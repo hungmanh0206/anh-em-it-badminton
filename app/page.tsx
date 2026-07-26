@@ -47,6 +47,7 @@ export default function Home() {
   const [latestRankingRows, setLatestRankingRows] = useState<RankingRow[]>([]);
   const [historySessions, setHistorySessions] = useState<HistorySession[]>([]);
   const [confirmation, setConfirmation] = useState<{ title: string; message: string; action: () => void | Promise<void> } | null>(null);
+  const [attendanceChangeNotice, setAttendanceChangeNotice] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
   const isCheckinWindowOpen = now.getDay() === 3;
   const session = homeSession(now);
@@ -93,10 +94,14 @@ export default function Home() {
     if (!user) return setLoginError("Tên đăng nhập hoặc mật khẩu chưa đúng.");
     setActiveUser(user); setLoginError(""); setShowCheckin(isCheckinWindowOpen && !user.responded);
   };
-  const checkInSelf = (attending: boolean) => {
+  const checkInSelf = async (attending: boolean) => {
     if (!activeUser) return;
-    const updated = members.map((m) => m.name === activeUser.name ? { ...m, present: attending, responded: true } : m);
-    if (supabase && sessionId) void supabase.rpc("respond_attendance", { p_session_id: sessionId, p_choice: attending ? "attending" : "absent" });
+    if (supabase && sessionId) {
+      const { data: needsReset, error } = await supabase.rpc("change_my_attendance", { p_session_id: sessionId, p_choice: attending ? "attending" : "absent" });
+      if (error) return setLoginError(error.message);
+      if (needsReset) setAttendanceChangeNotice("Một thành viên vừa thay đổi điểm danh sau khi đã bốc số/lập lịch.");
+    }
+    const updated = members.map((m) => m.username === activeUser.username ? { ...m, present: attending, responded: true } : m);
     localStorage.setItem("aemit-attendance", JSON.stringify(updated));
     setMembers(updated); setActiveUser({ ...activeUser, present: attending, responded: true }); setShowCheckin(false);
   };
@@ -115,10 +120,10 @@ export default function Home() {
     if (!supabase || !activeUser) return;
     const client = supabase;
     const loadLiveAttendance = async () => {
-      const { data: session } = await client.from("play_sessions").select("id").eq("session_date", "2026-07-26").maybeSingle();
-      if (!session) return;
-      setSessionId(session.id);
-      const { data } = await client.from("attendances").select("choice, profiles!attendances_member_id_fkey(username)").eq("session_id", session.id);
+      const { data: sessionRecord } = await client.from("play_sessions").select("id").eq("session_date", session.date.toISOString().slice(0, 10)).maybeSingle();
+      if (!sessionRecord) return;
+      setSessionId(sessionRecord.id);
+      const { data } = await client.from("attendances").select("choice, profiles!attendances_member_id_fkey(username)").eq("session_id", sessionRecord.id);
       if (!data) return;
       setMembers((previous) => previous.map((member) => {
         const attendance = data.find((item) => {
@@ -131,7 +136,7 @@ export default function Home() {
     void loadLiveAttendance();
     const channel = client.channel("club-attendance-live").on("postgres_changes", { event: "*", schema: "public", table: "attendances" }, loadLiveAttendance).subscribe();
     return () => { void client.removeChannel(channel); };
-  }, [activeUser]);
+  }, [activeUser, session.date]);
   useEffect(() => {
     if (!supabase) return;
     const client = supabase;
@@ -147,6 +152,17 @@ export default function Home() {
     };
     void loadRanking();
   }, [rankingMonth, now]);
+  useEffect(() => {
+    if (!supabase || !activeUser || activeUser.role !== "admin" || !sessionId) return;
+    const client = supabase;
+    const checkRequests = async () => {
+      const { data } = await client.from("attendance_change_requests").select("id, profiles!attendance_change_requests_member_id_fkey(full_name)").eq("session_id", sessionId).eq("status", "pending").limit(1);
+      if (data?.[0]) { const profile = Array.isArray(data[0].profiles) ? data[0].profiles[0] : data[0].profiles; setAttendanceChangeNotice(`${profile?.full_name || "Một thành viên"} vừa thay đổi điểm danh sau khi đã bốc số/lập lịch.`); }
+    };
+    void checkRequests();
+    const channel = client.channel("attendance-change-admin").on("postgres_changes", { event: "INSERT", schema: "public", table: "attendance_change_requests", filter: `session_id=eq.${sessionId}` }, checkRequests).subscribe();
+    return () => { void client.removeChannel(channel); };
+  }, [activeUser, sessionId]);
   useEffect(() => {
     if (!supabase) return;
     const client = supabase;
@@ -199,8 +215,9 @@ export default function Home() {
         {step === 3 && <Results matches={matches} scores={scores} setScores={setScores} isAdmin={isAdmin} />}
       </>}
     </section>
-    {showCheckin && <CheckinModal member={activeUser} onAnswer={checkInSelf} onSkip={() => setShowCheckin(false)} />}
+    {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { setShowCheckin(false); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={() => setShowCheckin(false)} />}
     {confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}
+    {isAdmin && attendanceChangeNotice && <ConfirmActionModal title="Thay đổi điểm danh" message={`${attendanceChangeNotice} Xác nhận để reset bốc số và lịch thi đấu; điểm danh mới sẽ được giữ lại.`} onCancel={() => setAttendanceChangeNotice(null)} onConfirm={async () => { if (supabase && sessionId) await supabase.rpc("reset_session_after_attendance_change", { p_session_id: sessionId }); setDrawn({}); setStep(0); setAttendanceChangeNotice(null); }} />}
   </main>;
 }
 
@@ -220,7 +237,7 @@ function Match({ match, i }: { match: string[]; i: number }) { return <article c
 function Results({ matches, scores, setScores, isAdmin }: { matches: string[][]; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; isAdmin: boolean }) { return <section className="panel"><div className="panel-head"><div><h2>Nhập kết quả</h2><p>{isAdmin ? "Cập nhật điểm từng trận. Hệ thống sẽ tự tính bảng xếp hạng tháng." : "Chỉ Admin có thể nhập và chốt kết quả buổi chơi."}</p></div><span className="count-pill">{Object.keys(scores).length}/{matches.length} trận</span></div><div className="result-list">{matches.map((m, i) => <div className="result-row" key={i}><b>#{i + 1}</b><span>{m[0]} + {m[1]}</span><input disabled={!isAdmin} aria-label="Điểm đội A" value={scores[i]?.[0] ?? ""} onChange={e => setScores({ ...scores, [i]: [e.target.value, scores[i]?.[1] ?? ""] })}/><em>:</em><input disabled={!isAdmin} aria-label="Điểm đội B" value={scores[i]?.[1] ?? ""} onChange={e => setScores({ ...scores, [i]: [scores[i]?.[0] ?? "", e.target.value] })}/><span>{m[2]} + {m[3]}</span></div>)}</div>{isAdmin && <div className="panel-foot"><span>Điểm cao hơn sẽ được tính là thắng (+1 điểm).</span><button className="primary">Chốt kết quả buổi chơi <span>✓</span></button></div>}</section> }
 function Ranking({ month, rows, onMonthChange }: { month: string; rows: RankingRow[]; onMonthChange: (month: string) => void }) { return <section className="ranking"><div className="section-title"><div><p className="eyebrow">XẾP HẠNG THEO THÁNG</p><h2>Bảng xếp hạng</h2></div></div><div className="ranking-toolbar"><label>Tháng<select value={month} onChange={(e) => onMonthChange(e.target.value)}><option>Tháng 7, 2026</option><option>Tháng 6, 2026</option></select></label><p>{month === monthLabel(new Date()) ? "BXH hiện tại sẽ khóa và reset sau 3 ngày kể từ buổi cuối tháng." : "Dữ liệu lịch sử đã được lưu và chỉ có thể xem."}</p></div><div className="rank-table"><div className="rank-head rank-columns"><span>Vị trí</span><span>Thành viên</span><span>Điểm</span><span>Điểm thắng</span><span>Điểm thua</span><span>Hiệu số</span><span>Số trận</span></div>{rows.length ? rows.map((row, i) => <div className={"rank-row rank-columns " + (i < 3 ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={i < 3 ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className="avatar small" style={{ background: row.color }}>{row.initials}</div><b>{row.name}</b><span className="level">L{row.level}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span></div>) : <div className="empty-ranking">Chưa có kết quả thi đấu cho {month}.</div>}</div></section> }
 function History({ sessions }: { sessions: HistorySession[] }) { const [month, setMonth] = useState("Tháng 7, 2026"); const [week, setWeek] = useState("Tất cả các tuần"); const [detail, setDetail] = useState<{ title: string; rows: { no: number; a: string; b: string; sa: number; sb: number }[] } | null>(null); const entries = sessions.filter((session) => { const date = new Date(`${session.date}T00:00:00`); return month === monthLabel(date); }).map((session) => { const date = new Date(`${session.date}T00:00:00`); return { ...session, week: `Tuần ${Math.ceil(date.getDate() / 7)} · Thứ Bảy ${date.toLocaleDateString("vi-VN")}`, title: `Buổi chơi ${date.toLocaleDateString("vi-VN")}`, detail: `${session.matches} trận · ${session.attendees} thành viên` }; }); const visible = week === "Tất cả các tuần" ? entries : entries.filter((session) => session.week === week); const showDetail = async (session: typeof entries[number]) => { if (!supabase) return; const [{ data: matches }, { data: profiles }] = await Promise.all([supabase.from("matches").select("match_no,team_a,team_b,score_a,score_b").eq("session_id", session.id).order("match_no"), supabase.from("profiles").select("id,full_name")]); const names = Object.fromEntries((profiles || []).map((profile: any) => [profile.id, profile.full_name])); setDetail({ title: session.title, rows: (matches || []).map((match: any) => ({ no: match.match_no, a: match.team_a.map((id: string) => names[id] || "?").join(" + "), b: match.team_b.map((id: string) => names[id] || "?").join(" + "), sa: match.score_a, sb: match.score_b })) }); }; return <><section className="panel history-panel"><div className="panel-head"><div><h2>Lịch sử thi đấu</h2><p>Dữ liệu từng buổi chơi, số bốc thăm và kết quả được lưu theo tuần.</p></div></div><div className="history-filters"><label>Tháng<select value={month} onChange={(e) => { setMonth(e.target.value); setWeek("Tất cả các tuần"); }}><option>Tháng 7, 2026</option><option>Tháng 6, 2026</option></select></label><label>Tuần<select value={week} onChange={(e) => setWeek(e.target.value)}><option>Tất cả các tuần</option>{entries.map((session) => <option key={session.id}>{session.week}</option>)}</select></label></div><div className="history-list">{visible.length ? visible.map((session) => <article key={session.id}><div><span>{session.week}</span><h3>{session.title}</h3><p>{session.detail}</p></div><button className="soft-btn" onClick={() => void showDetail(session)}>Xem chi tiết →</button></article>) : <div className="empty-ranking">Chưa có dữ liệu cho bộ lọc này.</div>}</div></section>{detail && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="history-detail"><button className="modal-close" onClick={() => setDetail(null)}>×</button><p className="eyebrow">KẾT QUẢ THI ĐẤU</p><h2>{detail.title}</h2><div className="history-match-list">{detail.rows.map((match) => <div key={match.no}><b>#{match.no}</b><span>{match.a}</span><strong>{match.sa} : {match.sb}</strong><span>{match.b}</span></div>)}</div></section></div>}</> }
-function Members({ members }: { members: Member[] }) { return <><section className="member-summary"><div><b>{members.length}</b><span>Tổng thành viên</span></div><div><b>4</b><span>Level 1</span></div><div><b>6</b><span>Level 2</span></div><div><b>{members.length}</b><span>Đang hoạt động</span></div></section><section className="panel"><div className="panel-head"><div><h2>Danh sách thành viên</h2><p>Quản lý thông tin và cấp độ của các thành viên CLB.</p></div><input className="search" placeholder="⌕  Tìm thành viên..." /></div><div className="member-table">{members.map(m => <div key={m.name}><div className="person"><div className="avatar" style={{ background: m.color }}>{m.initials}</div><div><b>{m.name}</b><small>@{m.name.toLowerCase().replace(" ", "")}</small></div></div><span className="level">Level {m.level}</span><span className="status">● Hoạt động</span><button className="more">•••</button></div>)}</div></section></> }
+function Members({ members }: { members: Member[] }) { return <><section className="member-summary"><div><b>{members.length}</b><span>Tổng thành viên</span></div><div><b>{members.length}</b><span>Đang hoạt động</span></div></section><section className="panel"><div className="panel-head"><div><h2>Danh sách thành viên</h2><p>Quản lý thông tin các thành viên CLB.</p></div><input className="search" placeholder="⌕  Tìm thành viên..." /></div><div className="member-table">{members.map(m => <div key={m.name}><div className="person"><div className="avatar" style={{ background: m.color }}>{m.initials}</div><div><b>{m.name}</b><small>@{m.name.toLowerCase().replace(" ", "")}</small></div></div><span className="status">● Hoạt động</span><button className="more">•••</button></div>)}</div></section></> }
 
 function Login({ onLogin, error }: { onLogin: (username: string, password: string) => void | Promise<void>; error: string }) {
   const [username, setUsername] = useState(""); const [password, setPassword] = useState("");
