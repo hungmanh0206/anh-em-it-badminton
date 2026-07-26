@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 type Member = { name: string; initials: string; level: 1 | 2; color: string; present: boolean; username: string; password: string; role?: "admin" | "member"; responded?: boolean };
 type RankingRow = { name: string; initials: string; level: number; points: number; pointsWon: number; pointsLost: number; pointDiff: number; matches: number; color: string };
 type HistorySession = { id: string; date: string; matches: number; attendees: number };
+const localDateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const monthLabel = (date: Date) => `Tháng ${date.getMonth() + 1}, ${date.getFullYear()}`;
 function homeSession(now: Date) { const day = now.getDay(); const offset = day >= 3 ? 6 - day : -(day + 1); const date = new Date(now); date.setDate(now.getDate() + offset); const state = day === 6 ? "ĐANG DIỄN RA" : day < 3 ? "ĐÃ DIỄN RA" : "CHƯA DIỄN RA"; return { date, state }; }
 function monthlyProgress(now: Date) { const year = now.getFullYear(), month = now.getMonth(); const saturdays: Date[] = []; for (let d = new Date(year, month, 1); d.getMonth() === month; d.setDate(d.getDate() + 1)) if (d.getDay() === 6) saturdays.push(new Date(d)); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return { total: saturdays.length, completed: saturdays.filter((d) => d < today).length }; }
@@ -138,10 +139,10 @@ export default function Home() {
     if (!supabase || !activeUser) return;
     const client = supabase;
     const loadLiveAttendance = async () => {
-      const { data: sessionRecord } = await client.from("play_sessions").select("id").eq("session_date", session.date.toISOString().slice(0, 10)).maybeSingle();
-      if (!sessionRecord) return;
-      setSessionId(sessionRecord.id);
-      const { data } = await client.from("attendances").select("choice, profiles!attendances_member_id_fkey(username)").eq("session_id", sessionRecord.id);
+      const { data: ensuredSessionId } = await client.rpc("ensure_weekly_session", { p_session_date: localDateKey(session.date) });
+      if (!ensuredSessionId) return;
+      setSessionId(ensuredSessionId);
+      const { data } = await client.from("attendances").select("choice, profiles!attendances_member_id_fkey(username)").eq("session_id", ensuredSessionId);
       if (!data) return;
       setMembers((previous) => previous.map((member) => {
         const attendance = data.find((item) => {
