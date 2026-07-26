@@ -95,20 +95,24 @@ export default function Home() {
   }, []);
   useEffect(() => {
     if (!supabase || !activeUser) return;
+    const client = supabase;
     const loadLiveAttendance = async () => {
-      const { data: session } = await supabase.from("play_sessions").select("id").eq("session_date", "2026-07-26").maybeSingle();
+      const { data: session } = await client.from("play_sessions").select("id").eq("session_date", "2026-07-26").maybeSingle();
       if (!session) return;
       setSessionId(session.id);
-      const { data } = await supabase.from("attendances").select("choice, profiles!attendances_member_id_fkey(username)").eq("session_id", session.id);
+      const { data } = await client.from("attendances").select("choice, profiles!attendances_member_id_fkey(username)").eq("session_id", session.id);
       if (!data) return;
       setMembers((previous) => previous.map((member) => {
-        const attendance = data.find((item) => item.profiles?.username === member.username);
+        const attendance = data.find((item) => {
+          const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+          return profile?.username === member.username;
+        });
         return attendance ? { ...member, present: attendance.choice === "attending", responded: attendance.choice !== "pending" } : member;
       }));
     };
     void loadLiveAttendance();
-    const channel = supabase.channel("club-attendance-live").on("postgres_changes", { event: "*", schema: "public", table: "attendances" }, loadLiveAttendance).subscribe();
-    return () => { void supabase.removeChannel(channel); };
+    const channel = client.channel("club-attendance-live").on("postgres_changes", { event: "*", schema: "public", table: "attendances" }, loadLiveAttendance).subscribe();
+    return () => { void client.removeChannel(channel); };
   }, [activeUser]);
   const drawSelf = () => {
     if (!activeUser) return;
