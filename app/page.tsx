@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 type Member = { name: string; initials: string; level: 1 | 2; color: string; present: boolean; username: string; password: string; role?: "admin" | "member"; responded?: boolean };
 const initialMembers: Member[] = [
@@ -35,6 +36,7 @@ export default function Home() {
   const [loginError, setLoginError] = useState("");
   const [spinning, setSpinning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const present = members.filter((m) => m.present);
   const canSchedule = present.length >= 6;
   const allAttendanceDone = members.every((m) => m.responded);
@@ -61,14 +63,26 @@ export default function Home() {
     setDrawn(Object.fromEntries(shuffled));
   };
 
-  const signIn = (username: string, password: string) => {
-    const user = members.find((m) => m.username === username.trim().toLowerCase() && m.password === password);
+  const signIn = async (username: string, password: string) => {
+    const normalized = username.trim().toLowerCase();
+    if (supabase) {
+      const { error } = await supabase.auth.signInWithPassword({ email: `${normalized}@anhemit.club`, password });
+      if (error) return setLoginError("Tên đăng nhập hoặc mật khẩu chưa đúng.");
+      const { data: profile } = await supabase.from("profiles").select("full_name, username, level, role").eq("username", normalized).single();
+      const localUser = members.find((m) => m.username === normalized);
+      if (profile && localUser) {
+        const user = { ...localUser, name: profile.full_name, level: Number(profile.level) as 1 | 2, role: profile.role };
+        setActiveUser(user); setLoginError(""); setShowCheckin(!user.responded); return;
+      }
+    }
+    const user = members.find((m) => m.username === normalized && m.password === password);
     if (!user) return setLoginError("Tên đăng nhập hoặc mật khẩu chưa đúng.");
     setActiveUser(user); setLoginError(""); setShowCheckin(!user.responded);
   };
   const checkInSelf = (attending: boolean) => {
     if (!activeUser) return;
     const updated = members.map((m) => m.name === activeUser.name ? { ...m, present: attending, responded: true } : m);
+    if (supabase && sessionId) void supabase.rpc("respond_attendance", { p_session_id: sessionId, p_choice: attending ? "attending" : "absent" });
     localStorage.setItem("aemit-attendance", JSON.stringify(updated));
     setMembers(updated); setActiveUser({ ...activeUser, present: attending, responded: true }); setShowCheckin(false);
   };
@@ -79,6 +93,23 @@ export default function Home() {
     window.addEventListener("storage", syncAttendance);
     return () => window.removeEventListener("storage", syncAttendance);
   }, []);
+  useEffect(() => {
+    if (!supabase || !activeUser) return;
+    const loadLiveAttendance = async () => {
+      const { data: session } = await supabase.from("play_sessions").select("id").eq("session_date", "2026-07-26").maybeSingle();
+      if (!session) return;
+      setSessionId(session.id);
+      const { data } = await supabase.from("attendances").select("choice, profiles!attendances_member_id_fkey(username)").eq("session_id", session.id);
+      if (!data) return;
+      setMembers((previous) => previous.map((member) => {
+        const attendance = data.find((item) => item.profiles?.username === member.username);
+        return attendance ? { ...member, present: attendance.choice === "attending", responded: attendance.choice !== "pending" } : member;
+      }));
+    };
+    void loadLiveAttendance();
+    const channel = supabase.channel("club-attendance-live").on("postgres_changes", { event: "*", schema: "public", table: "attendances" }, loadLiveAttendance).subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [activeUser]);
   const drawSelf = () => {
     if (!activeUser) return;
     const existing = JSON.parse(localStorage.getItem("aemit-drawn-slots") || "{}");
@@ -108,14 +139,14 @@ export default function Home() {
         <button><span>◷</span> Lịch sử thi đấu</button>
       </nav>
       <div className="club-card"><span>🏆</span><b>Tháng 7, 2026</b><small>3 / 4 buổi đã hoàn thành</small><div className="progress"><i /></div></div>
-      <div className="profile"><div className="avatar small" style={{ background: activeUser.color }}>{activeUser.initials}</div><div><b>{activeUser.name}</b><small>{isAdmin ? "Quản trị viên" : "Thành viên"}</small></div><button className="logout" onClick={() => setActiveUser(null)}>Đăng xuất</button></div>
+      <div className="profile"><div className="avatar small" style={{ background: activeUser.color }}>{activeUser.initials}</div><div><b>{activeUser.name}</b><small>{isAdmin ? "Quản trị viên" : "Thành viên"}</small></div><button className="logout" onClick={() => { void supabase?.auth.signOut(); setActiveUser(null); }}>Đăng xuất</button></div>
     </aside>
     <section className="content">
       <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" onClick={() => setSidebarOpen(!sidebarOpen)}>☰</button><div><p className="eyebrow">THỨ BẢY, 26 THÁNG 7</p><h1>{screen === "home" ? "Buổi chơi hôm nay" : "Quản lý thành viên"}</h1></div></div><div className="header-actions"><button className="icon-btn">⌕</button><button className="icon-btn">♧</button>{isAdmin && <button className="new-btn" onClick={() => setScreen("members")}>+ {screen === "home" ? "Tạo buổi mới" : "Thêm thành viên"}</button>}</div></header>
       {screen === "members" ? <Members members={members} /> : <>
         <section className="hero"><div><span className="live-dot">● ĐANG DIỄN RA</span><h2>Buổi chơi #04 <span>·</span> Tháng 7</h2><p>19:00 – 21:30 &nbsp;·&nbsp; Sân cầu lông Hoàng Mai</p></div><div className="hero-stats"><div><b>{present.length}</b><small>NGƯỜI CÓ MẶT</small></div><div><b>0{step + 1}<em>/04</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
-        {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => goStep(1)} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={activeUser} openSelfCheckin={() => setShowCheckin(true)} />}
+        {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={async () => { if (supabase && sessionId) { const { error } = await supabase.rpc("confirm_attendance", { p_session_id: sessionId }); if (error) return setLoginError(error.message); } goStep(1); }} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={activeUser} openSelfCheckin={() => setShowCheckin(true)} />}
         {step === 1 && <Draw drawn={drawn} draw={draw} drawSelf={drawSelf} spinning={spinning} currentUser={activeUser} isAdmin={isAdmin} onContinue={() => goStep(2)} />}
         {step === 2 && <Schedule matches={matches} drawn={drawn} onContinue={() => goStep(3)} isAdmin={isAdmin} />}
         {step === 3 && <Results matches={matches} scores={scores} setScores={setScores} isAdmin={isAdmin} />}
@@ -134,9 +165,9 @@ function Results({ matches, scores, setScores, isAdmin }: { matches: string[][];
 function Ranking() { const [month, setMonth] = useState("Tháng 7, 2026"); const months = ["Tháng 7, 2026", "Tháng 6, 2026", "Tháng 5, 2026"]; return <section className="ranking"><div className="section-title"><div><p className="eyebrow">XẾP HẠNG THEO THÁNG</p><h2>Bảng xếp hạng</h2></div></div><div className="ranking-toolbar"><div className="month-tabs">{months.map((m) => <button key={m} className={month === m ? "chosen" : ""} onClick={() => setMonth(m)}>{m}{m !== months[0] && <small>Lịch sử</small>}</button>)}</div><p>{month === months[0] ? "BXH hiện tại sẽ khóa và reset sau 3 ngày kể từ buổi cuối tháng." : "Dữ liệu lịch sử đã được lưu và chỉ có thể xem."}</p></div><div className="rank-table"><div className="rank-head rank-columns"><span>Vị trí</span><span>Thành viên</span><span>Điểm</span><span>Điểm thắng</span><span>Điểm thua</span><span>Hiệu số</span><span>Số trận</span></div>{ranking.map((r, i) => <div className={"rank-row rank-columns " + (i < 3 ? "top-rank top-" + (i + 1) : "")} key={r[0] as string}><b className={i < 3 ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className="avatar small" style={{ background: r[7] as string }}>{r[1]}</div><b>{r[0]}</b><span className="level">L{i < 4 ? 1 : 2}</span></div><b className="point-value">{r[2]}</b><span>{r[3]}</span><span>{r[4]}</span><span className={String(r[5]).startsWith("+") ? "positive" : "negative"}>{r[5]}</span><span>{r[6]}</span></div>)}</div></section> }
 function Members({ members }: { members: Member[] }) { return <><section className="member-summary"><div><b>{members.length}</b><span>Tổng thành viên</span></div><div><b>4</b><span>Level 1</span></div><div><b>6</b><span>Level 2</span></div><div><b>{members.length}</b><span>Đang hoạt động</span></div></section><section className="panel"><div className="panel-head"><div><h2>Danh sách thành viên</h2><p>Quản lý thông tin và cấp độ của các thành viên CLB.</p></div><input className="search" placeholder="⌕  Tìm thành viên..." /></div><div className="member-table">{members.map(m => <div key={m.name}><div className="person"><div className="avatar" style={{ background: m.color }}>{m.initials}</div><div><b>{m.name}</b><small>@{m.name.toLowerCase().replace(" ", "")}</small></div></div><span className="level">Level {m.level}</span><span className="status">● Hoạt động</span><button className="more">•••</button></div>)}</div></section></> }
 
-function Login({ onLogin, error }: { onLogin: (username: string, password: string) => void; error: string }) {
+function Login({ onLogin, error }: { onLogin: (username: string, password: string) => void | Promise<void>; error: string }) {
   const [username, setUsername] = useState("manh"); const [password, setPassword] = useState("123456");
-  return <main className="login-page"><section className="login-card"><div className="login-brand"><span>🏸</span><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></div><div><p className="eyebrow">CHÀO MỪNG TRỞ LẠI</p><h1>Đăng nhập CLB</h1><p>Đăng nhập để điểm danh và theo dõi lịch thi đấu của bạn.</p></div><form onSubmit={(e) => { e.preventDefault(); onLogin(username, password); }}><label>Tên đăng nhập<input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Ví dụ: manh" /></label><label>Mật khẩu<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Nhập mật khẩu" /></label>{error && <p className="login-error">{error}</p>}<button className="primary" type="submit">Đăng nhập <span>→</span></button></form><div className="demo-login"><b>Tài khoản demo</b><span>Admin: <code>manh / 123456</code></span><span>Thành viên: <code>hung / 123456</code></span></div></section></main>;
+  return <main className="login-page"><section className="login-card"><div className="login-brand"><span>🏸</span><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></div><div><p className="eyebrow">CHÀO MỪNG TRỞ LẠI</p><h1>Đăng nhập CLB</h1><p>Đăng nhập để điểm danh và theo dõi lịch thi đấu của bạn.</p></div><form onSubmit={(e) => { e.preventDefault(); void onLogin(username, password); }}><label>Tên đăng nhập<input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Ví dụ: manh" /></label><label>Mật khẩu<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Nhập mật khẩu" /></label>{error && <p className="login-error">{error}</p>}<button className="primary" type="submit">Đăng nhập <span>→</span></button></form><div className="demo-login"><b>Tài khoản khởi tạo</b><span>Admin: <code>manh / 123456</code></span><span>Thành viên: <code>hung / 123456</code></span></div></section></main>;
 }
 
 function CheckinModal({ member, onAnswer, onSkip }: { member: Member; onAnswer: (attending: boolean) => void; onSkip: () => void }) { return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Điểm danh buổi chơi"><section className="checkin-modal"><button className="modal-close" onClick={onSkip} aria-label="Đóng">×</button><span className="modal-icon">🏸</span><p className="eyebrow">BUỔI CHƠI THỨ BẢY</p><h2>Chào {member.name}, bạn có tham gia không?</h2><p>Hãy phản hồi để Admin chốt danh sách và mở bốc số vào thứ Tư. Bạn vẫn có thể thay đổi sau trong trang chính.</p><div className="modal-actions"><button className="primary" onClick={() => onAnswer(true)}>✓ Tôi tham gia</button><button className="secondary" onClick={() => onAnswer(false)}>Tôi không tham gia</button></div><button className="skip" onClick={onSkip}>Để sau</button></section></div> }
