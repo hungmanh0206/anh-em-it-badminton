@@ -158,6 +158,18 @@ export default function Home() {
     return () => { void client.removeChannel(channel); };
   }, [activeUser, session.date]);
   useEffect(() => {
+    if (!sessionId || now.getDay() !== 3) return;
+    const storedSessionId = localStorage.getItem("aemit-attendance-session");
+    if (storedSessionId === sessionId) return;
+    const resetMembers = members.map((member) => ({ ...member, present: false, responded: false }));
+    localStorage.setItem("aemit-attendance-session", sessionId);
+    localStorage.setItem("aemit-attendance", JSON.stringify(resetMembers));
+    localStorage.removeItem("aemit-drawn-slots");
+    setMembers(resetMembers);
+    setDrawn({});
+    setStep(0);
+  }, [sessionId, now]);
+  useEffect(() => {
     if (!supabase) return;
     const client = supabase;
     const match = rankingMonth.match(/Tháng (\d+), (\d+)/); const month = match ? `${match[2]}-${String(match[1]).padStart(2, "0")}-01` : "2026-07-01";
