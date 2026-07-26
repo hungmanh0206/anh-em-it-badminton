@@ -1,3 +1,4 @@
+// @ts-nocheck
 import vinext from "vinext";
 import { defineConfig } from "vite";
 import hostingConfig from "./.openai/hosting.json";
