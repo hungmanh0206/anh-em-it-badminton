@@ -48,6 +48,7 @@ export default function Home() {
   const [historySessions, setHistorySessions] = useState<HistorySession[]>([]);
   const [confirmation, setConfirmation] = useState<{ title: string; message: string; action: () => void | Promise<void> } | null>(null);
   const [attendanceChangeNotice, setAttendanceChangeNotice] = useState<string | null>(null);
+  const [authRestoring, setAuthRestoring] = useState(Boolean(supabase));
   const [now, setNow] = useState(() => new Date());
   const isCheckinWindowOpen = now.getDay() === 3;
   const session = homeSession(now);
@@ -105,6 +106,23 @@ export default function Home() {
     localStorage.setItem("aemit-attendance", JSON.stringify(updated));
     setMembers(updated); setActiveUser({ ...activeUser, present: attending, responded: true }); setShowCheckin(false);
   };
+  useEffect(() => {
+    if (!supabase) { setAuthRestoring(false); return; }
+    const client = supabase;
+    const restoreSession = async () => {
+      const { data: { session: savedSession } } = await client.auth.getSession();
+      const username = savedSession?.user.email?.split("@")[0];
+      if (username) {
+        const [{ data: profile }, localUser] = await Promise.all([
+          client.from("profiles").select("full_name, username, level, role").eq("username", username).single(),
+          Promise.resolve(initialMembers.find((member) => member.username === username)),
+        ]);
+        if (profile && localUser) setActiveUser({ ...localUser, name: profile.full_name, level: Number(profile.level) as 1 | 2, role: profile.role });
+      }
+      setAuthRestoring(false);
+    };
+    void restoreSession();
+  }, []);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
@@ -189,6 +207,7 @@ export default function Home() {
     }, 3500);
   };
 
+  if (!activeUser && authRestoring) return <main className="login-page"><div className="login-card"><p>Đang khôi phục phiên đăng nhập...</p></div></main>;
   if (!activeUser) return <Login onLogin={signIn} error={loginError} />;
   const isAdmin = activeUser.role === "admin";
 
