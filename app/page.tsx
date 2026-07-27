@@ -132,6 +132,7 @@ export default function Home() {
   const [confirmedMatches, setConfirmedMatches] = useState<Record<number, boolean>>({});
   const [activeUser, setActiveUser] = useState<Member | null>(null);
   const [showCheckin, setShowCheckin] = useState(false);
+  const [checkinPopupMode, setCheckinPopupMode] = useState<"auto" | "manual" | null>(null);
   const [loginError, setLoginError] = useState("");
   const [spinning, setSpinning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -146,6 +147,7 @@ export default function Home() {
   const [showProfileCard, setShowProfileCard] = useState(false);
   const [authRestoring, setAuthRestoring] = useState(Boolean(supabase));
   const [now, setNow] = useState(() => new Date());
+  const [attendanceSynced, setAttendanceSynced] = useState(!supabase);
   const [rankingRefreshTick, setRankingRefreshTick] = useState(0);
   const [monthCloseStatus, setMonthCloseStatus] = useState<MonthCloseStatus | null>(null);
   const [closingMonth, setClosingMonth] = useState(false);
@@ -192,6 +194,10 @@ export default function Home() {
     if (next > step + 1 || (next === 1 && !drawOpen && (!isCheckinWindowOpen || !canSchedule || !allAttendanceDone)) || (next === 2 && (!currentScheduleScenario || !allDrawn)) || (next === 3 && !currentScheduleScenario)) return;
     setStep(next);
   };
+  const closeCheckinPopup = () => {
+    setShowCheckin(false);
+    setCheckinPopupMode(null);
+  };
 
   const signIn = async (username: string, password: string) => {
     const normalized = username.trim().toLowerCase();
@@ -202,12 +208,12 @@ export default function Home() {
       const localUser = members.find((m) => m.username === normalized);
       if (profile && localUser) {
         const user = { ...localUser, name: profile.full_name, level: Number(profile.level) as 1 | 2, role: profile.role };
-        setActiveUser(user); setLoginError(""); setShowCheckin(false); return;
+        setActiveUser(user); setLoginError(""); closeCheckinPopup(); return;
       }
     }
     const user = members.find((m) => m.username === normalized && m.password === password);
     if (!user) return setLoginError("Tên đăng nhập hoặc mật khẩu chưa đúng.");
-    setActiveUser(user); setLoginError(""); setShowCheckin(false);
+    setActiveUser(user); setLoginError(""); closeCheckinPopup();
   };
   const checkInSelf = async (attending: boolean) => {
     if (!activeUser) return;
@@ -218,7 +224,7 @@ export default function Home() {
     }
     const updated = members.map((m) => m.username === activeUser.username ? { ...m, present: attending, responded: true } : m);
     localStorage.setItem("aemit-attendance", JSON.stringify(updated));
-    setMembers(updated); setActiveUser({ ...activeUser, present: attending, responded: true }); setShowCheckin(false);
+    setMembers(updated); setActiveUser({ ...activeUser, present: attending, responded: true }); closeCheckinPopup();
   };
   useEffect(() => {
     if (!supabase) return;
@@ -262,29 +268,34 @@ export default function Home() {
   useEffect(() => {
     if (!supabase || !activeUsername) return;
     const client = supabase;
+    setAttendanceSynced(false);
     const loadLiveAttendance = async () => {
-      const { data: ensuredSessionId } = await client.rpc("ensure_weekly_session", { p_session_date: localDateKey(session.date) });
-      if (!ensuredSessionId) return;
-      setSessionId(ensuredSessionId);
-      const [{ data: sessionRow }, { data }] = await Promise.all([
-        client.from("play_sessions").select("status").eq("id", ensuredSessionId).single(),
-        client.from("attendances").select("choice, drawn_number, profiles!attendances_member_id_fkey(username, full_name, level, role)").eq("session_id", ensuredSessionId),
-      ]);
-      if (sessionRow?.status) setSessionStatus(sessionRow.status as SessionStatus);
-      if (!data) return;
-      const attendanceRows = data as AttendanceRow[];
-      const nextDrawn: Record<string, number> = {};
-      setMembers((previous) => previous.map((member) => {
-        const attendance = attendanceRows.find((item) => {
-          const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
-          return profile?.username === member.username;
-        });
-        const profile = attendance ? (Array.isArray(attendance.profiles) ? attendance.profiles[0] : attendance.profiles) : null;
-        const nextName = profile?.full_name || member.name;
-        if (attendance?.choice === "attending" && typeof attendance.drawn_number === "number") nextDrawn[nextName] = attendance.drawn_number;
-        return attendance ? { ...member, name: nextName, level: Number(profile?.level || member.level) as 1 | 2, role: (profile?.role as "admin" | "member" | undefined) ?? member.role, present: attendance.choice === "attending", responded: attendance.choice !== "pending" } : { ...member, present: false, responded: false };
-      }));
-      setDrawn(nextDrawn);
+      try {
+        const { data: ensuredSessionId } = await client.rpc("ensure_weekly_session", { p_session_date: localDateKey(session.date) });
+        if (!ensuredSessionId) return;
+        setSessionId(ensuredSessionId);
+        const [{ data: sessionRow }, { data }] = await Promise.all([
+          client.from("play_sessions").select("status").eq("id", ensuredSessionId).single(),
+          client.from("attendances").select("choice, drawn_number, profiles!attendances_member_id_fkey(username, full_name, level, role)").eq("session_id", ensuredSessionId),
+        ]);
+        if (sessionRow?.status) setSessionStatus(sessionRow.status as SessionStatus);
+        if (!data) return;
+        const attendanceRows = data as AttendanceRow[];
+        const nextDrawn: Record<string, number> = {};
+        setMembers((previous) => previous.map((member) => {
+          const attendance = attendanceRows.find((item) => {
+            const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+            return profile?.username === member.username;
+          });
+          const profile = attendance ? (Array.isArray(attendance.profiles) ? attendance.profiles[0] : attendance.profiles) : null;
+          const nextName = profile?.full_name || member.name;
+          if (attendance?.choice === "attending" && typeof attendance.drawn_number === "number") nextDrawn[nextName] = attendance.drawn_number;
+          return attendance ? { ...member, name: nextName, level: Number(profile?.level || member.level) as 1 | 2, role: (profile?.role as "admin" | "member" | undefined) ?? member.role, present: attendance.choice === "attending", responded: attendance.choice !== "pending" } : { ...member, present: false, responded: false };
+        }));
+        setDrawn(nextDrawn);
+      } finally {
+        setAttendanceSynced(true);
+      }
     };
     void loadLiveAttendance();
     const channel = client.channel("club-attendance-live")
@@ -302,8 +313,18 @@ export default function Home() {
       if (current.name === syncedUser.name && current.level === syncedUser.level && current.role === syncedUser.role && current.present === syncedUser.present && current.responded === syncedUser.responded) return current;
       return { ...current, name: syncedUser.name, level: syncedUser.level, role: syncedUser.role, present: syncedUser.present, responded: syncedUser.responded };
     });
-    if (isCheckinWindowOpen && !syncedUser.responded) setShowCheckin(true);
-  }, [activeUsername, isCheckinWindowOpen, members]);
+    if (!isCheckinWindowOpen) {
+      if (checkinPopupMode === "auto") closeCheckinPopup();
+      return;
+    }
+    if (supabase && !attendanceSynced) return;
+    if (!syncedUser.responded) {
+      setCheckinPopupMode("auto");
+      setShowCheckin(true);
+      return;
+    }
+    if (checkinPopupMode === "auto") closeCheckinPopup();
+  }, [activeUsername, attendanceSynced, checkinPopupMode, isCheckinWindowOpen, members]);
   useEffect(() => {
     if (!sessionId || now.getDay() !== 3) return;
     const storedSessionId = localStorage.getItem("aemit-attendance-session");
@@ -544,13 +565,13 @@ export default function Home() {
         <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>Buổi thứ Bảy ngày {session.date.toLocaleDateString("vi-VN")}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>NGƯỜI CÓ MẶT</small></div><div><b>0{step + 1}<em>/04</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
-        {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở bốc số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: async () => { if (supabase && sessionId) { const { error } = await supabase.rpc("confirm_attendance", { p_session_id: sessionId }); if (error) return setLoginError(error.message); } setSessionStatus("checked_in"); setStep(1); } })} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => setShowCheckin(true)} />}
+        {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở bốc số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: async () => { if (supabase && sessionId) { const { error } = await supabase.rpc("confirm_attendance", { p_session_id: sessionId }); if (error) return setLoginError(error.message); } setSessionStatus("checked_in"); setStep(1); } })} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
         {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} currentUser={currentUser} isAdmin={isAdmin} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả bốc số hiện tại?", action: confirmScheduleFromDraw })} />}
         {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} onContinue={() => setConfirmation({ title: "Xác nhận nhập kết quả", message: "Chuyển sang bước ghi nhận kết quả các trận?", action: () => setStep(3) })} isAdmin={isAdmin} />}
         {step === 3 && <Results matches={currentMatches} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} onSaved={() => setRankingRefreshTick((tick) => tick + 1)} />}
       </>}
     </section>
-    {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { setShowCheckin(false); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={() => setShowCheckin(false)} />}
+    {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={closeCheckinPopup} />}
     {confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}
     {isAdmin && attendanceChangeNotice && <ConfirmActionModal title="Thay đổi điểm danh" message={`${attendanceChangeNotice} Xác nhận để reset bốc số và lịch thi đấu; điểm danh mới sẽ được giữ lại.`} onCancel={() => setAttendanceChangeNotice(null)} onConfirm={async () => { if (supabase && sessionId) await supabase.rpc("reset_session_after_attendance_change", { p_session_id: sessionId }); setDrawn({}); setStep(0); setAttendanceChangeNotice(null); }} />}
     {showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={championRankingLabel} rankClass={welcomeRankClass} onClose={() => setShowProfileCard(false)} />}
