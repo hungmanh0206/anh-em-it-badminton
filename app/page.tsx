@@ -30,6 +30,7 @@ const screenTitles: Record<Screen, string> = {
   history: "Lịch sử thi đấu",
 };
 const screenKeys = Object.keys(screenTitles) as Screen[];
+const hiddenRankingMonths = new Set(["Tháng 5, 2026", "Tháng 6, 2026"]);
 const isScreenKey = (value: string | null | undefined): value is Screen => Boolean(value && screenKeys.includes(value as Screen));
 const screenFromLocation = () => {
   if (typeof window === "undefined") return "home";
@@ -173,7 +174,7 @@ export default function Home() {
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const nextVisibleMonthStart = nextMonthStartDate(currentMonthStart);
   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const rankingMonthOptions = [nextVisibleMonthStart, currentMonthStart, previousMonthStart, new Date(now.getFullYear(), now.getMonth() - 2, 1)].map(monthLabel);
+  const rankingMonthOptions = [nextVisibleMonthStart, currentMonthStart, previousMonthStart, new Date(now.getFullYear(), now.getMonth() - 2, 1)].map(monthLabel).filter((month) => !hiddenRankingMonths.has(month));
   const championRankingMonth = isCurrentMonthRankingClosed(now) ? currentMonthStart : previousMonthStart;
   const previousMonthKey = localDateKey(previousMonthStart);
   const championRankingKey = localDateKey(championRankingMonth);
