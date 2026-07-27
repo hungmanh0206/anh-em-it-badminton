@@ -1220,3 +1220,152 @@ header {
     font-size: 17px !important;
   }
 }
+
+/* Final correction: no outer chip, only strong rank accent */
+.welcome-member.rank-1,
+.welcome-member.rank-2,
+.welcome-member.rank-3,
+.welcome-member.rank-none {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.welcome-member .welcome-rank,
+.welcome-member .welcome-level {
+  color: inherit !important;
+}
+
+.welcome-member .welcome-rank {
+  height: 28px !important;
+  padding: 0 11px !important;
+  border-radius: 999px !important;
+  font-family: "Be Vietnam Pro", system-ui, sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase;
+}
+
+.welcome-member .welcome-rank::before {
+  content: none !important;
+  display: none !important;
+}
+
+.welcome-member b {
+  position: relative;
+  z-index: 0;
+  color: var(--welcome-name, var(--club-ink-900)) !important;
+}
+
+.welcome-member b::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--welcome-underline, transparent);
+  opacity: 0.9;
+}
+
+.welcome-member .welcome-level {
+  color: var(--club-ink-800) !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+.welcome-member .welcome-level::before {
+  color: var(--welcome-dot, var(--club-ink-400)) !important;
+}
+
+.welcome-member.rank-1 {
+  --welcome-name: #2a1700;
+  --welcome-underline: linear-gradient(90deg, rgba(255, 213, 79, 0.9), rgba(255, 183, 0, 0.5));
+  --welcome-dot: #d18a00;
+}
+
+.welcome-member.rank-1 .welcome-rank {
+  background: linear-gradient(135deg, #fff0a8 0%, #ffc400 48%, #e59600 100%) !important;
+  color: #1b1200 !important;
+  box-shadow: 0 8px 20px rgba(255, 183, 0, 0.34) !important;
+}
+
+.welcome-member.rank-1 .welcome-rank::after {
+  content: "1";
+  margin-left: 5px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-weight: 900;
+}
+
+.welcome-member.rank-2 {
+  --welcome-name: #111827;
+  --welcome-underline: linear-gradient(90deg, rgba(210, 218, 229, 0.95), rgba(151, 163, 181, 0.45));
+  --welcome-dot: #7b8798;
+}
+
+.welcome-member.rank-2 .welcome-rank {
+  background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 46%, #8793a3 100%) !important;
+  color: #111827 !important;
+  box-shadow: 0 8px 20px rgba(91, 103, 120, 0.26) !important;
+}
+
+.welcome-member.rank-2 .welcome-rank::after {
+  content: "2";
+  margin-left: 5px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-weight: 900;
+}
+
+.welcome-member.rank-3 {
+  --welcome-name: #4b220f;
+  --welcome-underline: linear-gradient(90deg, rgba(224, 142, 82, 0.85), rgba(158, 82, 36, 0.38));
+  --welcome-dot: #a45c2b;
+}
+
+.welcome-member.rank-3 .welcome-rank {
+  background: linear-gradient(135deg, #ffc196 0%, #d8874d 48%, #8f421b 100%) !important;
+  color: #fffaf4 !important;
+  box-shadow: 0 8px 20px rgba(158, 82, 36, 0.28) !important;
+}
+
+.welcome-member.rank-3 .welcome-rank::after {
+  content: "3";
+  margin-left: 5px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-weight: 900;
+}
+
+.welcome-member.rank-none .welcome-rank {
+  display: none !important;
+}
+
+.welcome-member.rank-none b::after {
+  display: none;
+}
+
+@media (max-width: 800px) {
+  .welcome-member {
+    align-items: center !important;
+    gap: 9px !important;
+    row-gap: 7px !important;
+  }
+
+  .welcome-member .welcome-rank {
+    height: 27px !important;
+    padding-inline: 10px !important;
+    font-size: 9px !important;
+  }
+
+  .welcome-member b {
+    font-size: 19px !important;
+    letter-spacing: -0.05em !important;
+  }
+
+  .welcome-member .welcome-level {
+    font-size: 10px !important;
+  }
+}
