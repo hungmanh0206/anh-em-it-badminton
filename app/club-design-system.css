@@ -2104,3 +2104,81 @@ header {
     line-height: 1 !important;
   }
 }
+
+/* Sidebar champion recognition */
+.sidebar .club-card {
+  gap: 7px !important;
+}
+
+.sidebar .club-top1 {
+  position: relative;
+  display: grid !important;
+  gap: 5px !important;
+  margin-top: 12px !important;
+  padding: 12px 11px 11px !important;
+  overflow: hidden;
+  border: 1px solid rgba(255, 198, 72, 0.34) !important;
+  border-radius: 13px !important;
+  background:
+    radial-gradient(circle at 12% 16%, rgba(255, 213, 91, 0.28), transparent 28%),
+    linear-gradient(135deg, rgba(255, 183, 0, 0.16), rgba(255, 255, 255, 0.03) 42%, rgba(255, 183, 0, 0.09)) !important;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+.sidebar .club-top1::before {
+  content: "🏸";
+  position: absolute;
+  right: 9px;
+  top: 8px;
+  opacity: 0.18;
+  font-size: 28px;
+  transform: rotate(-18deg);
+}
+
+.sidebar .club-top1 small {
+  position: relative;
+  z-index: 1;
+  color: #ffd66d !important;
+  font-size: 8px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.25 !important;
+}
+
+.sidebar .club-top1 b {
+  position: relative;
+  z-index: 1;
+  color: #fffaf0 !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.2 !important;
+}
+
+.sidebar .club-top1 span {
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 246, 220, 0.72) !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+}
+
+.sidebar .club-top1.empty {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background:
+    radial-gradient(circle at 12% 16%, rgba(255, 255, 255, 0.1), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)) !important;
+}
+
+.sidebar .club-top1.empty small {
+  color: rgba(255, 214, 109, 0.82) !important;
+}
+
+.sidebar .club-top1.empty b {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.sidebar .club-top1.empty span {
+  color: rgba(255, 255, 255, 0.58) !important;
+}
