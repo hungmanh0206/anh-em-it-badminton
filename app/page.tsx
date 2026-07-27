@@ -6,6 +6,11 @@ import { supabase } from "@/lib/supabase";
 type Member = { name: string; initials: string; level: 1 | 2; color: string; present: boolean; username: string; password: string; role?: "admin" | "member"; responded?: boolean };
 type RankingRow = { name: string; initials: string; level: number; points: number; pointsWon: number; pointsLost: number; pointDiff: number; matches: number; color: string };
 type HistorySession = { id: string; date: string; matches: number; attendees: number };
+type SupabaseProfile = { id?: string; username?: string | null; full_name?: string | null; level?: number | string | null; role?: "admin" | "member" | string | null };
+type MonthlyResultRow = { total_points: number; points_for: number; points_against: number; point_diff: number; matches_played: number; level_next_month: number | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
+type HistorySessionRow = { id: string; session_date: string; matches?: { count: number }[] | null; attendances?: { count: number }[] | null };
+type MatchRow = { match_no: number; team_a: string[]; team_b: string[]; score_a: number; score_b: number };
+type ProfileRow = { id: string; full_name: string };
 const localDateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const monthLabel = (date: Date) => `Tháng ${date.getMonth() + 1}, ${date.getFullYear()}`;
 function homeSession(now: Date) { const day = now.getDay(); const offset = day >= 3 ? 6 - day : -(day + 1); const date = new Date(now); date.setDate(now.getDate() + offset); const state = day === 6 ? "ĐANG DIỄN RA" : day < 3 ? "ĐÃ DIỄN RA" : "CHƯA DIỄN RA"; return { date, state }; }
@@ -21,14 +26,6 @@ const initialMembers: Member[] = [
   { name: "Sơn", initials: "S", level: 2, color: "#9c69e9", present: false, username: "son", password: "123456", responded: false },
   { name: "Hải", initials: "H", level: 2, color: "#ef8b3d", present: false, username: "hai", password: "123456" },
   { name: "Phú", initials: "P", level: 2, color: "#3f9c59", present: false, username: "phu", password: "123456", responded: false },
-];
-
-const ranking = [
-  ["Mạnh", "M", 12, 224, 190, "+34", 16, "#6846e8"], ["Hùng", "H", 10, 216, 197, "+19", 16, "#e56a4d"],
-  ["Quý", "Q", 9, 211, 199, "+12", 16, "#2ba98b"], ["Thành", "T", 8, 205, 198, "+7", 16, "#e3a63c"],
-  ["Nam", "N", 7, 200, 198, "+2", 16, "#4175e8"], ["Đạt", "Đ", 6, 194, 199, "−5", 16, "#e05591"],
-  ["Đức Anh", "ĐA", 5, 190, 198, "−8", 16, "#2f9c9f"], ["Sơn", "S", 4, 185, 195, "−10", 16, "#9c69e9"],
-  ["Phú", "P", 3, 181, 196, "−15", 16, "#3f9c59"], ["Hải", "H", 2, 145, 166, "−21", 12, "#ef8b3d"],
 ];
 
 export default function Home() {
@@ -109,7 +106,7 @@ export default function Home() {
     setMembers(updated); setActiveUser({ ...activeUser, present: attending, responded: true }); setShowCheckin(false);
   };
   useEffect(() => {
-    if (!supabase) { setAuthRestoring(false); return; }
+    if (!supabase) return;
     const client = supabase;
     const restoreSession = async () => {
       const { data: { session: savedSession } } = await client.auth.getSession();
@@ -131,7 +128,7 @@ export default function Home() {
   }, []);
   useEffect(() => {
     const saved = localStorage.getItem("aemit-attendance");
-    if (saved) setMembers(JSON.parse(saved));
+    if (saved) window.queueMicrotask(() => setMembers(JSON.parse(saved) as Member[]));
     const syncAttendance = (event: StorageEvent) => { if (event.key === "aemit-attendance" && event.newValue) setMembers(JSON.parse(event.newValue)); };
     window.addEventListener("storage", syncAttendance);
     return () => window.removeEventListener("storage", syncAttendance);
@@ -165,10 +162,12 @@ export default function Home() {
     localStorage.setItem("aemit-attendance-session", sessionId);
     localStorage.setItem("aemit-attendance", JSON.stringify(resetMembers));
     localStorage.removeItem("aemit-drawn-slots");
-    setMembers(resetMembers);
-    setDrawn({});
-    setStep(0);
-  }, [sessionId, now]);
+    window.queueMicrotask(() => {
+      setMembers(resetMembers);
+      setDrawn({});
+      setStep(0);
+    });
+  }, [members, sessionId, now]);
   useEffect(() => {
     if (!supabase) return;
     const client = supabase;
@@ -176,7 +175,7 @@ export default function Home() {
     const loadRanking = async () => {
       const { data } = await client.from("monthly_results").select("total_points, points_for, points_against, point_diff, matches_played, level_next_month, profiles!monthly_results_member_id_fkey(full_name, level)").eq("month", month).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false });
       if (!data) return setRankingRows([]);
-      const mapped = data.map((row: any, index: number) => {
+      const mapped = (data as MonthlyResultRow[]).map((row, index) => {
         const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
         const name = profile?.full_name || "Thành viên";
         return { name, initials: name.split(" ").map((part: string) => part[0]).slice(-2).join(""), level: Number(profile?.level || row.level_next_month || 2), points: row.total_points, pointsWon: row.points_for, pointsLost: row.points_against, pointDiff: row.point_diff, matches: row.matches_played, color: ["#e7ad26", "#6ba9de", "#df8d2a", "#6846e8", "#e56a4d", "#2ba98b"][index % 6] };
@@ -201,7 +200,7 @@ export default function Home() {
     const loadHistory = async () => {
       const { data } = await client.from("play_sessions").select("id, session_date, matches(count), attendances(count)").eq("status", "completed").order("session_date", { ascending: false });
       if (!data) return;
-      setHistorySessions(data.map((session: any) => ({ id: session.id, date: session.session_date, matches: session.matches?.[0]?.count || 0, attendees: session.attendances?.[0]?.count || 0 })));
+      setHistorySessions((data as HistorySessionRow[]).map((session) => ({ id: session.id, date: session.session_date, matches: session.matches?.[0]?.count || 0, attendees: session.attendances?.[0]?.count || 0 })));
     };
     void loadHistory();
   }, []);
@@ -241,24 +240,6 @@ export default function Home() {
   if (!activeUser) return <Login onLogin={signIn} error={loginError} />;
   const isAdmin = activeUser.role === "admin";
   const profileAchievement = latestRankingRows.find((row) => row.name === activeUser.name) || rankingRows.find((row) => row.name === activeUser.name);
-  const updateMember = async (username: string, fullName: string) => {
-    if (supabase) {
-      const { error } = await supabase.rpc("admin_update_member", { p_username: username, p_full_name: fullName.trim() });
-      if (error) { setLoginError(error.message); return false; }
-    }
-    const initials = fullName.trim().split(" ").map((part) => part[0]).slice(-2).join("");
-    setMembers((previous) => previous.map((member) => member.username === username ? { ...member, name: fullName.trim(), initials } : member));
-    if (activeUser.username === username) setActiveUser((previous) => previous ? { ...previous, name: fullName.trim(), initials } : previous);
-    return true;
-  };
-  const removeMember = async (username: string) => {
-    if (supabase) {
-      const { error } = await supabase.rpc("admin_remove_member", { p_username: username });
-      if (error) { setLoginError(error.message); return false; }
-    }
-    setMembers((previous) => previous.filter((member) => member.username !== username));
-    return true;
-  };
 
   return <main className={"app-shell " + (sidebarOpen ? "sidebar-open" : "")}>
     <aside className="sidebar">
@@ -305,7 +286,7 @@ function Schedule({ matches, drawn, onContinue, isAdmin }: { matches: string[][]
 function Match({ match, i }: { match: string[]; i: number }) { return <article className="match"><div className="match-top"><b>TRẬN {String(i + 1).padStart(2, "0")}</b><span>{match[4]}</span></div><div className="teams"><div>{match[0]}<small> + {match[1]}</small></div><strong>VS</strong><div>{match[2]}<small> + {match[3]}</small></div></div></article> }
 function Results({ matches, scores, setScores, isAdmin }: { matches: string[][]; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; isAdmin: boolean }) { return <section className="panel"><div className="panel-head"><div><h2>Nhập kết quả</h2><p>{isAdmin ? "Cập nhật điểm từng trận. Hệ thống sẽ tự tính bảng xếp hạng tháng." : "Chỉ Admin có thể nhập và chốt kết quả buổi chơi."}</p></div><span className="count-pill">{Object.keys(scores).length}/{matches.length} trận</span></div><div className="result-list">{matches.map((m, i) => <div className="result-row" key={i}><b>#{i + 1}</b><span>{m[0]} + {m[1]}</span><input disabled={!isAdmin} aria-label="Điểm đội A" value={scores[i]?.[0] ?? ""} onChange={e => setScores({ ...scores, [i]: [e.target.value, scores[i]?.[1] ?? ""] })}/><em>:</em><input disabled={!isAdmin} aria-label="Điểm đội B" value={scores[i]?.[1] ?? ""} onChange={e => setScores({ ...scores, [i]: [scores[i]?.[0] ?? "", e.target.value] })}/><span>{m[2]} + {m[3]}</span></div>)}</div>{isAdmin && <div className="panel-foot"><span>Điểm cao hơn sẽ được tính là thắng (+1 điểm).</span><button className="primary">Chốt kết quả buổi chơi <span>✓</span></button></div>}</section> }
 function Ranking({ month, rows, onMonthChange }: { month: string; rows: RankingRow[]; onMonthChange: (month: string) => void }) { return <section className="ranking"><div className="section-title"><div><p className="eyebrow">XẾP HẠNG THEO THÁNG</p><h2>Bảng xếp hạng</h2></div></div><div className="ranking-toolbar"><label>Tháng<select value={month} onChange={(e) => onMonthChange(e.target.value)}><option>Tháng 7, 2026</option><option>Tháng 6, 2026</option></select></label><p>{month === monthLabel(new Date()) ? "BXH hiện tại sẽ khóa và reset sau 3 ngày kể từ buổi cuối tháng." : "Dữ liệu lịch sử đã được lưu và chỉ có thể xem."}</p></div><div className="rank-table"><div className="rank-head rank-columns"><span>Vị trí</span><span>Thành viên</span><span>Điểm</span><span>Điểm thắng</span><span>Điểm thua</span><span>Hiệu số</span><span>Số trận</span></div>{rows.length ? rows.map((row, i) => <div className={"rank-row rank-columns " + (i < 3 ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={i < 3 ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className="avatar small" style={{ background: row.color }}>{row.initials}</div><b>{row.name}</b><span className="level">L{row.level}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span></div>) : <div className="empty-ranking">Chưa có kết quả thi đấu cho {month}.</div>}</div></section> }
-function History({ sessions }: { sessions: HistorySession[] }) { const [month, setMonth] = useState("Tháng 7, 2026"); const [week, setWeek] = useState("Tất cả các tuần"); const [detail, setDetail] = useState<{ title: string; rows: { no: number; a: string; b: string; sa: number; sb: number }[] } | null>(null); const entries = sessions.filter((session) => { const date = new Date(`${session.date}T00:00:00`); return month === monthLabel(date); }).map((session) => { const date = new Date(`${session.date}T00:00:00`); return { ...session, week: `Tuần ${Math.ceil(date.getDate() / 7)} · Thứ Bảy ${date.toLocaleDateString("vi-VN")}`, title: `Buổi chơi ${date.toLocaleDateString("vi-VN")}`, detail: `${session.matches} trận · ${session.attendees} thành viên` }; }); const visible = week === "Tất cả các tuần" ? entries : entries.filter((session) => session.week === week); const showDetail = async (session: typeof entries[number]) => { if (!supabase) return; const [{ data: matches }, { data: profiles }] = await Promise.all([supabase.from("matches").select("match_no,team_a,team_b,score_a,score_b").eq("session_id", session.id).order("match_no"), supabase.from("profiles").select("id,full_name")]); const names = Object.fromEntries((profiles || []).map((profile: any) => [profile.id, profile.full_name])); setDetail({ title: session.title, rows: (matches || []).map((match: any) => ({ no: match.match_no, a: match.team_a.map((id: string) => names[id] || "?").join(" + "), b: match.team_b.map((id: string) => names[id] || "?").join(" + "), sa: match.score_a, sb: match.score_b })) }); }; return <><section className="panel history-panel"><div className="panel-head"><div><h2>Lịch sử thi đấu</h2><p>Dữ liệu từng buổi chơi, số bốc thăm và kết quả được lưu theo tuần.</p></div></div><div className="history-filters"><label>Tháng<select value={month} onChange={(e) => { setMonth(e.target.value); setWeek("Tất cả các tuần"); }}><option>Tháng 7, 2026</option><option>Tháng 6, 2026</option></select></label><label>Tuần<select value={week} onChange={(e) => setWeek(e.target.value)}><option>Tất cả các tuần</option>{entries.map((session) => <option key={session.id}>{session.week}</option>)}</select></label></div><div className="history-list">{visible.length ? visible.map((session) => <article key={session.id}><div><span>{session.week}</span><h3>{session.title}</h3><p>{session.detail}</p></div><button className="soft-btn" onClick={() => void showDetail(session)}>Xem chi tiết →</button></article>) : <div className="empty-ranking">Chưa có dữ liệu cho bộ lọc này.</div>}</div></section>{detail && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="history-detail"><button className="modal-close" onClick={() => setDetail(null)}>×</button><p className="eyebrow">KẾT QUẢ THI ĐẤU</p><h2>{detail.title}</h2><div className="history-match-list">{detail.rows.map((match) => <div key={match.no}><b>#{match.no}</b><span>{match.a}</span><strong>{match.sa} : {match.sb}</strong><span>{match.b}</span></div>)}</div></section></div>}</> }
+function History({ sessions }: { sessions: HistorySession[] }) { const [month, setMonth] = useState("Tháng 7, 2026"); const [week, setWeek] = useState("Tất cả các tuần"); const [detail, setDetail] = useState<{ title: string; rows: { no: number; a: string; b: string; sa: number; sb: number }[] } | null>(null); const entries = sessions.filter((session) => { const date = new Date(`${session.date}T00:00:00`); return month === monthLabel(date); }).map((session) => { const date = new Date(`${session.date}T00:00:00`); return { ...session, week: `Tuần ${Math.ceil(date.getDate() / 7)} · Thứ Bảy ${date.toLocaleDateString("vi-VN")}`, title: `Buổi chơi ${date.toLocaleDateString("vi-VN")}`, detail: `${session.matches} trận · ${session.attendees} thành viên` }; }); const visible = week === "Tất cả các tuần" ? entries : entries.filter((session) => session.week === week); const showDetail = async (session: typeof entries[number]) => { if (!supabase) return; const [{ data: matches }, { data: profiles }] = await Promise.all([supabase.from("matches").select("match_no,team_a,team_b,score_a,score_b").eq("session_id", session.id).order("match_no"), supabase.from("profiles").select("id,full_name")]); const names: Record<string, string> = Object.fromEntries(((profiles || []) as ProfileRow[]).map((profile) => [profile.id, profile.full_name])); setDetail({ title: session.title, rows: ((matches || []) as MatchRow[]).map((match) => ({ no: match.match_no, a: match.team_a.map((id: string) => names[id] || "?").join(" + "), b: match.team_b.map((id: string) => names[id] || "?").join(" + "), sa: match.score_a, sb: match.score_b })) }); }; return <><section className="panel history-panel"><div className="panel-head"><div><h2>Lịch sử thi đấu</h2><p>Dữ liệu từng buổi chơi, số bốc thăm và kết quả được lưu theo tuần.</p></div></div><div className="history-filters"><label>Tháng<select value={month} onChange={(e) => { setMonth(e.target.value); setWeek("Tất cả các tuần"); }}><option>Tháng 7, 2026</option><option>Tháng 6, 2026</option></select></label><label>Tuần<select value={week} onChange={(e) => setWeek(e.target.value)}><option>Tất cả các tuần</option>{entries.map((session) => <option key={session.id}>{session.week}</option>)}</select></label></div><div className="history-list">{visible.length ? visible.map((session) => <article key={session.id}><div><span>{session.week}</span><h3>{session.title}</h3><p>{session.detail}</p></div><button className="soft-btn" onClick={() => void showDetail(session)}>Xem chi tiết →</button></article>) : <div className="empty-ranking">Chưa có dữ liệu cho bộ lọc này.</div>}</div></section>{detail && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="history-detail"><button className="modal-close" onClick={() => setDetail(null)}>×</button><p className="eyebrow">KẾT QUẢ THI ĐẤU</p><h2>{detail.title}</h2><div className="history-match-list">{detail.rows.map((match) => <div key={match.no}><b>#{match.no}</b><span>{match.a}</span><strong>{match.sa} : {match.sb}</strong><span>{match.b}</span></div>)}</div></section></div>}</> }
 function Members({ members }: { members: Member[] }) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [editing, setEditing] = useState<Member | null>(null);
