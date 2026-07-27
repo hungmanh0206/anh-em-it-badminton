@@ -49,6 +49,13 @@ export default function Home() {
   const [showProfileCard, setShowProfileCard] = useState(false);
   const [authRestoring, setAuthRestoring] = useState(Boolean(supabase));
   const [now, setNow] = useState(() => new Date());
+  const currentDateLabel = now.toLocaleDateString("vi-VN", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).toUpperCase();
+  const previousMonthKey = localDateKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
   const isCheckinWindowOpen = now.getDay() === 3;
   const session = homeSession(now);
   const progress = monthlyProgress(now);
@@ -173,7 +180,6 @@ export default function Home() {
     const client = supabase;
     const match = rankingMonth.match(/Tháng (\d+), (\d+)/); const month = match ? `${match[2]}-${String(match[1]).padStart(2, "0")}-01` : "2026-07-01";
     const loadRanking = async () => {
-      const previousMonth = localDateKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
       const rankingSelect = "total_points, points_for, points_against, point_diff, matches_played, level_next_month, profiles!monthly_results_member_id_fkey(full_name, level)";
       const mapRows = (rows: MonthlyResultRow[]) => rows.map((row, index) => {
         const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
@@ -182,13 +188,13 @@ export default function Home() {
       });
       const [{ data }, { data: previousData }] = await Promise.all([
         client.from("monthly_results").select(rankingSelect).eq("month", month).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
-        client.from("monthly_results").select(rankingSelect).eq("month", previousMonth).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
+        client.from("monthly_results").select(rankingSelect).eq("month", previousMonthKey).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
       ]);
       setRankingRows(data ? mapRows(data as MonthlyResultRow[]) : []);
       setPreviousRankingRows(previousData ? mapRows(previousData as MonthlyResultRow[]) : []);
     };
     void loadRanking();
-  }, [rankingMonth, now]);
+  }, [rankingMonth, previousMonthKey]);
   useEffect(() => {
     if (!supabase || !activeUser || activeUser.role !== "admin" || !sessionId) return;
     const client = supabase;
@@ -263,7 +269,7 @@ export default function Home() {
       <div className="profile"><div className="avatar small" style={{ background: activeUser.color }}>{activeUser.initials}</div><div><b>{activeUser.name}</b><small>{isAdmin ? "Quản trị viên" : "Thành viên"}</small></div><button className="logout" onClick={() => { void supabase?.auth.signOut(); setActiveUser(null); }}>Đăng xuất</button></div>
     </aside>
     <section className="content">
-      <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{session.date.toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }).toUpperCase()}</p><h1>{screen === "home" ? "Home" : screen === "members" ? "Quản lý thành viên" : screen === "ranking" ? "Bảng xếp hạng" : "Lịch sử thi đấu"}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`}><span className="welcome-rank">{profileRank > 0 && profileRank <= 3 ? `TOP ${profileRank}` : "CLB"}</span><span className="welcome-copy">Chào</span><b>{activeUser.name}</b><span className="welcome-level">Level {activeUser.level}</span></p></header>
+      <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screen === "home" ? "Home" : screen === "members" ? "Quản lý thành viên" : screen === "ranking" ? "Bảng xếp hạng" : "Lịch sử thi đấu"}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`}><span className="welcome-rank">{profileRank > 0 && profileRank <= 3 ? `TOP ${profileRank}` : "CLB"}</span><span className="welcome-copy">Chào</span><b>{activeUser.name}</b><span className="welcome-level">Level {activeUser.level}</span></p></header>
       {screen === "members" ? <Members members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={setRankingMonth} /> : screen === "history" ? <History sessions={historySessions} /> : <>
         <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>Buổi thứ Bảy ngày {session.date.toLocaleDateString("vi-VN")}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>NGƯỜI CÓ MẶT</small></div><div><b>0{step + 1}<em>/04</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
