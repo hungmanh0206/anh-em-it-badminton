@@ -8,7 +8,7 @@ type RankingRow = { name: string; initials: string; level: number; points: numbe
 type MonthCloseStatus = { monthKey: string; monthLabel: string; nextMonthKey: string; nextMonthLabel: string; finalSessionCompleted: boolean; closed: boolean; eligible: boolean; currentRows: number; message: string };
 type HistorySession = { id: string; date: string; matches: number; attendees: number };
 type SupabaseProfile = { id?: string; username?: string | null; full_name?: string | null; level?: number | string | null; role?: "admin" | "member" | string | null; is_active?: boolean | null };
-type MonthlyResultRow = { total_points: number; points_for: number; points_against: number; point_diff: number; matches_played: number; level_next_month: number | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
+type MonthlyResultRow = { month?: string | null; total_points: number; points_for: number; points_against: number; point_diff: number; matches_played: number; level_next_month: number | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
 type HistorySessionRow = { id: string; session_date: string; matches?: { count: number }[] | null; attendances?: { count: number }[] | null };
 type MatchRow = { match_no: number; team_a: string[]; team_b: string[]; score_a: number; score_b: number };
 type SavedMatchRow = { match_no: number; score_a: number | null; score_b: number | null };
@@ -108,6 +108,10 @@ const findScheduleScenario = (participantCount: number, level1Count: number) => 
   return scenario ?? null;
 };
 const localDateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+const monthStartFromKey = (key: string) => {
+  const [year, month] = key.split("-").map(Number);
+  return new Date(year, (month || 1) - 1, 1);
+};
 const monthLabel = (date: Date) => `Tháng ${date.getMonth() + 1}, ${date.getFullYear()}`;
 const monthDateFromLabel = (label: string) => {
   const match = label.match(/Tháng (\d+), (\d+)/);
@@ -117,7 +121,13 @@ const nextMonthStartDate = (date: Date) => new Date(date.getFullYear(), date.get
 function homeSession(now: Date) { const day = now.getDay(); const offset = (6 - day + 7) % 7; const date = new Date(now); date.setDate(now.getDate() + offset); const state = day === 6 ? "ĐANG DIỄN RA" : day < 3 ? "CHỜ THỨ TƯ" : "CHƯA DIỄN RA"; return { date, state }; }
 function monthlyProgress(now: Date) { const year = now.getFullYear(), month = now.getMonth(); const saturdays: Date[] = []; for (let d = new Date(year, month, 1); d.getMonth() === month; d.setDate(d.getDate() + 1)) if (d.getDay() === 6) saturdays.push(new Date(d)); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return { total: saturdays.length, completed: saturdays.filter((d) => d < today).length }; }
 function finalSaturdayOfMonth(date: Date) { const finalSaturday = new Date(date.getFullYear(), date.getMonth() + 1, 0); while (finalSaturday.getDay() !== 6) finalSaturday.setDate(finalSaturday.getDate() - 1); return finalSaturday; }
-function isCurrentMonthRankingClosed(now: Date) { const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return finalSaturdayOfMonth(now) < today; }
+const recentMonthStarts = (start: Date, count: number) => Array.from({ length: count }, (_, index) => new Date(start.getFullYear(), start.getMonth() - index, 1));
+const sortMonthlyResultRows = (rows: MonthlyResultRow[]) => [...rows].sort((a, b) =>
+  b.total_points - a.total_points ||
+  b.point_diff - a.point_diff ||
+  b.points_for - a.points_for ||
+  b.matches_played - a.matches_played
+);
 const TEMP_ENABLE_CHECKIN_FOR_TEST = false;
 const TEMP_RESET_HOME_ATTENDANCE_FOR_TEST = false;
 const initialMembers: Member[] = [
@@ -153,6 +163,10 @@ export default function Home() {
   const [rankingRows, setRankingRows] = useState<RankingRow[]>([]);
   const [previousRankingRows, setPreviousRankingRows] = useState<RankingRow[]>([]);
   const [championRankingRows, setChampionRankingRows] = useState<RankingRow[]>([]);
+  const [championRankingLabel, setChampionRankingLabel] = useState(() => {
+    const initialDate = new Date();
+    return monthLabel(new Date(initialDate.getFullYear(), initialDate.getMonth() - 1, 1));
+  });
   const [historySessions, setHistorySessions] = useState<HistorySession[]>([]);
   const [confirmation, setConfirmation] = useState<{ title: string; message: string; action: () => void | Promise<void> } | null>(null);
   const [attendanceChangeNotice, setAttendanceChangeNotice] = useState<string | null>(null);
@@ -172,13 +186,12 @@ export default function Home() {
   }).toUpperCase();
   const activeUsername = activeUser?.username;
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const currentMonthKey = localDateKey(currentMonthStart);
+  const currentMonthLabel = monthLabel(currentMonthStart);
   const nextVisibleMonthStart = nextMonthStartDate(currentMonthStart);
   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const rankingMonthOptions = [nextVisibleMonthStart, currentMonthStart, previousMonthStart, new Date(now.getFullYear(), now.getMonth() - 2, 1)].map(monthLabel).filter((month) => !hiddenRankingMonths.has(month));
-  const championRankingMonth = isCurrentMonthRankingClosed(now) ? currentMonthStart : previousMonthStart;
   const previousMonthKey = localDateKey(previousMonthStart);
-  const championRankingKey = localDateKey(championRankingMonth);
-  const championRankingLabel = monthLabel(championRankingMonth);
   const isCheckinTestMode = TEMP_ENABLE_CHECKIN_FOR_TEST && now.getDay() !== 3;
   const isCheckinWindowOpen = TEMP_ENABLE_CHECKIN_FOR_TEST || now.getDay() === 3;
   const shouldLoadHomeSession = TEMP_ENABLE_CHECKIN_FOR_TEST || now.getDay() >= 3;
@@ -444,7 +457,10 @@ export default function Home() {
     const selectedNextMonthKey = localDateKey(selectedNextMonthDate);
     const selectedFinalSaturdayKey = localDateKey(finalSaturdayOfMonth(selectedMonthDate));
     const loadRanking = async () => {
-      const rankingSelect = "total_points, points_for, points_against, point_diff, matches_played, level_next_month, profiles!monthly_results_member_id_fkey(username, full_name, level)";
+      const rankingSelect = "month, total_points, points_for, points_against, point_diff, matches_played, level_next_month, profiles!monthly_results_member_id_fkey(username, full_name, level)";
+      const championMonthDates = recentMonthStarts(monthStartFromKey(currentMonthKey), 12);
+      const championMonthKeys = championMonthDates.map(localDateKey);
+      const championFinalSessionKeys = championMonthDates.map((date) => localDateKey(finalSaturdayOfMonth(date)));
       const zeroRowsFromProfiles = (profiles: SupabaseProfile[]) => [...profiles]
         .sort((a, b) => String(a.full_name || "").localeCompare(String(b.full_name || ""), "vi"))
         .map((profile, index) => {
@@ -456,10 +472,11 @@ export default function Home() {
         const name = profile?.full_name || "Thành viên";
         return { name, initials: name.split(" ").map((part: string) => part[0]).slice(-2).join(""), level: Number(profile?.level || row.level_next_month || 2), points: row.total_points, pointsWon: row.points_for, pointsLost: row.points_against, pointDiff: row.point_diff, matches: row.matches_played, color: ["#e7ad26", "#6ba9de", "#df8d2a", "#6846e8", "#e56a4d", "#2ba98b"][index % 6] };
       });
-      const [{ data }, { data: previousData }, { data: championData }, { data: activeProfiles }, { data: finalSession }, { count: nextMonthRows }] = await Promise.all([
+      const [{ data }, { data: previousData }, { data: championData }, { data: championFinalSessions }, { data: activeProfiles }, { data: finalSession }, { count: nextMonthRows }] = await Promise.all([
         client.from("monthly_results").select(rankingSelect).eq("month", month).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
         client.from("monthly_results").select(rankingSelect).eq("month", previousMonthKey).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
-        client.from("monthly_results").select(rankingSelect).eq("month", championRankingKey).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
+        client.from("monthly_results").select(rankingSelect).in("month", championMonthKeys),
+        client.from("play_sessions").select("session_date, status").in("session_date", championFinalSessionKeys),
         client.from("profiles").select("username, full_name, level").eq("is_active", true).order("full_name"),
         client.from("play_sessions").select("status").eq("session_date", selectedFinalSaturdayKey).maybeSingle(),
         client.from("monthly_results").select("id", { count: "exact", head: true }).eq("month", selectedNextMonthKey),
@@ -468,7 +485,32 @@ export default function Home() {
       const selectedHasMatchData = selectedRows.some((row) => row.matches_played > 0);
       setRankingRows(selectedHasMatchData ? mapRows(selectedRows) : zeroRowsFromProfiles((activeProfiles || []) as SupabaseProfile[]));
       setPreviousRankingRows(previousData ? mapRows(previousData as MonthlyResultRow[]) : []);
-      setChampionRankingRows(championData ? mapRows(championData as MonthlyResultRow[]) : []);
+      const championRowsByMonth = new Map<string, MonthlyResultRow[]>();
+      ((championData || []) as MonthlyResultRow[]).forEach((row) => {
+        if (!row.month) return;
+        const rows = championRowsByMonth.get(row.month) ?? [];
+        rows.push(row);
+        championRowsByMonth.set(row.month, rows);
+      });
+      const completedFinalSessionDates = new Set(((championFinalSessions || []) as { session_date: string; status: string | null }[])
+        .filter((sessionRow) => sessionRow.status === "completed")
+        .map((sessionRow) => sessionRow.session_date));
+      const latestChampionMonth = championMonthDates.find((date) => {
+        const monthKey = localDateKey(date);
+        const monthRows = championRowsByMonth.get(monthKey) ?? [];
+        const hasRealRanking = monthRows.some((row) => row.matches_played > 0);
+        const isPastMonth = monthKey < currentMonthKey;
+        const finalSessionCompleted = completedFinalSessionDates.has(localDateKey(finalSaturdayOfMonth(date)));
+        return hasRealRanking && (isPastMonth || finalSessionCompleted);
+      });
+      if (latestChampionMonth) {
+        const championMonthKey = localDateKey(latestChampionMonth);
+        setChampionRankingRows(mapRows(sortMonthlyResultRows(championRowsByMonth.get(championMonthKey) ?? [])));
+        setChampionRankingLabel(monthLabel(latestChampionMonth));
+      } else {
+        setChampionRankingRows([]);
+        setChampionRankingLabel(monthLabel(monthStartFromKey(previousMonthKey)));
+      }
       const currentRows = data ? (data as MonthlyResultRow[]).length : 0;
       const finalSessionCompleted = finalSession?.status === "completed";
       const closed = Boolean(nextMonthRows && nextMonthRows > 0);
@@ -485,7 +527,7 @@ export default function Home() {
       });
     };
     void loadRanking();
-  }, [rankingMonth, previousMonthKey, championRankingKey, rankingRefreshTick]);
+  }, [rankingMonth, currentMonthKey, previousMonthKey, rankingRefreshTick]);
   const closeRankingMonth = async () => {
     if (!supabase || !monthCloseStatus || closingMonth) return;
     if (!monthCloseStatus.eligible) {
@@ -672,10 +714,10 @@ export default function Home() {
         <button className={screen === "home" ? "active" : ""} onClick={() => setScreen("home")}><span>⌂</span> Home</button>
         {isAdmin && <button className={screen === "members" ? "active" : ""} onClick={() => setScreen("members")}><span>♙</span> Thành viên</button>}
         <button className={screen === "schedules" ? "active" : ""} onClick={() => setScreen("schedules")}><span>▤</span> Lịch thi đấu</button>
-        <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(monthLabel(now)); }}><span>▥</span> Bảng xếp hạng</button>
+        <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(currentMonthLabel); }}><span>▥</span> Bảng xếp hạng</button>
         <button className={screen === "history" ? "active" : ""} onClick={() => setScreen("history")}><span>◷</span> Lịch sử thi đấu</button>
       </nav>
-      <div className="club-card"><span>🏆</span><b>{monthLabel(now)}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div><div className={`club-top1 ${champion ? "" : "empty"}`}><small>NHÀ VÔ ĐỊCH {championRankingLabel.toUpperCase()}</small><b>{champion ? `👑 ${champion.name}` : "Chưa ghi danh"}</b><span>{champion ? `${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số` : `Chưa có dữ liệu BXH ${championRankingLabel}.`}</span></div></div>
+      <div className="club-card"><span>🏆</span><b>{currentMonthLabel}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div><div className={`club-top1 ${champion ? "" : "empty"}`}><small>NHÀ VÔ ĐỊCH {championRankingLabel.toUpperCase()}</small><b>{champion ? `👑 ${champion.name}` : "Chưa ghi danh"}</b><span>{champion ? `${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số` : `Chưa có dữ liệu BXH ${championRankingLabel}.`}</span></div></div>
       <div className="profile"><div className="avatar small" style={{ background: currentUser.color }}>{currentUser.initials}</div><div><b>{currentUser.name}</b><small>{isAdmin ? "Quản trị viên" : "Thành viên"}</small></div><button className="logout" onClick={() => { void supabase?.auth.signOut(); setActiveUser(null); }}>Đăng xuất</button></div>
     </aside>
     <section className="content">
