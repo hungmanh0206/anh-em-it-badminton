@@ -29,6 +29,15 @@ const screenTitles: Record<Screen, string> = {
   ranking: "Bảng xếp hạng",
   history: "Lịch sử thi đấu",
 };
+const screenKeys = Object.keys(screenTitles) as Screen[];
+const isScreenKey = (value: string | null | undefined): value is Screen => Boolean(value && screenKeys.includes(value as Screen));
+const screenFromLocation = () => {
+  if (typeof window === "undefined") return "home";
+  const hashScreen = window.location.hash.replace(/^#\/?/, "");
+  if (isScreenKey(hashScreen)) return hashScreen;
+  const savedScreen = window.localStorage.getItem("aemit-current-screen");
+  return isScreenKey(savedScreen) ? savedScreen : "home";
+};
 const slotLevel = (no: number): 1 | 2 => no <= 4 ? 1 : 2;
 const drawSlotsForLevel = (level: 1 | 2, level1Count: number, level2Count: number) => {
   const count = Math.max(0, level === 1 ? level1Count : level2Count);
@@ -124,7 +133,7 @@ const initialMembers: Member[] = [
 ];
 
 export default function Home() {
-  const [screen, setScreen] = useState<Screen>("home");
+  const [screen, setScreen] = useState<Screen>(screenFromLocation);
   const [rankingMonth, setRankingMonth] = useState(() => monthLabel(new Date()));
   const [step, setStep] = useState(0);
   const [members, setMembers] = useState(initialMembers);
@@ -280,6 +289,21 @@ export default function Home() {
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
+  }, []);
+  useEffect(() => {
+    window.localStorage.setItem("aemit-current-screen", screen);
+    const nextHash = `#${screen}`;
+    if (window.location.hash !== nextHash) {
+      window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${nextHash}`);
+    }
+  }, [screen]);
+  useEffect(() => {
+    const syncScreenFromHash = () => {
+      const nextScreen = screenFromLocation();
+      setScreen((current) => current === nextScreen ? current : nextScreen);
+    };
+    window.addEventListener("hashchange", syncScreenFromHash);
+    return () => window.removeEventListener("hashchange", syncScreenFromHash);
   }, []);
   useEffect(() => {
     if (supabase) {
@@ -627,6 +651,9 @@ export default function Home() {
     document.addEventListener("pointerdown", closeOutside);
     return () => { trigger?.removeEventListener("click", toggleProfile); document.removeEventListener("pointerdown", closeOutside); };
   }, [activeUser]);
+  useEffect(() => {
+    if (activeUser && activeUser.role !== "admin" && screen === "members") setScreen("home");
+  }, [activeUser, screen]);
   if (!activeUser && authRestoring) return <main className="login-page"><div className="login-card"><p>Đang khôi phục phiên đăng nhập...</p></div></main>;
   if (!activeUser) return <Login onLogin={signIn} error={loginError} />;
   const currentUser = members.find((member) => member.username === activeUser.username) ?? activeUser;
