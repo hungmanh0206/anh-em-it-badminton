@@ -16,6 +16,7 @@ type ProfileRow = { id: string; full_name: string };
 type Screen = "home" | "members" | "schedules" | "ranking" | "history";
 type SessionStatus = "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 type AttendanceRow = { choice: "pending" | "attending" | "absent"; drawn_number: number | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
+type HomeSessionPayload = { inactive?: boolean; sessionId?: string | null; status?: SessionStatus; attendances?: AttendanceRow[]; error?: string };
 const scheduleParticipants = [6, 7, 8, 9, 10] as const;
 type ParticipantCount = typeof scheduleParticipants[number];
 type MatchPattern = readonly [number, number, number, number, string?];
@@ -103,7 +104,7 @@ const monthDateFromLabel = (label: string) => {
   return match ? new Date(Number(match[2]), Number(match[1]) - 1, 1) : null;
 };
 const nextMonthStartDate = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 1);
-function homeSession(now: Date) { const day = now.getDay(); const offset = day >= 3 ? 6 - day : -(day + 1); const date = new Date(now); date.setDate(now.getDate() + offset); const state = day === 6 ? "ĐANG DIỄN RA" : day < 3 ? "ĐÃ DIỄN RA" : "CHƯA DIỄN RA"; return { date, state }; }
+function homeSession(now: Date) { const day = now.getDay(); const offset = (6 - day + 7) % 7; const date = new Date(now); date.setDate(now.getDate() + offset); const state = day === 6 ? "ĐANG DIỄN RA" : day < 3 ? "CHỜ THỨ TƯ" : "CHƯA DIỄN RA"; return { date, state }; }
 function monthlyProgress(now: Date) { const year = now.getFullYear(), month = now.getMonth(); const saturdays: Date[] = []; for (let d = new Date(year, month, 1); d.getMonth() === month; d.setDate(d.getDate() + 1)) if (d.getDay() === 6) saturdays.push(new Date(d)); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return { total: saturdays.length, completed: saturdays.filter((d) => d < today).length }; }
 function finalSaturdayOfMonth(date: Date) { const finalSaturday = new Date(date.getFullYear(), date.getMonth() + 1, 0); while (finalSaturday.getDay() !== 6) finalSaturday.setDate(finalSaturday.getDate() - 1); return finalSaturday; }
 function isCurrentMonthRankingClosed(now: Date) { const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return finalSaturdayOfMonth(now) < today; }
@@ -151,6 +152,7 @@ export default function Home() {
   const [attendanceSynced, setAttendanceSynced] = useState(!supabase);
   const [rankingRefreshTick, setRankingRefreshTick] = useState(0);
   const [monthCloseStatus, setMonthCloseStatus] = useState<MonthCloseStatus | null>(null);
+  const [monthCloseNotice, setMonthCloseNotice] = useState("");
   const [closingMonth, setClosingMonth] = useState(false);
   const currentDateLabel = now.toLocaleDateString("vi-VN", {
     weekday: "long",
@@ -169,8 +171,10 @@ export default function Home() {
   const championRankingLabel = monthLabel(championRankingMonth);
   const isCheckinTestMode = TEMP_ENABLE_CHECKIN_FOR_TEST && now.getDay() !== 3;
   const isCheckinWindowOpen = TEMP_ENABLE_CHECKIN_FOR_TEST || now.getDay() === 3;
+  const shouldLoadHomeSession = TEMP_ENABLE_CHECKIN_FOR_TEST || now.getDay() >= 3;
   const session = homeSession(now);
-  const currentCheckinPromptKey = `${activeUsername || "guest"}:${sessionId || localDateKey(session.date)}`;
+  const sessionDateKey = localDateKey(session.date);
+  const currentCheckinPromptKey = `${activeUsername || "guest"}:${sessionId || sessionDateKey}`;
   const signedInMember = activeUsername ? members.find((member) => member.username === activeUsername) : null;
   const signedInMemberPresent = Boolean(signedInMember?.present);
   const progress = monthlyProgress(now);
@@ -243,7 +247,7 @@ export default function Home() {
       if (needsReset) setAttendanceChangeNotice("Một thành viên vừa thay đổi điểm danh sau khi đã bốc số/lập lịch.");
     }
     const updated = members.map((m) => m.username === activeUser.username ? { ...m, present: attending, responded: true } : m);
-    localStorage.setItem("aemit-attendance", JSON.stringify(updated));
+    if (!supabase) localStorage.setItem("aemit-attendance", JSON.stringify(updated));
     setMembers(updated);
     setActiveUser({ ...activeUser, present: attending, responded: true });
     closeCheckinPopup();
@@ -278,6 +282,11 @@ export default function Home() {
     return () => window.clearInterval(timer);
   }, []);
   useEffect(() => {
+    if (supabase) {
+      localStorage.removeItem("aemit-attendance");
+      localStorage.removeItem("aemit-drawn-slots");
+      return;
+    }
     if (TEMP_RESET_HOME_ATTENDANCE_FOR_TEST) {
       localStorage.removeItem("aemit-attendance-session");
       localStorage.removeItem("aemit-attendance");
@@ -298,19 +307,50 @@ export default function Home() {
   useEffect(() => {
     if (!supabase || !activeUsername) return;
     const client = supabase;
+    let cancelled = false;
+    const applyPendingProfiles = (profiles: SupabaseProfile[]) => {
+      setMembers((previous) => previous.map((member) => {
+        const profile = profiles.find((item) => item.username === member.username);
+        return profile ? { ...member, name: profile.full_name || member.name, level: Number(profile.level || member.level) as 1 | 2, role: (profile.role as "admin" | "member" | undefined) ?? member.role, present: false, responded: false } : { ...member, present: false, responded: false };
+      }));
+    };
+    const resetHomeWorkflow = async () => {
+      const { data: profiles } = await client.from("profiles").select("username, full_name, level, role").eq("is_active", true).order("full_name");
+      if (cancelled) return;
+      applyPendingProfiles((profiles || []) as SupabaseProfile[]);
+      setSessionId(null);
+      setSessionStatus("draft");
+      setDrawn({});
+      setScores({});
+      setConfirmedMatches({});
+      setStep(0);
+      setAttendanceSynced(true);
+      if (checkinPopupMode === "auto") closeCheckinPopup();
+    };
+    if (!shouldLoadHomeSession) {
+      void resetHomeWorkflow();
+      return () => { cancelled = true; };
+    }
     setAttendanceSynced(false);
     const loadLiveAttendance = async () => {
       try {
-        const { data: ensuredSessionId } = await client.rpc("ensure_weekly_session", { p_session_date: localDateKey(session.date) });
-        if (!ensuredSessionId) return;
-        setSessionId(ensuredSessionId);
-        const [{ data: sessionRow }, { data }] = await Promise.all([
-          client.from("play_sessions").select("status").eq("id", ensuredSessionId).single(),
-          client.from("attendances").select("choice, drawn_number, profiles!attendances_member_id_fkey(username, full_name, level, role)").eq("session_id", ensuredSessionId),
-        ]);
-        if (sessionRow?.status) setSessionStatus(sessionRow.status as SessionStatus);
-        if (!data) return;
-        const attendanceRows = data as AttendanceRow[];
+        const { data: { session: authSession } } = await client.auth.getSession();
+        const response = await fetch("/api/home-session", {
+          headers: { ...(authSession?.access_token ? { Authorization: `Bearer ${authSession.access_token}` } : {}) },
+        });
+        const payload = await response.json().catch(() => ({ error: "Không thể tải phiên điểm danh." })) as HomeSessionPayload;
+        if (cancelled) return;
+        if (!response.ok) {
+          setLoginError(payload.error || "Không thể tải phiên điểm danh.");
+          return;
+        }
+        if (payload.inactive || !payload.sessionId) {
+          await resetHomeWorkflow();
+          return;
+        }
+        setSessionId(payload.sessionId);
+        if (payload.status) setSessionStatus(payload.status);
+        const attendanceRows = payload.attendances || [];
         const nextDrawn: Record<string, number> = {};
         setMembers((previous) => previous.map((member) => {
           const attendance = attendanceRows.find((item) => {
@@ -324,7 +364,7 @@ export default function Home() {
         }));
         setDrawn(nextDrawn);
       } finally {
-        setAttendanceSynced(true);
+        if (!cancelled) setAttendanceSynced(true);
       }
     };
     void loadLiveAttendance();
@@ -332,8 +372,8 @@ export default function Home() {
       .on("postgres_changes", { event: "*", schema: "public", table: "attendances" }, loadLiveAttendance)
       .on("postgres_changes", { event: "*", schema: "public", table: "play_sessions" }, loadLiveAttendance)
       .subscribe();
-    return () => { void client.removeChannel(channel); };
-  }, [activeUsername, session.date]);
+    return () => { cancelled = true; void client.removeChannel(channel); };
+  }, [activeUsername, checkinPopupMode, sessionDateKey, shouldLoadHomeSession]);
   useEffect(() => {
     if (!activeUsername) return;
     const syncedUser = members.find((member) => member.username === activeUsername);
@@ -357,7 +397,7 @@ export default function Home() {
     if (checkinPopupMode === "auto") closeCheckinPopup();
   }, [activeUsername, attendanceSynced, checkinPopupMode, currentCheckinPromptKey, dismissedCheckinPromptKey, isCheckinWindowOpen, members]);
   useEffect(() => {
-    if (!sessionId || now.getDay() !== 3) return;
+    if (supabase || !sessionId || now.getDay() !== 3) return;
     const storedSessionId = localStorage.getItem("aemit-attendance-session");
     if (storedSessionId === sessionId) return;
     const resetMembers = members.map((member) => ({ ...member, present: false, responded: false }));
@@ -423,8 +463,13 @@ export default function Home() {
   }, [rankingMonth, previousMonthKey, championRankingKey, rankingRefreshTick]);
   const closeRankingMonth = async () => {
     if (!supabase || !monthCloseStatus || closingMonth) return;
+    if (!monthCloseStatus.eligible) {
+      setMonthCloseNotice(monthCloseStatus.message);
+      return;
+    }
     setClosingMonth(true);
     setLoginError("");
+    setMonthCloseNotice("");
     try {
       const { data: { session: authSession } } = await supabase.auth.getSession();
       const response = await fetch("/api/month-close", {
@@ -432,15 +477,16 @@ export default function Home() {
         headers: { "Content-Type": "application/json", ...(authSession?.access_token ? { Authorization: `Bearer ${authSession.access_token}` } : {}) },
         body: JSON.stringify({ month: monthCloseStatus.monthKey }),
       });
-      const payload = await response.json().catch(() => ({ error: "Không thể chốt BXH tháng." })) as { error?: string };
+      const payload = await response.json().catch(() => ({ error: "Không thể chốt BXH tháng." })) as { error?: string; alreadyClosed?: boolean; nextMonth?: string; memberCount?: number; promotedCount?: number };
       if (!response.ok) {
-        setLoginError(payload.error || "Không thể chốt BXH tháng.");
+        setMonthCloseNotice(payload.error || "Không thể chốt BXH tháng.");
         return;
       }
       setRankingRefreshTick((tick) => tick + 1);
+      setMonthCloseNotice(payload.alreadyClosed ? `${monthCloseStatus.monthLabel} đã được chốt trước đó; BXH ${monthCloseStatus.nextMonthLabel} đã sẵn sàng.` : `Đã chốt ${monthCloseStatus.monthLabel} và tạo BXH ${monthCloseStatus.nextMonthLabel} cho ${payload.memberCount || "toàn bộ"} thành viên.`);
       setRankingMonth(monthCloseStatus.nextMonthLabel);
     } catch (error) {
-      setLoginError(error instanceof Error ? error.message : "Không thể chốt BXH tháng.");
+      setMonthCloseNotice(error instanceof Error ? error.message : "Không thể chốt BXH tháng.");
     } finally {
       setClosingMonth(false);
     }
@@ -499,7 +545,7 @@ export default function Home() {
         if (selected) {
           setDrawn((previous) => {
             const next = { ...previous, [self.name]: selected };
-            localStorage.setItem("aemit-drawn-slots", JSON.stringify(next));
+            if (!supabase) localStorage.setItem("aemit-drawn-slots", JSON.stringify(next));
             return next;
           });
         }
@@ -606,7 +652,7 @@ export default function Home() {
     </aside>
     <section className="content">
       <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className="welcome-avatar" style={{ background: currentUser.color }} aria-hidden="true">{profileRank > 0 && profileRank <= 3 ? profileRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
-      {screen === "members" ? <Members members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={setRankingMonth} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "history" ? <History sessions={historySessions} /> : <>
+      {screen === "members" ? <Members members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "history" ? <History sessions={historySessions} /> : <>
         <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>Buổi thứ Bảy ngày {session.date.toLocaleDateString("vi-VN")}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>NGƯỜI CÓ MẶT</small></div><div><b>0{step + 1}<em>/04</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
@@ -773,7 +819,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     return <div className={"result-row schedule-result-row match-result-row " + (confirmed ? "confirmed" : "")} key={i}><b>{i + 1}</b><TeamPair team={match.teamA} namesBySlot={namesBySlot} /><input disabled={locked} aria-label={`Điểm đội A trận ${i + 1}`} value={scores[i]?.[0] ?? ""} onChange={e => setScores({ ...scores, [i]: [e.target.value, scores[i]?.[1] ?? ""] })}/><em>:</em><input disabled={locked} aria-label={`Điểm đội B trận ${i + 1}`} value={scores[i]?.[1] ?? ""} onChange={e => setScores({ ...scores, [i]: [scores[i]?.[0] ?? "", e.target.value] })}/><TeamPair team={match.teamB} namesBySlot={namesBySlot} /><div className="result-actions">{isAdmin && (confirmed && !editing[i] ? <button className="soft-btn" onClick={() => setEditing({ ...editing, [i]: true })}>Sửa</button> : <button className="primary" disabled={saving === i} onClick={() => void saveMatch(match, i)}>{saving === i ? "Đang lưu…" : confirmed ? "Lưu lại" : "Xác nhận"}</button>)}</div></div>;
   })}</div>{isAdmin && <div className="panel-foot"><span>{confirmedCount === matches.length ? "✓ Toàn bộ trận đã xác nhận và BXH đã được cập nhật." : "Điểm cao hơn được tính là thắng (+1 điểm cho mỗi thành viên đội thắng)."}</span></div>}</section>;
 }
-function Ranking({ month, rows, onMonthChange, monthOptions, isAdmin, closeStatus, closingMonth, onCloseMonth }: { month: string; rows: RankingRow[]; onMonthChange: (month: string) => void; monthOptions: string[]; isAdmin: boolean; closeStatus: MonthCloseStatus | null; closingMonth: boolean; onCloseMonth: () => void }) {
+function Ranking({ month, rows, onMonthChange, monthOptions, isAdmin, closeStatus, closeNotice, closingMonth, onCloseMonth }: { month: string; rows: RankingRow[]; onMonthChange: (month: string) => void; monthOptions: string[]; isAdmin: boolean; closeStatus: MonthCloseStatus | null; closeNotice: string; closingMonth: boolean; onCloseMonth: () => void }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
   return <section className="ranking">
     <div className="section-title"><div><p className="eyebrow">XẾP HẠNG THEO THÁNG</p><h2>Bảng xếp hạng</h2></div></div>
@@ -783,6 +829,7 @@ function Ranking({ month, rows, onMonthChange, monthOptions, isAdmin, closeStatu
         <span>{closeStatus.closed ? "ĐÃ CHỐT THÁNG" : closeStatus.eligible ? "SẴN SÀNG CHỐT" : "CHỜ ĐỦ ĐIỀU KIỆN"}</span>
         <h3>{closeStatus.monthLabel} → {closeStatus.nextMonthLabel}</h3>
         <p>{closeStatus.message}</p>
+        {closeNotice && <p className="month-close-feedback" aria-live="polite">{closeNotice}</p>}
       </div>
       {!closeStatus.closed && <button className="primary" disabled={!closeStatus.eligible || closingMonth} onClick={onCloseMonth}>{closingMonth ? "Đang chốt..." : `Chốt BXH ${closeStatus.monthLabel}`}</button>}
     </div>}

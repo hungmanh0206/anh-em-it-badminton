@@ -2423,6 +2423,17 @@ header {
   line-height: 1.45;
 }
 
+.month-close-card .month-close-feedback {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 9px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255, 183, 0, 0.16);
+  color: var(--club-ink-950);
+  font-weight: 800;
+}
+
 .month-close-card.ready {
   border-color: rgba(255, 183, 0, 0.5);
   background:
