@@ -138,6 +138,7 @@ export default function Home() {
     month: "2-digit",
     year: "numeric",
   }).toUpperCase();
+  const activeUsername = activeUser?.username;
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const championRankingMonth = isCurrentMonthRankingClosed(now) ? currentMonthStart : previousMonthStart;
@@ -182,12 +183,12 @@ export default function Home() {
       const localUser = members.find((m) => m.username === normalized);
       if (profile && localUser) {
         const user = { ...localUser, name: profile.full_name, level: Number(profile.level) as 1 | 2, role: profile.role };
-        setActiveUser(user); setLoginError(""); setShowCheckin(isCheckinWindowOpen && !user.responded); return;
+        setActiveUser(user); setLoginError(""); setShowCheckin(false); return;
       }
     }
     const user = members.find((m) => m.username === normalized && m.password === password);
     if (!user) return setLoginError("Tên đăng nhập hoặc mật khẩu chưa đúng.");
-    setActiveUser(user); setLoginError(""); setShowCheckin(isCheckinWindowOpen && !user.responded);
+    setActiveUser(user); setLoginError(""); setShowCheckin(false);
   };
   const checkInSelf = async (attending: boolean) => {
     if (!activeUser) return;
@@ -240,7 +241,7 @@ export default function Home() {
     return () => window.removeEventListener("storage", syncAttendance);
   }, []);
   useEffect(() => {
-    if (!supabase || !activeUser) return;
+    if (!supabase || !activeUsername) return;
     const client = supabase;
     const loadLiveAttendance = async () => {
       const { data: ensuredSessionId } = await client.rpc("ensure_weekly_session", { p_session_date: localDateKey(session.date) });
@@ -272,7 +273,18 @@ export default function Home() {
       .on("postgres_changes", { event: "*", schema: "public", table: "play_sessions" }, loadLiveAttendance)
       .subscribe();
     return () => { void client.removeChannel(channel); };
-  }, [activeUser, session.date]);
+  }, [activeUsername, session.date]);
+  useEffect(() => {
+    if (!activeUsername) return;
+    const syncedUser = members.find((member) => member.username === activeUsername);
+    if (!syncedUser) return;
+    setActiveUser((current) => {
+      if (!current || current.username !== syncedUser.username) return current;
+      if (current.name === syncedUser.name && current.level === syncedUser.level && current.role === syncedUser.role && current.present === syncedUser.present && current.responded === syncedUser.responded) return current;
+      return { ...current, name: syncedUser.name, level: syncedUser.level, role: syncedUser.role, present: syncedUser.present, responded: syncedUser.responded };
+    });
+    setShowCheckin(isCheckinWindowOpen && !syncedUser.responded);
+  }, [activeUsername, isCheckinWindowOpen, members]);
   useEffect(() => {
     if (!sessionId || now.getDay() !== 3) return;
     const storedSessionId = localStorage.getItem("aemit-attendance-session");
