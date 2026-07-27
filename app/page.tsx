@@ -133,6 +133,7 @@ export default function Home() {
   const [activeUser, setActiveUser] = useState<Member | null>(null);
   const [showCheckin, setShowCheckin] = useState(false);
   const [checkinPopupMode, setCheckinPopupMode] = useState<"auto" | "manual" | null>(null);
+  const [dismissedCheckinPromptKey, setDismissedCheckinPromptKey] = useState<string | null>(null);
   const [loginError, setLoginError] = useState("");
   const [spinning, setSpinning] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -169,6 +170,9 @@ export default function Home() {
   const isCheckinTestMode = TEMP_ENABLE_CHECKIN_FOR_TEST && now.getDay() !== 3;
   const isCheckinWindowOpen = TEMP_ENABLE_CHECKIN_FOR_TEST || now.getDay() === 3;
   const session = homeSession(now);
+  const currentCheckinPromptKey = `${activeUsername || "guest"}:${sessionId || localDateKey(session.date)}`;
+  const signedInMember = activeUsername ? members.find((member) => member.username === activeUsername) : null;
+  const signedInMemberPresent = Boolean(signedInMember?.present);
   const progress = monthlyProgress(now);
   const present = members.filter((m) => m.present);
   const level1PresentCount = present.filter((m) => m.level === 1).length;
@@ -186,9 +190,19 @@ export default function Home() {
   const scheduleOpen = ["scheduled", "completed"].includes(sessionStatus);
   const steps = ["Điểm danh", "Bốc số", "Lịch thi đấu", "Nhập kết quả"];
   const goStep = (next: number) => {
+    if (next === 0) {
+      setLoginError("");
+      setStep(0);
+      return;
+    }
+    if (activeUser?.role !== "admin" && !signedInMemberPresent) {
+      setStep(0);
+      return setLoginError("Bạn cần cập nhật điểm danh sang tham gia trước khi vào bốc số, lịch thi đấu hoặc xem kết quả buổi này.");
+    }
     if (next > step && activeUser?.role !== "admin") {
       if (next === 1 && drawOpen) return setStep(1);
-      if (next === 2 && scheduleOpen) return setStep(2);
+      if (next === 2 && scheduleOpen && currentScheduleScenario) return setStep(2);
+      if (next === 3 && scheduleOpen && currentScheduleScenario) return setStep(3);
       return;
     }
     if (next > step + 1 || (next === 1 && !drawOpen && (!isCheckinWindowOpen || !canSchedule || !allAttendanceDone)) || (next === 2 && (!currentScheduleScenario || !allDrawn)) || (next === 3 && !currentScheduleScenario)) return;
@@ -197,6 +211,12 @@ export default function Home() {
   const closeCheckinPopup = () => {
     setShowCheckin(false);
     setCheckinPopupMode(null);
+  };
+  const dismissCheckinPopupToAttendance = () => {
+    setDismissedCheckinPromptKey(currentCheckinPromptKey);
+    closeCheckinPopup();
+    setScreen("home");
+    setStep(0);
   };
 
   const signIn = async (username: string, password: string) => {
@@ -224,7 +244,17 @@ export default function Home() {
     }
     const updated = members.map((m) => m.username === activeUser.username ? { ...m, present: attending, responded: true } : m);
     localStorage.setItem("aemit-attendance", JSON.stringify(updated));
-    setMembers(updated); setActiveUser({ ...activeUser, present: attending, responded: true }); closeCheckinPopup();
+    setMembers(updated);
+    setActiveUser({ ...activeUser, present: attending, responded: true });
+    closeCheckinPopup();
+    setScreen("home");
+    if (attending) {
+      setDismissedCheckinPromptKey(null);
+      if (drawOpen) setStep(1);
+    } else {
+      setDismissedCheckinPromptKey(currentCheckinPromptKey);
+      setStep(0);
+    }
   };
   useEffect(() => {
     if (!supabase) return;
@@ -318,13 +348,14 @@ export default function Home() {
       return;
     }
     if (supabase && !attendanceSynced) return;
-    if (!syncedUser.responded) {
+    if (!syncedUser.present) {
+      if (dismissedCheckinPromptKey === currentCheckinPromptKey) return;
       setCheckinPopupMode("auto");
       setShowCheckin(true);
       return;
     }
     if (checkinPopupMode === "auto") closeCheckinPopup();
-  }, [activeUsername, attendanceSynced, checkinPopupMode, isCheckinWindowOpen, members]);
+  }, [activeUsername, attendanceSynced, checkinPopupMode, currentCheckinPromptKey, dismissedCheckinPromptKey, isCheckinWindowOpen, members]);
   useEffect(() => {
     if (!sessionId || now.getDay() !== 3) return;
     const storedSessionId = localStorage.getItem("aemit-attendance-session");
@@ -516,9 +547,14 @@ export default function Home() {
 
   useEffect(() => {
     if (!activeUser || screen !== "home") return;
+    const isAdminUser = activeUser.role === "admin";
+    if (!isAdminUser && !signedInMemberPresent) {
+      setStep(0);
+      return;
+    }
     if ((sessionStatus === "scheduled" || sessionStatus === "completed") && currentScheduleScenario && allDrawn) setStep((current) => Math.max(current, 2));
     else if (drawOpen) setStep((current) => Math.max(current, 1));
-  }, [activeUser, allDrawn, currentScheduleScenario, drawOpen, screen, sessionStatus]);
+  }, [activeUser, allDrawn, currentScheduleScenario, drawOpen, screen, sessionStatus, signedInMemberPresent]);
 
   useEffect(() => {
     const trigger = document.querySelector(".welcome-member");
@@ -567,11 +603,11 @@ export default function Home() {
         {loginError && <div className="warning">{loginError}</div>}
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở bốc số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: async () => { if (supabase && sessionId) { const { error } = await supabase.rpc("confirm_attendance", { p_session_id: sessionId }); if (error) return setLoginError(error.message); } setSessionStatus("checked_in"); setStep(1); } })} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
         {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} currentUser={currentUser} isAdmin={isAdmin} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả bốc số hiện tại?", action: confirmScheduleFromDraw })} />}
-        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} onContinue={() => setConfirmation({ title: "Xác nhận nhập kết quả", message: "Chuyển sang bước ghi nhận kết quả các trận?", action: () => setStep(3) })} isAdmin={isAdmin} />}
+        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} onContinue={() => isAdmin ? setConfirmation({ title: "Xác nhận nhập kết quả", message: "Chuyển sang bước ghi nhận kết quả các trận?", action: () => setStep(3) }) : setStep(3)} isAdmin={isAdmin} />}
         {step === 3 && <Results matches={currentMatches} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} onSaved={() => setRankingRefreshTick((tick) => tick + 1)} />}
       </>}
     </section>
-    {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={closeCheckinPopup} />}
+    {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}
     {confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}
     {isAdmin && attendanceChangeNotice && <ConfirmActionModal title="Thay đổi điểm danh" message={`${attendanceChangeNotice} Xác nhận để reset bốc số và lịch thi đấu; điểm danh mới sẽ được giữ lại.`} onCancel={() => setAttendanceChangeNotice(null)} onConfirm={async () => { if (supabase && sessionId) await supabase.rpc("reset_session_after_attendance_change", { p_session_id: sessionId }); setDrawn({}); setStep(0); setAttendanceChangeNotice(null); }} />}
     {showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={championRankingLabel} rankClass={welcomeRankClass} onClose={() => setShowProfileCard(false)} />}
@@ -649,7 +685,7 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, currentUser, isAdm
 function Schedule({ scenario, drawn, onContinue, isAdmin }: { scenario: ScheduleScenario | null; drawn: Record<string, number>; onContinue: () => void; isAdmin: boolean }) {
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
   if (!scenario) return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Lịch chỉ được tạo khi có tối thiểu 6 thành viên và đúng tổ hợp Level trong thư viện lịch.</p></div></div><div className="empty-ranking">Chưa có lịch phù hợp cho danh sách điểm danh hiện tại.</div></section>;
-  return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Đã chọn mẫu theo danh sách hôm nay: {scenario.level1Count} Level 1 + {scenario.level2Count} Level 2.</p></div><span className="count-pill">{scenario.matches.length} trận</span></div><div className="schedule-grid">{scenario.matches.map((match, i) => <Match match={match} i={i} namesBySlot={namesBySlot} key={i} />)}</div>{isAdmin && <div className="panel-foot"><span>✓ {scenario.title} · Mỗi người 4 trận</span><button className="primary" onClick={onContinue}>Bắt đầu nhập điểm <span>→</span></button></div>}</section>;
+  return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Đã chọn mẫu theo danh sách hôm nay: {scenario.level1Count} Level 1 + {scenario.level2Count} Level 2.</p></div><span className="count-pill">{scenario.matches.length} trận</span></div><div className="schedule-grid">{scenario.matches.map((match, i) => <Match match={match} i={i} namesBySlot={namesBySlot} key={i} />)}</div><div className="panel-foot"><span>✓ {scenario.title} · Mỗi người 4 trận</span><button className={isAdmin ? "primary" : "soft-btn"} onClick={onContinue}>{isAdmin ? "Bắt đầu nhập điểm" : "Xem kết quả"} <span>→</span></button></div></section>;
 }
 function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
   const [participantFilter, setParticipantFilter] = useState<ParticipantCount>(6);
