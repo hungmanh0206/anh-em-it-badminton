@@ -292,7 +292,7 @@ export default function Home() {
       if (current.name === syncedUser.name && current.level === syncedUser.level && current.role === syncedUser.role && current.present === syncedUser.present && current.responded === syncedUser.responded) return current;
       return { ...current, name: syncedUser.name, level: syncedUser.level, role: syncedUser.role, present: syncedUser.present, responded: syncedUser.responded };
     });
-    setShowCheckin(isCheckinWindowOpen && !syncedUser.responded);
+    if (isCheckinWindowOpen && !syncedUser.responded) setShowCheckin(true);
   }, [activeUsername, isCheckinWindowOpen, members]);
   useEffect(() => {
     if (!sessionId || now.getDay() !== 3) return;
