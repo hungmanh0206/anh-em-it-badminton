@@ -968,3 +968,255 @@ header {
     margin-left: 0;
   }
 }
+
+/* Mobile header + rank highlight refinement */
+.welcome-member {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 0 !important;
+  margin-left: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--club-ink-900) !important;
+  line-height: 1 !important;
+}
+
+.welcome-member::before,
+.welcome-member::after {
+  content: none !important;
+  display: none !important;
+}
+
+.welcome-rank {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0 !important;
+  height: 26px !important;
+  padding: 0 10px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: var(--welcome-accent, var(--club-ink-100)) !important;
+  color: var(--welcome-badge-text, var(--club-ink-900)) !important;
+  box-shadow: var(--welcome-badge-shadow, none) !important;
+  font-family: "JetBrains Mono", ui-monospace, monospace !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em !important;
+  white-space: nowrap;
+}
+
+.welcome-rank::before {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.welcome-member b {
+  color: var(--welcome-name, var(--club-ink-900)) !important;
+  font-family: "Be Vietnam Pro", system-ui, sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.045em !important;
+  line-height: 1 !important;
+  text-shadow: var(--welcome-name-shadow, none) !important;
+  white-space: nowrap;
+}
+
+.welcome-level {
+  margin-left: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--club-ink-700) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  white-space: nowrap;
+}
+
+.welcome-level::before {
+  content: "•";
+  margin-right: 7px;
+  color: var(--welcome-dot, var(--club-ink-300));
+}
+
+.welcome-member.rank-1 {
+  --welcome-accent: linear-gradient(135deg, #ffe27a 0%, #ffb700 52%, #f08a00 100%);
+  --welcome-badge-text: #17110a;
+  --welcome-badge-shadow: 0 8px 20px rgba(255, 183, 0, 0.42);
+  --welcome-name: #11100d;
+  --welcome-name-shadow: 0 0 18px rgba(255, 183, 0, 0.55);
+  --welcome-dot: #d49200;
+}
+
+.welcome-member.rank-1 .welcome-rank::before {
+  content: "🥇";
+}
+
+.welcome-member.rank-1 b {
+  background: linear-gradient(90deg, #17110a, #8a5600 55%, #d78a00);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.welcome-member.rank-2 {
+  --welcome-accent: linear-gradient(135deg, #f9fbff 0%, #d7dde5 50%, #9ea8b6 100%);
+  --welcome-badge-text: #1d232b;
+  --welcome-badge-shadow: 0 8px 20px rgba(98, 107, 120, 0.28);
+  --welcome-name: #242b34;
+  --welcome-name-shadow: 0 0 15px rgba(183, 192, 204, 0.52);
+  --welcome-dot: #9aa4b2;
+}
+
+.welcome-member.rank-2 .welcome-rank::before {
+  content: "🥈";
+}
+
+.welcome-member.rank-3 {
+  --welcome-accent: linear-gradient(135deg, #ffc79c 0%, #d8874d 52%, #9e5224 100%);
+  --welcome-badge-text: #fffaf3;
+  --welcome-badge-shadow: 0 8px 20px rgba(185, 108, 52, 0.32);
+  --welcome-name: #5f2d13;
+  --welcome-name-shadow: 0 0 14px rgba(217, 151, 95, 0.42);
+  --welcome-dot: #b96c34;
+}
+
+.welcome-member.rank-3 .welcome-rank::before {
+  content: "🥉";
+}
+
+.welcome-member.rank-none {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.welcome-member.rank-none .welcome-rank {
+  display: none !important;
+}
+
+.welcome-member.rank-none b {
+  color: var(--club-ink-900) !important;
+  font-size: 17px !important;
+}
+
+@media (max-width: 800px) {
+  header {
+    display: grid !important;
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 13px;
+    row-gap: 8px;
+    align-items: start !important;
+    margin-bottom: 24px !important;
+  }
+
+  .title-group {
+    display: contents !important;
+  }
+
+  .title-group > div {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    padding-top: 1px;
+  }
+
+  .title-group .eyebrow {
+    margin: 0 0 8px !important;
+    color: var(--club-gold-700) !important;
+    font-size: 10px !important;
+    line-height: 1.25 !important;
+    letter-spacing: 0.12em !important;
+  }
+
+  .title-group h1 {
+    max-width: none !important;
+    color: #050505 !important;
+    font-size: clamp(30px, 8.4vw, 36px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.06em !important;
+  }
+
+  .mobile-menu {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    display: grid !important;
+    place-items: center !important;
+    align-content: center !important;
+    gap: 4px !important;
+    width: 46px !important;
+    height: 46px !important;
+    margin-top: 19px !important;
+    border: 0 !important;
+    border-radius: 16px !important;
+    background:
+      radial-gradient(circle at 35% 20%, rgba(255, 211, 107, 0.34), transparent 35%),
+      linear-gradient(180deg, var(--club-ink-900), var(--club-ink-800)) !important;
+    color: var(--club-gold-300) !important;
+    box-shadow: 0 14px 28px rgba(26, 25, 22, 0.22) !important;
+  }
+
+  .mobile-menu span {
+    width: 18px;
+    height: 2px;
+  }
+
+  .welcome-member {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+    max-width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex-wrap: wrap;
+    row-gap: 6px !important;
+  }
+
+  .welcome-rank {
+    height: 25px !important;
+    padding-inline: 9px !important;
+    font-size: 9px !important;
+  }
+
+  .welcome-member b {
+    font-size: 18px !important;
+  }
+
+  .welcome-level {
+    font-size: 10px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  header {
+    grid-template-columns: 46px minmax(0, 1fr);
+    column-gap: 12px;
+  }
+
+  .mobile-menu {
+    width: 44px !important;
+    height: 44px !important;
+    margin-top: 20px !important;
+  }
+
+  .title-group h1 {
+    font-size: clamp(29px, 9vw, 34px) !important;
+  }
+
+  .welcome-member {
+    margin-left: 0 !important;
+  }
+
+  .welcome-member b {
+    font-size: 17px !important;
+  }
+}
