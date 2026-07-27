@@ -1382,3 +1382,285 @@ header {
     font-size: 10px !important;
   }
 }
+
+/* Welcome card: avatar/medal + two-line text, matched to the provided reference */
+.welcome-member {
+  --welcome-card-bg: rgba(255, 255, 255, 0.94);
+  --welcome-card-border: rgba(29, 24, 14, 0.08);
+  --welcome-card-shadow: none;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  width: fit-content !important;
+  min-width: 174px !important;
+  max-width: min(100%, 254px) !important;
+  min-height: 58px !important;
+  margin-left: auto !important;
+  margin-top: 0 !important;
+  padding: 10px 15px 10px 10px !important;
+  border: 1px solid var(--welcome-card-border) !important;
+  border-radius: 17px !important;
+  background: var(--welcome-card-bg) !important;
+  box-shadow: var(--welcome-card-shadow) !important;
+  color: var(--club-ink-900) !important;
+  overflow: visible;
+}
+
+.welcome-member::before,
+.welcome-member::after,
+.welcome-member b::after {
+  content: none !important;
+  display: none !important;
+}
+
+.welcome-member span {
+  padding: 0 !important;
+}
+
+.welcome-member .welcome-avatar {
+  position: relative;
+  isolation: isolate;
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 38px !important;
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 999px !important;
+  color: var(--club-white) !important;
+  font-family: "Be Vietnam Pro", system-ui, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1 !important;
+  box-shadow: inset 0 -7px 12px rgba(0, 0, 0, 0.14);
+}
+
+.welcome-text {
+  display: grid !important;
+  min-width: 0 !important;
+  gap: 4px !important;
+  line-height: 1.06 !important;
+}
+
+.welcome-line {
+  display: flex !important;
+  align-items: baseline !important;
+  min-width: 0 !important;
+  gap: 5px !important;
+  white-space: nowrap !important;
+}
+
+.welcome-member .welcome-copy {
+  color: #1f1b12 !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1 !important;
+}
+
+.welcome-member b {
+  position: static !important;
+  display: block !important;
+  max-width: 118px;
+  overflow: hidden;
+  color: #070707 !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1.05 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.welcome-member .welcome-level {
+  display: block !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #4f483d !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.015em !important;
+  line-height: 1.05 !important;
+}
+
+.welcome-member .welcome-level::before {
+  content: none !important;
+  display: none !important;
+}
+
+.welcome-member.rank-1 {
+  --welcome-card-bg: linear-gradient(135deg, #fffdfa 0%, #fff7df 100%);
+  --welcome-card-border: rgba(255, 183, 0, 0.42);
+  --welcome-card-shadow: 0 16px 34px rgba(255, 183, 0, 0.34), 0 3px 12px rgba(102, 61, 0, 0.08);
+  border: 1px solid rgba(255, 183, 0, 0.42) !important;
+  border-radius: 17px !important;
+  background: linear-gradient(135deg, #fffdfa 0%, #fff7df 100%) !important;
+  box-shadow: 0 16px 34px rgba(255, 183, 0, 0.34), 0 3px 12px rgba(102, 61, 0, 0.08) !important;
+}
+
+.welcome-member.rank-2 {
+  --welcome-card-bg: linear-gradient(135deg, #ffffff 0%, #f2f5fa 100%);
+  --welcome-card-border: rgba(160, 171, 188, 0.42);
+  --welcome-card-shadow: 0 16px 34px rgba(126, 138, 158, 0.26), 0 3px 12px rgba(24, 33, 48, 0.06);
+  border: 1px solid rgba(160, 171, 188, 0.42) !important;
+  border-radius: 17px !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f2f5fa 100%) !important;
+  box-shadow: 0 16px 34px rgba(126, 138, 158, 0.26), 0 3px 12px rgba(24, 33, 48, 0.06) !important;
+}
+
+.welcome-member.rank-3 {
+  --welcome-card-bg: linear-gradient(135deg, #fffaf6 0%, #fff0e6 100%);
+  --welcome-card-border: rgba(190, 103, 42, 0.36);
+  --welcome-card-shadow: 0 16px 34px rgba(181, 96, 39, 0.27), 0 3px 12px rgba(82, 39, 13, 0.06);
+  border: 1px solid rgba(190, 103, 42, 0.36) !important;
+  border-radius: 17px !important;
+  background: linear-gradient(135deg, #fffaf6 0%, #fff0e6 100%) !important;
+  box-shadow: 0 16px 34px rgba(181, 96, 39, 0.27), 0 3px 12px rgba(82, 39, 13, 0.06) !important;
+}
+
+.welcome-member.rank-none {
+  --welcome-card-bg: rgba(255, 255, 255, 0.92);
+  --welcome-card-border: rgba(31, 27, 18, 0.08);
+  --welcome-card-shadow: none;
+  border: 1px solid rgba(31, 27, 18, 0.08) !important;
+  border-radius: 17px !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  box-shadow: none !important;
+  padding: 10px 15px 10px 10px !important;
+}
+
+.welcome-member.rank-1 .welcome-avatar,
+.welcome-member.rank-2 .welcome-avatar,
+.welcome-member.rank-3 .welcome-avatar {
+  color: #1f1600 !important;
+  font-size: 16px !important;
+  border: 2px solid rgba(255, 255, 255, 0.78) !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.welcome-member.rank-1 .welcome-avatar {
+  background: radial-gradient(circle at 32% 24%, #fff8c6 0 18%, #ffd64a 19% 56%, #d99200 100%) !important;
+  box-shadow: 0 8px 18px rgba(255, 183, 0, 0.34), inset 0 -8px 14px rgba(136, 79, 0, 0.18) !important;
+}
+
+.welcome-member.rank-2 .welcome-avatar {
+  background: radial-gradient(circle at 32% 24%, #ffffff 0 18%, #d9e0ea 19% 56%, #8793a3 100%) !important;
+  box-shadow: 0 8px 18px rgba(126, 138, 158, 0.24), inset 0 -8px 14px rgba(39, 49, 65, 0.14) !important;
+}
+
+.welcome-member.rank-3 .welcome-avatar {
+  background: radial-gradient(circle at 32% 24%, #ffe2c8 0 18%, #d98a50 19% 56%, #8d431d 100%) !important;
+  color: #fffaf4 !important;
+  text-shadow: 0 1px 0 rgba(66, 31, 9, 0.42);
+  box-shadow: 0 8px 18px rgba(181, 96, 39, 0.25), inset 0 -8px 14px rgba(76, 33, 10, 0.18) !important;
+}
+
+.welcome-member.rank-1 .welcome-avatar::before,
+.welcome-member.rank-2 .welcome-avatar::before,
+.welcome-member.rank-3 .welcome-avatar::before,
+.welcome-member.rank-1 .welcome-avatar::after,
+.welcome-member.rank-2 .welcome-avatar::after,
+.welcome-member.rank-3 .welcome-avatar::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  bottom: -8px;
+  width: 12px;
+  height: 17px;
+  border-radius: 2px 2px 5px 5px;
+  clip-path: polygon(0 0, 100% 0, 82% 100%, 50% 82%, 18% 100%);
+}
+
+.welcome-member.rank-1 .welcome-avatar::before,
+.welcome-member.rank-2 .welcome-avatar::before,
+.welcome-member.rank-3 .welcome-avatar::before {
+  left: 8px;
+  transform: rotate(10deg);
+}
+
+.welcome-member.rank-1 .welcome-avatar::after,
+.welcome-member.rank-2 .welcome-avatar::after,
+.welcome-member.rank-3 .welcome-avatar::after {
+  right: 8px;
+  transform: rotate(-10deg);
+}
+
+.welcome-member.rank-1 .welcome-avatar::before,
+.welcome-member.rank-1 .welcome-avatar::after {
+  background: linear-gradient(180deg, #ffd75a, #e49a00);
+}
+
+.welcome-member.rank-2 .welcome-avatar::before,
+.welcome-member.rank-2 .welcome-avatar::after {
+  background: linear-gradient(180deg, #e8edf4, #9aa6b6);
+}
+
+.welcome-member.rank-3 .welcome-avatar::before,
+.welcome-member.rank-3 .welcome-avatar::after {
+  background: linear-gradient(180deg, #dc945e, #9a4c22);
+}
+
+@media (max-width: 800px) {
+  header {
+    align-items: center !important;
+    gap: 14px !important;
+  }
+
+  .welcome-member {
+    min-width: 166px !important;
+    min-height: 56px !important;
+    margin-left: auto !important;
+    margin-top: 0 !important;
+    padding: 9px 13px 9px 9px !important;
+  }
+
+  .welcome-avatar {
+    flex-basis: 36px !important;
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .welcome-member .welcome-copy {
+    font-size: 12px !important;
+  }
+
+  .welcome-member b {
+    max-width: 94px;
+    font-size: 15px !important;
+  }
+
+  .welcome-member .welcome-level {
+    font-size: 10.5px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    column-gap: 10px !important;
+  }
+
+  .title-group {
+    min-width: 0 !important;
+  }
+
+  .welcome-member {
+    justify-self: end !important;
+    min-width: 158px !important;
+    max-width: 176px !important;
+    border-radius: 15px !important;
+  }
+
+  .welcome-line {
+    gap: 4px !important;
+  }
+
+  .welcome-member b {
+    max-width: 76px;
+    font-size: 14.5px !important;
+  }
+}
