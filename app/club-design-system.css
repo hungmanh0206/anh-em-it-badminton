@@ -242,6 +242,35 @@ header {
   background: var(--club-gold-50) !important;
 }
 
+.attendance-actions .soft-btn {
+  border: 2px solid var(--club-gold-600) !important;
+  background: linear-gradient(180deg, var(--club-gold-300), var(--club-gold-500)) !important;
+  color: var(--club-ink-950) !important;
+  box-shadow: var(--club-shadow-gold) !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.02em;
+  padding: 12px 16px !important;
+}
+
+.attendance-actions .soft-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--club-gold-700) !important;
+  background: linear-gradient(180deg, var(--club-gold-400), var(--club-gold-600)) !important;
+}
+
+.attendance-actions .soft-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.attendance-actions .soft-btn:disabled {
+  border-color: var(--club-ink-200) !important;
+  background: var(--club-ink-100) !important;
+  color: var(--club-ink-500) !important;
+  box-shadow: none !important;
+  font-weight: 850 !important;
+}
+
 .primary,
 .new-btn {
   border: 0 !important;
