@@ -18,7 +18,7 @@ type AttendanceWithProfile = {
   profiles: ProfileJoin | ProfileJoin[] | null;
 };
 
-const openDrawStatuses = new Set(["checked_in", "drawn", "scheduled"]);
+const openDrawStatuses = new Set(["checked_in", "drawn", "scheduled", "completed"]);
 
 const toProfile = (profiles: ProfileJoin | ProfileJoin[] | null) => Array.isArray(profiles) ? profiles[0] : profiles;
 const toLevel = (level: ProfileJoin["level"]): 1 | 2 => Number(level) === 1 ? 1 : 2;
@@ -70,6 +70,9 @@ export async function POST(request: Request) {
       const pool = drawSlotsForLevel(selfLevel, level1Count, level2Count);
       if (!pool.length) return Response.json({ error: "Không có dải số phù hợp với Level của bạn trong buổi này." }, { status: 400 });
 
+      const inactiveMemberIdsWithStaleSlots = attendances
+        .filter((attendance) => attendance.choice !== "attending" && typeof attendance.drawn_number === "number")
+        .map((attendance) => attendance.member_id);
       const invalidMemberIds = attendingRows
         .filter((attendance) => typeof attendance.drawn_number === "number")
         .filter((attendance) => {
@@ -77,13 +80,14 @@ export async function POST(request: Request) {
           return !isDrawSlotValid(attendanceLevel, Number(attendance.drawn_number), level1Count, level2Count);
         })
         .map((attendance) => attendance.member_id);
+      const memberIdsToClear = [...new Set([...inactiveMemberIdsWithStaleSlots, ...invalidMemberIds])];
 
-      if (invalidMemberIds.length) {
+      if (memberIdsToClear.length) {
         const { error: clearError } = await admin
           .from("attendances")
           .update({ drawn_number: null })
           .eq("session_id", body.sessionId)
-          .in("member_id", invalidMemberIds);
+          .in("member_id", memberIdsToClear);
         if (clearError) throw clearError;
         continue;
       }
