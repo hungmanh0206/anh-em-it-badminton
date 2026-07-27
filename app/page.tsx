@@ -78,6 +78,7 @@ function monthlyProgress(now: Date) { const year = now.getFullYear(), month = no
 function finalSaturdayOfMonth(date: Date) { const finalSaturday = new Date(date.getFullYear(), date.getMonth() + 1, 0); while (finalSaturday.getDay() !== 6) finalSaturday.setDate(finalSaturday.getDate() - 1); return finalSaturday; }
 function isCurrentMonthRankingClosed(now: Date) { const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return finalSaturdayOfMonth(now) < today; }
 const TEMP_ENABLE_CHECKIN_FOR_TEST = true;
+const TEMP_RESET_HOME_ATTENDANCE_FOR_TEST = true;
 const initialMembers: Member[] = [
   { name: "Mạnh", initials: "M", level: 1, color: "#6846e8", present: false, username: "manh", password: "123456", role: "admin", responded: false },
   { name: "Hùng", initials: "H", level: 1, color: "#e56a4d", present: false, username: "hung", password: "123456", responded: false },
@@ -200,8 +201,19 @@ export default function Home() {
     return () => window.clearInterval(timer);
   }, []);
   useEffect(() => {
-    const saved = localStorage.getItem("aemit-attendance");
-    if (saved) window.queueMicrotask(() => setMembers(JSON.parse(saved) as Member[]));
+    if (TEMP_RESET_HOME_ATTENDANCE_FOR_TEST) {
+      localStorage.removeItem("aemit-attendance-session");
+      localStorage.removeItem("aemit-attendance");
+      localStorage.removeItem("aemit-drawn-slots");
+      window.queueMicrotask(() => {
+        setMembers(initialMembers.map((member) => ({ ...member, present: false, responded: false })));
+        setDrawn({});
+        setStep(0);
+      });
+    } else {
+      const saved = localStorage.getItem("aemit-attendance");
+      if (saved) window.queueMicrotask(() => setMembers(JSON.parse(saved) as Member[]));
+    }
     const syncAttendance = (event: StorageEvent) => { if (event.key === "aemit-attendance" && event.newValue) setMembers(JSON.parse(event.newValue)); };
     window.addEventListener("storage", syncAttendance);
     return () => window.removeEventListener("storage", syncAttendance);
@@ -213,6 +225,7 @@ export default function Home() {
       const { data: ensuredSessionId } = await client.rpc("ensure_weekly_session", { p_session_date: localDateKey(session.date) });
       if (!ensuredSessionId) return;
       setSessionId(ensuredSessionId);
+      if (TEMP_RESET_HOME_ATTENDANCE_FOR_TEST) return;
       const { data } = await client.from("attendances").select("choice, profiles!attendances_member_id_fkey(username)").eq("session_id", ensuredSessionId);
       if (!data) return;
       setMembers((previous) => previous.map((member) => {
