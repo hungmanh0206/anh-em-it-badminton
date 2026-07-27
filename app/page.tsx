@@ -282,8 +282,40 @@ export default function Home() {
     {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { setShowCheckin(false); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={() => setShowCheckin(false)} />}
     {confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}
     {isAdmin && attendanceChangeNotice && <ConfirmActionModal title="Thay đổi điểm danh" message={`${attendanceChangeNotice} Xác nhận để reset bốc số và lịch thi đấu; điểm danh mới sẽ được giữ lại.`} onCancel={() => setAttendanceChangeNotice(null)} onConfirm={async () => { if (supabase && sessionId) await supabase.rpc("reset_session_after_attendance_change", { p_session_id: sessionId }); setDrawn({}); setStep(0); setAttendanceChangeNotice(null); }} />}
-    {showProfileCard && <div className="member-profile-popover"><button className="modal-close" onClick={() => setShowProfileCard(false)}>×</button><p className="eyebrow">THÀNH TÍCH THÁNG TRƯỚC</p><h2>{activeUser.name}</h2><div className="profile-stat"><span>Level</span><b>Level {activeUser.level}</b></div><div className="profile-stat"><span>Vị trí</span><b>{profileAchievement ? `#${profileRank}` : "—"}</b></div><div className="profile-stat"><span>Điểm</span><b>{profileAchievement ? `${profileAchievement.points} điểm` : "—"}</b></div></div>}
+    {showProfileCard && <ProfilePopover member={activeUser} rank={profileRank} achievement={profileAchievement} rankClass={welcomeRankClass} onClose={() => setShowProfileCard(false)} />}
   </main>;
+}
+
+function ProfilePopover({ member, rank, achievement, rankClass, onClose }: { member: Member; rank: number; achievement: RankingRow | null; rankClass: string; onClose: () => void }) {
+  const isTopRank = rank > 0 && rank <= 3;
+  const pointDiff = achievement?.pointDiff;
+  const pointDiffLabel = typeof pointDiff === "number" ? `${pointDiff > 0 ? "+" : ""}${pointDiff}` : "—";
+  const roleLabel = member.role === "admin" ? "Quản trị viên" : "Thành viên";
+  return <aside className={`member-profile-popover profile-${rankClass}`} role="dialog" aria-modal="true" aria-label={`Thông tin hồ sơ ${member.name}`}>
+    <button className="modal-close profile-close" onClick={onClose} aria-label="Đóng">×</button>
+    <div className="profile-hero-card">
+      <span className="profile-medal" style={{ background: member.color }} aria-hidden="true">{isTopRank ? rank : member.initials}</span>
+      <div>
+        <p>{isTopRank ? `Top ${rank} tháng trước` : "Hồ sơ thành viên"}</p>
+        <h2>{member.name}</h2>
+        <span>{roleLabel} · Level {member.level}</span>
+      </div>
+    </div>
+    <div className="profile-score-card">
+      <span>Thành tích tháng trước</span>
+      <b>{achievement ? `${achievement.points} điểm` : "Chưa có dữ liệu"}</b>
+      <small>{achievement ? `${achievement.matches} trận · hiệu số ${pointDiffLabel}` : "BXH sẽ cập nhật sau khi có kết quả thi đấu."}</small>
+    </div>
+    <div className="profile-stat-grid">
+      <div className="profile-stat"><span>Vị trí</span><b>{achievement ? `Top ${rank}` : "—"}</b></div>
+      <div className="profile-stat"><span>Level</span><b>{member.level}</b></div>
+      <div className="profile-stat"><span>Điểm thắng</span><b>{achievement ? achievement.pointsWon : "—"}</b></div>
+      <div className="profile-stat"><span>Điểm thua</span><b>{achievement ? achievement.pointsLost : "—"}</b></div>
+      <div className={`profile-stat ${typeof pointDiff === "number" ? pointDiff >= 0 ? "positive" : "negative" : ""}`}><span>Hiệu số</span><b>{pointDiffLabel}</b></div>
+      <div className="profile-stat"><span>Số trận</span><b>{achievement ? achievement.matches : "—"}</b></div>
+    </div>
+    <p className="profile-note">{isTopRank ? "Thành tích nổi bật được tính theo kết quả tháng trước." : "Thông tin xếp hạng sẽ nổi bật hơn khi có dữ liệu tháng trước."}</p>
+  </aside>;
 }
 
 function CheckIn({ members, onContinue, canSchedule, isAdmin, currentUser, isCheckinWindowOpen, openSelfCheckin }: { members: Member[]; setMembers: (m: Member[]) => void; onContinue: () => void; canSchedule: boolean; isAdmin: boolean; currentUser: Member; isCheckinWindowOpen: boolean; openSelfCheckin: () => void }) {
