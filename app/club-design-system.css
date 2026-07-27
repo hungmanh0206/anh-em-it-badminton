@@ -602,6 +602,86 @@ header {
   color: var(--club-ink-300) !important;
 }
 
+.history-detail {
+  width: min(100%, 800px) !important;
+  padding: 32px !important;
+}
+
+.history-match-list {
+  gap: 10px !important;
+  margin-top: 22px !important;
+}
+
+.history-match-list > .history-match-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) minmax(108px, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  border: 1px solid var(--club-ink-200);
+  border-radius: var(--club-radius-md);
+  background:
+    linear-gradient(90deg, rgba(255, 249, 236, 0.76), rgba(255, 255, 255, 0.98) 34%, rgba(255, 255, 255, 0.98) 66%, rgba(255, 249, 236, 0.76));
+  box-shadow: var(--club-shadow-xs);
+}
+
+.history-match-list > .history-match-row:hover {
+  border-color: rgba(255, 183, 0, 0.45);
+  box-shadow: var(--club-shadow-sm);
+}
+
+.history-match-index {
+  justify-self: start;
+  color: var(--club-ink-500) !important;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.history-team {
+  color: var(--club-ink-900) !important;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.history-team-a {
+  text-align: right;
+}
+
+.history-team-b {
+  text-align: left;
+}
+
+.history-score {
+  display: grid;
+  grid-template-columns: minmax(2ch, auto) 10px minmax(2ch, auto);
+  justify-content: center;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 108px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 183, 0, 0.38);
+  border-radius: 999px;
+  background: var(--club-ink-900);
+  color: var(--club-gold-100) !important;
+  font-size: 16px;
+  font-weight: 900;
+  text-align: center;
+  box-shadow: 0 10px 24px rgba(26, 25, 22, 0.14);
+}
+
+.history-score span {
+  min-width: 2ch;
+}
+
+.history-score i {
+  color: rgba(255, 255, 255, 0.42);
+  font-style: normal;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -625,5 +705,30 @@ header {
 
   .hero {
     border-radius: var(--club-radius-lg) !important;
+  }
+
+  .history-detail {
+    padding: 24px 16px !important;
+  }
+
+  .history-match-list > .history-match-row {
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .history-match-index {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+
+  .history-team {
+    font-size: 12px;
+  }
+
+  .history-score {
+    min-width: 84px;
+    padding: 7px 10px;
+    font-size: 14px;
   }
 }
