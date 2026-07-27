@@ -107,7 +107,7 @@ function homeSession(now: Date) { const day = now.getDay(); const offset = day >
 function monthlyProgress(now: Date) { const year = now.getFullYear(), month = now.getMonth(); const saturdays: Date[] = []; for (let d = new Date(year, month, 1); d.getMonth() === month; d.setDate(d.getDate() + 1)) if (d.getDay() === 6) saturdays.push(new Date(d)); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return { total: saturdays.length, completed: saturdays.filter((d) => d < today).length }; }
 function finalSaturdayOfMonth(date: Date) { const finalSaturday = new Date(date.getFullYear(), date.getMonth() + 1, 0); while (finalSaturday.getDay() !== 6) finalSaturday.setDate(finalSaturday.getDate() - 1); return finalSaturday; }
 function isCurrentMonthRankingClosed(now: Date) { const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return finalSaturdayOfMonth(now) < today; }
-const TEMP_ENABLE_CHECKIN_FOR_TEST = true;
+const TEMP_ENABLE_CHECKIN_FOR_TEST = false;
 const TEMP_RESET_HOME_ATTENDANCE_FOR_TEST = false;
 const initialMembers: Member[] = [
   { name: "Mạnh", initials: "M", level: 1, color: "#6846e8", present: false, username: "manh", password: "123456", role: "admin", responded: false },
