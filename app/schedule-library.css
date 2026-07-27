@@ -143,20 +143,20 @@
   overflow: hidden;
 }
 
-.schedule-case.impossible {
-  border-color: rgba(214, 69, 69, 0.22) !important;
+.schedule-case.relaxed {
+  border-color: rgba(37, 99, 235, 0.2) !important;
 }
 
-.schedule-case.impossible .schedule-case-head {
+.schedule-case.relaxed .schedule-case-head {
   background:
-    radial-gradient(circle at 100% 0%, rgba(214, 69, 69, 0.12), transparent 32%),
-    linear-gradient(180deg, rgba(255, 245, 245, 0.92), rgba(255, 255, 255, 0.82));
+    radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.12), transparent 32%),
+    linear-gradient(180deg, rgba(239, 246, 255, 0.92), rgba(255, 255, 255, 0.82));
 }
 
-.schedule-case.impossible .schedule-case-badge {
-  border-color: rgba(214, 69, 69, 0.28);
-  background: #fff1f1;
-  color: #b32626;
+.schedule-case.relaxed .schedule-case-badge {
+  border-color: rgba(37, 99, 235, 0.28);
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
 .schedule-case-head {
@@ -246,27 +246,27 @@
   text-transform: uppercase;
 }
 
-.schedule-impossible {
+.schedule-relaxed-note {
   display: grid;
   gap: 8px;
   margin: 20px 25px;
   padding: 18px 20px;
-  border: 1px dashed rgba(214, 69, 69, 0.32);
+  border: 1px dashed rgba(37, 99, 235, 0.26);
   border-radius: 16px;
   background:
-    radial-gradient(circle at 0 0, rgba(214, 69, 69, 0.11), transparent 34%),
-    #fffafa;
+    radial-gradient(circle at 0 0, rgba(37, 99, 235, 0.11), transparent 34%),
+    #f8fbff;
 }
 
-.schedule-impossible b {
-  color: #b32626;
+.schedule-relaxed-note b {
+  color: #1d4ed8;
   font-size: 15px;
   font-weight: 950;
 }
 
-.schedule-impossible p {
+.schedule-relaxed-note p {
   max-width: 760px;
-  color: #6f4e4e;
+  color: #44546b;
   font-size: 12px;
   font-weight: 750;
   line-height: 1.55;
@@ -422,7 +422,7 @@
     padding: 14px 17px 17px;
   }
 
-  .schedule-impossible {
+  .schedule-relaxed-note {
     margin: 17px 16px;
     padding: 16px;
   }
