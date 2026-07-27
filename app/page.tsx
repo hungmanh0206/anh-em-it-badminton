@@ -409,7 +409,6 @@ function Schedule({ scenario, drawn, onContinue, isAdmin }: { scenario: Schedule
 function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
   const [participantFilter, setParticipantFilter] = useState<ParticipantCount>(6);
   const visibleScenarios = scenarios.filter((scenario) => scenario.participantCount === participantFilter);
-  const visibleMatches = visibleScenarios.reduce((sum, scenario) => sum + scenario.matches.length, 0);
   return <section className="schedule-library">
     <section className="panel schedule-overview">
       <div>
@@ -425,7 +424,6 @@ function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
     <div className="schedule-filter" role="group" aria-label="Lọc lịch theo số lượng thành viên">
       {scheduleParticipants.map((count) => <button key={count} type="button" className={participantFilter === count ? "active" : ""} onClick={() => setParticipantFilter(count)}>{count} người</button>)}
     </div>
-    <div className="schedule-summary-strip"><span>{visibleScenarios.length} trường hợp</span><span>{visibleMatches} trận mẫu</span><span>Level 1: xanh dương · Level 2: xanh lá</span></div>
     <div className="schedule-case-list">
       {visibleScenarios.map((scenario) => <article className={"panel schedule-case " + (scenario.relaxedReason ? "relaxed" : "")} key={scenario.id}>
         <div className="schedule-case-head">
