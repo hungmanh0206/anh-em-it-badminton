@@ -42,7 +42,7 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [rankingRows, setRankingRows] = useState<RankingRow[]>([]);
-  const [latestRankingRows, setLatestRankingRows] = useState<RankingRow[]>([]);
+  const [previousRankingRows, setPreviousRankingRows] = useState<RankingRow[]>([]);
   const [historySessions, setHistorySessions] = useState<HistorySession[]>([]);
   const [confirmation, setConfirmation] = useState<{ title: string; message: string; action: () => void | Promise<void> } | null>(null);
   const [attendanceChangeNotice, setAttendanceChangeNotice] = useState<string | null>(null);
@@ -173,13 +173,19 @@ export default function Home() {
     const client = supabase;
     const match = rankingMonth.match(/Tháng (\d+), (\d+)/); const month = match ? `${match[2]}-${String(match[1]).padStart(2, "0")}-01` : "2026-07-01";
     const loadRanking = async () => {
-      const { data } = await client.from("monthly_results").select("total_points, points_for, points_against, point_diff, matches_played, level_next_month, profiles!monthly_results_member_id_fkey(full_name, level)").eq("month", month).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false });
-      if (!data) return setRankingRows([]);
-      const mapped = (data as MonthlyResultRow[]).map((row, index) => {
+      const previousMonth = localDateKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+      const rankingSelect = "total_points, points_for, points_against, point_diff, matches_played, level_next_month, profiles!monthly_results_member_id_fkey(full_name, level)";
+      const mapRows = (rows: MonthlyResultRow[]) => rows.map((row, index) => {
         const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
         const name = profile?.full_name || "Thành viên";
         return { name, initials: name.split(" ").map((part: string) => part[0]).slice(-2).join(""), level: Number(profile?.level || row.level_next_month || 2), points: row.total_points, pointsWon: row.points_for, pointsLost: row.points_against, pointDiff: row.point_diff, matches: row.matches_played, color: ["#e7ad26", "#6ba9de", "#df8d2a", "#6846e8", "#e56a4d", "#2ba98b"][index % 6] };
-      }); setRankingRows(mapped); if (rankingMonth === monthLabel(now)) setLatestRankingRows(mapped);
+      });
+      const [{ data }, { data: previousData }] = await Promise.all([
+        client.from("monthly_results").select(rankingSelect).eq("month", month).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
+        client.from("monthly_results").select(rankingSelect).eq("month", previousMonth).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
+      ]);
+      setRankingRows(data ? mapRows(data as MonthlyResultRow[]) : []);
+      setPreviousRankingRows(previousData ? mapRows(previousData as MonthlyResultRow[]) : []);
     };
     void loadRanking();
   }, [rankingMonth, now]);
@@ -239,7 +245,10 @@ export default function Home() {
   if (!activeUser && authRestoring) return <main className="login-page"><div className="login-card"><p>Đang khôi phục phiên đăng nhập...</p></div></main>;
   if (!activeUser) return <Login onLogin={signIn} error={loginError} />;
   const isAdmin = activeUser.role === "admin";
-  const profileAchievement = latestRankingRows.find((row) => row.name === activeUser.name) || rankingRows.find((row) => row.name === activeUser.name);
+  const achievementRows = previousRankingRows.length ? previousRankingRows : rankingRows;
+  const profileRank = achievementRows.findIndex((row) => row.name === activeUser.name) + 1;
+  const profileAchievement = profileRank > 0 ? achievementRows[profileRank - 1] : null;
+  const welcomeRankClass = profileRank > 0 && profileRank <= 3 ? `rank-${profileRank}` : "rank-none";
 
   return <main className={"app-shell " + (sidebarOpen ? "sidebar-open" : "")}>
     <aside className="sidebar">
@@ -250,11 +259,11 @@ export default function Home() {
         <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(monthLabel(now)); }}><span>▥</span> Bảng xếp hạng</button>
         <button className={screen === "history" ? "active" : ""} onClick={() => setScreen("history")}><span>◷</span> Lịch sử thi đấu</button>
       </nav>
-      <div className="club-card"><span>🏆</span><b>{monthLabel(now)}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div>{latestRankingRows[0] && <div className="club-top1"><small>TOP 1 THÁNG TRƯỚC</small><b>👑 {latestRankingRows[0].name}</b><span>{latestRankingRows[0].points} điểm · +{latestRankingRows[0].pointDiff} hiệu số</span></div>}</div>
+      <div className="club-card"><span>🏆</span><b>{monthLabel(now)}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div>{previousRankingRows[0] && <div className="club-top1"><small>TOP 1 THÁNG TRƯỚC</small><b>👑 {previousRankingRows[0].name}</b><span>{previousRankingRows[0].points} điểm · +{previousRankingRows[0].pointDiff} hiệu số</span></div>}</div>
       <div className="profile"><div className="avatar small" style={{ background: activeUser.color }}>{activeUser.initials}</div><div><b>{activeUser.name}</b><small>{isAdmin ? "Quản trị viên" : "Thành viên"}</small></div><button className="logout" onClick={() => { void supabase?.auth.signOut(); setActiveUser(null); }}>Đăng xuất</button></div>
     </aside>
     <section className="content">
-      <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" onClick={() => setSidebarOpen(!sidebarOpen)}>☰</button><div><p className="eyebrow">{session.date.toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }).toUpperCase()}</p><h1>{screen === "home" ? "Home" : screen === "members" ? "Quản lý thành viên" : screen === "ranking" ? "Bảng xếp hạng" : "Lịch sử thi đấu"}</h1></div></div><p className="welcome-member">Chào mừng <b>{activeUser.name}</b> <span>·</span> Level {activeUser.level}</p></header>
+      <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{session.date.toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }).toUpperCase()}</p><h1>{screen === "home" ? "Home" : screen === "members" ? "Quản lý thành viên" : screen === "ranking" ? "Bảng xếp hạng" : "Lịch sử thi đấu"}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`}><span className="welcome-rank">{profileRank > 0 && profileRank <= 3 ? `TOP ${profileRank}` : "CLB"}</span><span className="welcome-copy">Chào</span><b>{activeUser.name}</b><span className="welcome-level">Level {activeUser.level}</span></p></header>
       {screen === "members" ? <Members members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={setRankingMonth} /> : screen === "history" ? <History sessions={historySessions} /> : <>
         <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>Buổi thứ Bảy ngày {session.date.toLocaleDateString("vi-VN")}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>NGƯỜI CÓ MẶT</small></div><div><b>0{step + 1}<em>/04</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
@@ -267,7 +276,7 @@ export default function Home() {
     {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { setShowCheckin(false); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={() => setShowCheckin(false)} />}
     {confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}
     {isAdmin && attendanceChangeNotice && <ConfirmActionModal title="Thay đổi điểm danh" message={`${attendanceChangeNotice} Xác nhận để reset bốc số và lịch thi đấu; điểm danh mới sẽ được giữ lại.`} onCancel={() => setAttendanceChangeNotice(null)} onConfirm={async () => { if (supabase && sessionId) await supabase.rpc("reset_session_after_attendance_change", { p_session_id: sessionId }); setDrawn({}); setStep(0); setAttendanceChangeNotice(null); }} />}
-    {showProfileCard && <div className="member-profile-popover"><button className="modal-close" onClick={() => setShowProfileCard(false)}>×</button><p className="eyebrow">THÀNH TÍCH THÁNG TRƯỚC</p><h2>{activeUser.name}</h2><div className="profile-stat"><span>Level</span><b>Level {activeUser.level}</b></div><div className="profile-stat"><span>Vị trí</span><b>{profileAchievement ? `#${(latestRankingRows.length ? latestRankingRows : rankingRows).findIndex((row) => row.name === activeUser.name) + 1}` : "—"}</b></div><div className="profile-stat"><span>Điểm</span><b>{profileAchievement ? `${profileAchievement.points} điểm` : "—"}</b></div></div>}
+    {showProfileCard && <div className="member-profile-popover"><button className="modal-close" onClick={() => setShowProfileCard(false)}>×</button><p className="eyebrow">THÀNH TÍCH THÁNG TRƯỚC</p><h2>{activeUser.name}</h2><div className="profile-stat"><span>Level</span><b>Level {activeUser.level}</b></div><div className="profile-stat"><span>Vị trí</span><b>{profileAchievement ? `#${profileRank}` : "—"}</b></div><div className="profile-stat"><span>Điểm</span><b>{profileAchievement ? `${profileAchievement.points} điểm` : "—"}</b></div></div>}
   </main>;
 }
 
