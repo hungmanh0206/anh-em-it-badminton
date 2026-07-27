@@ -1233,6 +1233,7 @@ header {
 }
 
 .welcome-member .welcome-rank,
+.welcome-member .welcome-copy,
 .welcome-member .welcome-level {
   color: inherit !important;
 }
@@ -1257,6 +1258,14 @@ header {
   position: relative;
   z-index: 0;
   color: var(--welcome-name, var(--club-ink-900)) !important;
+}
+
+.welcome-member .welcome-copy {
+  color: var(--club-ink-900) !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.02em !important;
+  white-space: nowrap;
 }
 
 .welcome-member b::after {
@@ -1358,6 +1367,10 @@ header {
     height: 27px !important;
     padding-inline: 10px !important;
     font-size: 9px !important;
+  }
+
+  .welcome-member .welcome-copy {
+    font-size: 11px !important;
   }
 
   .welcome-member b {
