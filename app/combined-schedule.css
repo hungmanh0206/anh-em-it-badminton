@@ -1,0 +1,116 @@
+.combined-schedule-panel,
+.result-entry-panel,
+.live-ranking-panel {
+  margin-top: 16px !important;
+}
+
+.combined-schedule-panel {
+  border-color: #e5dcbd !important;
+  background: linear-gradient(180deg, #fffdf6, #fff) !important;
+}
+
+.result-entry-panel {
+  border-color: #e6e0f4 !important;
+}
+
+.live-ranking-panel {
+  border-color: #eadfb8 !important;
+  background: linear-gradient(180deg, #fffaf0, #fff) !important;
+}
+
+.result-row.match-result-row {
+  grid-template-columns: 34px minmax(170px, 1fr) 46px 12px 46px minmax(170px, 1fr) 96px !important;
+}
+
+.match-result-row.confirmed {
+  border-color: #ccebdc !important;
+  background: #fbfffd !important;
+}
+
+.match-result-row .team-pair {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.match-result-row .team-pair:last-of-type {
+  justify-content: flex-end;
+}
+
+.result-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.result-actions .primary,
+.result-actions .soft-btn {
+  padding: 8px 10px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.result-notice {
+  margin-top: 0 !important;
+}
+
+.live-ranking-panel .rank-table {
+  margin: 0 25px 25px;
+}
+
+.live-rank-table {
+  overflow: auto;
+}
+
+.live-ranking-panel .panel-head {
+  align-items: center;
+}
+
+@media (max-width: 800px) {
+  .combined-schedule-panel,
+  .result-entry-panel,
+  .live-ranking-panel {
+    margin-top: 14px !important;
+  }
+
+  .result-list {
+    overflow-x: auto;
+  }
+
+  .result-row.match-result-row {
+    grid-template-columns: 28px minmax(170px, 1fr) 40px 10px 40px 92px !important;
+    min-width: 650px;
+  }
+
+  .live-ranking-panel .rank-table {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .result-row.match-result-row {
+    grid-template-columns: 24px 1fr 36px 8px 36px !important;
+    min-width: 0;
+  }
+
+  .match-result-row .team-pair:last-of-type {
+    display: none !important;
+  }
+
+  .match-result-row .result-actions {
+    grid-column: 1 / -1;
+    justify-content: stretch;
+  }
+
+  .match-result-row .result-actions button {
+    width: 100%;
+  }
+
+  .live-ranking-panel .rank-table {
+    margin: 0 16px 18px;
+  }
+
+  .live-ranking-panel .panel-head {
+    align-items: flex-start;
+  }
+}

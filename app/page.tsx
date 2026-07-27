@@ -161,6 +161,7 @@ export default function Home() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>("draft");
   const [rankingRows, setRankingRows] = useState<RankingRow[]>([]);
+  const [liveRankingRows, setLiveRankingRows] = useState<RankingRow[]>([]);
   const [previousRankingRows, setPreviousRankingRows] = useState<RankingRow[]>([]);
   const [championRankingRows, setChampionRankingRows] = useState<RankingRow[]>([]);
   const [championRankingLabel, setChampionRankingLabel] = useState(() => {
@@ -209,13 +210,12 @@ export default function Home() {
     return typeof slot === "number" && isDrawSlotValid(member.level, slot, level1PresentCount, level2PresentCount) ? [[member.name, slot]] : [];
   })) as Record<string, number>;
   const currentScheduleScenario = findScheduleScenario(present.length, level1PresentCount);
-  const currentMatches = currentScheduleScenario?.matches ?? [];
   const canSchedule = present.length >= 6 && Boolean(currentScheduleScenario);
   const allAttendanceDone = members.every((m) => m.responded);
   const allDrawn = present.length > 0 && present.every((member) => typeof validDrawn[member.name] === "number");
   const drawOpen = ["checked_in", "drawn", "scheduled", "completed"].includes(sessionStatus);
   const scheduleOpen = ["scheduled", "completed"].includes(sessionStatus);
-  const steps = ["Điểm danh", "Bốc số", "Lịch thi đấu", "Nhập kết quả"];
+  const steps = ["Điểm danh", "Bốc số", "Lịch thi đấu"];
   const goStep = (next: number) => {
     if (next === 0) {
       setLoginError("");
@@ -229,10 +229,9 @@ export default function Home() {
     if (next > step && activeUser?.role !== "admin") {
       if (next === 1 && drawOpen) return setStep(1);
       if (next === 2 && scheduleOpen && currentScheduleScenario) return setStep(2);
-      if (next === 3 && scheduleOpen && currentScheduleScenario) return setStep(3);
       return;
     }
-    if (next > step + 1 || (next === 1 && !drawOpen && (!isCheckinWindowOpen || !canSchedule || !allAttendanceDone)) || (next === 2 && (!currentScheduleScenario || !allDrawn)) || (next === 3 && !currentScheduleScenario)) return;
+    if (next > step + 1 || (next === 1 && !drawOpen && (!isCheckinWindowOpen || !canSchedule || !allAttendanceDone)) || (next === 2 && (!currentScheduleScenario || !allDrawn))) return;
     setStep(next);
   };
   const closeCheckinPopup = () => {
@@ -472,8 +471,9 @@ export default function Home() {
         const name = profile?.full_name || "Thành viên";
         return { name, initials: name.split(" ").map((part: string) => part[0]).slice(-2).join(""), level: Number(profile?.level || row.level_next_month || 2), points: row.total_points, pointsWon: row.points_for, pointsLost: row.points_against, pointDiff: row.point_diff, matches: row.matches_played, color: ["#e7ad26", "#6ba9de", "#df8d2a", "#6846e8", "#e56a4d", "#2ba98b"][index % 6] };
       });
-      const [{ data }, { data: previousData }, { data: championData }, { data: championFinalSessions }, { data: activeProfiles }, { data: finalSession }, { count: nextMonthRows }] = await Promise.all([
+      const [{ data }, { data: currentData }, { data: previousData }, { data: championData }, { data: championFinalSessions }, { data: activeProfiles }, { data: finalSession }, { count: nextMonthRows }] = await Promise.all([
         client.from("monthly_results").select(rankingSelect).eq("month", month).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
+        client.from("monthly_results").select(rankingSelect).eq("month", currentMonthKey).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
         client.from("monthly_results").select(rankingSelect).eq("month", previousMonthKey).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
         client.from("monthly_results").select(rankingSelect).in("month", championMonthKeys),
         client.from("play_sessions").select("session_date, status").in("session_date", championFinalSessionKeys),
@@ -483,7 +483,11 @@ export default function Home() {
       ]);
       const selectedRows = data ? data as MonthlyResultRow[] : [];
       const selectedHasMatchData = selectedRows.some((row) => row.matches_played > 0);
-      setRankingRows(selectedHasMatchData ? mapRows(selectedRows) : zeroRowsFromProfiles((activeProfiles || []) as SupabaseProfile[]));
+      const activeProfileRows = (activeProfiles || []) as SupabaseProfile[];
+      const currentRowsForLive = month === currentMonthKey ? selectedRows : currentData ? currentData as MonthlyResultRow[] : [];
+      const currentHasMatchData = currentRowsForLive.some((row) => row.matches_played > 0);
+      setRankingRows(selectedHasMatchData ? mapRows(selectedRows) : zeroRowsFromProfiles(activeProfileRows));
+      setLiveRankingRows(currentHasMatchData ? mapRows(currentRowsForLive) : zeroRowsFromProfiles(activeProfileRows));
       setPreviousRankingRows(previousData ? mapRows(previousData as MonthlyResultRow[]) : []);
       const championRowsByMonth = new Map<string, MonthlyResultRow[]>();
       ((championData || []) as MonthlyResultRow[]).forEach((row) => {
@@ -723,13 +727,12 @@ export default function Home() {
     <section className="content">
       <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className="welcome-avatar" style={{ background: currentUser.color }} aria-hidden="true">{profileRank > 0 && profileRank <= 3 ? profileRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
       {screen === "members" ? <Members members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "history" ? <History sessions={historySessions} /> : <>
-        <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>Buổi thứ Bảy ngày {session.date.toLocaleDateString("vi-VN")}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>NGƯỜI CÓ MẶT</small></div><div><b>0{step + 1}<em>/04</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
+        <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>Buổi thứ Bảy ngày {session.date.toLocaleDateString("vi-VN")}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>NGƯỜI CÓ MẶT</small></div><div><b>{String(step + 1).padStart(2, "0")}<em>/{String(steps.length).padStart(2, "0")}</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở bốc số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: async () => { if (supabase && sessionId) { const { error } = await supabase.rpc("confirm_attendance", { p_session_id: sessionId }); if (error) return setLoginError(error.message); } setSessionStatus("checked_in"); setStep(1); } })} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
         {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} currentUser={currentUser} isAdmin={isAdmin} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả bốc số hiện tại?", action: confirmScheduleFromDraw })} />}
-        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} onContinue={() => isAdmin ? setConfirmation({ title: "Xác nhận nhập kết quả", message: "Chuyển sang bước ghi nhận kết quả các trận?", action: () => setStep(3) }) : setStep(3)} isAdmin={isAdmin} />}
-        {step === 3 && <Results matches={currentMatches} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} onSaved={() => setRankingRefreshTick((tick) => tick + 1)} />}
+        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} rankingRows={liveRankingRows} rankingMonth={currentMonthLabel} onSaved={(completed) => { if (completed) setSessionStatus("completed"); setRankingMonth(currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}
     </section>
     {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}
@@ -807,10 +810,18 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, currentUser, isAdm
     <div className="panel-foot"><span>{allDrawn ? "✓ Tất cả người tham gia đã bốc số. Admin có thể tạo lịch." : "Đang chờ các thành viên tự bốc số của mình."}</span>{isAdmin && <button className="primary" disabled={!allDrawn} onClick={onContinue}>Tạo lịch thi đấu <span>→</span></button>}</div>
   </section>;
 }
-function Schedule({ scenario, drawn, onContinue, isAdmin }: { scenario: ScheduleScenario | null; drawn: Record<string, number>; onContinue: () => void; isAdmin: boolean }) {
+function Schedule({ scenario, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, isAdmin, rankingRows, rankingMonth, onSaved }: { scenario: ScheduleScenario | null; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; isAdmin: boolean; rankingRows: RankingRow[]; rankingMonth: string; onSaved: (completed: boolean) => void }) {
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
   if (!scenario) return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Lịch chỉ được tạo khi có tối thiểu 6 thành viên và đúng tổ hợp Level trong thư viện lịch.</p></div></div><div className="empty-ranking">Chưa có lịch phù hợp cho danh sách điểm danh hiện tại.</div></section>;
-  return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Đã chọn mẫu theo danh sách hôm nay: {scenario.level1Count} Level 1 + {scenario.level2Count} Level 2.</p></div><span className="count-pill">{scenario.matches.length} trận</span></div><div className="schedule-grid">{scenario.matches.map((match, i) => <Match match={match} i={i} namesBySlot={namesBySlot} key={i} />)}</div><div className="panel-foot"><span>✓ {scenario.title} · Mỗi người 4 trận</span><button className={isAdmin ? "primary" : "soft-btn"} onClick={onContinue}>{isAdmin ? "Bắt đầu nhập điểm" : "Xem kết quả"} <span>→</span></button></div></section>;
+  return <>
+    <section className="panel combined-schedule-panel">
+      <div className="panel-head"><div><h2>Lịch thi đấu & nhập điểm</h2><p>Đã chọn mẫu theo danh sách hôm nay: {scenario.level1Count} Level 1 + {scenario.level2Count} Level 2. Nhập điểm ngay bên dưới từng trận.</p></div><span className="count-pill">{scenario.matches.length} trận</span></div>
+      <div className="schedule-grid">{scenario.matches.map((match, i) => <Match match={match} i={i} namesBySlot={namesBySlot} key={i} />)}</div>
+      <div className="panel-foot"><span>✓ {scenario.title} · Mỗi người 4 trận</span><span>{isAdmin ? "Admin xác nhận từng trận; BXH cập nhật ngay sau khi lưu." : "Thành viên được xem lịch và kết quả, chỉ Admin được sửa điểm."}</span></div>
+    </section>
+    <Results matches={scenario.matches} drawn={drawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} onSaved={onSaved} />
+    <LiveRankingSnapshot rows={rankingRows} month={rankingMonth} />
+  </>;
 }
 function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
   const [participantFilter, setParticipantFilter] = useState<ParticipantCount>(6);
@@ -852,7 +863,7 @@ function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
 function SlotToken({ no, name }: { no: number; name?: string }) { return <span className={`slot-token level-${slotLevel(no)}`}><b>{no}</b>{name && <small>{name}</small>}</span>; }
 function TeamPair({ team, namesBySlot }: { team: readonly [number, number]; namesBySlot?: Record<number, string> }) { return <span className="team-pair"><SlotToken no={team[0]} name={namesBySlot?.[team[0]]} /><i>+</i><SlotToken no={team[1]} name={namesBySlot?.[team[1]]} /></span>; }
 function Match({ match, i, namesBySlot }: { match: ScheduleMatch; i: number; namesBySlot?: Record<number, string> }) { return <article className="match schedule-match-card"><div className="match-top"><b>TRẬN {String(i + 1).padStart(2, "0")}</b><span>{match.type}</span></div><div className="teams"><TeamPair team={match.teamA} namesBySlot={namesBySlot} /><strong>VS</strong><TeamPair team={match.teamB} namesBySlot={namesBySlot} /></div></article>; }
-function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, isAdmin, onSaved }: { matches: ScheduleMatch[]; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; isAdmin: boolean; onSaved: () => void }) {
+function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, isAdmin, onSaved }: { matches: ScheduleMatch[]; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; isAdmin: boolean; onSaved: (completed: boolean) => void }) {
   const [editing, setEditing] = useState<Record<number, boolean>>({});
   const [saving, setSaving] = useState<number | null>(null);
   const [notice, setNotice] = useState("");
@@ -873,21 +884,32 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
       headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
       body: JSON.stringify({ sessionId, matchNo: index + 1, matchType: match.type, teamA: match.teamA, teamB: match.teamB, scoreA, scoreB, totalMatches: matches.length }),
     });
+    const payload = await response.json().catch(() => ({})) as { error?: string; completed?: boolean };
     setSaving(null);
     if (!response.ok) {
-      const payload = await response.json().catch(() => ({ error: "Không thể lưu kết quả trận." }));
       return setNotice(payload.error || "Không thể lưu kết quả trận.");
     }
     setConfirmedMatches({ ...confirmedMatches, [index]: true });
     setEditing({ ...editing, [index]: false });
     setNotice(`Đã cập nhật BXH sau trận ${index + 1}.`);
-    onSaved();
+    onSaved(Boolean(payload.completed));
   };
-  return <section className="panel"><div className="panel-head"><div><h2>Nhập kết quả</h2><p>{isAdmin ? "Xác nhận từng trận. Mỗi lần xác nhận sẽ cập nhật ngay xuống bảng xếp hạng." : "Chỉ Admin có thể nhập, sửa và xác nhận kết quả từng trận."}</p></div><span className="count-pill">{confirmedCount}/{matches.length} trận</span></div>{notice && <div className="warning result-notice">{notice}</div>}<div className="result-list">{matches.map((match, i) => {
+  return <section className="panel result-entry-panel"><div className="panel-head"><div><h2>Điểm số từng trận</h2><p>{isAdmin ? "Xác nhận từng trận. Mỗi lần xác nhận sẽ cập nhật ngay xuống BXH bên dưới và tab BXH chính." : "Bạn có thể xem điểm từng trận tại đây; chỉ Admin có quyền nhập, sửa và xác nhận."}</p></div><span className="count-pill">{confirmedCount}/{matches.length} trận</span></div>{notice && <div className="warning result-notice">{notice}</div>}<div className="result-list">{matches.map((match, i) => {
     const confirmed = Boolean(confirmedMatches[i]);
     const locked = !isAdmin || (confirmed && !editing[i]);
     return <div className={"result-row schedule-result-row match-result-row " + (confirmed ? "confirmed" : "")} key={i}><b>{i + 1}</b><TeamPair team={match.teamA} namesBySlot={namesBySlot} /><input disabled={locked} aria-label={`Điểm đội A trận ${i + 1}`} value={scores[i]?.[0] ?? ""} onChange={e => setScores({ ...scores, [i]: [e.target.value, scores[i]?.[1] ?? ""] })}/><em>:</em><input disabled={locked} aria-label={`Điểm đội B trận ${i + 1}`} value={scores[i]?.[1] ?? ""} onChange={e => setScores({ ...scores, [i]: [scores[i]?.[0] ?? "", e.target.value] })}/><TeamPair team={match.teamB} namesBySlot={namesBySlot} /><div className="result-actions">{isAdmin && (confirmed && !editing[i] ? <button className="soft-btn" onClick={() => setEditing({ ...editing, [i]: true })}>Sửa</button> : <button className="primary" disabled={saving === i} onClick={() => void saveMatch(match, i)}>{saving === i ? "Đang lưu…" : confirmed ? "Lưu lại" : "Xác nhận"}</button>)}</div></div>;
   })}</div>{isAdmin && <div className="panel-foot"><span>{confirmedCount === matches.length ? "✓ Toàn bộ trận đã xác nhận và BXH đã được cập nhật." : "Điểm cao hơn được tính là thắng (+1 điểm cho mỗi thành viên đội thắng)."}</span></div>}</section>;
+}
+function LiveRankingSnapshot({ rows, month }: { rows: RankingRow[]; month: string }) {
+  const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
+  const completedMatches = Math.floor(rows.reduce((total, row) => total + row.matches, 0) / 4);
+  return <section className="panel live-ranking-panel">
+    <div className="panel-head"><div><h2>BXH tạm thời</h2><p>Tự động cập nhật theo điểm đã lưu của {month}. Bảng xếp hạng chính cũng dùng cùng dữ liệu này.</p></div><span className="count-pill">{completedMatches} trận đã tính</span></div>
+    <div className="rank-table live-rank-table"><div className="rank-head rank-columns"><span>Vị trí</span><span>Thành viên</span><span>Điểm</span><span>Điểm thắng</span><span>Điểm thua</span><span>Hiệu số</span><span>Số trận</span></div>{rows.length ? rows.map((row, i) => {
+      const isTopRank = hasRankingData && i < 3;
+      return <div className={"rank-row rank-columns " + (isTopRank ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={isTopRank ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className="avatar small" style={{ background: row.color }}>{row.initials}</div><b>{row.name}</b><span className="level">L{row.level}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span></div>;
+    }) : <div className="empty-ranking">Chưa có dữ liệu BXH cho tháng hiện tại.</div>}</div>
+  </section>;
 }
 function Ranking({ month, rows, onMonthChange, monthOptions, isAdmin, closeStatus, closeNotice, closingMonth, onCloseMonth }: { month: string; rows: RankingRow[]; onMonthChange: (month: string) => void; monthOptions: string[]; isAdmin: boolean; closeStatus: MonthCloseStatus | null; closeNotice: string; closingMonth: boolean; onCloseMonth: () => void }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
