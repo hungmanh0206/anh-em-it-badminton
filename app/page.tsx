@@ -28,6 +28,18 @@ const screenTitles: Record<Screen, string> = {
   history: "Lịch sử thi đấu",
 };
 const slotLevel = (no: number): 1 | 2 => no <= 4 ? 1 : 2;
+const drawSlotsForLevel = (level: 1 | 2, level1Count: number, level2Count: number) => {
+  const count = Math.max(0, level === 1 ? level1Count : level2Count);
+  const start = level === 1 ? 1 : 5;
+  return Array.from({ length: count }, (_, index) => start + index);
+};
+const drawSlotRangeLabel = (level: 1 | 2, level1Count: number, level2Count: number) => {
+  const slots = drawSlotsForLevel(level, level1Count, level2Count);
+  if (!slots.length) return "chưa có số";
+  return slots.length === 1 ? `số ${slots[0]}` : `số ${slots[0]}–${slots[slots.length - 1]}`;
+};
+const isDrawSlotValid = (level: 1 | 2, slot: number, level1Count: number, level2Count: number) =>
+  drawSlotsForLevel(level, level1Count, level2Count).includes(slot);
 const matchTypeLabel = (team: readonly [number, number]) => team.every((no) => slotLevel(no) === 1) ? "L1 + L1" : team.every((no) => slotLevel(no) === 2) ? "L2 + L2" : "L1 + L2";
 const schedule = (patterns: MatchPattern[]) => patterns.map(([a1, a2, b1, b2, type]) => {
   const teamA = [a1, a2] as const;
@@ -138,11 +150,16 @@ export default function Home() {
   const progress = monthlyProgress(now);
   const present = members.filter((m) => m.present);
   const level1PresentCount = present.filter((m) => m.level === 1).length;
+  const level2PresentCount = present.length - level1PresentCount;
+  const validDrawn = Object.fromEntries(present.flatMap((member) => {
+    const slot = drawn[member.name];
+    return typeof slot === "number" && isDrawSlotValid(member.level, slot, level1PresentCount, level2PresentCount) ? [[member.name, slot]] : [];
+  })) as Record<string, number>;
   const currentScheduleScenario = findScheduleScenario(present.length, level1PresentCount);
   const currentMatches = currentScheduleScenario?.matches ?? [];
   const canSchedule = present.length >= 6 && Boolean(currentScheduleScenario);
   const allAttendanceDone = members.every((m) => m.responded);
-  const allDrawn = present.length > 0 && present.every((member) => typeof drawn[member.name] === "number");
+  const allDrawn = present.length > 0 && present.every((member) => typeof validDrawn[member.name] === "number");
   const drawOpen = ["checked_in", "drawn", "scheduled", "completed"].includes(sessionStatus);
   const scheduleOpen = ["scheduled", "completed"].includes(sessionStatus);
   const steps = ["Điểm danh", "Bốc số", "Lịch thi đấu", "Nhập kết quả"];
@@ -152,7 +169,7 @@ export default function Home() {
       if (next === 2 && scheduleOpen) return setStep(2);
       return;
     }
-    if (next > step + 1 || (next === 1 && !drawOpen && (!isCheckinWindowOpen || !canSchedule || !allAttendanceDone)) || (next === 2 && (!currentScheduleScenario || !allDrawn)) || (next === 3 && (!currentScheduleScenario || !allDrawn))) return;
+    if (next > step + 1 || (next === 1 && !drawOpen && (!isCheckinWindowOpen || !canSchedule || !allAttendanceDone)) || (next === 2 && (!currentScheduleScenario || !allDrawn)) || (next === 3 && !currentScheduleScenario)) return;
     setStep(next);
   };
 
@@ -245,7 +262,7 @@ export default function Home() {
         const profile = attendance ? (Array.isArray(attendance.profiles) ? attendance.profiles[0] : attendance.profiles) : null;
         const nextName = profile?.full_name || member.name;
         if (attendance?.choice === "attending" && typeof attendance.drawn_number === "number") nextDrawn[nextName] = attendance.drawn_number;
-        return attendance ? { ...member, name: nextName, level: Number(profile?.level || member.level) as 1 | 2, role: (profile?.role as "admin" | "member" | undefined) ?? member.role, present: attendance.choice === "attending", responded: attendance.choice !== "pending" } : member;
+        return attendance ? { ...member, name: nextName, level: Number(profile?.level || member.level) as 1 | 2, role: (profile?.role as "admin" | "member" | undefined) ?? member.role, present: attendance.choice === "attending", responded: attendance.choice !== "pending" } : { ...member, present: false, responded: false };
       }));
       setDrawn(nextDrawn);
     };
@@ -338,7 +355,7 @@ export default function Home() {
     if (!activeUser || spinning) return;
     const self = members.find((member) => member.username === activeUser.username) ?? activeUser;
     if (!self.present) return setLoginError("Bạn cần điểm danh tham gia trước khi bốc số.");
-    if (drawn[self.name]) return;
+    if (validDrawn[self.name]) return;
     setLoginError("");
     setSpinning(true);
     const revealAfterSpin = (selected?: number) => {
@@ -355,14 +372,25 @@ export default function Home() {
     };
     try {
       if (supabase && sessionId) {
-        const { data, error } = await supabase.rpc("claim_draw_slot", { p_session_id: sessionId });
-        if (error) throw error;
-        revealAfterSpin(Number(data));
+        const { data: { session: authSession } } = await supabase.auth.getSession();
+        const response = await fetch("/api/draw-slot", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(authSession?.access_token ? { Authorization: `Bearer ${authSession.access_token}` } : {}) },
+          body: JSON.stringify({ sessionId }),
+        });
+        const payload = await response.json().catch(() => ({ error: "Không thể bốc số lúc này." })) as { drawnNumber?: number; error?: string };
+        if (!response.ok || typeof payload.drawnNumber !== "number") throw new Error(payload.error || "Không thể bốc số lúc này.");
+        revealAfterSpin(payload.drawnNumber);
         return;
       }
       const latest = JSON.parse(localStorage.getItem("aemit-drawn-slots") || "{}") as Record<string, number>;
-      const pool = self.level === 1 ? [1, 2, 3, 4] : [5, 6, 7, 8, 9, 10];
-      const available = pool.filter((slot) => !Object.values(latest).includes(slot));
+      const pool = drawSlotsForLevel(self.level, level1PresentCount, level2PresentCount);
+      const usedSlots = present.flatMap((member) => {
+        const slot = latest[member.name];
+        return typeof slot === "number" && isDrawSlotValid(member.level, slot, level1PresentCount, level2PresentCount) ? [slot] : [];
+      });
+      const available = pool.filter((slot) => !usedSlots.includes(slot));
+      if (!available.length) throw new Error("Không còn số trống trong dải Level của bạn.");
       const selected = available[Math.floor(Math.random() * available.length)];
       revealAfterSpin(selected);
     } catch (error) {
@@ -392,9 +420,9 @@ export default function Home() {
 
   useEffect(() => {
     if (!activeUser || screen !== "home") return;
-    if (sessionStatus === "scheduled" || sessionStatus === "completed") setStep((current) => Math.max(current, 2));
+    if ((sessionStatus === "scheduled" || sessionStatus === "completed") && currentScheduleScenario && allDrawn) setStep((current) => Math.max(current, 2));
     else if (drawOpen) setStep((current) => Math.max(current, 1));
-  }, [activeUser, drawOpen, screen, sessionStatus]);
+  }, [activeUser, allDrawn, currentScheduleScenario, drawOpen, screen, sessionStatus]);
 
   useEffect(() => {
     const trigger = document.querySelector(".welcome-member");
@@ -441,9 +469,9 @@ export default function Home() {
         <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>Buổi thứ Bảy ngày {session.date.toLocaleDateString("vi-VN")}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>NGƯỜI CÓ MẶT</small></div><div><b>0{step + 1}<em>/04</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở bốc số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: async () => { if (supabase && sessionId) { const { error } = await supabase.rpc("confirm_attendance", { p_session_id: sessionId }); if (error) return setLoginError(error.message); } setSessionStatus("checked_in"); setStep(1); } })} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => setShowCheckin(true)} />}
-        {step === 1 && <Draw members={present} drawn={drawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} currentUser={currentUser} isAdmin={isAdmin} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả bốc số hiện tại?", action: confirmScheduleFromDraw })} />}
-        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={drawn} onContinue={() => setConfirmation({ title: "Xác nhận nhập kết quả", message: "Chuyển sang bước ghi nhận kết quả các trận?", action: () => goStep(3) })} isAdmin={isAdmin} />}
-        {step === 3 && <Results matches={currentMatches} drawn={drawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} onSaved={() => setRankingRefreshTick((tick) => tick + 1)} />}
+        {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} currentUser={currentUser} isAdmin={isAdmin} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả bốc số hiện tại?", action: confirmScheduleFromDraw })} />}
+        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} onContinue={() => setConfirmation({ title: "Xác nhận nhập kết quả", message: "Chuyển sang bước ghi nhận kết quả các trận?", action: () => setStep(3) })} isAdmin={isAdmin} />}
+        {step === 3 && <Results matches={currentMatches} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} onSaved={() => setRankingRefreshTick((tick) => tick + 1)} />}
       </>}
     </section>
     {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { setShowCheckin(false); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={() => setShowCheckin(false)} />}
@@ -498,7 +526,10 @@ function CheckIn({ members, onContinue, canSchedule, isAdmin, currentUser, isChe
   </section>;
 }
 function Draw({ members, drawn, allDrawn, drawSelf, spinning, currentUser, isAdmin, onContinue }: { members: Member[]; drawn: Record<string, number>; allDrawn: boolean; drawSelf: () => void; spinning: boolean; currentUser: Member; isAdmin: boolean; onContinue: () => void }) {
-  const pool = currentUser.level === 1 ? [1, 2, 3, 4] : [5, 6, 7, 8, 9, 10];
+  const level1Count = members.filter((member) => member.level === 1).length;
+  const level2Count = members.length - level1Count;
+  const pool = drawSlotsForLevel(currentUser.level, level1Count, level2Count);
+  const rangeLabel = drawSlotRangeLabel(currentUser.level, level1Count, level2Count);
   const mine = drawn[currentUser.name];
   const entries = members.map((member) => ({ member, no: drawn[member.name] }));
   const wheelStyle = { "--spin-duration": "3.9s", "--spin-deg": `${currentUser.level === 1 ? 1738 : 2096}deg` } as CSSProperties;
@@ -512,7 +543,7 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, currentUser, isAdm
         })}</div>
         <div className="wheel-inner">{spinning ? <b>…<small>ĐANG QUAY</small></b> : mine ? <b>{mine}<small>SỐ CỦA BẠN</small></b> : <b>?</b>}</div>
       </div>
-      <div className="draw-copy"><span className="tag">{currentUser.level === 1 ? "VÒNG QUAY LEVEL 1 · SỐ 1–4" : "VÒNG QUAY LEVEL 2 · SỐ 5–10"}</span><h2>{spinning ? "Vòng quay đang chọn số…" : mine ? "Bạn đã bốc xong" : currentUser.present ? "Đến lượt bạn bốc số" : "Bạn chưa điểm danh tham gia"}</h2><p>Vòng quay chạy khoảng 4 giây. Số được claim ngay trên hệ thống để không ai bị trùng, sau đó mới reveal ra màn hình.</p><button className="primary" disabled={spinning || !currentUser.present || Boolean(mine)} onClick={drawSelf}>{spinning ? "Đang quay…" : mine ? "Đã có số" : "Bốc số của tôi"} <span>↻</span></button></div>
+      <div className="draw-copy"><span className="tag">VÒNG QUAY LEVEL {currentUser.level} · {rangeLabel.toUpperCase()}</span><h2>{spinning ? "Vòng quay đang chọn số…" : mine ? "Bạn đã bốc xong" : currentUser.present ? "Đến lượt bạn bốc số" : "Bạn chưa điểm danh tham gia"}</h2><p>Vòng quay chạy khoảng 4 giây. Số được claim ngay trên hệ thống để không ai bị trùng, sau đó mới reveal ra màn hình.</p><button className="primary" disabled={spinning || !currentUser.present || Boolean(mine)} onClick={drawSelf}>{spinning ? "Đang quay…" : mine ? "Đã có số" : "Bốc số của tôi"} <span>↻</span></button></div>
     </div>
     <div className="draw-list draw-roster">{entries.map(({ member, no }) => <div className={no ? "drawn" : "pending"} key={member.username}><span>{member.name}</span><b>{no ?? "—"}</b><small>Level {member.level}</small></div>)}</div>
     <div className="panel-foot"><span>{allDrawn ? "✓ Tất cả người tham gia đã bốc số. Admin có thể tạo lịch." : "Đang chờ các thành viên tự bốc số của mình."}</span>{isAdmin && <button className="primary" disabled={!allDrawn} onClick={onContinue}>Tạo lịch thi đấu <span>→</span></button>}</div>

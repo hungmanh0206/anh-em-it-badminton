@@ -18,7 +18,15 @@ export function createSupabaseAdmin() {
   });
 }
 
-export async function requireAdmin(request: Request) {
+type AuthProfile = {
+  id: string;
+  role: "admin" | "member" | string;
+  full_name?: string | null;
+  username?: string | null;
+  level?: "1" | "2" | number | string | null;
+};
+
+export async function requireUser(request: Request) {
   const admin = createSupabaseAdmin();
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) throw new ApiError(401, "Bạn cần đăng nhập lại.");
@@ -26,11 +34,17 @@ export async function requireAdmin(request: Request) {
   const { data: authData, error: authError } = await admin.auth.getUser(token);
   if (authError || !authData.user) throw new ApiError(401, "Phiên đăng nhập không hợp lệ.");
 
-  const { data: profile, error: profileError } = await admin.from("profiles").select("id, role").eq("id", authData.user.id).single();
+  const { data: profile, error: profileError } = await admin.from("profiles").select("id, role, full_name, username, level").eq("id", authData.user.id).single();
   if (profileError || !profile) throw new ApiError(403, "Không tìm thấy hồ sơ người dùng.");
-  if (profile.role !== "admin") throw new ApiError(403, "Chỉ Admin được thực hiện thao tác này.");
 
-  return { admin, user: authData.user };
+  return { admin, user: authData.user, profile: profile as AuthProfile };
+}
+
+export async function requireAdmin(request: Request) {
+  const context = await requireUser(request);
+  if (context.profile.role !== "admin") throw new ApiError(403, "Chỉ Admin được thực hiện thao tác này.");
+
+  return context;
 }
 
 export function jsonError(error: unknown) {
