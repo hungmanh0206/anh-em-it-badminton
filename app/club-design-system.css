@@ -1981,3 +1981,126 @@ header {
     padding: 12px !important;
   }
 }
+
+/* Final mobile header correction: compact greeting chip + left-aligned title */
+@media (max-width: 560px) {
+  header {
+    display: grid !important;
+    grid-template-columns: 46px minmax(0, 1fr) !important;
+    grid-template-areas:
+      "menu greeting"
+      "title title" !important;
+    align-items: start !important;
+    justify-content: start !important;
+    column-gap: 12px !important;
+    row-gap: 13px !important;
+    text-align: left !important;
+  }
+
+  .title-group {
+    display: contents !important;
+  }
+
+  .mobile-menu {
+    grid-area: menu !important;
+    align-self: start !important;
+    justify-self: start !important;
+    margin-top: 0 !important;
+  }
+
+  .title-group > div {
+    grid-area: title !important;
+    justify-self: start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding-top: 0 !important;
+    text-align: left !important;
+  }
+
+  .title-group .eyebrow,
+  .title-group h1 {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    text-align: left !important;
+  }
+
+  .title-group .eyebrow {
+    margin-bottom: 7px !important;
+  }
+
+  .title-group h1 {
+    font-size: clamp(28px, 8.4vw, 33px) !important;
+    line-height: 1.02 !important;
+  }
+
+  .welcome-member,
+  .welcome-member.rank-1,
+  .welcome-member.rank-2,
+  .welcome-member.rank-3,
+  .welcome-member.rank-none {
+    grid-area: greeting !important;
+    justify-self: end !important;
+    align-self: start !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    width: fit-content !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 92px) !important;
+    min-height: 48px !important;
+    margin: 0 !important;
+    padding: 7px 11px 7px 7px !important;
+    gap: 8px !important;
+    border-radius: 15px !important;
+    text-align: left !important;
+  }
+
+  .welcome-member .welcome-avatar {
+    flex: 0 0 34px !important;
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 11px !important;
+  }
+
+  .welcome-member.rank-1 .welcome-avatar,
+  .welcome-member.rank-2 .welcome-avatar,
+  .welcome-member.rank-3 .welcome-avatar {
+    font-size: 15px !important;
+  }
+
+  .welcome-text {
+    display: grid !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+  }
+
+  .welcome-line {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .welcome-member .welcome-copy {
+    font-size: 11px !important;
+    line-height: 1 !important;
+  }
+
+  .welcome-member b {
+    display: block !important;
+    max-width: 72px !important;
+    overflow: hidden !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .welcome-member .welcome-level {
+    font-size: 10px !important;
+    line-height: 1 !important;
+  }
+}
