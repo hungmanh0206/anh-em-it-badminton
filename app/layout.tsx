@@ -11,8 +11,8 @@ export const metadata: Metadata = {
   title: "Anh Em IT — Quản lý CLB Cầu lông",
   description: "Quản lý buổi chơi, lịch đấu và bảng xếp hạng CLB Anh Em IT.",
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: "/favicon.svg?v=team-logo",
+    shortcut: "/favicon.svg?v=team-logo",
   },
 };
 
