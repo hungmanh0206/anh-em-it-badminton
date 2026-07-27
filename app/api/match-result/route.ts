@@ -33,6 +33,10 @@ const monthStart = (dateText: string) => {
   const date = new Date(`${dateText}T00:00:00`);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-01`;
 };
+const nextMonthStart = (dateText: string) => {
+  const date = new Date(`${dateText}T00:00:00`);
+  return `${date.getFullYear()}-${String(date.getMonth() + 2).padStart(2, "0")}-01`;
+};
 
 const assertScore = (score: unknown) => Number.isInteger(score) && Number(score) >= 0;
 
@@ -70,6 +74,15 @@ export async function POST(request: Request) {
     }
 
     const month = monthStart(playSession.session_date);
+    const { count: nextMonthCount, error: nextMonthError } = await admin
+      .from("monthly_results")
+      .select("id", { count: "exact", head: true })
+      .eq("month", nextMonthStart(playSession.session_date));
+    if (nextMonthError) throw nextMonthError;
+    if ((nextMonthCount || 0) > 0) {
+      return Response.json({ error: "Tháng này đã chốt BXH, không thể nhập hoặc sửa điểm nữa." }, { status: 400 });
+    }
+
     const previousMatch = oldMatch as StoredMatch | null;
     const participantIds = [...new Set([...(previousMatch?.team_a || []), ...(previousMatch?.team_b || []), ...teamAIds, ...teamBIds].filter(Boolean) as string[])];
     const { data: profiles, error: profilesError } = await admin.from("profiles").select("id, level").in("id", participantIds);

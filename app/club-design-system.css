@@ -2379,3 +2379,92 @@ header {
 .sidebar .club-top1.empty span {
   color: rgba(255, 255, 255, 0.58) !important;
 }
+
+/* Monthly ranking close action */
+.month-close-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--club-ink-200);
+  border-radius: var(--club-radius-lg);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 183, 0, 0.12), transparent 30%),
+    var(--club-white);
+  box-shadow: var(--club-shadow-sm);
+}
+
+.month-close-card > div {
+  min-width: 0;
+}
+
+.month-close-card span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--club-ink-600);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.month-close-card h3 {
+  margin: 0 0 4px;
+  color: var(--club-ink-950);
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.month-close-card p {
+  color: var(--club-ink-600);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.month-close-card.ready {
+  border-color: rgba(255, 183, 0, 0.5);
+  background:
+    radial-gradient(circle at 4% 8%, rgba(255, 183, 0, 0.22), transparent 33%),
+    linear-gradient(135deg, #fff9e8, #ffffff);
+  box-shadow: 0 12px 30px rgba(255, 183, 0, 0.2);
+}
+
+.month-close-card.ready span {
+  color: var(--club-gold-700);
+}
+
+.month-close-card.closed {
+  border-color: rgba(31, 138, 91, 0.28);
+  background:
+    radial-gradient(circle at 4% 8%, rgba(31, 138, 91, 0.12), transparent 33%),
+    linear-gradient(135deg, #effcf6, #ffffff);
+}
+
+.month-close-card.closed span {
+  color: var(--club-success);
+}
+
+.month-close-card.waiting {
+  background:
+    radial-gradient(circle at 4% 8%, rgba(121, 115, 106, 0.08), transparent 32%),
+    var(--club-white);
+}
+
+.month-close-card .primary {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .month-close-card {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .month-close-card .primary {
+    width: 100%;
+  }
+}
