@@ -12,8 +12,11 @@ type HistorySessionRow = { id: string; session_date: string; matches?: { count: 
 type MatchRow = { match_no: number; team_a: string[]; team_b: string[]; score_a: number; score_b: number };
 type ProfileRow = { id: string; full_name: string };
 type Screen = "home" | "members" | "schedules" | "ranking" | "history";
-type MatchTemplate = readonly [string, string, string, string, string];
-type ScheduleScenario = { id: string; title: string; subtitle: string; badge: string; note: string; matches: MatchTemplate[] };
+const scheduleParticipants = [6, 7, 8, 9, 10] as const;
+type ParticipantCount = typeof scheduleParticipants[number];
+type MatchPattern = readonly [number, number, number, number, string?];
+type ScheduleMatch = { teamA: readonly [number, number]; teamB: readonly [number, number]; type: string };
+type ScheduleScenario = { id: string; participantCount: ParticipantCount; level1Count: number; level2Count: number; title: string; subtitle: string; badge: string; note: string; matches: ScheduleMatch[] };
 const screenTitles: Record<Screen, string> = {
   home: "Home",
   members: "Quản lý thành viên",
@@ -21,95 +24,47 @@ const screenTitles: Record<Screen, string> = {
   ranking: "Bảng xếp hạng",
   history: "Lịch sử thi đấu",
 };
-const slot = (no: number) => `Số ${no}`;
-const matchFromSlots = (a1: number, a2: number, b1: number, b2: number, type = "XOAY VÒNG"): MatchTemplate => [slot(a1), slot(a2), slot(b1), slot(b2), type];
-const scheduleScenarios: ScheduleScenario[] = [
-  {
-    id: "six-players",
-    title: "Trường hợp 6 người",
-    subtitle: "6 trận · mỗi người 4 trận",
-    badge: "Tối thiểu",
-    note: "Dùng khi buổi chơi chỉ vừa đủ số người để lập lịch đôi; mỗi người nghỉ 2 lượt.",
-    matches: [
-      matchFromSlots(1, 2, 3, 4),
-      matchFromSlots(1, 3, 5, 6),
-      matchFromSlots(2, 5, 4, 6),
-      matchFromSlots(1, 4, 2, 3),
-      matchFromSlots(1, 5, 2, 6),
-      matchFromSlots(3, 6, 4, 5),
-    ],
-  },
-  {
-    id: "seven-players",
-    title: "Trường hợp 7 người",
-    subtitle: "7 trận · mỗi người 4 trận",
-    badge: "Xoay nghỉ",
-    note: "Phù hợp khi có 7 người; lịch ưu tiên đổi đồng đội và rải lượt nghỉ đều.",
-    matches: [
-      matchFromSlots(1, 2, 3, 4),
-      matchFromSlots(1, 5, 6, 7),
-      matchFromSlots(2, 3, 4, 5),
-      matchFromSlots(1, 6, 2, 7),
-      matchFromSlots(3, 5, 4, 6),
-      matchFromSlots(1, 3, 4, 7),
-      matchFromSlots(2, 6, 5, 7),
-    ],
-  },
-  {
-    id: "eight-players",
-    title: "Trường hợp 8 người",
-    subtitle: "8 trận · mỗi người 4 trận",
-    badge: "Cân bằng",
-    note: "Hai sân/nhóm slot có thể xoay song song; sau đó trộn chéo để mọi người gặp thêm đối thủ mới.",
-    matches: [
-      matchFromSlots(1, 2, 3, 4),
-      matchFromSlots(5, 6, 7, 8),
-      matchFromSlots(1, 3, 2, 4),
-      matchFromSlots(5, 7, 6, 8),
-      matchFromSlots(1, 4, 2, 3),
-      matchFromSlots(5, 8, 6, 7),
-      matchFromSlots(1, 5, 2, 6, "TRỘN CHÉO"),
-      matchFromSlots(3, 7, 4, 8, "TRỘN CHÉO"),
-    ],
-  },
-  {
-    id: "nine-players",
-    title: "Trường hợp 9 người",
-    subtitle: "9 trận · mỗi người 4 trận",
-    badge: "Phổ biến",
-    note: "Kịch bản hay gặp của CLB: đủ 9 người, một người nghỉ mỗi lượt và tổng trận vẫn gọn.",
-    matches: [
-      matchFromSlots(1, 2, 3, 4),
-      matchFromSlots(5, 6, 7, 8),
-      matchFromSlots(1, 3, 2, 9),
-      matchFromSlots(4, 5, 6, 7),
-      matchFromSlots(1, 4, 8, 9),
-      matchFromSlots(2, 3, 5, 7),
-      matchFromSlots(1, 8, 6, 9),
-      matchFromSlots(2, 4, 3, 5),
-      matchFromSlots(6, 8, 7, 9),
-    ],
-  },
-  {
-    id: "ten-players",
-    title: "Trường hợp 10 người",
-    subtitle: "10 trận · mỗi người 4 trận",
-    badge: "Đầy đủ",
-    note: "Dùng khi đông đủ slot; lịch giữ nhịp nghỉ rộng hơn để tránh quá tải.",
-    matches: [
-      matchFromSlots(1, 10, 2, 3),
-      matchFromSlots(4, 5, 6, 7),
-      matchFromSlots(1, 2, 8, 9),
-      matchFromSlots(3, 10, 4, 6),
-      matchFromSlots(5, 8, 7, 9),
-      matchFromSlots(1, 3, 2, 10),
-      matchFromSlots(4, 7, 5, 6),
-      matchFromSlots(1, 8, 2, 9),
-      matchFromSlots(3, 4, 5, 10),
-      matchFromSlots(6, 9, 7, 8),
-    ],
-  },
+const baseSchedulePatterns: Record<ParticipantCount, MatchPattern[]> = {
+  6: [[1, 2, 3, 4], [1, 3, 5, 6], [2, 5, 4, 6], [1, 4, 2, 3], [1, 5, 2, 6], [3, 6, 4, 5]],
+  7: [[1, 2, 3, 4], [1, 5, 6, 7], [2, 3, 4, 5], [1, 6, 2, 7], [3, 5, 4, 6], [1, 3, 4, 7], [2, 6, 5, 7]],
+  8: [[1, 2, 3, 4], [5, 6, 7, 8], [1, 3, 2, 4], [5, 7, 6, 8], [1, 4, 2, 3], [5, 8, 6, 7], [1, 5, 2, 6, "TRỘN CHÉO"], [3, 7, 4, 8, "TRỘN CHÉO"]],
+  9: [[1, 2, 3, 4], [5, 6, 7, 8], [1, 3, 2, 9], [4, 5, 6, 7], [1, 4, 8, 9], [2, 3, 5, 7], [1, 8, 6, 9], [2, 4, 3, 5], [6, 8, 7, 9]],
+  10: [[1, 10, 2, 3], [4, 5, 6, 7], [1, 2, 8, 9], [3, 10, 4, 6], [5, 8, 7, 9], [1, 3, 2, 10], [4, 7, 5, 6], [1, 8, 2, 9], [3, 4, 5, 10], [6, 9, 7, 8]],
+};
+const scheduleScenarioSplits: Record<ParticipantCount, number[]> = {
+  6: [0, 1, 2, 3, 4],
+  7: [1, 2, 3, 4],
+  8: [2, 3, 4],
+  9: [3, 4],
+  10: [4],
+};
+const slotLevel = (no: number): 1 | 2 => no <= 4 ? 1 : 2;
+const slotsForSplit = (level1Count: number, level2Count: number) => [
+  ...Array.from({ length: level1Count }, (_, index) => index + 1),
+  ...Array.from({ length: level2Count }, (_, index) => index + 5),
 ];
+const makeScheduleScenario = (participantCount: ParticipantCount, level1Count: number): ScheduleScenario => {
+  const level2Count = participantCount - level1Count;
+  const slots = slotsForSplit(level1Count, level2Count);
+  const matches = baseSchedulePatterns[participantCount].map(([a1, a2, b1, b2, type = "XOAY VÒNG"]) => ({
+    teamA: [slots[a1 - 1], slots[a2 - 1]] as const,
+    teamB: [slots[b1 - 1], slots[b2 - 1]] as const,
+    type,
+  }));
+  return {
+    id: `${participantCount}-players-${level1Count}-l1-${level2Count}-l2`,
+    participantCount,
+    level1Count,
+    level2Count,
+    title: `${participantCount} người · ${level1Count} Level 1 + ${level2Count} Level 2`,
+    subtitle: `${matches.length} trận · mỗi người 4 trận`,
+    badge: `${level1Count}L1 + ${level2Count}L2`,
+    note: `Áp dụng khi buổi chơi có ${level1Count} thành viên Level 1 và ${level2Count} thành viên Level 2.`,
+    matches,
+  };
+};
+const scheduleScenarios = scheduleParticipants.flatMap((participantCount) => scheduleScenarioSplits[participantCount].map((level1Count) => makeScheduleScenario(participantCount, level1Count)));
+const findScheduleScenario = (participantCount: number, level1Count: number) => scheduleScenarios.find((scenario) => scenario.participantCount === participantCount && scenario.level1Count === level1Count) ?? null;
 const localDateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const monthLabel = (date: Date) => `Tháng ${date.getMonth() + 1}, ${date.getFullYear()}`;
 function homeSession(now: Date) { const day = now.getDay(); const offset = day >= 3 ? 6 - day : -(day + 1); const date = new Date(now); date.setDate(now.getDate() + offset); const state = day === 6 ? "ĐANG DIỄN RA" : day < 3 ? "ĐÃ DIỄN RA" : "CHƯA DIỄN RA"; return { date, state }; }
@@ -169,24 +124,20 @@ export default function Home() {
   const session = homeSession(now);
   const progress = monthlyProgress(now);
   const present = members.filter((m) => m.present);
-  const canSchedule = present.length >= 6;
+  const level1PresentCount = present.filter((m) => m.level === 1).length;
+  const currentScheduleScenario = findScheduleScenario(present.length, level1PresentCount);
+  const currentMatches = currentScheduleScenario?.matches ?? [];
+  const canSchedule = present.length >= 6 && Boolean(currentScheduleScenario);
   const allAttendanceDone = members.every((m) => m.responded);
   const slots = useMemo(() => {
     const l1 = present.filter((m) => m.level === 1).map((m, i) => [m.name, i + 1] as const);
     const l2 = present.filter((m) => m.level === 2).map((m, i) => [m.name, i + 5] as const);
     return [...l1, ...l2];
   }, [present]);
-  const matches = [
-    ["Mạnh", "Hùng", "Quý", "Thành", "MIXED"], ["Mạnh", "Quý", "Hùng", "Phú", "MIXED"],
-    ["Mạnh", "Sơn", "Đạt", "Đức Anh", "MIXED"], ["Mạnh", "Phú", "Thành", "Nam", "MIXED"],
-    ["Hùng", "Quý", "Đức Anh", "Phú", "MIXED"], ["Hùng", "Thành", "Nam", "Sơn", "MIXED"],
-    ["Quý", "Đạt", "Đức Anh", "Sơn", "MIXED"], ["Thành", "Đạt", "Nam", "Đức Anh", "MIXED"],
-    ["Đạt", "Nam", "Sơn", "Phú", "L2 ONLY"],
-  ];
   const steps = ["Điểm danh", "Bốc số", "Lịch thi đấu", "Nhập kết quả"];
   const goStep = (next: number) => {
     if (next > step && activeUser?.role !== "admin") return;
-    if (next > step + 1 || (next === 1 && (!isCheckinWindowOpen || !canSchedule || !allAttendanceDone)) || (next === 2 && Object.keys(drawn).length === 0)) return;
+    if (next > step + 1 || (next === 1 && (!isCheckinWindowOpen || !canSchedule || !allAttendanceDone)) || (next === 2 && (!currentScheduleScenario || Object.keys(drawn).length === 0))) return;
     setStep(next);
   };
   const draw = () => {
@@ -388,8 +339,8 @@ export default function Home() {
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở bốc số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: async () => { if (supabase && sessionId) { const { error } = await supabase.rpc("confirm_attendance", { p_session_id: sessionId }); if (error) return setLoginError(error.message); } goStep(1); } })} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={activeUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => setShowCheckin(true)} />}
         {step === 1 && <Draw drawn={drawn} draw={draw} drawSelf={drawSelf} spinning={spinning} currentUser={activeUser} isAdmin={isAdmin} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả bốc số hiện tại?", action: () => goStep(2) })} />}
-        {step === 2 && <Schedule matches={matches} drawn={drawn} onContinue={() => setConfirmation({ title: "Xác nhận nhập kết quả", message: "Chuyển sang bước ghi nhận kết quả các trận?", action: () => goStep(3) })} isAdmin={isAdmin} />}
-        {step === 3 && <Results matches={matches} scores={scores} setScores={setScores} isAdmin={isAdmin} />}
+        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={drawn} onContinue={() => setConfirmation({ title: "Xác nhận nhập kết quả", message: "Chuyển sang bước ghi nhận kết quả các trận?", action: () => goStep(3) })} isAdmin={isAdmin} />}
+        {step === 3 && <Results matches={currentMatches} drawn={drawn} scores={scores} setScores={setScores} isAdmin={isAdmin} />}
       </>}
     </section>
     {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { setShowCheckin(false); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={() => setShowCheckin(false)} />}
@@ -433,32 +384,44 @@ function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass
 
 function CheckIn({ members, onContinue, canSchedule, isAdmin, currentUser, isCheckinWindowOpen, isCheckinTestMode, openSelfCheckin }: { members: Member[]; setMembers: (m: Member[]) => void; onContinue: () => void; canSchedule: boolean; isAdmin: boolean; currentUser: Member; isCheckinWindowOpen: boolean; isCheckinTestMode: boolean; openSelfCheckin: () => void }) {
   const n = members.filter((m) => m.present).length;
+  const l1 = members.filter((m) => m.present && m.level === 1).length;
+  const l2 = n - l1;
   const allResponded = members.every((m) => m.responded);
   return <section className="panel checkin">
     <div className="panel-head"><div><h2>Điểm danh thành viên</h2><p>{isCheckinTestMode ? "Đang bật tạm điểm danh để test; sau khi test xong sẽ quay lại lịch mở thứ Tư." : isCheckinWindowOpen ? (isAdmin ? "Admin chỉ điểm danh cho chính mình và mở bước tiếp theo khi toàn bộ thành viên đã phản hồi." : "Bạn chỉ có thể điểm danh cho chính mình; các nội dung khác ở chế độ xem.") : "Điểm danh mở từ thứ Tư hằng tuần cho buổi chơi thứ Bảy."}</p></div><div className="count-pill">{n} người có mặt</div></div>
     <div className="member-grid">{members.map((m) => <div className="member-card readonly" key={m.name}><div className="avatar" style={{ background: m.color }}>{m.initials}</div><div><b>{m.name}{m.name === currentUser.name && <em>Bạn</em>}</b><small>Level {m.level} (theo BXH tháng trước) · {m.responded ? (m.present ? "Tham gia" : "Không tham gia") : "Chưa phản hồi"}</small></div><span className={"attendance-mark " + (!m.responded ? "waiting" : m.present ? "yes" : "no")}>{m.responded ? (m.present ? "✓" : "×") : ""}</span></div>)}</div>
-    {isCheckinWindowOpen && !canSchedule && <div className="warning">Cần tối thiểu 6 người có mặt để tạo lịch thi đấu tự động.</div>}
+    {isCheckinWindowOpen && !canSchedule && <div className="warning">{n < 6 ? "Cần tối thiểu 6 người có mặt để tạo lịch thi đấu tự động." : `Chưa có mẫu lịch phù hợp cho ${n} người (${l1} Level 1 + ${l2} Level 2).`}</div>}
     <div className="panel-foot"><span>{isCheckinTestMode ? "Chế độ test đang bật — nút điểm danh có thể dùng ngay hôm nay." : !isCheckinWindowOpen ? "Điểm danh và popup nhắc sẽ tự mở vào thứ Tư." : allResponded ? "✓ Toàn bộ thành viên đã phản hồi. Admin có thể xác nhận để mở bốc số." : "Đang chờ các thành viên tự phản hồi điểm danh — trạng thái cập nhật trực tiếp."}</span><div className="attendance-actions"><button className="soft-btn" disabled={!isCheckinWindowOpen} onClick={openSelfCheckin}>{isCheckinWindowOpen ? (currentUser.responded ? "Cập nhật điểm danh của tôi" : "Điểm danh của tôi") : "Mở vào thứ Tư"}</button>{isAdmin && <button className="primary" disabled={!isCheckinWindowOpen || !canSchedule || !allResponded} onClick={onContinue}>Xác nhận điểm danh & mở bốc số <span>→</span></button>}</div></div>
   </section>;
 }
 function Draw({ drawn, draw, drawSelf, spinning, currentUser, isAdmin, onContinue }: { drawn: Record<string, number>; draw: () => void; drawSelf: () => void; spinning: boolean; currentUser: Member; isAdmin: boolean; onContinue: () => void }) { const entries = Object.entries(drawn); const mine = drawn[currentUser.name]; return <section className="panel draw-panel"><div className="panel-head"><div><h2>Bốc số ngẫu nhiên</h2><p>{isAdmin ? "Theo dõi số đã bốc. Bước tạo lịch chỉ mở sau khi mọi người hoàn tất." : `Bạn đang ở Level ${currentUser.level}; giao diện chỉ hiển thị vòng quay phù hợp với cấp độ của bạn.`}</p></div><span className="mode">LEVEL {currentUser.level}</span></div><div className="draw-body"><div className={"wheel " + (spinning ? "spinning" : "")}><div className="wheel-inner">{spinning ? <b>…<small>ĐANG QUAY</small></b> : mine ? <b>#{mine}<small>SỐ CỦA BẠN</small></b> : <b>?</b>}</div></div><div className="draw-copy"><span className="tag">{currentUser.level === 1 ? "VÒNG QUAY LEVEL 1 · SỐ 1–4" : "VÒNG QUAY LEVEL 2 · SỐ 5–10"}</span><h2>{spinning ? "Vòng quay đang chọn số…" : mine ? "Bạn đã có số!" : "Đến lượt bạn bốc số"}</h2><p>Vòng quay kéo dài 3,5 giây. Hệ thống giữ số đã chọn ngay khi bốc để không thành viên nào nhận trùng số.</p><button className="primary" disabled={spinning} onClick={isAdmin ? draw : drawSelf}>{spinning ? "Đang quay…" : isAdmin ? "Bốc số mô phỏng" : mine ? "Xem số đã bốc" : "Bốc số của tôi"} <span>↻</span></button></div></div>{entries.length > 0 && <div className="draw-list">{entries.map(([name, no]) => <div key={name}><span>{name}</span><b>#{no}</b></div>)}</div>}<div className="panel-foot"><span>🔒 Số được giữ duy nhất ngay khi quay.</span>{isAdmin && <button className="primary" disabled={entries.length < 1} onClick={onContinue}>Tạo lịch thi đấu <span>→</span></button>}</div></section> }
-function Schedule({ matches, drawn, onContinue, isAdmin }: { matches: string[][]; drawn: Record<string, number>; onContinue: () => void; isAdmin: boolean }) { return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>{Object.keys(drawn).length ? "Đã ghép lịch theo số bốc và Level của các thành viên." : "Lịch mẫu được tạo theo quy tắc mỗi người thi đấu 4 trận."}</p></div>{isAdmin && <button className="soft-btn">↻ Tạo lại lịch</button>}</div><div className="schedule-grid">{matches.map((m, i) => <Match match={m} i={i} key={i} />)}</div>{isAdmin && <div className="panel-foot"><span>✓ Mỗi người 4 trận · Không lặp đồng đội</span><button className="primary" onClick={onContinue}>Bắt đầu nhập điểm <span>→</span></button></div>}</section> }
+function Schedule({ scenario, drawn, onContinue, isAdmin }: { scenario: ScheduleScenario | null; drawn: Record<string, number>; onContinue: () => void; isAdmin: boolean }) {
+  const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
+  if (!scenario) return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Lịch chỉ được tạo khi có tối thiểu 6 thành viên và đúng tổ hợp Level trong thư viện lịch.</p></div></div><div className="empty-ranking">Chưa có lịch phù hợp cho danh sách điểm danh hiện tại.</div></section>;
+  return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Đã chọn mẫu theo danh sách hôm nay: {scenario.level1Count} Level 1 + {scenario.level2Count} Level 2.</p></div><span className="count-pill">{scenario.matches.length} trận</span></div><div className="schedule-grid">{scenario.matches.map((match, i) => <Match match={match} i={i} namesBySlot={namesBySlot} key={i} />)}</div>{isAdmin && <div className="panel-foot"><span>✓ {scenario.title} · Mỗi người 4 trận</span><button className="primary" onClick={onContinue}>Bắt đầu nhập điểm <span>→</span></button></div>}</section>;
+}
 function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
-  const totalMatches = scenarios.reduce((sum, scenario) => sum + scenario.matches.length, 0);
+  const [participantFilter, setParticipantFilter] = useState<ParticipantCount>(6);
+  const visibleScenarios = scenarios.filter((scenario) => scenario.participantCount === participantFilter);
+  const visibleMatches = visibleScenarios.reduce((sum, scenario) => sum + scenario.matches.length, 0);
   return <section className="schedule-library">
     <section className="panel schedule-overview">
       <div>
         <p className="eyebrow">THƯ VIỆN LỊCH</p>
-        <h2>Tất cả mẫu lịch thi đấu</h2>
-        <p>Trang này chỉ dùng để xem các kịch bản lịch theo số người tham gia. Không có thao tác chọn lịch và không ghi đè lịch của buổi chơi hiện tại.</p>
+        <h2>Mẫu lịch theo số người & Level</h2>
+        <p>Lịch chỉ có khi buổi chơi có từ 6 thành viên trở lên. Trang này chỉ để xem các trường hợp tạo lịch, không chọn hay ghi đè lịch của buổi hiện tại.</p>
       </div>
       <div className="schedule-overview-stats">
-        <div><b>{scenarios.length}</b><span>trường hợp</span></div>
-        <div><b>{totalMatches}</b><span>trận mẫu</span></div>
+        <div><b>{participantFilter}</b><span>người tham gia</span></div>
+        <div><b>{visibleScenarios.length}</b><span>trường hợp</span></div>
       </div>
     </section>
+    <div className="schedule-filter" role="group" aria-label="Lọc lịch theo số lượng thành viên">
+      {scheduleParticipants.map((count) => <button key={count} type="button" className={participantFilter === count ? "active" : ""} onClick={() => setParticipantFilter(count)}>{count} người</button>)}
+    </div>
+    <div className="schedule-summary-strip"><span>{visibleScenarios.length} trường hợp</span><span>{visibleMatches} trận mẫu</span><span>Level 1: xanh dương · Level 2: xanh lá</span></div>
     <div className="schedule-case-list">
-      {scenarios.map((scenario) => <article className="panel schedule-case" key={scenario.id}>
+      {visibleScenarios.map((scenario) => <article className="panel schedule-case" key={scenario.id}>
         <div className="schedule-case-head">
           <div>
             <span className="schedule-case-badge">{scenario.badge}</span>
@@ -475,8 +438,10 @@ function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
     </div>
   </section>;
 }
-function Match({ match, i }: { match: readonly string[]; i: number }) { return <article className="match"><div className="match-top"><b>TRẬN {String(i + 1).padStart(2, "0")}</b><span>{match[4]}</span></div><div className="teams"><div>{match[0]}<small> + {match[1]}</small></div><strong>VS</strong><div>{match[2]}<small> + {match[3]}</small></div></div></article> }
-function Results({ matches, scores, setScores, isAdmin }: { matches: string[][]; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; isAdmin: boolean }) { return <section className="panel"><div className="panel-head"><div><h2>Nhập kết quả</h2><p>{isAdmin ? "Cập nhật điểm từng trận. Hệ thống sẽ tự tính bảng xếp hạng tháng." : "Chỉ Admin có thể nhập và chốt kết quả buổi chơi."}</p></div><span className="count-pill">{Object.keys(scores).length}/{matches.length} trận</span></div><div className="result-list">{matches.map((m, i) => <div className="result-row" key={i}><b>#{i + 1}</b><span>{m[0]} + {m[1]}</span><input disabled={!isAdmin} aria-label="Điểm đội A" value={scores[i]?.[0] ?? ""} onChange={e => setScores({ ...scores, [i]: [e.target.value, scores[i]?.[1] ?? ""] })}/><em>:</em><input disabled={!isAdmin} aria-label="Điểm đội B" value={scores[i]?.[1] ?? ""} onChange={e => setScores({ ...scores, [i]: [scores[i]?.[0] ?? "", e.target.value] })}/><span>{m[2]} + {m[3]}</span></div>)}</div>{isAdmin && <div className="panel-foot"><span>Điểm cao hơn sẽ được tính là thắng (+1 điểm).</span><button className="primary">Chốt kết quả buổi chơi <span>✓</span></button></div>}</section> }
+function SlotToken({ no, name }: { no: number; name?: string }) { return <span className={`slot-token level-${slotLevel(no)}`}><b>{no}</b>{name && <small>{name}</small>}</span>; }
+function TeamPair({ team, namesBySlot }: { team: readonly [number, number]; namesBySlot?: Record<number, string> }) { return <span className="team-pair"><SlotToken no={team[0]} name={namesBySlot?.[team[0]]} /><i>+</i><SlotToken no={team[1]} name={namesBySlot?.[team[1]]} /></span>; }
+function Match({ match, i, namesBySlot }: { match: ScheduleMatch; i: number; namesBySlot?: Record<number, string> }) { return <article className="match schedule-match-card"><div className="match-top"><b>TRẬN {String(i + 1).padStart(2, "0")}</b><span>{match.type}</span></div><div className="teams"><TeamPair team={match.teamA} namesBySlot={namesBySlot} /><strong>VS</strong><TeamPair team={match.teamB} namesBySlot={namesBySlot} /></div></article>; }
+function Results({ matches, drawn, scores, setScores, isAdmin }: { matches: ScheduleMatch[]; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; isAdmin: boolean }) { const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>; return <section className="panel"><div className="panel-head"><div><h2>Nhập kết quả</h2><p>{isAdmin ? "Cập nhật điểm từng trận. Hệ thống sẽ tự tính bảng xếp hạng tháng." : "Chỉ Admin có thể nhập và chốt kết quả buổi chơi."}</p></div><span className="count-pill">{Object.keys(scores).length}/{matches.length} trận</span></div><div className="result-list">{matches.map((match, i) => <div className="result-row schedule-result-row" key={i}><b>{i + 1}</b><TeamPair team={match.teamA} namesBySlot={namesBySlot} /><input disabled={!isAdmin} aria-label="Điểm đội A" value={scores[i]?.[0] ?? ""} onChange={e => setScores({ ...scores, [i]: [e.target.value, scores[i]?.[1] ?? ""] })}/><em>:</em><input disabled={!isAdmin} aria-label="Điểm đội B" value={scores[i]?.[1] ?? ""} onChange={e => setScores({ ...scores, [i]: [scores[i]?.[0] ?? "", e.target.value] })}/><TeamPair team={match.teamB} namesBySlot={namesBySlot} /></div>)}</div>{isAdmin && <div className="panel-foot"><span>Điểm cao hơn sẽ được tính là thắng (+1 điểm).</span><button className="primary">Chốt kết quả buổi chơi <span>✓</span></button></div>}</section>; }
 function Ranking({ month, rows, onMonthChange }: { month: string; rows: RankingRow[]; onMonthChange: (month: string) => void }) { return <section className="ranking"><div className="section-title"><div><p className="eyebrow">XẾP HẠNG THEO THÁNG</p><h2>Bảng xếp hạng</h2></div></div><div className="ranking-toolbar"><label>Tháng<select value={month} onChange={(e) => onMonthChange(e.target.value)}><option>Tháng 7, 2026</option><option>Tháng 6, 2026</option></select></label><p>{month === monthLabel(new Date()) ? "BXH hiện tại sẽ khóa và reset sau 3 ngày kể từ buổi cuối tháng." : "Dữ liệu lịch sử đã được lưu và chỉ có thể xem."}</p></div><div className="rank-table"><div className="rank-head rank-columns"><span>Vị trí</span><span>Thành viên</span><span>Điểm</span><span>Điểm thắng</span><span>Điểm thua</span><span>Hiệu số</span><span>Số trận</span></div>{rows.length ? rows.map((row, i) => <div className={"rank-row rank-columns " + (i < 3 ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={i < 3 ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className="avatar small" style={{ background: row.color }}>{row.initials}</div><b>{row.name}</b><span className="level">L{row.level}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span></div>) : <div className="empty-ranking">Chưa có kết quả thi đấu cho {month}.</div>}</div></section> }
 function History({ sessions }: { sessions: HistorySession[] }) { const [month, setMonth] = useState("Tháng 7, 2026"); const [week, setWeek] = useState("Tất cả các tuần"); const [detail, setDetail] = useState<{ title: string; rows: { no: number; a: string; b: string; sa: number; sb: number }[] } | null>(null); const entries = sessions.filter((session) => { const date = new Date(`${session.date}T00:00:00`); return month === monthLabel(date); }).map((session) => { const date = new Date(`${session.date}T00:00:00`); return { ...session, week: `Tuần ${Math.ceil(date.getDate() / 7)} · Thứ Bảy ${date.toLocaleDateString("vi-VN")}`, title: `Buổi chơi ${date.toLocaleDateString("vi-VN")}`, detail: `${session.matches} trận · ${session.attendees} thành viên` }; }); const visible = week === "Tất cả các tuần" ? entries : entries.filter((session) => session.week === week); const showDetail = async (session: typeof entries[number]) => { if (!supabase) return; const [{ data: matches }, { data: profiles }] = await Promise.all([supabase.from("matches").select("match_no,team_a,team_b,score_a,score_b").eq("session_id", session.id).order("match_no"), supabase.from("profiles").select("id,full_name")]); const names: Record<string, string> = Object.fromEntries(((profiles || []) as ProfileRow[]).map((profile) => [profile.id, profile.full_name])); setDetail({ title: session.title, rows: ((matches || []) as MatchRow[]).map((match) => ({ no: match.match_no, a: match.team_a.map((id: string) => names[id] || "?").join(" - "), b: match.team_b.map((id: string) => names[id] || "?").join(" - "), sa: match.score_a, sb: match.score_b })) }); }; return <><section className="panel history-panel"><div className="panel-head"><div><h2>Lịch sử thi đấu</h2><p>Dữ liệu từng buổi chơi, số bốc thăm và kết quả được lưu theo tuần.</p></div></div><div className="history-filters"><label>Tháng<select value={month} onChange={(e) => { setMonth(e.target.value); setWeek("Tất cả các tuần"); }}><option>Tháng 7, 2026</option><option>Tháng 6, 2026</option></select></label><label>Tuần<select value={week} onChange={(e) => setWeek(e.target.value)}><option>Tất cả các tuần</option>{entries.map((session) => <option key={session.id}>{session.week}</option>)}</select></label></div><div className="history-list">{visible.length ? visible.map((session) => <article key={session.id}><div><span>{session.week}</span><h3>{session.title}</h3><p>{session.detail}</p></div><button className="soft-btn" onClick={() => void showDetail(session)}>Xem chi tiết →</button></article>) : <div className="empty-ranking">Chưa có dữ liệu cho bộ lọc này.</div>}</div></section>{detail && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="history-detail"><button className="modal-close" onClick={() => setDetail(null)}>×</button><p className="eyebrow">KẾT QUẢ THI ĐẤU</p><h2>{detail.title}</h2><div className="history-match-list">{detail.rows.map((match) => <article className="history-match-row" key={match.no}><span className="history-match-index">Trận {match.no}</span><span className="history-team history-team-a">{match.a}</span><strong className="history-score"><span>{match.sa}</span><i>:</i><span>{match.sb}</span></strong><span className="history-team history-team-b">{match.b}</span></article>)}</div></section></div>}</> }
 function Members({ members }: { members: Member[] }) {
