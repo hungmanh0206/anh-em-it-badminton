@@ -15,6 +15,8 @@ const localDateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMon
 const monthLabel = (date: Date) => `Tháng ${date.getMonth() + 1}, ${date.getFullYear()}`;
 function homeSession(now: Date) { const day = now.getDay(); const offset = day >= 3 ? 6 - day : -(day + 1); const date = new Date(now); date.setDate(now.getDate() + offset); const state = day === 6 ? "ĐANG DIỄN RA" : day < 3 ? "ĐÃ DIỄN RA" : "CHƯA DIỄN RA"; return { date, state }; }
 function monthlyProgress(now: Date) { const year = now.getFullYear(), month = now.getMonth(); const saturdays: Date[] = []; for (let d = new Date(year, month, 1); d.getMonth() === month; d.setDate(d.getDate() + 1)) if (d.getDay() === 6) saturdays.push(new Date(d)); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return { total: saturdays.length, completed: saturdays.filter((d) => d < today).length }; }
+function finalSaturdayOfMonth(date: Date) { const finalSaturday = new Date(date.getFullYear(), date.getMonth() + 1, 0); while (finalSaturday.getDay() !== 6) finalSaturday.setDate(finalSaturday.getDate() - 1); return finalSaturday; }
+function isCurrentMonthRankingClosed(now: Date) { const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return finalSaturdayOfMonth(now) < today; }
 const initialMembers: Member[] = [
   { name: "Mạnh", initials: "M", level: 1, color: "#6846e8", present: false, username: "manh", password: "123456", role: "admin", responded: false },
   { name: "Hùng", initials: "H", level: 1, color: "#e56a4d", present: false, username: "hung", password: "123456", responded: false },
@@ -43,6 +45,7 @@ export default function Home() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [rankingRows, setRankingRows] = useState<RankingRow[]>([]);
   const [previousRankingRows, setPreviousRankingRows] = useState<RankingRow[]>([]);
+  const [championRankingRows, setChampionRankingRows] = useState<RankingRow[]>([]);
   const [historySessions, setHistorySessions] = useState<HistorySession[]>([]);
   const [confirmation, setConfirmation] = useState<{ title: string; message: string; action: () => void | Promise<void> } | null>(null);
   const [attendanceChangeNotice, setAttendanceChangeNotice] = useState<string | null>(null);
@@ -55,7 +58,12 @@ export default function Home() {
     month: "2-digit",
     year: "numeric",
   }).toUpperCase();
-  const previousMonthKey = localDateKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const championRankingMonth = isCurrentMonthRankingClosed(now) ? currentMonthStart : previousMonthStart;
+  const previousMonthKey = localDateKey(previousMonthStart);
+  const championRankingKey = localDateKey(championRankingMonth);
+  const championRankingLabel = monthLabel(championRankingMonth);
   const isCheckinWindowOpen = now.getDay() === 3;
   const session = homeSession(now);
   const progress = monthlyProgress(now);
@@ -186,15 +194,17 @@ export default function Home() {
         const name = profile?.full_name || "Thành viên";
         return { name, initials: name.split(" ").map((part: string) => part[0]).slice(-2).join(""), level: Number(profile?.level || row.level_next_month || 2), points: row.total_points, pointsWon: row.points_for, pointsLost: row.points_against, pointDiff: row.point_diff, matches: row.matches_played, color: ["#e7ad26", "#6ba9de", "#df8d2a", "#6846e8", "#e56a4d", "#2ba98b"][index % 6] };
       });
-      const [{ data }, { data: previousData }] = await Promise.all([
+      const [{ data }, { data: previousData }, { data: championData }] = await Promise.all([
         client.from("monthly_results").select(rankingSelect).eq("month", month).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
         client.from("monthly_results").select(rankingSelect).eq("month", previousMonthKey).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
+        client.from("monthly_results").select(rankingSelect).eq("month", championRankingKey).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
       ]);
       setRankingRows(data ? mapRows(data as MonthlyResultRow[]) : []);
       setPreviousRankingRows(previousData ? mapRows(previousData as MonthlyResultRow[]) : []);
+      setChampionRankingRows(championData ? mapRows(championData as MonthlyResultRow[]) : []);
     };
     void loadRanking();
-  }, [rankingMonth, previousMonthKey]);
+  }, [rankingMonth, previousMonthKey, championRankingKey]);
   useEffect(() => {
     if (!supabase || !activeUser || activeUser.role !== "admin" || !sessionId) return;
     const client = supabase;
@@ -251,10 +261,11 @@ export default function Home() {
   if (!activeUser && authRestoring) return <main className="login-page"><div className="login-card"><p>Đang khôi phục phiên đăng nhập...</p></div></main>;
   if (!activeUser) return <Login onLogin={signIn} error={loginError} />;
   const isAdmin = activeUser.role === "admin";
-  const achievementRows = previousRankingRows.length ? previousRankingRows : rankingRows;
+  const achievementRows = championRankingRows.length ? championRankingRows : previousRankingRows.length ? previousRankingRows : rankingRows;
   const profileRank = achievementRows.findIndex((row) => row.name === activeUser.name) + 1;
   const profileAchievement = profileRank > 0 ? achievementRows[profileRank - 1] : null;
   const welcomeRankClass = profileRank > 0 && profileRank <= 3 ? `rank-${profileRank}` : "rank-none";
+  const champion = championRankingRows[0];
 
   return <main className={"app-shell " + (sidebarOpen ? "sidebar-open" : "")}>
     <aside className="sidebar">
@@ -265,7 +276,7 @@ export default function Home() {
         <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(monthLabel(now)); }}><span>▥</span> Bảng xếp hạng</button>
         <button className={screen === "history" ? "active" : ""} onClick={() => setScreen("history")}><span>◷</span> Lịch sử thi đấu</button>
       </nav>
-      <div className="club-card"><span>🏆</span><b>{monthLabel(now)}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div><div className={`club-top1 ${previousRankingRows[0] ? "" : "empty"}`}><small>NHÀ VÔ ĐỊCH THÁNG TRƯỚC</small><b>{previousRankingRows[0] ? `👑 ${previousRankingRows[0].name}` : "Chưa ghi danh"}</b><span>{previousRankingRows[0] ? `${previousRankingRows[0].points} điểm · ${previousRankingRows[0].pointDiff > 0 ? "+" : ""}${previousRankingRows[0].pointDiff} hiệu số` : "Chốt BXH tháng trước để vinh danh top 1."}</span></div></div>
+      <div className="club-card"><span>🏆</span><b>{monthLabel(now)}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div><div className={`club-top1 ${champion ? "" : "empty"}`}><small>NHÀ VÔ ĐỊCH {championRankingLabel.toUpperCase()}</small><b>{champion ? `👑 ${champion.name}` : "Chưa ghi danh"}</b><span>{champion ? `${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số` : `Chưa có dữ liệu BXH ${championRankingLabel}.`}</span></div></div>
       <div className="profile"><div className="avatar small" style={{ background: activeUser.color }}>{activeUser.initials}</div><div><b>{activeUser.name}</b><small>{isAdmin ? "Quản trị viên" : "Thành viên"}</small></div><button className="logout" onClick={() => { void supabase?.auth.signOut(); setActiveUser(null); }}>Đăng xuất</button></div>
     </aside>
     <section className="content">
@@ -282,11 +293,11 @@ export default function Home() {
     {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { setShowCheckin(false); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={() => setShowCheckin(false)} />}
     {confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}
     {isAdmin && attendanceChangeNotice && <ConfirmActionModal title="Thay đổi điểm danh" message={`${attendanceChangeNotice} Xác nhận để reset bốc số và lịch thi đấu; điểm danh mới sẽ được giữ lại.`} onCancel={() => setAttendanceChangeNotice(null)} onConfirm={async () => { if (supabase && sessionId) await supabase.rpc("reset_session_after_attendance_change", { p_session_id: sessionId }); setDrawn({}); setStep(0); setAttendanceChangeNotice(null); }} />}
-    {showProfileCard && <ProfilePopover member={activeUser} rank={profileRank} achievement={profileAchievement} rankClass={welcomeRankClass} onClose={() => setShowProfileCard(false)} />}
+    {showProfileCard && <ProfilePopover member={activeUser} rank={profileRank} achievement={profileAchievement} achievementMonth={championRankingLabel} rankClass={welcomeRankClass} onClose={() => setShowProfileCard(false)} />}
   </main>;
 }
 
-function ProfilePopover({ member, rank, achievement, rankClass, onClose }: { member: Member; rank: number; achievement: RankingRow | null; rankClass: string; onClose: () => void }) {
+function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass, onClose }: { member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; onClose: () => void }) {
   const isTopRank = rank > 0 && rank <= 3;
   const pointDiff = achievement?.pointDiff;
   const pointDiffLabel = typeof pointDiff === "number" ? `${pointDiff > 0 ? "+" : ""}${pointDiff}` : "—";
@@ -296,13 +307,13 @@ function ProfilePopover({ member, rank, achievement, rankClass, onClose }: { mem
     <div className="profile-hero-card">
       <span className="profile-medal" style={{ background: member.color }} aria-hidden="true">{isTopRank ? rank : member.initials}</span>
       <div>
-        <p>{isTopRank ? `Top ${rank} tháng trước` : "Hồ sơ thành viên"}</p>
+        <p>{isTopRank ? `Top ${rank} · ${achievementMonth}` : "Hồ sơ thành viên"}</p>
         <h2>{member.name}</h2>
         <span>{roleLabel} · Level {member.level}</span>
       </div>
     </div>
     <div className="profile-score-card">
-      <span>Thành tích tháng trước</span>
+      <span>Thành tích {achievementMonth}</span>
       <b>{achievement ? `${achievement.points} điểm` : "Chưa có dữ liệu"}</b>
       <small>{achievement ? `${achievement.matches} trận · hiệu số ${pointDiffLabel}` : "BXH sẽ cập nhật sau khi có kết quả thi đấu."}</small>
     </div>
@@ -314,7 +325,7 @@ function ProfilePopover({ member, rank, achievement, rankClass, onClose }: { mem
       <div className={`profile-stat ${typeof pointDiff === "number" ? pointDiff >= 0 ? "positive" : "negative" : ""}`}><span>Hiệu số</span><b>{pointDiffLabel}</b></div>
       <div className="profile-stat"><span>Số trận</span><b>{achievement ? achievement.matches : "—"}</b></div>
     </div>
-    <p className="profile-note">{isTopRank ? "Thành tích nổi bật được tính theo kết quả tháng trước." : "Thông tin xếp hạng sẽ nổi bật hơn khi có dữ liệu tháng trước."}</p>
+    <p className="profile-note">{isTopRank ? `Thành tích nổi bật được tính theo BXH ${achievementMonth}.` : `Thông tin xếp hạng sẽ nổi bật hơn khi có dữ liệu BXH ${achievementMonth}.`}</p>
   </aside>;
 }
 
