@@ -1,0 +1,629 @@
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap");
+
+:root {
+  --club-gold-50: #fff9ec;
+  --club-gold-100: #fff1d1;
+  --club-gold-200: #ffe19e;
+  --club-gold-400: #ffc23d;
+  --club-gold-500: #ffb700;
+  --club-gold-600: #e6a300;
+  --club-gold-700: #c28800;
+  --club-ink-950: #12110f;
+  --club-ink-900: #1a1916;
+  --club-ink-800: #2a2823;
+  --club-ink-700: #3d3a33;
+  --club-ink-600: #57534a;
+  --club-ink-500: #79736a;
+  --club-ink-300: #c9c2b5;
+  --club-ink-200: #e6e0d5;
+  --club-ink-100: #f2eee6;
+  --club-ink-50: #faf8f3;
+  --club-white: #ffffff;
+  --club-success: #1f8a5b;
+  --club-danger: #d64545;
+  --club-info: #2a6fdb;
+  --club-radius-sm: 8px;
+  --club-radius-md: 12px;
+  --club-radius-lg: 16px;
+  --club-radius-xl: 24px;
+  --club-shadow-xs: 0 1px 2px rgba(26, 25, 22, 0.06);
+  --club-shadow-sm: 0 2px 8px rgba(26, 25, 22, 0.08);
+  --club-shadow-md: 0 8px 24px rgba(26, 25, 22, 0.1);
+  --club-shadow-lg: 0 18px 48px rgba(26, 25, 22, 0.14);
+  --club-shadow-gold: 0 10px 26px rgba(255, 183, 0, 0.34);
+  --club-focus: 0 0 0 3px rgba(255, 183, 0, 0.45);
+  --club-ease: cubic-bezier(0.2, 0, 0.1, 1);
+}
+
+* {
+  scrollbar-color: var(--club-ink-300) transparent;
+}
+
+body {
+  background:
+    radial-gradient(circle at 18% 6%, rgba(255, 183, 0, 0.14), transparent 28%),
+    linear-gradient(180deg, #fffdf8 0%, var(--club-ink-50) 44%, #f7f3ea 100%) !important;
+  color: var(--club-ink-900) !important;
+  font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif !important;
+  letter-spacing: -0.01em !important;
+}
+
+h1,
+h2,
+h3,
+.brand b,
+.login-brand b {
+  color: var(--club-ink-900);
+  font-family: "Be Vietnam Pro", system-ui, sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+}
+
+p,
+small,
+.panel-head p,
+.hero p,
+.member-card small {
+  color: var(--club-ink-600);
+}
+
+button,
+input,
+select {
+  font-family: inherit !important;
+}
+
+button,
+.member-card,
+.match,
+.history-list article,
+.rank-row {
+  transition:
+    transform 180ms var(--club-ease),
+    box-shadow 180ms var(--club-ease),
+    border-color 180ms var(--club-ease),
+    background 180ms var(--club-ease),
+    color 180ms var(--club-ease);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: none !important;
+  box-shadow: var(--club-focus) !important;
+  border-color: var(--club-gold-500) !important;
+}
+
+.app-shell {
+  background:
+    radial-gradient(circle at 82% 2%, rgba(255, 183, 0, 0.18), transparent 24%),
+    var(--club-ink-50) !important;
+}
+
+.sidebar {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 183, 0, 0.24), transparent 30%),
+    linear-gradient(180deg, var(--club-ink-900), var(--club-ink-950)) !important;
+  color: var(--club-white) !important;
+  border-right: 1px solid rgba(255, 183, 0, 0.18);
+  box-shadow: 14px 0 36px rgba(26, 25, 22, 0.14);
+}
+
+.brand {
+  gap: 12px !important;
+}
+
+.brand-mark,
+.login-brand > span {
+  display: grid !important;
+  place-items: center !important;
+  width: 42px !important;
+  height: 42px !important;
+  flex: 0 0 42px;
+  border-radius: 14px !important;
+  background: var(--club-gold-500) !important;
+  color: var(--club-ink-900) !important;
+  box-shadow: var(--club-shadow-gold) !important;
+  font-size: 0 !important;
+}
+
+.brand-mark::before,
+.login-brand > span::before {
+  content: "AE";
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.08em;
+}
+
+.brand small,
+.login-brand small {
+  color: rgba(255, 255, 255, 0.62) !important;
+  letter-spacing: 0.14em !important;
+}
+
+nav button {
+  border: 1px solid transparent !important;
+  border-radius: var(--club-radius-md) !important;
+  color: rgba(255, 255, 255, 0.66) !important;
+}
+
+nav button:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: var(--club-white) !important;
+}
+
+nav button.active {
+  background: rgba(255, 183, 0, 0.14) !important;
+  border-color: rgba(255, 183, 0, 0.32) !important;
+  color: var(--club-gold-100) !important;
+  box-shadow: inset 3px 0 0 var(--club-gold-500);
+}
+
+.club-card,
+.club-top1 {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid rgba(255, 183, 0, 0.22) !important;
+  border-radius: var(--club-radius-lg) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.club-card small,
+.club-top1 span {
+  color: rgba(255, 255, 255, 0.68) !important;
+}
+
+.club-top1 small,
+.live-dot,
+.eyebrow {
+  color: var(--club-gold-700) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+}
+
+.sidebar .eyebrow,
+.club-top1 small {
+  color: var(--club-gold-300) !important;
+}
+
+.progress {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.progress i {
+  background: linear-gradient(90deg, var(--club-gold-500), var(--club-gold-200)) !important;
+}
+
+.profile {
+  border-top-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.logout {
+  color: var(--club-gold-300) !important;
+  font-weight: 700;
+}
+
+.content {
+  max-width: 1280px !important;
+}
+
+header {
+  align-items: flex-start !important;
+}
+
+.mobile-menu,
+.icon-btn,
+.soft-btn,
+.text-btn,
+.secondary,
+.skip {
+  border: 1px solid var(--club-ink-200) !important;
+  border-radius: var(--club-radius-md) !important;
+  background: var(--club-white) !important;
+  color: var(--club-ink-700) !important;
+  box-shadow: var(--club-shadow-xs) !important;
+}
+
+.mobile-menu:hover,
+.icon-btn:hover,
+.soft-btn:hover,
+.text-btn:hover,
+.secondary:hover {
+  transform: translateY(-1px);
+  border-color: var(--club-gold-400) !important;
+  background: var(--club-gold-50) !important;
+}
+
+.primary,
+.new-btn {
+  border: 0 !important;
+  border-radius: var(--club-radius-md) !important;
+  background: linear-gradient(180deg, var(--club-gold-400), var(--club-gold-500)) !important;
+  color: var(--club-ink-900) !important;
+  box-shadow: var(--club-shadow-sm) !important;
+  font-weight: 800 !important;
+}
+
+.primary:hover:not(:disabled),
+.new-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, var(--club-gold-500), var(--club-gold-600)) !important;
+  box-shadow: var(--club-shadow-gold) !important;
+}
+
+.primary:active:not(:disabled),
+.new-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.hero {
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 183, 0, 0.24);
+  border-radius: var(--club-radius-xl) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 183, 0, 0.32), transparent 28%),
+    linear-gradient(135deg, var(--club-ink-900), #25231f) !important;
+  box-shadow: var(--club-shadow-lg) !important;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  right: -80px;
+  bottom: -100px;
+  width: 260px;
+  height: 260px;
+  border: 1px solid rgba(255, 183, 0, 0.22);
+  border-radius: 50%;
+}
+
+.hero h2,
+.hero-stats b {
+  color: var(--club-white) !important;
+}
+
+.hero h2 span,
+.hero p,
+.hero-stats em,
+.hero-stats small {
+  color: rgba(255, 255, 255, 0.68) !important;
+}
+
+.hero-stats div {
+  border-left-color: rgba(255, 183, 0, 0.34) !important;
+}
+
+.hero-stats b,
+.point-value,
+.member-summary b,
+.draw-list b,
+.history-match-list strong,
+.profile-stat b {
+  font-family: "JetBrains Mono", ui-monospace, monospace !important;
+}
+
+.workflow button {
+  color: var(--club-ink-500) !important;
+  border-bottom-color: var(--club-ink-200) !important;
+}
+
+.workflow button span {
+  border-color: var(--club-ink-300) !important;
+  background: var(--club-white);
+  color: var(--club-ink-600);
+}
+
+.workflow button.current,
+.workflow button.done {
+  color: var(--club-ink-900) !important;
+  border-bottom-color: var(--club-gold-500) !important;
+}
+
+.workflow button.current span,
+.workflow button.done span {
+  background: var(--club-gold-500) !important;
+  border-color: var(--club-gold-500) !important;
+  color: var(--club-ink-900) !important;
+}
+
+.panel,
+.rank-table,
+.member-summary div,
+.login-card,
+.checkin-modal,
+.history-detail,
+.confirm-modal,
+.member-editor,
+.member-profile-popover {
+  border: 1px solid var(--club-ink-200) !important;
+  border-radius: var(--club-radius-lg) !important;
+  background: var(--club-white) !important;
+  box-shadow: var(--club-shadow-sm) !important;
+}
+
+.panel {
+  overflow: hidden;
+}
+
+.panel-head,
+.panel-foot {
+  border-color: var(--club-ink-200) !important;
+}
+
+.panel-head {
+  background:
+    linear-gradient(180deg, rgba(255, 249, 236, 0.82), rgba(255, 255, 255, 0.74));
+}
+
+.count-pill,
+.mode,
+.tag,
+.level {
+  border: 1px solid rgba(255, 183, 0, 0.34) !important;
+  background: var(--club-gold-50) !important;
+  color: var(--club-gold-700) !important;
+  border-radius: 999px !important;
+  font-weight: 800 !important;
+}
+
+.member-card,
+.match,
+.history-list article,
+.result-row,
+.draw-list div {
+  border-color: var(--club-ink-200) !important;
+  border-radius: var(--club-radius-md) !important;
+  background: var(--club-white) !important;
+}
+
+.member-card:hover,
+.match:hover,
+.history-list article:hover,
+.rank-row:hover {
+  transform: translateY(-2px) !important;
+  border-color: rgba(255, 183, 0, 0.45) !important;
+  box-shadow: var(--club-shadow-md) !important;
+}
+
+.member-card.selected {
+  background: var(--club-gold-50) !important;
+  border-color: var(--club-gold-500) !important;
+}
+
+.avatar {
+  border: 2px solid rgba(255, 255, 255, 0.84);
+  box-shadow: 0 0 0 1px rgba(26, 25, 22, 0.08);
+}
+
+.attendance-live {
+  color: var(--club-success) !important;
+}
+
+.attendance-live i {
+  background: var(--club-success) !important;
+}
+
+.attendance-mark.yes {
+  background: var(--club-success) !important;
+  border-color: rgba(31, 138, 91, 0.24) !important;
+  color: var(--club-white) !important;
+}
+
+.attendance-mark.no {
+  background: var(--club-danger) !important;
+  border-color: rgba(214, 69, 69, 0.2) !important;
+  color: var(--club-white) !important;
+}
+
+.attendance-mark.waiting {
+  background: var(--club-ink-100) !important;
+  border-color: var(--club-ink-200) !important;
+}
+
+.warning {
+  border: 1px solid var(--club-gold-200) !important;
+  background: var(--club-gold-50) !important;
+  color: var(--club-gold-700) !important;
+}
+
+.draw-body {
+  border: 1px solid var(--club-ink-200);
+  background:
+    radial-gradient(circle at 16% 14%, rgba(255, 183, 0, 0.2), transparent 22%),
+    var(--club-ink-50) !important;
+  border-radius: var(--club-radius-lg) !important;
+}
+
+.wheel {
+  background: conic-gradient(
+    var(--club-gold-500) 0 45deg,
+    var(--club-ink-900) 45deg 90deg,
+    #f59e0b 90deg 135deg,
+    var(--club-success) 135deg 180deg,
+    var(--club-gold-300) 180deg 225deg,
+    var(--club-info) 225deg 270deg,
+    var(--club-ink-700) 270deg 315deg,
+    var(--club-danger) 315deg
+  ) !important;
+  box-shadow: var(--club-shadow-gold) !important;
+}
+
+.wheel::after {
+  border-top-color: var(--club-ink-900) !important;
+}
+
+.wheel-inner {
+  color: var(--club-ink-900) !important;
+}
+
+.rank-head {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 183, 0, 0.2), transparent 30%),
+    var(--club-ink-900) !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.rank-row.top-rank {
+  background: linear-gradient(90deg, var(--club-gold-50), var(--club-white)) !important;
+}
+
+.top-1,
+.top-2,
+.top-3 {
+  border-left-color: var(--club-gold-500) !important;
+}
+
+.point-value,
+.rank-number,
+.text-btn,
+.history-list span,
+.draw-list b,
+.member-summary b {
+  color: var(--club-gold-700) !important;
+}
+
+.medal,
+.m0,
+.m1,
+.m2 {
+  background: var(--club-gold-500) !important;
+  color: var(--club-ink-900) !important;
+}
+
+.positive {
+  color: var(--club-success) !important;
+}
+
+.negative,
+.danger-text,
+.login-error {
+  color: var(--club-danger) !important;
+}
+
+.search,
+.login-card input,
+.member-editor input,
+.result-row input,
+.history-filters select,
+.ranking-toolbar select {
+  border: 1px solid var(--club-ink-200) !important;
+  border-radius: var(--club-radius-md) !important;
+  background: var(--club-white) !important;
+  color: var(--club-ink-900) !important;
+  box-shadow: var(--club-shadow-xs);
+}
+
+.login-page {
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255, 183, 0, 0.28), transparent 28%),
+    linear-gradient(135deg, var(--club-ink-900), var(--club-ink-950)) !important;
+}
+
+.login-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--club-radius-xl) !important;
+}
+
+.login-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 6px;
+  background: linear-gradient(90deg, var(--club-gold-500), var(--club-gold-200));
+}
+
+.login-brand > span {
+  width: 48px !important;
+  height: 48px !important;
+  flex-basis: 48px;
+}
+
+.login-brand small {
+  color: var(--club-ink-500) !important;
+}
+
+.modal-backdrop {
+  background: rgba(26, 25, 22, 0.58) !important;
+  backdrop-filter: blur(5px);
+}
+
+.modal-icon {
+  font-size: 0 !important;
+  color: var(--club-ink-900) !important;
+  background: var(--club-gold-50) !important;
+  border: 1px solid var(--club-gold-200);
+}
+
+.checkin-modal .modal-icon::before {
+  content: "✓";
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.confirm-modal .modal-icon::before {
+  content: "?";
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.member-menu {
+  border-color: var(--club-ink-200) !important;
+  border-radius: var(--club-radius-md) !important;
+  box-shadow: var(--club-shadow-md) !important;
+}
+
+.member-menu button:hover {
+  background: var(--club-gold-50) !important;
+}
+
+.welcome-member {
+  border: 1px solid rgba(255, 183, 0, 0.38) !important;
+  border-radius: var(--club-radius-lg) !important;
+  background: linear-gradient(135deg, var(--club-white), var(--club-gold-50)) !important;
+  box-shadow: var(--club-shadow-sm) !important;
+  color: var(--club-ink-600) !important;
+}
+
+.welcome-member::before {
+  background: var(--club-gold-500) !important;
+  color: var(--club-ink-900) !important;
+  box-shadow: var(--club-shadow-gold) !important;
+}
+
+.welcome-member b {
+  color: var(--club-ink-900) !important;
+  font-family: "Be Vietnam Pro", system-ui, sans-serif !important;
+  font-weight: 800 !important;
+}
+
+.welcome-member span {
+  color: var(--club-ink-300) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+@media (max-width: 800px) {
+  .sidebar {
+    box-shadow: 16px 0 42px rgba(18, 17, 15, 0.28) !important;
+  }
+
+  .brand-mark {
+    width: 38px !important;
+    height: 38px !important;
+    flex-basis: 38px;
+  }
+
+  .hero {
+    border-radius: var(--club-radius-lg) !important;
+  }
+}
