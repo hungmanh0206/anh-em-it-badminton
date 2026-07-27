@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   try {
     const { admin, user, profile } = await requireUser(request);
     const body = await request.json() as Body;
-    if (!body.sessionId) return Response.json({ error: "Thiếu phiên thi đấu để bốc số." }, { status: 400 });
+    if (!body.sessionId) return Response.json({ error: "Thiếu phiên thi đấu để chọn số." }, { status: 400 });
 
     const { data: sessionRow, error: sessionError } = await admin
       .from("play_sessions")
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     if (sessionError) throw sessionError;
     const sessionStatus = String(sessionRow?.status || "");
     if (!openDrawStatuses.has(sessionStatus)) {
-      return Response.json({ error: "Bước bốc số chưa được mở cho buổi này." }, { status: 400 });
+      return Response.json({ error: "Bước chọn số chưa được mở cho buổi này." }, { status: 400 });
     }
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       const selfAttendance = attendances.find((attendance) => attendance.member_id === user.id);
       if (!selfAttendance) throw new ApiError(404, "Không tìm thấy điểm danh của bạn trong buổi này.");
       if (selfAttendance.choice !== "attending") {
-        return Response.json({ error: "Bạn cần điểm danh tham gia trước khi bốc số." }, { status: 400 });
+        return Response.json({ error: "Bạn cần điểm danh tham gia trước khi chọn số." }, { status: 400 });
       }
 
       const attendingRows = attendances.filter((attendance) => attendance.choice === "attending");

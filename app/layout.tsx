@@ -6,6 +6,7 @@ import "./responsive-overlays.css";
 import "./welcome-banner.css";
 import "./club-design-system.css";
 import "./schedule-library.css";
+import "./sidebar-polish.css";
 
 export const metadata: Metadata = {
   title: "Anh Em IT — Quản lý CLB Cầu lông",

@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       return !drawSlotsForLevel(level, level1Count, level2Count).includes(attendance.drawn_number);
     });
     if (invalidDraw) {
-      return Response.json({ error: "Cần tất cả người tham gia bốc số đúng dải Level hiện tại trước khi tạo lịch." }, { status: 400 });
+      return Response.json({ error: "Cần tất cả người tham gia chọn số đúng dải Level hiện tại trước khi tạo lịch." }, { status: 400 });
     }
 
     const { error } = await admin
