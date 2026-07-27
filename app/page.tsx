@@ -16,7 +16,7 @@ const scheduleParticipants = [6, 7, 8, 9, 10] as const;
 type ParticipantCount = typeof scheduleParticipants[number];
 type MatchPattern = readonly [number, number, number, number, string?];
 type ScheduleMatch = { teamA: readonly [number, number]; teamB: readonly [number, number]; type: string };
-type ScheduleScenario = { id: string; participantCount: ParticipantCount; level1Count: number; level2Count: number; title: string; subtitle: string; badge: string; note: string; matches: ScheduleMatch[] };
+type ScheduleScenario = { id: string; participantCount: ParticipantCount; level1Count: number; level2Count: number; title: string; subtitle: string; badge: string; note: string; matches: ScheduleMatch[]; impossibleReason?: string };
 const screenTitles: Record<Screen, string> = {
   home: "Home",
   members: "Quản lý thành viên",
@@ -24,47 +24,51 @@ const screenTitles: Record<Screen, string> = {
   ranking: "Bảng xếp hạng",
   history: "Lịch sử thi đấu",
 };
-const baseSchedulePatterns: Record<ParticipantCount, MatchPattern[]> = {
-  6: [[1, 2, 3, 4], [1, 3, 5, 6], [2, 5, 4, 6], [1, 4, 2, 3], [1, 5, 2, 6], [3, 6, 4, 5]],
-  7: [[1, 2, 3, 4], [1, 5, 6, 7], [2, 3, 4, 5], [1, 6, 2, 7], [3, 5, 4, 6], [1, 3, 4, 7], [2, 6, 5, 7]],
-  8: [[1, 2, 3, 4], [5, 6, 7, 8], [1, 3, 2, 4], [5, 7, 6, 8], [1, 4, 2, 3], [5, 8, 6, 7], [1, 5, 2, 6, "TRỘN CHÉO"], [3, 7, 4, 8, "TRỘN CHÉO"]],
-  9: [[1, 2, 3, 4], [5, 6, 7, 8], [1, 3, 2, 9], [4, 5, 6, 7], [1, 4, 8, 9], [2, 3, 5, 7], [1, 8, 6, 9], [2, 4, 3, 5], [6, 8, 7, 9]],
-  10: [[1, 10, 2, 3], [4, 5, 6, 7], [1, 2, 8, 9], [3, 10, 4, 6], [5, 8, 7, 9], [1, 3, 2, 10], [4, 7, 5, 6], [1, 8, 2, 9], [3, 4, 5, 10], [6, 9, 7, 8]],
-};
-const scheduleScenarioSplits: Record<ParticipantCount, number[]> = {
-  6: [0, 1, 2, 3, 4],
-  7: [1, 2, 3, 4],
-  8: [2, 3, 4],
-  9: [3, 4],
-  10: [4],
-};
 const slotLevel = (no: number): 1 | 2 => no <= 4 ? 1 : 2;
-const slotsForSplit = (level1Count: number, level2Count: number) => [
-  ...Array.from({ length: level1Count }, (_, index) => index + 1),
-  ...Array.from({ length: level2Count }, (_, index) => index + 5),
-];
-const makeScheduleScenario = (participantCount: ParticipantCount, level1Count: number): ScheduleScenario => {
+const matchTypeLabel = (team: readonly [number, number]) => team.every((no) => slotLevel(no) === 1) ? "L1 + L1" : team.every((no) => slotLevel(no) === 2) ? "L2 + L2" : "L1 + L2";
+const schedule = (patterns: MatchPattern[]) => patterns.map(([a1, a2, b1, b2, type]) => {
+  const teamA = [a1, a2] as const;
+  const teamB = [b1, b2] as const;
+  return { teamA, teamB, type: type ?? matchTypeLabel(teamA) };
+});
+const impossibleOneLevel1 = "Không thể tạo lịch: chỉ có 1 thành viên Level 1 nên không thể lập trận cân bằng kiểu L1+L2 vs L1+L2 cho người này.";
+const impossibleThreeThree = "Không thể tạo lịch: 3 Level 1 + 3 Level 2 chỉ tạo được trận mixed, nhưng cần 12 cặp đồng đội mixed trong khi chỉ có 9 cặp không trùng.";
+const makeScheduleScenario = (participantCount: ParticipantCount, level1Count: number, matches: ScheduleMatch[], impossibleReason?: string): ScheduleScenario => {
   const level2Count = participantCount - level1Count;
-  const slots = slotsForSplit(level1Count, level2Count);
-  const matches = baseSchedulePatterns[participantCount].map(([a1, a2, b1, b2, type = "XOAY VÒNG"]) => ({
-    teamA: [slots[a1 - 1], slots[a2 - 1]] as const,
-    teamB: [slots[b1 - 1], slots[b2 - 1]] as const,
-    type,
-  }));
   return {
     id: `${participantCount}-players-${level1Count}-l1-${level2Count}-l2`,
     participantCount,
     level1Count,
     level2Count,
     title: `${participantCount} người · ${level1Count} Level 1 + ${level2Count} Level 2`,
-    subtitle: `${matches.length} trận · mỗi người 4 trận`,
+    subtitle: impossibleReason ? "Không thể tạo lịch theo đủ quy tắc" : `${matches.length} trận · mỗi người 4 trận`,
     badge: `${level1Count}L1 + ${level2Count}L2`,
-    note: `Áp dụng khi buổi chơi có ${level1Count} thành viên Level 1 và ${level2Count} thành viên Level 2.`,
+    note: impossibleReason ?? `Áp dụng khi buổi chơi có ${level1Count} thành viên Level 1 và ${level2Count} thành viên Level 2.`,
     matches,
+    impossibleReason,
   };
 };
-const scheduleScenarios = scheduleParticipants.flatMap((participantCount) => scheduleScenarioSplits[participantCount].map((level1Count) => makeScheduleScenario(participantCount, level1Count)));
-const findScheduleScenario = (participantCount: number, level1Count: number) => scheduleScenarios.find((scenario) => scenario.participantCount === participantCount && scenario.level1Count === level1Count) ?? null;
+const scheduleScenarios: ScheduleScenario[] = [
+  makeScheduleScenario(6, 0, schedule([[5, 10, 6, 7], [5, 6, 8, 9], [7, 8, 9, 10], [5, 7, 6, 10], [5, 8, 6, 9], [7, 9, 8, 10]])),
+  makeScheduleScenario(6, 1, [], impossibleOneLevel1),
+  makeScheduleScenario(6, 2, schedule([[1, 5, 2, 6], [1, 7, 2, 8], [5, 6, 7, 8], [1, 6, 2, 5], [1, 8, 2, 7], [5, 7, 6, 8]])),
+  makeScheduleScenario(6, 3, [], impossibleThreeThree),
+  makeScheduleScenario(6, 4, schedule([[1, 2, 3, 4], [1, 5, 2, 6], [3, 5, 4, 6], [1, 3, 2, 4], [1, 6, 2, 5], [3, 6, 4, 5]])),
+  makeScheduleScenario(7, 1, [], impossibleOneLevel1),
+  makeScheduleScenario(7, 2, schedule([[1, 5, 2, 6], [5, 7, 8, 9], [1, 6, 2, 7], [1, 8, 2, 9], [5, 6, 7, 8], [1, 9, 2, 5], [6, 8, 7, 9]])),
+  makeScheduleScenario(7, 3, schedule([[1, 5, 2, 6], [1, 7, 3, 8], [2, 5, 3, 6], [1, 8, 2, 7], [1, 6, 3, 5], [2, 8, 3, 7], [5, 6, 7, 8]])),
+  makeScheduleScenario(7, 4, schedule([[1, 2, 3, 4], [1, 5, 2, 6], [3, 5, 4, 7], [1, 6, 2, 7], [3, 6, 4, 5], [1, 7, 2, 5], [3, 7, 4, 6]])),
+  makeScheduleScenario(8, 2, schedule([[1, 10, 2, 5], [6, 7, 8, 9], [1, 5, 2, 10], [6, 8, 7, 9], [1, 6, 2, 7], [5, 8, 9, 10], [1, 7, 2, 6], [5, 9, 8, 10]])),
+  makeScheduleScenario(8, 3, schedule([[1, 5, 2, 6], [1, 7, 3, 8], [2, 5, 3, 9], [6, 7, 8, 9], [1, 6, 3, 5], [1, 8, 2, 7], [2, 9, 3, 6], [5, 8, 7, 9]])),
+  makeScheduleScenario(8, 4, schedule([[1, 2, 3, 4], [5, 6, 7, 8], [1, 3, 2, 4], [5, 7, 6, 8], [1, 4, 2, 3], [5, 8, 6, 7], [1, 5, 2, 6], [3, 7, 4, 8]])),
+  makeScheduleScenario(9, 3, schedule([[1, 10, 2, 5], [1, 6, 3, 7], [2, 8, 3, 9], [5, 10, 6, 7], [1, 8, 2, 9], [1, 5, 3, 10], [6, 8, 7, 9], [2, 10, 3, 5], [6, 9, 7, 8]])),
+  makeScheduleScenario(9, 4, schedule([[1, 5, 2, 6], [3, 7, 4, 8], [1, 6, 2, 9], [3, 5, 4, 7], [1, 8, 3, 9], [2, 5, 4, 6], [5, 7, 8, 9], [1, 7, 3, 6], [2, 8, 4, 9]])),
+  makeScheduleScenario(10, 4, schedule([[1, 10, 2, 5], [3, 6, 4, 7], [1, 8, 2, 9], [3, 10, 4, 5], [6, 7, 8, 9], [1, 2, 3, 4], [5, 10, 6, 8], [1, 7, 3, 9], [2, 10, 4, 6], [5, 8, 7, 9]])),
+];
+const findScheduleScenario = (participantCount: number, level1Count: number) => {
+  const scenario = scheduleScenarios.find((item) => item.participantCount === participantCount && item.level1Count === level1Count);
+  return scenario && !scenario.impossibleReason ? scenario : null;
+};
 const localDateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const monthLabel = (date: Date) => `Tháng ${date.getMonth() + 1}, ${date.getFullYear()}`;
 function homeSession(now: Date) { const day = now.getDay(); const offset = day >= 3 ? 6 - day : -(day + 1); const date = new Date(now); date.setDate(now.getDate() + offset); const state = day === 6 ? "ĐANG DIỄN RA" : day < 3 ? "ĐÃ DIỄN RA" : "CHƯA DIỄN RA"; return { date, state }; }
@@ -421,7 +425,7 @@ function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
     </div>
     <div className="schedule-summary-strip"><span>{visibleScenarios.length} trường hợp</span><span>{visibleMatches} trận mẫu</span><span>Level 1: xanh dương · Level 2: xanh lá</span></div>
     <div className="schedule-case-list">
-      {visibleScenarios.map((scenario) => <article className="panel schedule-case" key={scenario.id}>
+      {visibleScenarios.map((scenario) => <article className={"panel schedule-case " + (scenario.impossibleReason ? "impossible" : "")} key={scenario.id}>
         <div className="schedule-case-head">
           <div>
             <span className="schedule-case-badge">{scenario.badge}</span>
@@ -430,10 +434,10 @@ function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
           </div>
           <p>{scenario.note}</p>
         </div>
-        <div className="schedule-grid schedule-library-grid">
+        {scenario.impossibleReason ? <div className="schedule-impossible"><b>Không thể áp dụng</b><p>Không tồn tại lịch thỏa đồng thời: đúng kiểu bắt cặp theo Level, mỗi thành viên đủ 4 trận, và không lặp đồng đội quá 1 lần/tuần.</p></div> : <div className="schedule-grid schedule-library-grid">
           {scenario.matches.map((match, i) => <Match match={match} i={i} key={`${scenario.id}-${i}`} />)}
-        </div>
-        <div className="schedule-readonly-note"><span>✓ Dùng slot theo kết quả bốc số của buổi chơi</span><b>Chỉ xem</b></div>
+        </div>}
+        <div className="schedule-readonly-note"><span>{scenario.impossibleReason ? "⚠ Trường hợp này cần đổi quy tắc nếu vẫn muốn tạo lịch." : "✓ Dùng slot theo kết quả bốc số của buổi chơi"}</span><b>{scenario.impossibleReason ? "Không tạo" : "Chỉ xem"}</b></div>
       </article>)}
     </div>
   </section>;
