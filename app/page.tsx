@@ -34,7 +34,7 @@ const schedule = (patterns: MatchPattern[]) => patterns.map(([a1, a2, b1, b2, ty
   return { teamA, teamB, type: type ?? (teamALabel === teamBLabel ? teamALabel : "LINH HOẠT") };
 });
 const relaxedOneLevel1 = "Lịch linh hoạt: chỉ có 1 thành viên Level 1 nên các trận của người này không áp dụng rule cân Level; vẫn giữ mỗi người 4 trận và không lặp đồng đội.";
-const relaxedThreeThree = "Lịch linh hoạt: 3 Level 1 + 3 Level 2 vẫn giữ kiểu L1+L2 vs L1+L2, nhưng cho phép lặp vài cặp đồng đội ở mức tối thiểu.";
+const relaxedThreeThree = "Lịch linh hoạt: 3 Level 1 + 3 Level 2 ưu tiên không lặp đồng đội; 2 trận cuối không áp dụng rule cân Level để vẫn giữ mỗi người 4 trận.";
 const makeScheduleScenario = (participantCount: ParticipantCount, level1Count: number, matches: ScheduleMatch[], relaxedReason?: string): ScheduleScenario => {
   const level2Count = participantCount - level1Count;
   return {
@@ -54,17 +54,17 @@ const scheduleScenarios: ScheduleScenario[] = [
   makeScheduleScenario(6, 0, schedule([[5, 10, 6, 7], [5, 6, 8, 9], [7, 8, 9, 10], [5, 7, 6, 10], [5, 8, 6, 9], [7, 9, 8, 10]])),
   makeScheduleScenario(6, 1, schedule([[1, 5, 6, 7], [1, 6, 8, 9], [5, 8, 7, 9], [1, 7, 5, 6], [1, 8, 5, 9], [6, 9, 7, 8]]), relaxedOneLevel1),
   makeScheduleScenario(6, 2, schedule([[1, 5, 2, 6], [1, 7, 2, 8], [5, 6, 7, 8], [1, 6, 2, 5], [1, 8, 2, 7], [5, 7, 6, 8]])),
-  makeScheduleScenario(6, 3, schedule([[1, 5, 2, 6], [1, 5, 2, 7], [1, 6, 3, 5], [1, 7, 3, 6], [2, 5, 3, 7], [2, 6, 3, 7]]), relaxedThreeThree),
+  makeScheduleScenario(6, 3, schedule([[1, 5, 2, 6], [1, 6, 3, 7], [2, 7, 3, 5], [1, 7, 2, 5], [1, 3, 5, 6], [2, 3, 6, 7]]), relaxedThreeThree),
   makeScheduleScenario(6, 4, schedule([[1, 2, 3, 4], [1, 5, 2, 6], [3, 5, 4, 6], [1, 3, 2, 4], [1, 6, 2, 5], [3, 6, 4, 5]])),
   makeScheduleScenario(7, 1, schedule([[1, 5, 6, 7], [1, 8, 9, 10], [5, 6, 7, 8], [1, 9, 5, 10], [6, 8, 7, 9], [1, 6, 7, 10], [5, 9, 8, 10]]), relaxedOneLevel1),
   makeScheduleScenario(7, 2, schedule([[1, 5, 2, 6], [5, 7, 8, 9], [1, 6, 2, 7], [1, 8, 2, 9], [5, 6, 7, 8], [1, 9, 2, 5], [6, 8, 7, 9]])),
   makeScheduleScenario(7, 3, schedule([[1, 5, 2, 6], [1, 7, 3, 8], [2, 5, 3, 6], [1, 8, 2, 7], [1, 6, 3, 5], [2, 8, 3, 7], [5, 6, 7, 8]])),
   makeScheduleScenario(7, 4, schedule([[1, 2, 3, 4], [1, 5, 2, 6], [3, 5, 4, 7], [1, 6, 2, 7], [3, 6, 4, 5], [1, 7, 2, 5], [3, 7, 4, 6]])),
-  makeScheduleScenario(8, 2, schedule([[1, 10, 2, 5], [6, 7, 8, 9], [1, 5, 2, 10], [6, 8, 7, 9], [1, 6, 2, 7], [5, 8, 9, 10], [1, 7, 2, 6], [5, 9, 8, 10]])),
+  makeScheduleScenario(8, 2, schedule([[1, 5, 2, 6], [1, 8, 2, 9], [1, 7, 2, 10], [1, 9, 2, 8], [5, 6, 7, 10], [5, 7, 6, 10], [5, 10, 8, 9], [6, 8, 7, 9]])),
   makeScheduleScenario(8, 3, schedule([[1, 5, 2, 6], [1, 7, 3, 8], [2, 5, 3, 9], [6, 7, 8, 9], [1, 6, 3, 5], [1, 8, 2, 7], [2, 9, 3, 6], [5, 8, 7, 9]])),
-  makeScheduleScenario(8, 4, schedule([[1, 2, 3, 4], [5, 6, 7, 8], [1, 3, 2, 4], [5, 7, 6, 8], [1, 4, 2, 3], [5, 8, 6, 7], [1, 5, 2, 6], [3, 7, 4, 8]])),
+  makeScheduleScenario(8, 4, schedule([[1, 2, 3, 4], [1, 3, 2, 4], [1, 5, 2, 6], [3, 7, 4, 8], [1, 7, 3, 5], [2, 8, 4, 6], [5, 6, 7, 8], [5, 8, 6, 7]])),
   makeScheduleScenario(9, 3, schedule([[1, 10, 2, 5], [1, 6, 3, 7], [2, 8, 3, 9], [5, 10, 6, 7], [1, 8, 2, 9], [1, 5, 3, 10], [6, 8, 7, 9], [2, 10, 3, 5], [6, 9, 7, 8]])),
-  makeScheduleScenario(9, 4, schedule([[1, 5, 2, 6], [3, 7, 4, 8], [1, 6, 2, 9], [3, 5, 4, 7], [1, 8, 3, 9], [2, 5, 4, 6], [5, 7, 8, 9], [1, 7, 3, 6], [2, 8, 4, 9]])),
+  makeScheduleScenario(9, 4, schedule([[1, 2, 3, 4], [1, 3, 2, 4], [1, 5, 2, 6], [3, 7, 4, 8], [1, 9, 3, 5], [2, 8, 4, 6], [5, 7, 6, 9], [5, 8, 7, 9], [6, 7, 8, 9]])),
   makeScheduleScenario(10, 4, schedule([[1, 10, 2, 5], [3, 6, 4, 7], [1, 8, 2, 9], [3, 10, 4, 5], [6, 7, 8, 9], [1, 2, 3, 4], [5, 10, 6, 8], [1, 7, 3, 9], [2, 10, 4, 6], [5, 8, 7, 9]])),
 ];
 const findScheduleScenario = (participantCount: number, level1Count: number) => {
