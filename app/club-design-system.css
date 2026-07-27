@@ -467,7 +467,8 @@ header {
 .draw-body {
   border: 1px solid var(--club-ink-200);
   background:
-    radial-gradient(circle at 16% 14%, rgba(255, 183, 0, 0.2), transparent 22%),
+    radial-gradient(circle at 18% 12%, rgba(255, 183, 0, 0.24), transparent 26%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 247, 220, 0.42)),
     var(--club-ink-50) !important;
   border-radius: var(--club-radius-lg) !important;
 }
@@ -475,37 +476,30 @@ header {
 .wheel {
   overflow: visible;
   position: relative;
-  background: conic-gradient(
-    var(--club-gold-500) 0 45deg,
-    var(--club-ink-900) 45deg 90deg,
-    #f59e0b 90deg 135deg,
-    var(--club-success) 135deg 180deg,
-    var(--club-gold-300) 180deg 225deg,
-    var(--club-info) 225deg 270deg,
-    var(--club-ink-700) 270deg 315deg,
-    var(--club-danger) 315deg
-  ) !important;
-  box-shadow: var(--club-shadow-gold) !important;
+  display: grid;
+  place-items: center;
+  width: 220px !important;
+  height: 220px !important;
+  padding: 0 !important;
+  isolation: isolate;
+  border: 10px solid #fff8e7;
+  background: var(--wheel-gradient, conic-gradient(var(--club-gold-500), var(--club-ink-900))) !important;
+  box-shadow:
+    0 22px 42px rgba(184, 118, 14, 0.2),
+    0 0 0 1px rgba(144, 98, 20, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.62) !important;
 }
 
-.level-wheel-1 {
-  background: conic-gradient(
-    var(--club-info) 0 90deg,
-    #74b7ff 90deg 180deg,
-    var(--club-info) 180deg 270deg,
-    #d9ecff 270deg
-  ) !important;
-}
-
-.level-wheel-2 {
-  background: conic-gradient(
-    var(--club-success) 0 60deg,
-    #8be2b4 60deg 120deg,
-    var(--club-success) 120deg 180deg,
-    #cbf6dd 180deg 240deg,
-    var(--club-success) 240deg 300deg,
-    #7bdca7 300deg
-  ) !important;
+.wheel::before {
+  content: "";
+  position: absolute;
+  inset: 20px;
+  z-index: 1;
+  border-radius: 999px;
+  border: 1px dashed rgba(255, 255, 255, 0.72);
+  box-shadow:
+    inset 0 0 0 10px rgba(255, 255, 255, 0.12),
+    inset 0 0 24px rgba(13, 59, 39, 0.1);
 }
 
 .wheel.spinning {
@@ -520,20 +514,53 @@ header {
 }
 
 .wheel::after {
+  top: -18px !important;
+  z-index: 6;
+  border-left-width: 13px !important;
+  border-right-width: 13px !important;
+  border-top-width: 24px !important;
   border-top-color: var(--club-ink-900) !important;
+  filter:
+    drop-shadow(0 4px 0 var(--club-gold-400))
+    drop-shadow(0 10px 14px rgba(26, 25, 22, 0.24)) !important;
 }
 
 .wheel-inner {
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  z-index: 5;
+  width: 104px;
+  height: 104px;
+  display: grid;
+  place-items: center;
+  border: 6px solid rgba(255, 183, 0, 0.22);
+  background:
+    radial-gradient(circle at 34% 22%, rgba(255, 255, 255, 1), rgba(255, 251, 239, 1) 56%, rgba(255, 244, 211, 1));
   color: var(--club-ink-900) !important;
+  box-shadow:
+    0 14px 30px rgba(26, 25, 22, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.82);
+}
+
+.wheel-inner b {
+  color: var(--club-ink-900);
+  font-size: 48px !important;
+  font-weight: 950;
+  letter-spacing: -1px;
+}
+
+.wheel-inner small {
+  margin-top: 4px;
+  color: var(--club-gold-700) !important;
+  font-size: 8px !important;
+  font-weight: 900;
 }
 
 .wheel-numbers {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 4;
   border-radius: 999px;
+  pointer-events: none;
 }
 
 .wheel-numbers span {
@@ -542,17 +569,71 @@ header {
   top: 50%;
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  margin: -14px;
+  width: 38px;
+  height: 38px;
+  margin: -19px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
+  border: 3px solid rgba(255, 255, 255, 0.72);
+  background: #fffdf5;
   color: var(--club-ink-900);
   font-family: "JetBrains Mono", ui-monospace, monospace;
-  font-size: 15px;
-  font-weight: 900;
-  box-shadow: 0 4px 10px rgba(26, 25, 22, 0.12);
-  transform: rotate(var(--slot-angle)) translateY(-70px) rotate(var(--slot-angle-inverse));
+  font-size: 18px;
+  font-weight: 950;
+  box-shadow:
+    0 8px 18px rgba(26, 25, 22, 0.16),
+    inset 0 0 0 1px rgba(255, 183, 0, 0.22);
+  transform: rotate(var(--slot-angle)) translateY(-86px) rotate(var(--slot-angle-inverse));
+}
+
+.level-wheel-1 .wheel-numbers span {
+  border-color: rgba(191, 228, 255, 0.9);
+  color: #0b5fc8;
+  box-shadow:
+    0 8px 18px rgba(29, 127, 242, 0.18),
+    inset 0 0 0 1px rgba(29, 127, 242, 0.22);
+}
+
+.level-wheel-2 .wheel-numbers span {
+  border-color: rgba(185, 245, 208, 0.9);
+  color: #08744f;
+  box-shadow:
+    0 8px 18px rgba(14, 154, 100, 0.18),
+    inset 0 0 0 1px rgba(14, 154, 100, 0.22);
+}
+
+@media (max-width: 560px) {
+  .draw-body {
+    padding: 22px 14px !important;
+  }
+
+  .wheel {
+    width: 190px !important;
+    height: 190px !important;
+    margin-bottom: 22px !important;
+    border-width: 8px;
+  }
+
+  .wheel::before {
+    inset: 17px;
+  }
+
+  .wheel-inner {
+    width: 88px;
+    height: 88px;
+    border-width: 5px;
+  }
+
+  .wheel-inner b {
+    font-size: 40px !important;
+  }
+
+  .wheel-numbers span {
+    width: 34px;
+    height: 34px;
+    margin: -17px;
+    font-size: 16px;
+    transform: rotate(var(--slot-angle)) translateY(-74px) rotate(var(--slot-angle-inverse));
+  }
 }
 
 .draw-roster div {

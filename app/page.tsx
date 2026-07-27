@@ -33,6 +33,15 @@ const drawSlotsForLevel = (level: 1 | 2, level1Count: number, level2Count: numbe
   const start = level === 1 ? 1 : 5;
   return Array.from({ length: count }, (_, index) => start + index);
 };
+const wheelGradient = (level: 1 | 2, count: number) => {
+  const colors = level === 1 ? ["#1d7ff2", "#bfe4ff", "#0b5fc8", "#eaf6ff"] : ["#0e9a64", "#b9f5d0", "#08744f", "#effdf5"];
+  const safeCount = Math.max(1, count);
+  return `conic-gradient(${Array.from({ length: safeCount }, (_, index) => {
+    const start = (index * 360) / safeCount;
+    const end = ((index + 1) * 360) / safeCount;
+    return `${colors[index % colors.length]} ${start}deg ${end}deg`;
+  }).join(", ")})`;
+};
 const drawSlotRangeLabel = (level: 1 | 2, level1Count: number, level2Count: number) => {
   const slots = drawSlotsForLevel(level, level1Count, level2Count);
   if (!slots.length) return "chưa có số";
@@ -545,13 +554,13 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, currentUser, isAdm
   const rangeLabel = drawSlotRangeLabel(currentUser.level, level1Count, level2Count);
   const mine = drawn[currentUser.name];
   const entries = members.map((member) => ({ member, no: drawn[member.name] }));
-  const wheelStyle = { "--spin-duration": "3.9s", "--spin-deg": `${currentUser.level === 1 ? 1738 : 2096}deg` } as CSSProperties;
+  const wheelStyle = { "--spin-duration": "3.9s", "--spin-deg": `${currentUser.level === 1 ? 1738 : 2096}deg`, "--wheel-gradient": wheelGradient(currentUser.level, pool.length) } as CSSProperties;
   return <section className="panel draw-panel">
     <div className="panel-head"><div><h2>Bốc số ngẫu nhiên</h2><p>{isAdmin ? "Admin cũng chỉ bốc số cho chính mình. Khi tất cả người tham gia đã có số, Admin xác nhận để tạo lịch." : `Bạn đang ở Level ${currentUser.level}; vòng quay chỉ lấy số trong đúng dải của bạn.`}</p></div><span className="mode">LEVEL {currentUser.level}</span></div>
     <div className="draw-body">
       <div className={"wheel level-wheel level-wheel-" + currentUser.level + (spinning ? " spinning" : "")} style={wheelStyle}>
         <div className="wheel-numbers">{pool.map((slot, index) => {
-          const angle = index * (360 / pool.length);
+          const angle = (index + 0.5) * (360 / pool.length);
           return <span key={slot} style={{ "--slot-angle": `${angle}deg`, "--slot-angle-inverse": `${-angle}deg` } as CSSProperties}>{slot}</span>;
         })}</div>
         <div className="wheel-inner">{spinning ? <b>…<small>ĐANG QUAY</small></b> : mine ? <b>{mine}<small>SỐ CỦA BẠN</small></b> : <b>?</b>}</div>
