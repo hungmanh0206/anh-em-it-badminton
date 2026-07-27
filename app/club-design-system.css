@@ -473,6 +473,8 @@ header {
 }
 
 .wheel {
+  overflow: visible;
+  position: relative;
   background: conic-gradient(
     var(--club-gold-500) 0 45deg,
     var(--club-ink-900) 45deg 90deg,
@@ -486,12 +488,97 @@ header {
   box-shadow: var(--club-shadow-gold) !important;
 }
 
+.level-wheel-1 {
+  background: conic-gradient(
+    var(--club-info) 0 90deg,
+    #74b7ff 90deg 180deg,
+    var(--club-info) 180deg 270deg,
+    #d9ecff 270deg
+  ) !important;
+}
+
+.level-wheel-2 {
+  background: conic-gradient(
+    var(--club-success) 0 60deg,
+    #8be2b4 60deg 120deg,
+    var(--club-success) 120deg 180deg,
+    #cbf6dd 180deg 240deg,
+    var(--club-success) 240deg 300deg,
+    #7bdca7 300deg
+  ) !important;
+}
+
+.wheel.spinning {
+  animation: clubSpinWheel var(--spin-duration, 3.9s) cubic-bezier(0.12, 0.72, 0.08, 1) forwards !important;
+}
+
+@keyframes clubSpinWheel {
+  0% { transform: rotate(0deg); }
+  70% { transform: rotate(calc(var(--spin-deg, 1800deg) - 90deg)); }
+  88% { transform: rotate(calc(var(--spin-deg, 1800deg) + 18deg)); }
+  100% { transform: rotate(var(--spin-deg, 1800deg)); }
+}
+
 .wheel::after {
   border-top-color: var(--club-ink-900) !important;
 }
 
 .wheel-inner {
+  position: relative;
+  z-index: 2;
   color: var(--club-ink-900) !important;
+}
+
+.wheel-numbers {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 999px;
+}
+
+.wheel-numbers span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: -14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--club-ink-900);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 15px;
+  font-weight: 900;
+  box-shadow: 0 4px 10px rgba(26, 25, 22, 0.12);
+  transform: rotate(var(--slot-angle)) translateY(-70px) rotate(var(--slot-angle-inverse));
+}
+
+.draw-roster div {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 8px;
+}
+
+.draw-roster b {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.draw-roster small {
+  color: var(--club-ink-500);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.draw-roster .pending {
+  opacity: 0.72;
+}
+
+.draw-roster .drawn {
+  border-color: rgba(255, 183, 0, 0.45) !important;
+  background: var(--club-gold-50) !important;
 }
 
 .rank-head {
