@@ -781,10 +781,10 @@ export default function Home() {
       <nav onClick={() => setSidebarOpen(false)}>
         <button className={screen === "home" ? "active" : ""} onClick={() => setScreen("home")}><span>⌂</span> Home</button>
         {isAdmin && <button className={screen === "members" ? "active" : ""} onClick={() => setScreen("members")}><span>♙</span> Thành viên</button>}
-        <button className={screen === "rules" ? "active" : ""} onClick={() => setScreen("rules")}><span>§</span> Thể lệ</button>
         <button className={screen === "schedules" ? "active" : ""} onClick={() => setScreen("schedules")}><span>▤</span> Lịch thi đấu</button>
         <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(currentMonthLabel); }}><span>▥</span> Bảng xếp hạng</button>
         <button className={screen === "history" ? "active" : ""} onClick={() => setScreen("history")}><span>◷</span> Lịch sử thi đấu</button>
+        <button className={screen === "rules" ? "active" : ""} onClick={() => setScreen("rules")}><span>§</span> Thể lệ</button>
       </nav>
       <div className="club-card"><span>🏆</span><b>{currentMonthLabel}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div><div className={`club-top1 ${champion ? "" : "empty"}`}><small>NHÀ VÔ ĐỊCH {championRankingLabel.toUpperCase()}</small><b>{champion ? `👑 ${champion.name}` : "Chưa ghi danh"}</b><span>{champion ? `${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số` : `Chưa có dữ liệu BXH ${championRankingLabel}.`}</span></div></div>
       <div className="profile"><div className="avatar small" style={{ background: currentUser.color }}>{currentUser.initials}</div><div><b>{currentUser.name}</b><small>{isAdmin ? "Quản trị viên" : "Thành viên"}</small></div><button className="logout" onClick={() => { void supabase?.auth.signOut(); setActiveUser(null); }}>Đăng xuất</button></div>

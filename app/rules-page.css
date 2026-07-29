@@ -6,8 +6,8 @@
 .rules-hero,
 .rules-flow article,
 .rules-card {
-  border: 1px solid rgba(255, 183, 0, 0.18);
-  box-shadow: 0 18px 42px rgba(26, 25, 22, 0.08);
+  border: 1px solid var(--club-ink-200);
+  box-shadow: var(--club-shadow-sm);
 }
 
 .rules-hero {
@@ -149,10 +149,9 @@
   align-items: center;
   column-gap: 12px;
   row-gap: 10px;
-  border-radius: 20px;
+  border-radius: var(--club-radius-lg);
   padding: 20px;
-  background:
-    linear-gradient(135deg, rgba(255, 247, 223, 0.95), rgba(255, 255, 255, 0.96));
+  background: var(--club-white);
 }
 
 .rules-flow span,
@@ -206,11 +205,9 @@
 .rules-card {
   position: relative;
   overflow: hidden;
-  border-radius: 24px;
+  border-radius: var(--club-radius-lg);
   padding: 25px;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(255, 183, 0, 0.13), transparent 32%),
-    #fffefa;
+  background: var(--club-white);
 }
 
 .rules-card::after {
@@ -221,7 +218,7 @@
   width: 170px;
   height: 170px;
   border-radius: 50%;
-  background: rgba(255, 183, 0, 0.08);
+  background: rgba(255, 183, 0, 0.04);
   pointer-events: none;
 }
 
@@ -281,8 +278,8 @@
   gap: 7px;
   border-radius: 999px;
   padding: 7px 9px;
-  border: 1px solid rgba(255, 183, 0, 0.24);
-  background: linear-gradient(135deg, #fffdfa, #fff4cf);
+  border: 1px solid var(--club-ink-200);
+  background: var(--club-white);
   color: #171512;
   box-shadow: 0 10px 20px rgba(139, 98, 0, 0.08);
 }
@@ -328,9 +325,9 @@
 .rules-level-grid div,
 .rules-match-types div,
 .rules-prizes div {
-  border: 1px solid rgba(26, 25, 22, 0.08);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--club-ink-200);
+  border-radius: var(--club-radius-md);
+  background: var(--club-white);
 }
 
 .rules-level-grid div {
@@ -340,7 +337,7 @@
   column-gap: 9px;
   row-gap: 3px;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.54);
+  background: var(--club-white);
 }
 
 .level-chip {
@@ -421,9 +418,10 @@
 
 .rules-note,
 .rules-total {
-  border-radius: 16px;
+  border: 1px solid rgba(255, 183, 0, 0.34);
+  border-radius: var(--club-radius-md);
   padding: 13px 15px;
-  background: #fff3c7;
+  background: var(--club-gold-50);
   color: #4c3b0a !important;
   font-weight: 750;
 }
@@ -466,17 +464,17 @@
 }
 
 .rules-prizes .gold {
-  background: linear-gradient(135deg, #fff5c7, #fffdf4);
+  background: var(--club-white);
   border-color: rgba(255, 183, 0, 0.36);
 }
 
 .rules-prizes .silver {
-  background: linear-gradient(135deg, #f1f3f6, #ffffff);
+  background: var(--club-white);
   border-color: rgba(152, 162, 179, 0.34);
 }
 
 .rules-prizes .bronze {
-  background: linear-gradient(135deg, #fff0e4, #ffffff);
+  background: var(--club-white);
   border-color: rgba(201, 117, 55, 0.32);
 }
 
