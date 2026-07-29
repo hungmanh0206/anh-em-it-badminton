@@ -10,6 +10,95 @@
   line-height: 1 !important;
 }
 
+.sidebar .profile {
+  position: relative;
+  min-height: 68px;
+  margin: auto 3px 0 !important;
+  padding: 12px 10px !important;
+  gap: 10px !important;
+  overflow: hidden;
+  border: 1px solid rgba(255, 214, 109, 0.22) !important;
+  border-radius: 17px !important;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 214, 109, 0.18), transparent 32%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025)) !important;
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+.sidebar .profile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 214, 109, 0.08), transparent);
+  opacity: 0.55;
+}
+
+.sidebar .profile .avatar.small {
+  position: relative;
+  z-index: 1;
+  width: 42px !important;
+  height: 42px !important;
+  border: 2px solid rgba(255, 255, 255, 0.42);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+  color: #fff !important;
+  font-size: 14px !important;
+  font-weight: 950 !important;
+}
+
+.sidebar .profile > div:not(.avatar) {
+  position: relative;
+  z-index: 1;
+  display: grid !important;
+  min-width: 0;
+  gap: 4px;
+}
+
+.sidebar .profile b {
+  display: block;
+  max-width: 96px;
+  overflow: hidden;
+  color: #fffaf0 !important;
+  font-size: 15px !important;
+  font-weight: 950 !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.02em !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar .profile small {
+  margin: 0 !important;
+  color: rgba(255, 255, 255, 0.68) !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1.1 !important;
+}
+
+.sidebar .logout {
+  position: relative;
+  z-index: 1;
+  margin-left: auto !important;
+  padding: 8px 9px !important;
+  border: 1px solid rgba(255, 214, 109, 0.42) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 183, 0, 0.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: #ffd86f !important;
+  font-size: 11px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  white-space: nowrap;
+}
+
+.sidebar .logout:hover {
+  background: rgba(255, 183, 0, 0.22) !important;
+  color: #fff4c6 !important;
+}
+
 @media (max-width: 800px) {
   .sidebar nav button {
     font-size: 14.5px !important;
@@ -19,5 +108,54 @@
   .sidebar nav button span {
     width: 30px !important;
     font-size: 20px !important;
+  }
+
+  .sidebar .profile {
+    min-height: 74px;
+    margin: auto 2px 0 !important;
+    padding: 13px 11px !important;
+    gap: 11px !important;
+  }
+
+  .sidebar .profile .avatar.small {
+    width: 46px !important;
+    height: 46px !important;
+    font-size: 15px !important;
+  }
+
+  .sidebar .profile b {
+    max-width: 98px;
+    font-size: 16px !important;
+  }
+
+  .sidebar .profile small {
+    font-size: 11.5px !important;
+  }
+
+  .sidebar .logout {
+    padding: 9px 10px !important;
+    font-size: 11.5px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .sidebar .profile {
+    gap: 8px !important;
+    padding: 12px 9px !important;
+  }
+
+  .sidebar .profile .avatar.small {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .sidebar .profile b {
+    max-width: 82px;
+    font-size: 15px !important;
+  }
+
+  .sidebar .logout {
+    padding: 8px 8px !important;
+    font-size: 10.5px !important;
   }
 }
