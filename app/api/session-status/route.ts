@@ -11,6 +11,7 @@ type ProfileJoin = {
 
 type AttendanceWithProfile = {
   drawn_number: number | null;
+  level_at_time?: "1" | "2" | number | string | null;
   profiles: ProfileJoin | ProfileJoin[] | null;
 };
 
@@ -24,6 +25,8 @@ const allowedLevel1CountsByParticipants = new Map<number, number[]>([
 ]);
 const toProfile = (profiles: ProfileJoin | ProfileJoin[] | null) => Array.isArray(profiles) ? profiles[0] : profiles;
 const toLevel = (level: ProfileJoin["level"]): 1 | 2 => Number(level) === 1 ? 1 : 2;
+const attendanceLevel = (attendance: AttendanceWithProfile): 1 | 2 =>
+  toLevel(attendance.level_at_time ?? toProfile(attendance.profiles)?.level);
 const drawSlotsForLevel = (level: 1 | 2, level1Count: number, level2Count: number, participantCount = level1Count + level2Count) => {
   if (participantCount === 5) return [1, 2, 3, 4, 5];
   const count = Math.max(0, level === 1 ? level1Count : level2Count);
@@ -41,14 +44,14 @@ export async function POST(request: Request) {
 
     const { data: attendances, error: attendanceError } = await admin
       .from("attendances")
-      .select("drawn_number, profiles!attendances_member_id_fkey(level)")
+      .select("drawn_number, level_at_time, profiles!attendances_member_id_fkey(level)")
       .eq("session_id", body.sessionId)
       .eq("choice", "attending");
     if (attendanceError) throw attendanceError;
     const attendanceRows = (attendances || []) as AttendanceWithProfile[];
     if (!attendanceRows.length) return Response.json({ error: "Chưa có thành viên tham gia để tạo lịch." }, { status: 400 });
 
-    const level1Count = attendanceRows.filter((attendance) => toLevel(toProfile(attendance.profiles)?.level) === 1).length;
+    const level1Count = attendanceRows.filter((attendance) => attendanceLevel(attendance) === 1).length;
     const level2Count = attendanceRows.length - level1Count;
     if (!hasScheduleScenario(attendanceRows.length, level1Count)) {
       return Response.json({ error: `Chưa có mẫu lịch phù hợp cho ${attendanceRows.length} người (${level1Count} Level 1 + ${level2Count} Level 2).` }, { status: 400 });
@@ -56,7 +59,7 @@ export async function POST(request: Request) {
 
     const invalidDraw = attendanceRows.some((attendance) => {
       if (typeof attendance.drawn_number !== "number") return true;
-      const level = toLevel(toProfile(attendance.profiles)?.level);
+      const level = attendanceLevel(attendance);
       return !drawSlotsForLevel(level, level1Count, level2Count, attendanceRows.length).includes(attendance.drawn_number);
     });
     if (invalidDraw) {

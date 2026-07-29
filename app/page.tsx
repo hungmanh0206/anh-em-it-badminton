@@ -928,12 +928,12 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, curren
   const isHoldingSlot = spinning && typeof spinTarget !== "number";
   const spinDeg = 1440 - targetAngle;
   const isOpenFive = participantCount === 5;
-  const modeLabel = isOpenFive ? "SỐ 1–5" : `LEVEL ${currentUser.level}`;
+  const modeLabel = isOpenFive ? "Số 1–5" : `Level ${currentUser.level}`;
   const autoLastSlot = !mine && currentUser.present && availableSlots.length === 1 ? availableSlots[0] : null;
   const entries = members.map((member) => ({ member, no: spinning && member.name === currentUser.name ? undefined : drawn[member.name] }));
   const wheelStyle = { "--spin-duration": "3.9s", "--spin-deg": `${spinDeg}deg`, "--wheel-gradient": wheelGradient(wheelSlots.length || 1) } as CSSProperties;
   return <section className="panel draw-panel">
-    <div className="panel-head"><div><h2>Chọn số ngẫu nhiên</h2><p>{isOpenFive ? "Buổi 5 người không phân Level; tất cả thành viên chọn số trong dải 1–5." : isAdmin ? "Admin cũng chỉ chọn số cho chính mình. Khi tất cả người tham gia đã có số, Admin xác nhận để tạo lịch." : `Bạn đang ở Level ${currentUser.level}; vòng quay chỉ lấy số trong đúng dải của bạn.`}</p></div><span className="mode">{modeLabel}</span></div>
+    <div className="panel-head draw-panel-head"><div><h2>Chọn số ngẫu nhiên</h2></div><span className="mode draw-mode-pill">{modeLabel}</span></div>
     <div className="draw-body">
       <div className={"wheel level-wheel level-wheel-" + (isOpenFive ? "open" : currentUser.level)} style={wheelStyle}>
         <span className="wheel-pointer" aria-hidden="true" />
@@ -945,21 +945,19 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, curren
         </div>
         <div className="wheel-inner">{isWheelSpinning || isHoldingSlot ? <b>…<small>{isHoldingSlot ? "ĐANG GIỮ SỐ" : "ĐANG QUAY"}</small></b> : mine ? <b>{mine}<small>SỐ CỦA BẠN</small></b> : autoLastSlot ? <b>{autoLastSlot}<small>SỐ CUỐI</small></b> : <b>?</b>}</div>
       </div>
-      <div className="draw-copy"><span className="tag">CHỌN SỐ · {rangeLabel.toUpperCase()}</span><h2>{isWheelSpinning ? "Vòng quay đang chọn số…" : isHoldingSlot ? "Đang giữ số hợp lệ…" : mine ? "Bạn đã chọn xong" : currentUser.present ? (autoLastSlot ? "Bạn là người cuối trong dải số này" : "Đến lượt bạn chọn số") : "Bạn chưa điểm danh tham gia"}</h2><p>{autoLastSlot ? "Chỉ còn 1 số hợp lệ, bấm để nhận luôn số cuối cùng — không cần quay." : "Vòng quay chạy khoảng 4 giây. Số đã chọn sẽ biến mất khỏi vòng quay để người sau không bị trùng."}</p><button className="primary" disabled={spinning || !currentUser.present || Boolean(mine)} onClick={drawSelf}>{spinning ? "Đang xử lý…" : mine ? "Đã có số" : autoLastSlot ? "Nhận số cuối cùng" : "Chọn số của tôi"} <span>↻</span></button></div>
+      <div className="draw-copy"><span className="tag">CHỌN SỐ · {rangeLabel.toUpperCase()}</span><h2>{isWheelSpinning ? "Vòng quay đang chọn số…" : isHoldingSlot ? "Đang giữ số hợp lệ…" : mine ? "Bạn đã chọn xong" : currentUser.present ? (autoLastSlot ? "Bạn là người cuối trong dải số này" : "Đến lượt bạn chọn số") : "Bạn chưa điểm danh tham gia"}</h2><button className="primary" disabled={spinning || !currentUser.present || Boolean(mine)} onClick={drawSelf}>{spinning ? "Đang xử lý…" : mine ? "Đã có số" : autoLastSlot ? "Nhận số cuối cùng" : "Chọn số của tôi"} <span>↻</span></button></div>
     </div>
     <div className="draw-list draw-roster">{entries.map(({ member, no }) => <div className={no ? "drawn" : "pending"} key={member.username}><span>{member.name}</span><b>{no ?? "—"}</b><small>Level {member.level}</small></div>)}</div>
-    <div className="panel-foot"><span>{allDrawn ? "✓ Tất cả người tham gia đã chọn số. Admin có thể tạo lịch." : "Đang chờ các thành viên tự chọn số của mình."}</span>{isAdmin && <button className="primary" disabled={!allDrawn} onClick={onContinue}>Tạo lịch thi đấu <span>→</span></button>}</div>
+    {isAdmin && <div className="panel-foot draw-actions-foot"><button className="primary" disabled={!allDrawn} onClick={onContinue}>Tạo lịch thi đấu <span>→</span></button></div>}
   </section>;
 }
 function Schedule({ scenario, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, isAdmin, rankingRows, rankingMonth, onSaved }: { scenario: ScheduleScenario | null; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; isAdmin: boolean; rankingRows: RankingRow[]; rankingMonth: string; onSaved: (completed: boolean) => void }) {
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
   if (!scenario) return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Lịch chỉ được tạo khi có tối thiểu 5 thành viên và đúng tổ hợp trong thư viện lịch.</p></div></div><div className="empty-ranking">Chưa có lịch phù hợp cho danh sách điểm danh hiện tại.</div></section>;
-  const scenarioLabel = scenario.participantCount === 5 ? "5 người · không phân Level" : `${scenario.level1Count} Level 1 + ${scenario.level2Count} Level 2`;
   return <>
     <section className="panel combined-schedule-panel">
-      <div className="panel-head"><div><h2>Lịch thi đấu & nhập điểm</h2><p>Đã chọn mẫu theo danh sách hôm nay: {scenarioLabel}. Nhập điểm ngay bên dưới từng trận.</p></div><span className="count-pill">{scenario.matches.length} trận</span></div>
+      <div className="panel-head"><div><h2>Lịch thi đấu & nhập điểm</h2></div><span className="count-pill schedule-count-pill">{scenario.matches.length} trận</span></div>
       <div className="schedule-grid">{scenario.matches.map((match, i) => <Match match={match} i={i} namesBySlot={namesBySlot} key={i} />)}</div>
-      <div className="panel-foot"><span>✓ {scenario.title} · Mỗi người 4 trận</span><span>{isAdmin ? "Admin xác nhận từng trận; BXH cập nhật ngay sau khi lưu." : "Thành viên được xem lịch và kết quả, chỉ Admin được sửa điểm."}</span></div>
     </section>
     <Results key={`${sessionId ?? "local"}-${scenario.id}`} matches={scenario.matches} drawn={drawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} onSaved={onSaved} />
     <LiveRankingSnapshot rows={rankingRows} month={rankingMonth} />
@@ -1124,7 +1122,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     setNotice(`Đã cập nhật BXH sau trận ${index + 1}.`);
     onSaved(Boolean(payload.completed));
   };
-  return <section className="panel result-entry-panel"><div className="panel-head"><div><h2>Điểm số từng trận</h2><p>{isAdmin ? "Xác nhận từng trận. Mỗi lần xác nhận sẽ cập nhật ngay xuống BXH bên dưới và tab BXH chính." : "Bạn có thể xem điểm từng trận tại đây; chỉ Admin có quyền nhập, sửa và xác nhận."}</p></div><span className="count-pill">{confirmedCount}/{matches.length} trận</span></div>{notice && <div className="warning result-notice">{notice}</div>}<div className="result-list">{matches.map((match, i) => {
+  return <section className="panel result-entry-panel"><div className="panel-head"><div><h2>Điểm số từng trận</h2></div><span className="count-pill match-count-pill"><b>{confirmedCount}</b><small>/{matches.length} trận</small></span></div>{notice && <div className="warning result-notice">{notice}</div>}<div className="result-list">{matches.map((match, i) => {
     const confirmed = Boolean(confirmedMatches[i]);
     const locked = !isAdmin || (confirmed && !editing[i]);
     return <div className={"result-row schedule-result-row match-result-row " + (confirmed ? "confirmed" : "")} key={i}>
@@ -1134,13 +1132,13 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
       <div className="match-result-team match-result-team-b"><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
       <div className="result-actions">{isAdmin && (confirmed && !editing[i] ? <button className="soft-btn" onClick={() => setEditing({ ...editing, [i]: true })}>Sửa</button> : <button className="primary" disabled={saving === i} onClick={() => void saveMatch(match, i)}>{saving === i ? "Đang lưu…" : confirmed ? "Lưu lại" : "Xác nhận"}</button>)}</div>
     </div>;
-  })}</div>{isAdmin && <div className="panel-foot"><span>{confirmedCount === matches.length ? "✓ Toàn bộ trận đã xác nhận và BXH đã được cập nhật." : "Điểm cao hơn được tính là thắng (+1 điểm cho mỗi thành viên đội thắng)."}</span></div>}</section>;
+  })}</div></section>;
 }
 function LiveRankingSnapshot({ rows, month }: { rows: RankingRow[]; month: string }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
   const completedMatches = Math.floor(rows.reduce((total, row) => total + row.matches, 0) / 4);
-  return <section className="panel live-ranking-panel">
-    <div className="panel-head"><div><h2>Bảng xếp hạng theo tuần</h2><p>Tự động cập nhật theo điểm đã lưu của {month}. Bảng xếp hạng chính cũng dùng cùng dữ liệu này.</p></div><span className="count-pill">{completedMatches} trận đã tính</span></div>
+  return <section className="panel live-ranking-panel" aria-label={`Bảng xếp hạng theo tuần ${month}`}>
+    <div className="panel-head"><div><h2>Bảng xếp hạng theo tuần</h2></div><span className="count-pill weekly-count-pill"><b>{completedMatches}</b><small>trận đã tính</small></span></div>
     <div className="rank-table live-rank-table"><div className="rank-head rank-columns"><span>Vị trí</span><span>Thành viên</span><span>Điểm</span><span>Điểm thắng</span><span>Điểm thua</span><span>Hiệu số</span><span>Số trận</span></div>{rows.length ? rows.map((row, i) => {
       const isTopRank = hasRankingData && i < 3;
       return <div className={"rank-row rank-columns " + (isTopRank ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={isTopRank ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className="avatar small" style={{ background: row.color }}>{row.initials}</div><b>{row.name}</b><span className="level">L{row.level}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span><div className="rank-mobile-stats" aria-hidden="true"><span><em>Thắng</em><b>{row.pointsWon}</b></span><span><em>Thua</em><b>{row.pointsLost}</b></span><span><em>Hiệu</em><b className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</b></span><span><em>Trận</em><b>{row.matches}</b></span></div></div>;
