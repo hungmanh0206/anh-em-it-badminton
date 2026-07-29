@@ -32,6 +32,64 @@
   line-height: 1;
 }
 
+.checkin .member-card.readonly small {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.attendance-status {
+  font-weight: 700;
+}
+
+.attendance-status.present {
+  color: #078454;
+  font-weight: 950;
+}
+
+.attendance-status.absent {
+  color: #d83d50;
+  font-weight: 950;
+}
+
+.attendance-status.pending {
+  color: var(--club-ink-500, #7b7280);
+  font-weight: 700;
+}
+
+.checkin .attendance-mark {
+  display: inline-grid !important;
+  flex: 0 0 34px !important;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  aspect-ratio: 1 / 1;
+  place-items: center !important;
+  margin-left: auto !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  font-family: "Be Vietnam Pro", system-ui, sans-serif !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  transform: none !important;
+}
+
+.checkin .attendance-mark.yes {
+  font-size: 23px !important;
+}
+
+.checkin .attendance-mark.no {
+  font-size: 25px !important;
+}
+
+.checkin .attendance-mark.waiting {
+  font-size: 0 !important;
+}
+
 .checkin-actions-foot {
   justify-content: flex-end !important;
   gap: 10px !important;
