@@ -767,3 +767,37 @@
     padding-right: 7px !important;
   }
 }
+
+@media (max-width: 800px) {
+  .rank-row:not(.top-rank) .point-value {
+    color: #14110d !important;
+    font-size: 29px !important;
+  }
+
+  .rank-row.top-1 .point-value {
+    color: #d28a00 !important;
+    font-size: 31px !important;
+  }
+
+  .rank-row.top-2 .point-value {
+    color: #657080 !important;
+    font-size: 31px !important;
+  }
+
+  .rank-row.top-3 .point-value {
+    color: #b96125 !important;
+    font-size: 31px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .rank-row:not(.top-rank) .point-value {
+    font-size: 26px !important;
+  }
+
+  .rank-row.top-1 .point-value,
+  .rank-row.top-2 .point-value,
+  .rank-row.top-3 .point-value {
+    font-size: 28px !important;
+  }
+}
