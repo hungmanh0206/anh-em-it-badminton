@@ -1,0 +1,56 @@
+.hero-stats {
+  align-items: center;
+}
+
+.hero-stats div {
+  min-width: 72px;
+}
+
+@media (max-width: 800px) {
+  .hero-stats {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, max-content));
+    gap: 12px !important;
+    justify-content: start;
+    align-items: end;
+    overflow: visible;
+  }
+
+  .hero-stats div {
+    min-width: 0;
+    padding-left: 12px !important;
+  }
+
+  .hero-stats b {
+    font-size: 23px !important;
+    line-height: 1 !important;
+  }
+
+  .hero-stats small {
+    font-size: 8px !important;
+    line-height: 1.15 !important;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero-stats {
+    gap: 9px !important;
+  }
+
+  .hero-stats div {
+    padding-left: 9px !important;
+  }
+
+  .hero-stats b {
+    font-size: 20px !important;
+  }
+
+  .hero-stats em {
+    font-size: 11px !important;
+  }
+
+  .hero-stats small {
+    font-size: 7px !important;
+  }
+}
