@@ -1,0 +1,88 @@
+@media (min-width: 801px) {
+  .rank-table .rank-row.rank-columns.top-rank {
+    position: relative;
+    border-left: 0 !important;
+    overflow: hidden;
+    transition:
+      background 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .rank-table .rank-row.rank-columns.top-1 {
+    background:
+      linear-gradient(90deg, rgba(255, 230, 132, 0.34), rgba(255, 248, 220, 0.72) 34%, rgba(255, 255, 255, 0.98) 74%) !important;
+    box-shadow:
+      inset 5px 0 0 #e8b229,
+      inset 0 1px 0 rgba(255, 255, 255, 0.85),
+      0 8px 18px rgba(232, 178, 41, 0.08) !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-2 {
+    background:
+      linear-gradient(90deg, rgba(218, 225, 236, 0.58), rgba(247, 249, 252, 0.9) 35%, rgba(255, 255, 255, 0.98) 74%) !important;
+    box-shadow:
+      inset 5px 0 0 #aeb6c5,
+      inset 0 1px 0 rgba(255, 255, 255, 0.86),
+      0 8px 18px rgba(90, 100, 118, 0.07) !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-3 {
+    background:
+      linear-gradient(90deg, rgba(232, 158, 88, 0.24), rgba(255, 241, 230, 0.86) 35%, rgba(255, 255, 255, 0.98) 74%) !important;
+    box-shadow:
+      inset 5px 0 0 #cd8752,
+      inset 0 1px 0 rgba(255, 255, 255, 0.86),
+      0 8px 18px rgba(172, 93, 38, 0.07) !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-rank:hover {
+    transform: translateX(2px);
+  }
+
+  .rank-table .rank-row.rank-columns.top-rank .medal {
+    width: 31px !important;
+    height: 31px !important;
+    border-radius: 999px;
+    font-size: 13px !important;
+    font-weight: 950 !important;
+    letter-spacing: -0.2px;
+    box-shadow:
+      0 7px 16px rgba(31, 24, 14, 0.17),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-1 .medal {
+    background: linear-gradient(135deg, #ffe071, #ffb000 62%, #d99000) !important;
+    color: #251900 !important;
+    font-size: 0 !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-1 .medal::before {
+    content: "\1F3C6";
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .rank-table .rank-row.rank-columns.top-2 .medal {
+    background: linear-gradient(135deg, #f9fbff, #c9d1de 55%, #929cab) !important;
+    color: #26303d !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-3 .medal {
+    background: linear-gradient(135deg, #f2ad5f, #d68037 58%, #a95f2a) !important;
+    color: #fff8ef !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-1 .point-value {
+    color: #c47a00 !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-2 .point-value {
+    color: #68717f !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-3 .point-value {
+    color: #b86220 !important;
+  }
+}
