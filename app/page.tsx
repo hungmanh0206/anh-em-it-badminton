@@ -559,6 +559,24 @@ export default function Home() {
     };
     void loadRanking();
   }, [rankingMonth, currentMonthKey, previousMonthKey, rankingRefreshTick]);
+  useEffect(() => {
+    if (!supabase) return;
+    const client = supabase;
+    const channel = client
+      .channel("club-ranking-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "monthly_results" }, () => {
+        setRankingRefreshTick((tick) => tick + 1);
+      })
+      .subscribe();
+    return () => { void client.removeChannel(channel); };
+  }, []);
+  useEffect(() => {
+    if (!supabase || !showProfileCard) return;
+    const timer = window.setInterval(() => {
+      setRankingRefreshTick((tick) => tick + 1);
+    }, 15_000);
+    return () => window.clearInterval(timer);
+  }, [showProfileCard]);
   const closeRankingMonth = async () => {
     if (!supabase || !monthCloseStatus || closingMonth) return;
     if (!monthCloseStatus.eligible) {
@@ -743,10 +761,14 @@ export default function Home() {
   if (!activeUser) return <Login onLogin={signIn} error={loginError} />;
   const currentUser = members.find((member) => member.username === activeUser.username) ?? activeUser;
   const isAdmin = currentUser.role === "admin";
-  const achievementRows = championRankingRows.length ? championRankingRows : previousRankingRows.length ? previousRankingRows : rankingRows;
-  const profileRank = achievementRows.findIndex((row) => row.name === currentUser.name) + 1;
-  const profileAchievement = profileRank > 0 ? achievementRows[profileRank - 1] : null;
-  const welcomeRankClass = profileRank > 0 && profileRank <= 3 ? `rank-${profileRank}` : "rank-none";
+  const welcomeRows = championRankingRows.length ? championRankingRows : previousRankingRows.length ? previousRankingRows : rankingRows;
+  const welcomeRank = welcomeRows.findIndex((row) => row.name === currentUser.name) + 1;
+  const welcomeRankClass = welcomeRank > 0 && welcomeRank <= 3 ? `rank-${welcomeRank}` : "rank-none";
+  const profileRows = liveRankingRows.length ? liveRankingRows : rankingRows;
+  const profileRank = profileRows.findIndex((row) => row.name === currentUser.name) + 1;
+  const profileAchievement = profileRank > 0 ? profileRows[profileRank - 1] : null;
+  const profileHasRankingData = Boolean(profileAchievement && !profileAchievement.placeholder && profileAchievement.matches > 0);
+  const profileRankClass = profileHasRankingData && profileRank > 0 && profileRank <= 3 ? `rank-${profileRank}` : "rank-none";
   const champion = championRankingRows[0];
 
   return <main className={"app-shell " + (sidebarOpen ? "sidebar-open" : "")}>
@@ -763,7 +785,7 @@ export default function Home() {
       <div className="profile"><div className="avatar small" style={{ background: currentUser.color }}>{currentUser.initials}</div><div><b>{currentUser.name}</b><small>{isAdmin ? "Quản trị viên" : "Thành viên"}</small></div><button className="logout" onClick={() => { void supabase?.auth.signOut(); setActiveUser(null); }}>Đăng xuất</button></div>
     </aside>
     <section className="content">
-      <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className="welcome-avatar" style={{ background: currentUser.color }} aria-hidden="true">{profileRank > 0 && profileRank <= 3 ? profileRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
+      <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className="welcome-avatar" style={{ background: currentUser.color }} aria-hidden="true">{welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
       {screen === "members" ? <Members members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "history" ? <History sessions={historySessions} /> : <>
         <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>Buổi thứ Bảy ngày {session.date.toLocaleDateString("vi-VN")}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>NGƯỜI CÓ MẶT</small></div><div><b>{String(step + 1).padStart(2, "0")}<em>/{String(steps.length).padStart(2, "0")}</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
@@ -776,39 +798,44 @@ export default function Home() {
     {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}
     {confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}
     {isAdmin && attendanceChangeNotice && <ConfirmActionModal title="Thay đổi điểm danh" message={`${attendanceChangeNotice} Xác nhận để reset chọn số và lịch thi đấu; điểm danh mới sẽ được giữ lại.`} onCancel={() => setAttendanceChangeNotice(null)} onConfirm={async () => { if (supabase && sessionId) await supabase.rpc("reset_session_after_attendance_change", { p_session_id: sessionId }); setDrawn({}); setStep(0); setAttendanceChangeNotice(null); }} />}
-    {showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={championRankingLabel} rankClass={welcomeRankClass} onClose={() => setShowProfileCard(false)} />}
+    {showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={currentMonthLabel} rankClass={profileRankClass} hasRankingData={profileHasRankingData} onClose={() => setShowProfileCard(false)} />}
   </main>;
 }
 
-function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass, onClose }: { member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; onClose: () => void }) {
-  const isTopRank = rank > 0 && rank <= 3;
+function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass, hasRankingData, onClose }: { member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; hasRankingData: boolean; onClose: () => void }) {
+  const isTopRank = hasRankingData && rank > 0 && rank <= 3;
   const pointDiff = achievement?.pointDiff;
-  const pointDiffLabel = typeof pointDiff === "number" ? `${pointDiff > 0 ? "+" : ""}${pointDiff}` : "—";
+  const pointDiffLabel = typeof pointDiff === "number" ? `${pointDiff > 0 ? "+" : ""}${pointDiff}` : "0";
+  const positionLabel = hasRankingData && rank > 0 ? `Top ${rank}` : "—";
+  const points = achievement?.points ?? 0;
+  const pointsWon = achievement?.pointsWon ?? 0;
+  const pointsLost = achievement?.pointsLost ?? 0;
+  const matches = achievement?.matches ?? 0;
   const roleLabel = member.role === "admin" ? "Quản trị viên" : "Thành viên";
   return <aside className={`member-profile-popover profile-${rankClass}`} role="dialog" aria-modal="true" aria-label={`Thông tin hồ sơ ${member.name}`}>
     <button className="modal-close profile-close" onClick={onClose} aria-label="Đóng">×</button>
     <div className="profile-hero-card">
       <span className="profile-medal" style={{ background: member.color }} aria-hidden="true">{isTopRank ? rank : member.initials}</span>
       <div>
-        <p>{isTopRank ? `Top ${rank} · ${achievementMonth}` : "Hồ sơ thành viên"}</p>
+        <p>{hasRankingData && rank > 0 ? `${positionLabel} · ${achievementMonth}` : "Hồ sơ tháng hiện tại"}</p>
         <h2>{member.name}</h2>
         <span>{roleLabel} · Level {member.level}</span>
       </div>
     </div>
     <div className="profile-score-card">
       <span>Thành tích {achievementMonth}</span>
-      <b>{achievement ? `${achievement.points} điểm` : "Chưa có dữ liệu"}</b>
-      <small>{achievement ? `${achievement.matches} trận · hiệu số ${pointDiffLabel}` : "BXH sẽ cập nhật sau khi có kết quả thi đấu."}</small>
+      <b>{points} điểm</b>
+      <small>{hasRankingData ? `${matches} trận · hiệu số ${pointDiffLabel}` : "Tháng này đã reset; sẽ tự cập nhật sau trận đầu tiên."}</small>
     </div>
     <div className="profile-stat-grid">
-      <div className="profile-stat"><span>Vị trí</span><b>{achievement ? `Top ${rank}` : "—"}</b></div>
+      <div className="profile-stat"><span>Vị trí</span><b>{positionLabel}</b></div>
       <div className="profile-stat"><span>Level</span><b>{member.level}</b></div>
-      <div className="profile-stat"><span>Điểm thắng</span><b>{achievement ? achievement.pointsWon : "—"}</b></div>
-      <div className="profile-stat"><span>Điểm thua</span><b>{achievement ? achievement.pointsLost : "—"}</b></div>
+      <div className="profile-stat"><span>Điểm thắng</span><b>{pointsWon}</b></div>
+      <div className="profile-stat"><span>Điểm thua</span><b>{pointsLost}</b></div>
       <div className={`profile-stat ${typeof pointDiff === "number" ? pointDiff >= 0 ? "positive" : "negative" : ""}`}><span>Hiệu số</span><b>{pointDiffLabel}</b></div>
-      <div className="profile-stat"><span>Số trận</span><b>{achievement ? achievement.matches : "—"}</b></div>
+      <div className="profile-stat"><span>Số trận</span><b>{matches}</b></div>
     </div>
-    <p className="profile-note">{isTopRank ? `Thành tích nổi bật được tính theo BXH ${achievementMonth}.` : `Thông tin xếp hạng sẽ nổi bật hơn khi có dữ liệu BXH ${achievementMonth}.`}</p>
+    <p className="profile-note">{hasRankingData ? `Đang cập nhật realtime theo BXH ${achievementMonth}.` : `BXH ${achievementMonth} đang ở trạng thái mới; chỉ số sẽ chạy lại khi có kết quả thi đấu.`}</p>
   </aside>;
 }
 
