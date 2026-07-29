@@ -32,6 +32,27 @@
   line-height: 1;
 }
 
+.checkin-actions-foot {
+  justify-content: flex-end !important;
+  gap: 10px !important;
+}
+
+.checkin-actions-foot .attendance-actions {
+  margin-left: auto;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.checkin-actions-foot .soft-btn,
+.checkin-actions-foot .primary {
+  min-height: 42px;
+  border-radius: 12px !important;
+  font-size: 12px;
+  font-weight: 950 !important;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
 @media (max-width: 560px) {
   .checkin .checkin-head {
     padding: 18px 16px 12px !important;
@@ -60,5 +81,15 @@
 
   .attendance-count-pill span {
     font-size: 10.5px;
+  }
+
+  .checkin-actions-foot {
+    align-items: stretch !important;
+  }
+
+  .checkin-actions-foot .attendance-actions,
+  .checkin-actions-foot .soft-btn,
+  .checkin-actions-foot .primary {
+    width: 100%;
   }
 }

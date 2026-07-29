@@ -86,3 +86,104 @@
     color: #b86220 !important;
   }
 }
+
+@media (min-width: 801px) and (max-width: 1180px) {
+  .content {
+    padding-left: 28px !important;
+    padding-right: 28px !important;
+  }
+
+  .ranking .rank-table,
+  .live-ranking-panel .rank-table {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .rank-head.rank-columns,
+  .rank-row.rank-columns {
+    grid-template-columns: 48px minmax(112px, 1.45fr) 56px 76px 76px 66px 54px !important;
+    gap: 5px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .rank-head.rank-columns {
+    font-size: 8px !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .rank-row.rank-columns {
+    min-height: 56px !important;
+    font-size: 11.5px !important;
+  }
+
+  .rank-row .person {
+    min-width: 0;
+    gap: 7px !important;
+  }
+
+  .rank-row .person > b {
+    max-width: 100%;
+    overflow: hidden;
+    color: #14110d !important;
+    font-size: 12px !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rank-row .person .avatar.small {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 9px !important;
+  }
+
+  .rank-row .level {
+    margin-left: 0 !important;
+    padding: 2px 4px !important;
+    font-size: 8px !important;
+  }
+
+  .rank-row .point-value {
+    font-size: 18px !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-rank .medal {
+    width: 28px !important;
+    height: 28px !important;
+  }
+}
+
+@media (min-width: 801px) and (max-width: 920px) {
+  .sidebar {
+    width: 222px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .content {
+    width: calc(100% - 222px) !important;
+    margin-left: 222px !important;
+    padding: 28px 18px 48px !important;
+  }
+
+  .rank-head.rank-columns,
+  .rank-row.rank-columns {
+    grid-template-columns: 40px minmax(94px, 1.45fr) 48px 60px 60px 52px 44px !important;
+    gap: 4px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .rank-head.rank-columns {
+    font-size: 7.2px !important;
+    letter-spacing: 0.025em !important;
+  }
+
+  .rank-row.rank-columns {
+    font-size: 10.5px !important;
+  }
+
+  .rank-row .point-value {
+    font-size: 16px !important;
+  }
+}
