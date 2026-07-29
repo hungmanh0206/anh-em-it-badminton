@@ -1,0 +1,23 @@
+{
+  "name": "Anh Em IT Badminton Club",
+  "short_name": "Anh Em IT",
+  "description": "Quản lý CLB cầu lông Anh Em IT",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff7df",
+  "theme_color": "#ffb700",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -2479,3 +2479,16 @@ header {
     width: 100%;
   }
 }
+
+.brand-mark,
+.login-brand > span {
+  background: transparent url("/favicon.svg?v=sapp-badminton-icons") center / contain no-repeat !important;
+  box-shadow: 0 10px 24px rgba(255, 183, 0, 0.26) !important;
+}
+
+.brand-mark::before,
+.brand-mark::after,
+.login-brand > span::before,
+.login-brand > span::after {
+  content: none !important;
+}
