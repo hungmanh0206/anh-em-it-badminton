@@ -916,8 +916,7 @@ function Rules() {
 
     <div className="rules-grid">
       <article className="rules-card">
-        <span className="rules-index">I</span>
-        <h2>Thể thức & mục tiêu</h2>
+        <div className="rules-card-title"><span className="rules-index">1</span><h2>Thể thức & mục tiêu</h2></div>
         <ul>
           <li>Thi đấu theo thể thức đánh đôi, mỗi trận gồm 2 người đấu với 2 người.</li>
           <li>Lịch đấu ưu tiên công bằng về số trận, đồng đội và đối thủ.</li>
@@ -927,8 +926,7 @@ function Rules() {
       </article>
 
       <article className="rules-card">
-        <span className="rules-index">II</span>
-        <h2>Thành viên & phân level</h2>
+        <div className="rules-card-title"><span className="rules-index">2</span><h2>Thành viên & phân level</h2></div>
         <p className="rules-member-line">Hùng, Sơn, Nam, Phú, Mạnh, Thành, Đạt, Đức Anh, Quý, Hải.</p>
         <div className="rules-level-grid">
           <div><span className="level-chip level-one">Level 1</span><b>Hạng 1–4</b><p>Nhóm đang dẫn đầu theo BXH tháng trước.</p></div>
@@ -937,8 +935,7 @@ function Rules() {
       </article>
 
       <article className="rules-card rules-card-wide">
-        <span className="rules-index">III</span>
-        <h2>Cấu trúc lịch đấu hằng tuần</h2>
+        <div className="rules-card-title"><span className="rules-index">3</span><h2>Cấu trúc lịch đấu hằng tuần</h2></div>
         <p>Lịch chỉ được tạo khi có từ 6 thành viên tham gia. Hệ thống sẽ chọn thư viện lịch phù hợp theo tổng số người và số lượng Level 1 / Level 2 của buổi đó.</p>
         <div className="rules-match-types">
           <div><b><span className="level-one">Level 1</span> + <span className="level-one">Level 1</span></b><span>vs</span><b><span className="level-one">Level 1</span> + <span className="level-one">Level 1</span></b></div>
@@ -949,8 +946,7 @@ function Rules() {
       </article>
 
       <article className="rules-card">
-        <span className="rules-index">IV</span>
-        <h2>Nguyên tắc chi tiết</h2>
+        <div className="rules-card-title"><span className="rules-index">4</span><h2>Nguyên tắc chi tiết</h2></div>
         <ol>
           <li>Mỗi thành viên tham gia sẽ thi đấu đúng 4 trận trong buổi.</li>
           <li>Không để hai người làm đồng đội quá 1 lần/tuần nếu lịch cho phép.</li>
@@ -961,8 +957,7 @@ function Rules() {
       </article>
 
       <article className="rules-card">
-        <span className="rules-index">V</span>
-        <h2>Quyền lợi & tính điểm</h2>
+        <div className="rules-card-title"><span className="rules-index">5</span><h2>Quyền lợi & tính điểm</h2></div>
         <ul>
           <li>Thành viên đã điểm danh tham gia được đảm bảo lịch đấu 4 trận khi số người đủ điều kiện.</li>
           <li>Thắng được <strong>+1 điểm</strong>, thua <strong>0 điểm</strong>.</li>
@@ -972,8 +967,7 @@ function Rules() {
       </article>
 
       <article className="rules-card rules-card-wide rules-prize-card">
-        <span className="rules-index">VI</span>
-        <h2>Cơ cấu giải thưởng</h2>
+        <div className="rules-card-title"><span className="rules-index">6</span><h2>Cơ cấu giải thưởng</h2></div>
         <div className="rules-prizes">
           <div className="gold"><span>🏅</span><b>Vô địch</b><p>1 áo cầu lông, tối đa 200k. Nếu chọn áo đắt hơn, người nhận tự bù phần chênh lệch.</p></div>
           <div className="silver"><span>🥈</span><b>Á quân</b><p>2 cuốn cán Yonex xịn hoặc 1 đôi tất cầu lông cao cấp, khoảng 80–100k.</p></div>
