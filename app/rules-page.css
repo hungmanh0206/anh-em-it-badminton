@@ -275,28 +275,13 @@
 .rules-member-list span {
   display: flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
   border-radius: 999px;
-  padding: 7px 9px;
+  padding: 9px 12px;
   border: 1px solid var(--club-ink-200);
   background: var(--club-white);
   color: #171512;
   box-shadow: 0 10px 20px rgba(139, 98, 0, 0.08);
-}
-
-.rules-member-list i {
-  display: inline-grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
-  border-radius: 50%;
-  background: #1a1916;
-  color: #ffcf64;
-  font-size: 9px;
-  font-style: normal;
-  font-weight: 950;
-  letter-spacing: -0.04em;
 }
 
 .rules-member-list b {
