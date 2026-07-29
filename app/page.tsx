@@ -527,6 +527,7 @@ export default function Home() {
           return { name, initials: initialsFromName(name), level: Number(profile.level || row.level_next_month || 2), points: row.total_points, pointsWon: row.points_for, pointsLost: row.points_against, pointDiff: row.point_diff, matches: row.matches_played, color: colorForIndex(index), placeholder: row.matches_played === 0 };
         });
         return mergedRows.sort((a, b) =>
+          (a.placeholder === b.placeholder ? 0 : a.placeholder ? 1 : -1) ||
           b.points - a.points ||
           b.pointDiff - a.pointDiff ||
           b.pointsWon - a.pointsWon ||
