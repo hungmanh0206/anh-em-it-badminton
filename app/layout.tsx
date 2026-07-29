@@ -10,6 +10,7 @@ import "./sidebar-polish.css";
 import "./mobile-ranking.css";
 import "./checkin-polish.css";
 import "./ranking-podium.css";
+import "./tablet-header.css";
 
 export const metadata: Metadata = {
   title: "Anh Em IT — Quản lý CLB Cầu lông",

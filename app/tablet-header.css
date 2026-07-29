@@ -1,0 +1,101 @@
+@media (min-width: 561px) and (max-width: 800px) {
+  header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    column-gap: 18px !important;
+    row-gap: 0 !important;
+    margin-bottom: 24px !important;
+    text-align: left !important;
+  }
+
+  .title-group {
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    align-items: center !important;
+    column-gap: 12px !important;
+    min-width: 0 !important;
+  }
+
+  .mobile-menu {
+    align-self: center !important;
+    justify-self: start !important;
+    width: 40px !important;
+    height: 40px !important;
+    margin: 0 !important;
+  }
+
+  .title-group > div {
+    min-width: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+  }
+
+  .title-group .eyebrow {
+    margin: 0 0 5px !important;
+    color: var(--club-gold-700, #a26700) !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    text-align: left !important;
+  }
+
+  .title-group h1 {
+    margin: 0 !important;
+    font-size: 30px !important;
+    line-height: 1 !important;
+    text-align: left !important;
+  }
+
+  .welcome-member,
+  .welcome-member.rank-1,
+  .welcome-member.rank-2,
+  .welcome-member.rank-3,
+  .welcome-member.rank-none {
+    justify-self: end !important;
+    align-self: center !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 178px !important;
+    min-height: 46px !important;
+    margin: 0 !important;
+    padding: 7px 11px 7px 7px !important;
+    gap: 8px !important;
+    border-radius: 15px !important;
+  }
+
+  .welcome-member .welcome-avatar {
+    flex: 0 0 32px !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 11px !important;
+  }
+
+  .welcome-member.rank-1 .welcome-avatar,
+  .welcome-member.rank-2 .welcome-avatar,
+  .welcome-member.rank-3 .welcome-avatar {
+    font-size: 14px !important;
+  }
+
+  .welcome-text {
+    gap: 3px !important;
+  }
+
+  .welcome-line {
+    gap: 4px !important;
+  }
+
+  .welcome-member .welcome-copy {
+    font-size: 10.5px !important;
+  }
+
+  .welcome-member b {
+    max-width: 72px !important;
+    font-size: 13.5px !important;
+    line-height: 1 !important;
+  }
+
+  .welcome-member .welcome-level {
+    font-size: 9.5px !important;
+    line-height: 1 !important;
+  }
+}
