@@ -12,31 +12,44 @@
 
 .rules-hero {
   position: relative;
+  isolation: isolate;
   overflow: hidden;
-  min-height: 230px;
-  border-radius: 28px;
-  padding: 34px;
-  color: #fff;
+  min-height: 245px;
+  border-radius: 30px;
+  padding: 32px;
+  color: #1a1916;
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
-  gap: 28px;
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 390px);
+  gap: 24px;
+  align-items: stretch;
   background:
-    radial-gradient(circle at 5% 0%, rgba(255, 183, 0, 0.52), transparent 34%),
-    radial-gradient(circle at 85% 18%, rgba(255, 225, 136, 0.2), transparent 30%),
-    linear-gradient(135deg, #171512, #312606 58%, #7b5700);
+    radial-gradient(circle at 0% 0%, rgba(255, 183, 0, 0.35), transparent 30%),
+    radial-gradient(circle at 92% 10%, rgba(255, 183, 0, 0.32), transparent 25%),
+    linear-gradient(135deg, #fffdf6 0%, #fff4d6 58%, #ffd46f 100%);
+}
+
+.rules-hero::before {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  border: 1px solid rgba(255, 183, 0, 0.28);
+  border-radius: 24px;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .rules-hero::after {
   content: "";
   position: absolute;
-  right: -34px;
-  top: -42px;
-  width: 240px;
-  height: 240px;
+  right: 18px;
+  bottom: -42px;
+  width: 260px;
+  height: 260px;
   background: url("/favicon.svg?v=sapp-badminton-icons") center / contain no-repeat;
-  opacity: 0.22;
-  transform: rotate(11deg);
+  opacity: 0.11;
+  transform: rotate(-9deg);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .rules-hero-copy,
@@ -45,50 +58,79 @@
   z-index: 1;
 }
 
+.rules-hero-copy {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+}
+
 .rules-hero .eyebrow {
-  color: #ffcf64;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: #1a1916;
+  color: #ffd66d !important;
+  letter-spacing: 0.12em;
 }
 
 .rules-hero h2 {
-  font-size: clamp(31px, 5vw, 58px);
-  line-height: 0.95;
-  letter-spacing: -0.07em;
-  margin: 0 0 14px;
-  max-width: 760px;
+  color: #11100d !important;
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 0.96;
+  letter-spacing: -0.075em !important;
+  margin: 18px 0 16px;
+  max-width: 690px;
 }
 
 .rules-hero p:not(.eyebrow) {
-  color: rgba(255, 255, 255, 0.76);
+  color: #4c463a !important;
   font-size: 15px;
-  line-height: 1.7;
-  max-width: 620px;
+  font-weight: 650;
+  line-height: 1.75;
+  max-width: 650px;
 }
 
 .rules-hero-stats {
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  align-content: end;
 }
 
 .rules-hero-stats div {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 18px;
-  padding: 15px 16px;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(26, 25, 22, 0.08);
+  border-radius: 22px;
+  padding: 17px 18px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 16px 34px rgba(110, 73, 0, 0.12);
+  backdrop-filter: blur(16px);
+}
+
+.rules-hero-stats div::after {
+  content: "";
+  position: absolute;
+  right: -18px;
+  bottom: -22px;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background: rgba(255, 183, 0, 0.14);
 }
 
 .rules-hero-stats b {
   display: block;
-  color: #ffcf64;
-  font-size: 25px;
+  color: #b97700 !important;
+  font-size: 30px;
   line-height: 1;
-  margin-bottom: 5px;
+  margin-bottom: 7px;
+  letter-spacing: -0.05em;
 }
 
 .rules-hero-stats span {
-  color: rgba(255, 255, 255, 0.72);
+  color: #1f1b14;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
