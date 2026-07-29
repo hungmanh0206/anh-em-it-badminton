@@ -10,7 +10,7 @@ export class ApiError extends Error {
 }
 
 export function createSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !secretKey) throw new ApiError(500, "Server chưa có Supabase secret để lưu kết quả.");
   return createClient(url, secretKey, {
