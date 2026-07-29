@@ -13,7 +13,7 @@ type HistorySessionRow = { id: string; session_date: string; matches?: { count: 
 type MatchRow = { match_no: number; team_a: string[]; team_b: string[]; score_a: number; score_b: number };
 type SavedMatchRow = { match_no: number; score_a: number | null; score_b: number | null };
 type ProfileRow = { id: string; full_name: string };
-type Screen = "home" | "members" | "schedules" | "ranking" | "history";
+type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "history";
 type SessionStatus = "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 type AttendanceRow = { choice: "pending" | "attending" | "absent"; drawn_number: number | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
 type HomeSessionPayload = { inactive?: boolean; sessionId?: string | null; sessionDate?: string; status?: SessionStatus; attendances?: AttendanceRow[]; needsReset?: boolean; error?: string };
@@ -25,6 +25,7 @@ type ScheduleScenario = { id: string; participantCount: ParticipantCount; level1
 const screenTitles: Record<Screen, string> = {
   home: "Home",
   members: "Quản lý thành viên",
+  rules: "Thể lệ",
   schedules: "Lịch thi đấu",
   ranking: "Bảng xếp hạng",
   history: "Lịch sử thi đấu",
@@ -780,6 +781,7 @@ export default function Home() {
       <nav onClick={() => setSidebarOpen(false)}>
         <button className={screen === "home" ? "active" : ""} onClick={() => setScreen("home")}><span>⌂</span> Home</button>
         {isAdmin && <button className={screen === "members" ? "active" : ""} onClick={() => setScreen("members")}><span>♙</span> Thành viên</button>}
+        <button className={screen === "rules" ? "active" : ""} onClick={() => setScreen("rules")}><span>§</span> Thể lệ</button>
         <button className={screen === "schedules" ? "active" : ""} onClick={() => setScreen("schedules")}><span>▤</span> Lịch thi đấu</button>
         <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(currentMonthLabel); }}><span>▥</span> Bảng xếp hạng</button>
         <button className={screen === "history" ? "active" : ""} onClick={() => setScreen("history")}><span>◷</span> Lịch sử thi đấu</button>
@@ -789,7 +791,7 @@ export default function Home() {
     </aside>
     <section className="content">
       <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className="welcome-avatar" style={{ background: currentUser.color }} aria-hidden="true">{welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
-      {screen === "members" ? <Members members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "history" ? <History sessions={historySessions} /> : <>
+      {screen === "members" ? <Members members={members} /> : screen === "rules" ? <Rules /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "history" ? <History sessions={historySessions} /> : <>
         <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>{saturdaySessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>THAM GIA</small></div><div><b>{notAttending.length}</b><small>KHÔNG THAM GIA</small></div><div><b>{String(step + 1).padStart(2, "0")}<em>/{String(steps.length).padStart(2, "0")}</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
@@ -891,6 +893,99 @@ function Schedule({ scenario, drawn, scores, setScores, confirmedMatches, setCon
     <LiveRankingSnapshot rows={rankingRows} month={rankingMonth} />
   </>;
 }
+function Rules() {
+  return <section className="rules-page">
+    <section className="rules-hero">
+      <div className="rules-hero-copy">
+        <p className="eyebrow">BỘ LUẬT CLB</p>
+        <h2>Giải cầu lông Anh Em IT</h2>
+        <p>Lịch đấu được tạo để mọi thành viên có số trận cân bằng, gặp nhiều đối thủ khác nhau và vẫn giữ tinh thần vui vẻ, cạnh tranh lành mạnh.</p>
+      </div>
+      <div className="rules-hero-stats" aria-label="Tóm tắt thể lệ">
+        <div><b>2 vs 2</b><span>Thể thức đánh đôi</span></div>
+        <div><b>4</b><span>Trận mỗi người / tuần</span></div>
+        <div><b>10</b><span>Thành viên tối đa</span></div>
+      </div>
+    </section>
+
+    <section className="rules-flow" aria-label="Quy trình buổi chơi">
+      <article><span>01</span><b>Điểm danh</b><p>Thành viên xác nhận tham gia hoặc không tham gia trước khi lập lịch.</p></article>
+      <article><span>02</span><b>Chọn số</b><p>Level 1 nhận số 1–4, Level 2 nhận số 5–10; dải số tự thu gọn theo số người tham gia thực tế.</p></article>
+      <article><span>03</span><b>Thi đấu & nhập điểm</b><p>Admin xác nhận từng trận, BXH tháng cập nhật ngay sau mỗi kết quả được lưu.</p></article>
+    </section>
+
+    <div className="rules-grid">
+      <article className="rules-card">
+        <span className="rules-index">I</span>
+        <h2>Thể thức & mục tiêu</h2>
+        <ul>
+          <li>Thi đấu theo thể thức đánh đôi, mỗi trận gồm 2 người đấu với 2 người.</li>
+          <li>Lịch đấu ưu tiên công bằng về số trận, đồng đội và đối thủ.</li>
+          <li>Hạn chế tối đa việc trùng lặp cặp đấu trong cùng một buổi.</li>
+          <li>Phân nhóm dựa trên BXH tháng trước để trận đấu vừa sức và hấp dẫn hơn.</li>
+        </ul>
+      </article>
+
+      <article className="rules-card">
+        <span className="rules-index">II</span>
+        <h2>Thành viên & phân level</h2>
+        <p className="rules-member-line">Hùng, Sơn, Nam, Phú, Mạnh, Thành, Đạt, Đức Anh, Quý, Hải.</p>
+        <div className="rules-level-grid">
+          <div><span className="level-chip level-one">Level 1</span><b>Hạng 1–4</b><p>Nhóm đang dẫn đầu theo BXH tháng trước.</p></div>
+          <div><span className="level-chip level-two">Level 2</span><b>Hạng 5–10</b><p>Nhóm còn lại, được cập nhật sau khi chốt BXH tháng.</p></div>
+        </div>
+      </article>
+
+      <article className="rules-card rules-card-wide">
+        <span className="rules-index">III</span>
+        <h2>Cấu trúc lịch đấu hằng tuần</h2>
+        <p>Lịch chỉ được tạo khi có từ 6 thành viên tham gia. Hệ thống sẽ chọn thư viện lịch phù hợp theo tổng số người và số lượng Level 1 / Level 2 của buổi đó.</p>
+        <div className="rules-match-types">
+          <div><b><span className="level-one">Level 1</span> + <span className="level-one">Level 1</span></b><span>vs</span><b><span className="level-one">Level 1</span> + <span className="level-one">Level 1</span></b></div>
+          <div><b><span className="level-one">Level 1</span> + <span className="level-two">Level 2</span></b><span>vs</span><b><span className="level-one">Level 1</span> + <span className="level-two">Level 2</span></b></div>
+          <div><b><span className="level-two">Level 2</span> + <span className="level-two">Level 2</span></b><span>vs</span><b><span className="level-two">Level 2</span> + <span className="level-two">Level 2</span></b></div>
+        </div>
+        <p className="rules-note">Nếu một trường hợp không thể áp dụng đủ mọi quy tắc, lịch sẽ ưu tiên các điều kiện khả thi theo thứ tự: đủ 4 trận mỗi người, hạn chế lặp đồng đội, rồi mới đến cân bằng tuyệt đối theo level.</p>
+      </article>
+
+      <article className="rules-card">
+        <span className="rules-index">IV</span>
+        <h2>Nguyên tắc chi tiết</h2>
+        <ol>
+          <li>Mỗi thành viên tham gia sẽ thi đấu đúng 4 trận trong buổi.</li>
+          <li>Không để hai người làm đồng đội quá 1 lần/tuần nếu lịch cho phép.</li>
+          <li>Phân bổ đối thủ dựa trên level và thứ hạng hiện có.</li>
+          <li>Ưu tiên đa dạng đội hình, tránh cảm giác “gặp mãi một cặp”.</li>
+          <li>Khuyến khích giao lưu giữa các cấp độ để mọi trận đều mới mẻ.</li>
+        </ol>
+      </article>
+
+      <article className="rules-card">
+        <span className="rules-index">V</span>
+        <h2>Quyền lợi & tính điểm</h2>
+        <ul>
+          <li>Thành viên đã điểm danh tham gia được đảm bảo lịch đấu 4 trận khi số người đủ điều kiện.</li>
+          <li>Thắng được <strong>+1 điểm</strong>, thua <strong>0 điểm</strong>.</li>
+          <li>Điểm thắng, điểm thua, hiệu số và số trận đều được lưu vào BXH tháng.</li>
+          <li>Nếu vắng mặt trong buổi đã diễn ra, thành viên không được bù 4 trận của buổi đó.</li>
+        </ul>
+      </article>
+
+      <article className="rules-card rules-card-wide rules-prize-card">
+        <span className="rules-index">VI</span>
+        <h2>Cơ cấu giải thưởng</h2>
+        <div className="rules-prizes">
+          <div className="gold"><span>🏅</span><b>Vô địch</b><p>1 áo cầu lông, tối đa 200k. Nếu chọn áo đắt hơn, người nhận tự bù phần chênh lệch.</p></div>
+          <div className="silver"><span>🥈</span><b>Á quân</b><p>2 cuốn cán Yonex xịn hoặc 1 đôi tất cầu lông cao cấp, khoảng 80–100k.</p></div>
+          <div className="bronze"><span>🥉</span><b>Giải ba</b><p>1 đôi tất thủ công hoặc 1 cuốn cán Yonex xịn, khoảng 40–50k.</p></div>
+          <div><span>🎖️</span><b>Giải tư</b><p>2 cuốn cán rẻ, khoảng 20k.</p></div>
+        </div>
+        <p className="rules-total">Tổng giá trị giải thưởng dự kiến: <strong>350k</strong>.</p>
+      </article>
+    </div>
+  </section>;
+}
+
 function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
   const [participantFilter, setParticipantFilter] = useState<ParticipantCount>(6);
   const visibleScenarios = scenarios.filter((scenario) => scenario.participantCount === participantFilter);
