@@ -452,7 +452,7 @@ export default function Home() {
       return;
     }
     if (supabase && !attendanceSynced) return;
-    if (!syncedUser.present) {
+    if (!syncedUser.responded) {
       if (dismissedCheckinPromptKey === currentCheckinPromptKey) return;
       setCheckinPopupMode("auto");
       setShowCheckin(true);
