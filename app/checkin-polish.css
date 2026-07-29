@@ -1,0 +1,64 @@
+.checkin .checkin-head {
+  align-items: center !important;
+}
+
+.checkin .checkin-head h2 {
+  margin: 0 !important;
+}
+
+.attendance-count-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  min-width: max-content !important;
+  padding: 8px 13px !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+}
+
+.attendance-count-pill b {
+  color: var(--club-gold-700, #a26700);
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.attendance-count-pill span {
+  color: var(--club-ink-700, #5a4c38);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+@media (max-width: 560px) {
+  .checkin .checkin-head {
+    padding: 18px 16px 12px !important;
+    gap: 12px !important;
+  }
+
+  .checkin .checkin-head > div:first-child {
+    min-width: 0;
+  }
+
+  .checkin .checkin-head h2 {
+    font-size: 19px !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  .attendance-count-pill {
+    flex: 0 0 auto;
+    padding: 8px 11px !important;
+    border-radius: 999px !important;
+  }
+
+  .attendance-count-pill b {
+    font-size: 19px;
+  }
+
+  .attendance-count-pill span {
+    font-size: 10.5px;
+  }
+}
