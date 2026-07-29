@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useEffect, useState } from "react";
+import { type CSSProperties, useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 type Member = { name: string; initials: string; level: 1 | 2; color: string; present: boolean; username: string; password: string; role?: "admin" | "member"; responded?: boolean };
@@ -16,7 +16,7 @@ type ProfileRow = { id: string; full_name: string };
 type Screen = "home" | "members" | "schedules" | "ranking" | "history";
 type SessionStatus = "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 type AttendanceRow = { choice: "pending" | "attending" | "absent"; drawn_number: number | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
-type HomeSessionPayload = { inactive?: boolean; sessionId?: string | null; status?: SessionStatus; attendances?: AttendanceRow[]; error?: string };
+type HomeSessionPayload = { inactive?: boolean; sessionId?: string | null; sessionDate?: string; status?: SessionStatus; attendances?: AttendanceRow[]; needsReset?: boolean; error?: string };
 const scheduleParticipants = [6, 7, 8, 9, 10] as const;
 type ParticipantCount = typeof scheduleParticipants[number];
 type MatchPattern = readonly [number, number, number, number, string?];
@@ -244,6 +244,23 @@ export default function Home() {
     setScreen("home");
     setStep(0);
   };
+  const applyHomeSessionPayload = useCallback((payload: HomeSessionPayload) => {
+    if (payload.sessionId) setSessionId(payload.sessionId);
+    if (payload.status) setSessionStatus(payload.status);
+    const attendanceRows = payload.attendances || [];
+    const nextDrawn: Record<string, number> = {};
+    setMembers((previous) => previous.map((member) => {
+      const attendance = attendanceRows.find((item) => {
+        const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+        return profile?.username === member.username;
+      });
+      const profile = attendance ? (Array.isArray(attendance.profiles) ? attendance.profiles[0] : attendance.profiles) : null;
+      const nextName = profile?.full_name || member.name;
+      if (attendance?.choice === "attending" && typeof attendance.drawn_number === "number") nextDrawn[nextName] = attendance.drawn_number;
+      return attendance ? { ...member, name: nextName, level: Number(profile?.level || member.level) as 1 | 2, role: (profile?.role as "admin" | "member" | undefined) ?? member.role, present: attendance.choice === "attending", responded: attendance.choice !== "pending" } : { ...member, present: false, responded: false };
+    }));
+    setDrawn(nextDrawn);
+  }, []);
 
   const signIn = async (username: string, password: string) => {
     const normalized = username.trim().toLowerCase();
@@ -263,10 +280,34 @@ export default function Home() {
   };
   const checkInSelf = async (attending: boolean) => {
     if (!activeUser) return;
-    if (supabase && sessionId) {
-      const { data: needsReset, error } = await supabase.rpc("change_my_attendance", { p_session_id: sessionId, p_choice: attending ? "attending" : "absent" });
-      if (error) return setLoginError(error.message);
-      if (needsReset) setAttendanceChangeNotice("Một thành viên vừa thay đổi điểm danh sau khi đã chọn số/lập lịch.");
+    if (supabase) {
+      try {
+        const { data: { session: authSession } } = await supabase.auth.getSession();
+        if (!authSession?.access_token) return setLoginError("Bạn cần đăng nhập lại để lưu điểm danh.");
+        const response = await fetch("/api/checkin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${authSession.access_token}` },
+          body: JSON.stringify({ sessionId, attending }),
+        });
+        const payload = await response.json().catch(() => ({ error: "Không thể lưu điểm danh." })) as HomeSessionPayload;
+        if (!response.ok) return setLoginError(payload.error || "Không thể lưu điểm danh.");
+        applyHomeSessionPayload(payload);
+        if (payload.needsReset) setAttendanceChangeNotice("Một thành viên vừa thay đổi điểm danh sau khi đã chọn số/lập lịch.");
+        setActiveUser({ ...activeUser, present: attending, responded: true });
+        closeCheckinPopup();
+        setScreen("home");
+        if (attending) {
+          setDismissedCheckinPromptKey(null);
+          const nextStatus = payload.status || sessionStatus;
+          if (["checked_in", "drawn", "scheduled", "completed"].includes(nextStatus)) setStep(1);
+        } else {
+          setDismissedCheckinPromptKey(currentCheckinPromptKey);
+          setStep(0);
+        }
+      } catch (error) {
+        setLoginError(error instanceof Error ? error.message : "Không thể lưu điểm danh.");
+      }
+      return;
     }
     const updated = members.map((m) => m.username === activeUser.username ? { ...m, present: attending, responded: true } : m);
     if (!supabase) localStorage.setItem("aemit-attendance", JSON.stringify(updated));
@@ -385,21 +426,7 @@ export default function Home() {
           await resetHomeWorkflow();
           return;
         }
-        setSessionId(payload.sessionId);
-        if (payload.status) setSessionStatus(payload.status);
-        const attendanceRows = payload.attendances || [];
-        const nextDrawn: Record<string, number> = {};
-        setMembers((previous) => previous.map((member) => {
-          const attendance = attendanceRows.find((item) => {
-            const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
-            return profile?.username === member.username;
-          });
-          const profile = attendance ? (Array.isArray(attendance.profiles) ? attendance.profiles[0] : attendance.profiles) : null;
-          const nextName = profile?.full_name || member.name;
-          if (attendance?.choice === "attending" && typeof attendance.drawn_number === "number") nextDrawn[nextName] = attendance.drawn_number;
-          return attendance ? { ...member, name: nextName, level: Number(profile?.level || member.level) as 1 | 2, role: (profile?.role as "admin" | "member" | undefined) ?? member.role, present: attendance.choice === "attending", responded: attendance.choice !== "pending" } : { ...member, present: false, responded: false };
-        }));
-        setDrawn(nextDrawn);
+        applyHomeSessionPayload(payload);
       } finally {
         if (!cancelled) setAttendanceSynced(true);
       }
@@ -410,7 +437,7 @@ export default function Home() {
       .on("postgres_changes", { event: "*", schema: "public", table: "play_sessions" }, loadLiveAttendance)
       .subscribe();
     return () => { cancelled = true; void client.removeChannel(channel); };
-  }, [activeUsername, checkinPopupMode, sessionDateKey, shouldLoadHomeSession]);
+  }, [activeUsername, applyHomeSessionPayload, checkinPopupMode, sessionDateKey, shouldLoadHomeSession]);
   useEffect(() => {
     if (!activeUsername) return;
     const syncedUser = members.find((member) => member.username === activeUsername);
@@ -655,6 +682,7 @@ export default function Home() {
   };
   const confirmScheduleFromDraw = async () => {
     if (!allDrawn || !currentScheduleScenario) return setLoginError("Cần tất cả người tham gia chọn số trước khi tạo lịch.");
+    if (supabase && !sessionId) return setLoginError("Phiên điểm danh chưa sẵn sàng. Vui lòng tải lại trang hoặc thử lại sau vài giây.");
     if (supabase && sessionId) {
       const { data: { session: authSession } } = await supabase.auth.getSession();
       const response = await fetch("/api/session-status", {
@@ -669,6 +697,16 @@ export default function Home() {
     }
     setSessionStatus("scheduled");
     setStep(2);
+  };
+  const confirmAttendanceAndOpenDraw = async () => {
+    if (supabase) {
+      if (!sessionId) return setLoginError("Phiên điểm danh chưa sẵn sàng. Vui lòng tải lại trang hoặc thử lại sau vài giây.");
+      const { error } = await supabase.rpc("confirm_attendance", { p_session_id: sessionId });
+      if (error) return setLoginError(error.message);
+    }
+    setLoginError("");
+    setSessionStatus("checked_in");
+    setStep(1);
   };
 
   useEffect(() => {
@@ -730,7 +768,7 @@ export default function Home() {
         <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>Buổi thứ Bảy ngày {session.date.toLocaleDateString("vi-VN")}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>NGƯỜI CÓ MẶT</small></div><div><b>{String(step + 1).padStart(2, "0")}<em>/{String(steps.length).padStart(2, "0")}</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
-        {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: async () => { if (supabase && sessionId) { const { error } = await supabase.rpc("confirm_attendance", { p_session_id: sessionId }); if (error) return setLoginError(error.message); } setSessionStatus("checked_in"); setStep(1); } })} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
+        {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
         {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} currentUser={currentUser} isAdmin={isAdmin} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
         {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} rankingRows={liveRankingRows} rankingMonth={currentMonthLabel} onSaved={(completed) => { if (completed) setSessionStatus("completed"); setRankingMonth(currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}
