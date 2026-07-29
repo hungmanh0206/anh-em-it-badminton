@@ -666,3 +666,71 @@
     gap: 7px;
   }
 }
+
+@media (max-width: 800px) {
+  .ranking {
+    margin-top: 6px !important;
+  }
+
+  .rank-row.rank-columns > span {
+    display: none !important;
+  }
+
+  .rank-row .person {
+    grid-column: 2 !important;
+    max-width: 100%;
+  }
+
+  .rank-row .person > b {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .rank-mobile-stats {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    display: flex !important;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 8px !important;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .rank-mobile-stats span {
+    display: inline-flex !important;
+    align-items: baseline !important;
+    gap: 3px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .rank-mobile-stats em {
+    font-size: 6.5px !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  .rank-mobile-stats b {
+    font-size: 11px !important;
+  }
+
+  .rank-match-count {
+    display: none !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .rank-mobile-stats {
+    gap: 5px !important;
+  }
+
+  .rank-mobile-stats em {
+    font-size: 6px !important;
+  }
+
+  .rank-mobile-stats b {
+    font-size: 10.5px !important;
+  }
+}
