@@ -1,0 +1,267 @@
+@media (max-width: 800px) {
+  .ranking {
+    margin-top: 22px !important;
+  }
+
+  .ranking .section-title {
+    align-items: flex-start;
+    margin-bottom: 14px !important;
+  }
+
+  .ranking-toolbar {
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .ranking-toolbar > p {
+    max-width: none !important;
+    color: var(--club-ink-600, #6f6878) !important;
+    font-size: 11px !important;
+  }
+
+  .rank-table,
+  .live-rank-table,
+  .live-ranking-panel .rank-table {
+    display: grid !important;
+    gap: 10px !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .live-ranking-panel .rank-table {
+    margin: 0 16px 18px !important;
+  }
+
+  .rank-table::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .rank-head {
+    display: none !important;
+  }
+
+  .rank-row.rank-columns {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) minmax(0, 1fr) auto !important;
+    gap: 10px 8px !important;
+    align-items: center !important;
+    padding: 12px !important;
+    border: 1px solid rgba(46, 36, 26, 0.09) !important;
+    border-radius: 18px !important;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(255, 183, 0, 0.12), transparent 32%),
+      #fff !important;
+    box-shadow: 0 12px 28px rgba(42, 31, 13, 0.08) !important;
+    transform: none !important;
+  }
+
+  .rank-row.rank-columns:hover {
+    transform: none !important;
+  }
+
+  .rank-row.top-rank {
+    box-shadow: 0 14px 34px rgba(42, 31, 13, 0.12) !important;
+  }
+
+  .rank-row.top-1 {
+    border-color: rgba(232, 178, 41, 0.5) !important;
+    background:
+      linear-gradient(135deg, rgba(255, 246, 207, 0.96), rgba(255, 255, 255, 0.98)) !important;
+  }
+
+  .rank-row.top-2 {
+    border-color: rgba(174, 182, 197, 0.55) !important;
+    background:
+      linear-gradient(135deg, rgba(239, 241, 245, 0.96), rgba(255, 255, 255, 0.98)) !important;
+  }
+
+  .rank-row.top-3 {
+    border-color: rgba(205, 135, 82, 0.48) !important;
+    background:
+      linear-gradient(135deg, rgba(255, 240, 231, 0.96), rgba(255, 255, 255, 0.98)) !important;
+  }
+
+  .rank-row > b:first-child {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    justify-self: center;
+  }
+
+  .rank-row .rank-number {
+    display: grid !important;
+    width: 32px !important;
+    height: 32px !important;
+    place-items: center;
+    border: 1px solid rgba(45, 38, 30, 0.1);
+    border-radius: 50%;
+    background: #fff9ea;
+    color: var(--club-ink-950, #211b16) !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+  }
+
+  .rank-row .medal {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    box-shadow: 0 7px 16px rgba(42, 31, 13, 0.2) !important;
+  }
+
+  .rank-row .person {
+    grid-column: 2 / 4;
+    grid-row: 1;
+    min-width: 0;
+    gap: 8px !important;
+  }
+
+  .rank-row .person .avatar {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 11px !important;
+  }
+
+  .rank-row .person > b {
+    min-width: 0;
+    color: var(--club-ink-950, #211b16);
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rank-row .level {
+    margin-left: 0 !important;
+    padding: 3px 7px !important;
+    font-size: 9px !important;
+  }
+
+  .rank-row .point-value {
+    grid-column: 4;
+    grid-row: 1;
+    justify-self: end;
+    display: grid !important;
+    gap: 1px;
+    min-width: 46px;
+    color: var(--club-gold-700, #a26700) !important;
+    font-size: 24px !important;
+    font-weight: 950 !important;
+    line-height: 1;
+    text-align: right;
+  }
+
+  .rank-row .point-value::before {
+    content: "ĐIỂM";
+    color: var(--club-ink-500, #8a7d67);
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+  }
+
+  .rank-row > span {
+    display: grid !important;
+    gap: 3px;
+    min-width: 0;
+    padding: 8px 8px !important;
+    border: 1px solid rgba(46, 36, 26, 0.07);
+    border-radius: 12px;
+    background: rgba(255, 250, 241, 0.7);
+    color: var(--club-ink-900, #30271e) !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    line-height: 1.05;
+    text-align: left;
+  }
+
+  .rank-row > span::before {
+    color: var(--club-ink-500, #8a7d67);
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .rank-row > span:nth-of-type(1) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .rank-row > span:nth-of-type(1)::before {
+    content: "Thắng";
+  }
+
+  .rank-row > span:nth-of-type(2) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .rank-row > span:nth-of-type(2)::before {
+    content: "Thua";
+  }
+
+  .rank-row > span:nth-of-type(3) {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .rank-row > span:nth-of-type(3)::before {
+    content: "Hiệu";
+  }
+
+  .rank-row > span:nth-of-type(4) {
+    grid-column: 4;
+    grid-row: 2;
+  }
+
+  .rank-row > span:nth-of-type(4)::before {
+    content: "Trận";
+  }
+}
+
+@media (max-width: 420px) {
+  .rank-row.rank-columns {
+    grid-template-columns: 38px minmax(0, 1fr) minmax(0, 0.86fr) 48px !important;
+    gap: 9px 6px !important;
+    padding: 11px !important;
+  }
+
+  .rank-row .medal,
+  .rank-row .rank-number {
+    width: 31px !important;
+    height: 31px !important;
+  }
+
+  .rank-row .person {
+    gap: 7px !important;
+  }
+
+  .rank-row .person .avatar {
+    width: 31px !important;
+    height: 31px !important;
+  }
+
+  .rank-row .person > b {
+    font-size: 14px !important;
+  }
+
+  .rank-row .point-value {
+    min-width: 42px;
+    font-size: 22px !important;
+  }
+
+  .rank-row > span {
+    padding: 7px 6px !important;
+    font-size: 12px !important;
+  }
+}
