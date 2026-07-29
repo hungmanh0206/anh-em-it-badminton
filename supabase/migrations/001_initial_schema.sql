@@ -1,10 +1,33 @@
 -- Anh Em IT Badminton Club: PostgreSQL schema for Supabase
-create type public.member_role as enum ('admin', 'member');
-create type public.member_level as enum ('1', '2');
-create type public.session_status as enum ('draft', 'checked_in', 'drawn', 'scheduled', 'completed');
-create type public.attendance_choice as enum ('pending', 'attending', 'absent');
+do $$
+begin
+  create type public.member_role as enum ('admin', 'member');
+exception
+  when duplicate_object then null;
+end $$;
 
-create table public.profiles (
+do $$
+begin
+  create type public.member_level as enum ('1', '2');
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  create type public.session_status as enum ('draft', 'checked_in', 'drawn', 'scheduled', 'completed');
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  create type public.attendance_choice as enum ('pending', 'attending', 'absent');
+exception
+  when duplicate_object then null;
+end $$;
+
+create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null,
   username text unique not null,
@@ -17,7 +40,7 @@ create table public.profiles (
   updated_at timestamptz not null default now()
 );
 
-create table public.play_sessions (
+create table if not exists public.play_sessions (
   id uuid primary key default gen_random_uuid(),
   session_date date unique not null,
   status public.session_status not null default 'draft',
@@ -28,7 +51,7 @@ create table public.play_sessions (
   created_at timestamptz not null default now()
 );
 
-create table public.attendances (
+create table if not exists public.attendances (
   session_id uuid not null references public.play_sessions(id) on delete cascade,
   member_id uuid not null references public.profiles(id) on delete cascade,
   choice public.attendance_choice not null default 'pending',
@@ -39,7 +62,7 @@ create table public.attendances (
   unique(session_id, drawn_number)
 );
 
-create table public.matches (
+create table if not exists public.matches (
   id uuid primary key default gen_random_uuid(),
   session_id uuid not null references public.play_sessions(id) on delete cascade,
   match_no integer not null,
@@ -51,7 +74,7 @@ create table public.matches (
   unique(session_id, match_no)
 );
 
-create table public.monthly_results (
+create table if not exists public.monthly_results (
   id uuid primary key default gen_random_uuid(),
   month date not null,
   member_id uuid not null references public.profiles(id),
@@ -118,13 +141,61 @@ alter table public.attendances enable row level security;
 alter table public.matches enable row level security;
 alter table public.monthly_results enable row level security;
 
-create policy "active profiles are readable" on public.profiles for select to authenticated using (is_active);
-create policy "sessions are readable" on public.play_sessions for select to authenticated using (true);
-create policy "attendance is readable" on public.attendances for select to authenticated using (true);
-create policy "members update only their attendance" on public.attendances for update to authenticated using (member_id = auth.uid()) with check (member_id = auth.uid());
-create policy "matches are readable" on public.matches for select to authenticated using (true);
-create policy "monthly results are readable" on public.monthly_results for select to authenticated using (true);
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'profiles' and policyname = 'active profiles are readable') then
+    create policy "active profiles are readable" on public.profiles for select to authenticated using (is_active);
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'play_sessions' and policyname = 'sessions are readable') then
+    create policy "sessions are readable" on public.play_sessions for select to authenticated using (true);
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'attendances' and policyname = 'attendance is readable') then
+    create policy "attendance is readable" on public.attendances for select to authenticated using (true);
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'attendances' and policyname = 'members update only their attendance') then
+    create policy "members update only their attendance" on public.attendances for update to authenticated using (member_id = auth.uid()) with check (member_id = auth.uid());
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'matches' and policyname = 'matches are readable') then
+    create policy "matches are readable" on public.matches for select to authenticated using (true);
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'monthly_results' and policyname = 'monthly results are readable') then
+    create policy "monthly results are readable" on public.monthly_results for select to authenticated using (true);
+  end if;
+end $$;
 
 -- Enable realtime updates for the live attendance board.
-alter publication supabase_realtime add table public.attendances;
-alter publication supabase_realtime add table public.play_sessions;
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'attendances') then
+    alter publication supabase_realtime add table public.attendances;
+  end if;
+end $$;
+
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'play_sessions') then
+    alter publication supabase_realtime add table public.play_sessions;
+  end if;
+end $$;

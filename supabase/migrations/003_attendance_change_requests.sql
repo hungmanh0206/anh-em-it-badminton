@@ -12,7 +12,12 @@ create table if not exists public.attendance_change_requests (
 );
 
 alter table public.attendance_change_requests enable row level security;
-create policy "attendance change requests are readable" on public.attendance_change_requests for select to authenticated using (true);
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'attendance_change_requests' and policyname = 'attendance change requests are readable') then
+    create policy "attendance change requests are readable" on public.attendance_change_requests for select to authenticated using (true);
+  end if;
+end $$;
 
 create or replace function public.change_my_attendance(p_session_id uuid, p_choice public.attendance_choice)
 returns boolean language plpgsql security definer set search_path = public as $$
@@ -40,4 +45,10 @@ begin
   update public.attendance_change_requests set status = 'resolved', resolved_at = now() where session_id = p_session_id and status = 'pending';
 end; $$;
 
-alter publication supabase_realtime add table public.attendance_change_requests;
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'attendance_change_requests') then
+    alter publication supabase_realtime add table public.attendance_change_requests;
+  end if;
+end $$;
