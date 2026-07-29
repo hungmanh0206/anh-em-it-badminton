@@ -171,7 +171,7 @@
 .rules-flow b {
   display: block;
   margin: 0;
-  font-size: 18px;
+  font-size: 15px;
   line-height: 1.08;
 }
 
@@ -228,8 +228,8 @@
 
 .rules-card h2 {
   margin: 14px 0 13px;
-  font-size: clamp(21px, 2.3vw, 29px);
-  letter-spacing: -0.05em;
+  font-size: clamp(18px, 1.55vw, 21px);
+  letter-spacing: -0.035em;
 }
 
 .rules-card-title {
@@ -250,7 +250,7 @@
 
 .rules-card-title h2 {
   margin: 0;
-  line-height: 1.08;
+  line-height: 1.12;
 }
 
 .rules-card ul,
@@ -598,5 +598,13 @@
 
   .rules-prizes b {
     font-size: 16px;
+  }
+
+  .rules-flow b {
+    font-size: 14px;
+  }
+
+  .rules-card h2 {
+    font-size: 18px;
   }
 }
