@@ -397,16 +397,22 @@
 }
 
 .rules-prizes div {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 11px;
+  row-gap: 3px;
   padding: 16px;
 }
 
 .rules-prizes span {
   display: inline-grid;
+  grid-row: 1 / span 2;
   place-items: center;
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  margin-bottom: 12px;
+  margin: 0;
   background: #f6f1e6;
   font-size: 18px;
 }
@@ -414,10 +420,12 @@
 .rules-prizes b {
   display: block;
   font-size: 17px;
-  margin-bottom: 6px;
+  margin: 1px 0 2px;
+  line-height: 1.15;
 }
 
 .rules-prizes p {
+  grid-column: 2;
   font-size: 12px;
 }
 
@@ -556,5 +564,21 @@
     width: 24px;
     height: 24px;
     font-size: 7px;
+  }
+
+  .rules-prizes div {
+    grid-template-columns: 32px minmax(0, 1fr);
+    column-gap: 10px;
+    padding: 14px;
+  }
+
+  .rules-prizes span {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .rules-prizes b {
+    font-size: 16px;
   }
 }
