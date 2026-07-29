@@ -734,3 +734,36 @@
     font-size: 10.5px !important;
   }
 }
+
+@media (max-width: 800px) {
+  .rank-row.rank-columns {
+    grid-template-columns: 32px minmax(0, 1fr) 64px !important;
+    padding-right: 14px !important;
+  }
+
+  .rank-row .point-value {
+    justify-self: stretch !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    text-align: center !important;
+  }
+
+  .rank-row .point-value::before {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .rank-row.rank-columns {
+    grid-template-columns: 30px minmax(0, 1fr) 58px !important;
+    padding-right: 12px !important;
+  }
+
+  .rank-row .point-value {
+    padding-left: 7px !important;
+    padding-right: 7px !important;
+  }
+}
