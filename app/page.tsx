@@ -930,7 +930,7 @@ function Rules() {
       <article className="rules-card">
         <div className="rules-card-title"><span className="rules-index">2</span><h2>Thành viên & phân level</h2></div>
         <div className="rules-member-list" aria-label="Danh sách thành viên">
-          {memberNames.map((name) => <span key={name}>{name}</span>)}
+          {memberNames.map((name) => <span key={name}><i aria-hidden="true">{name.slice(0, name === "Đức Anh" ? 2 : 1)}</i><b>{name}</b></span>)}
         </div>
         <div className="rules-level-grid">
           <div><span className="level-chip level-one">Level 1</span><b>Hạng 1–4</b><p>Nhóm đang dẫn đầu theo BXH tháng trước.</p></div>
