@@ -894,6 +894,8 @@ function Schedule({ scenario, drawn, scores, setScores, confirmedMatches, setCon
   </>;
 }
 function Rules() {
+  const memberNames = ["Hùng", "Sơn", "Nam", "Phú", "Mạnh", "Thành", "Đạt", "Đức Anh", "Quý", "Hải"];
+
   return <section className="rules-page">
     <section className="rules-hero">
       <div className="rules-hero-copy">
@@ -927,7 +929,9 @@ function Rules() {
 
       <article className="rules-card">
         <div className="rules-card-title"><span className="rules-index">2</span><h2>Thành viên & phân level</h2></div>
-        <p className="rules-member-line">Hùng, Sơn, Nam, Phú, Mạnh, Thành, Đạt, Đức Anh, Quý, Hải.</p>
+        <div className="rules-member-list" aria-label="Danh sách thành viên">
+          {memberNames.map((name) => <span key={name}>{name}</span>)}
+        </div>
         <div className="rules-level-grid">
           <div><span className="level-chip level-one">Level 1</span><b>Hạng 1–4</b><p>Nhóm đang dẫn đầu theo BXH tháng trước.</p></div>
           <div><span className="level-chip level-two">Level 2</span><b>Hạng 5–10</b><p>Nhóm còn lại, được cập nhật sau khi chốt BXH tháng.</p></div>
