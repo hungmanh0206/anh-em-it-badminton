@@ -51,6 +51,8 @@
   .welcome-member.rank-2,
   .welcome-member.rank-3,
   .welcome-member.rank-none {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
     justify-self: end !important;
     align-self: center !important;
     width: auto !important;
