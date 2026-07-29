@@ -153,7 +153,7 @@ const initialMembers: Member[] = [
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>(screenFromLocation);
-  const [rankingMonth, setRankingMonth] = useState(() => monthLabel(new Date()));
+  const [rankingMonth, setRankingMonth] = useState(() => monthLabel(homeSession(new Date()).date));
   const [step, setStep] = useState(0);
   const [members, setMembers] = useState(initialMembers);
   const [drawn, setDrawn] = useState<Record<string, number>>({});
@@ -198,14 +198,16 @@ export default function Home() {
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const currentMonthKey = localDateKey(currentMonthStart);
   const currentMonthLabel = monthLabel(currentMonthStart);
-  const nextVisibleMonthStart = nextMonthStartDate(currentMonthStart);
+  const session = homeSession(now);
+  const sessionMonthStart = new Date(session.date.getFullYear(), session.date.getMonth(), 1);
+  const sessionMonthKey = localDateKey(sessionMonthStart);
+  const sessionMonthLabel = monthLabel(sessionMonthStart);
   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const rankingMonthOptions = [nextVisibleMonthStart, currentMonthStart, previousMonthStart, new Date(now.getFullYear(), now.getMonth() - 2, 1)].map(monthLabel).filter((month) => !hiddenRankingMonths.has(month));
+  const rankingMonthOptions = [...new Set([sessionMonthStart, currentMonthStart, previousMonthStart, new Date(now.getFullYear(), now.getMonth() - 2, 1)].map(monthLabel))].filter((month) => !hiddenRankingMonths.has(month));
   const previousMonthKey = localDateKey(previousMonthStart);
   const isCheckinTestMode = TEMP_ENABLE_CHECKIN_FOR_TEST && now.getDay() !== 3;
   const isCheckinWindowOpen = TEMP_ENABLE_CHECKIN_FOR_TEST || now.getDay() === 3;
   const shouldLoadHomeSession = TEMP_ENABLE_CHECKIN_FOR_TEST || now.getDay() >= 3;
-  const session = homeSession(now);
   const sessionDateKey = localDateKey(session.date);
   const currentCheckinPromptKey = `${activeUsername || "guest"}:${sessionId || sessionDateKey}`;
   const signedInMember = activeUsername ? members.find((member) => member.username === activeUsername) : null;
@@ -497,20 +499,44 @@ export default function Home() {
       const championMonthDates = recentMonthStarts(monthStartFromKey(currentMonthKey), 12);
       const championMonthKeys = championMonthDates.map(localDateKey);
       const championFinalSessionKeys = championMonthDates.map((date) => localDateKey(finalSaturdayOfMonth(date)));
+      const colorForIndex = (index: number) => ["#e7ad26", "#6ba9de", "#df8d2a", "#6846e8", "#e56a4d", "#2ba98b"][index % 6];
+      const initialsFromName = (name: string) => name.split(" ").map((part: string) => part[0]).slice(-2).join("");
       const zeroRowsFromProfiles = (profiles: SupabaseProfile[]) => [...profiles]
         .sort((a, b) => String(a.full_name || "").localeCompare(String(b.full_name || ""), "vi"))
         .map((profile, index) => {
           const name = profile.full_name || "Thành viên";
-          return { name, initials: name.split(" ").map((part: string) => part[0]).slice(-2).join(""), level: Number(profile.level || 2), points: 0, pointsWon: 0, pointsLost: 0, pointDiff: 0, matches: 0, color: ["#e7ad26", "#6ba9de", "#df8d2a", "#6846e8", "#e56a4d", "#2ba98b"][index % 6], placeholder: true };
+          return { name, initials: initialsFromName(name), level: Number(profile.level || 2), points: 0, pointsWon: 0, pointsLost: 0, pointDiff: 0, matches: 0, color: colorForIndex(index), placeholder: true };
         });
       const mapRows = (rows: MonthlyResultRow[]) => rows.map((row, index) => {
         const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
         const name = profile?.full_name || "Thành viên";
-        return { name, initials: name.split(" ").map((part: string) => part[0]).slice(-2).join(""), level: Number(profile?.level || row.level_next_month || 2), points: row.total_points, pointsWon: row.points_for, pointsLost: row.points_against, pointDiff: row.point_diff, matches: row.matches_played, color: ["#e7ad26", "#6ba9de", "#df8d2a", "#6846e8", "#e56a4d", "#2ba98b"][index % 6] };
+        return { username: profile?.username || name, name, initials: initialsFromName(name), level: Number(profile?.level || row.level_next_month || 2), points: row.total_points, pointsWon: row.points_for, pointsLost: row.points_against, pointDiff: row.point_diff, matches: row.matches_played, color: colorForIndex(index), placeholder: row.matches_played === 0 };
       });
-      const [{ data }, { data: currentData }, { data: previousData }, { data: championData }, { data: championFinalSessions }, { data: activeProfiles }, { data: finalSession }, { count: nextMonthRows }] = await Promise.all([
+      const buildRankingRows = (rows: MonthlyResultRow[], profiles: SupabaseProfile[]) => {
+        if (!profiles.length) return mapRows(rows);
+        const hasMatchData = rows.some((row) => row.matches_played > 0);
+        if (!hasMatchData) return zeroRowsFromProfiles(profiles);
+        const rowsByUsername = new Map(rows.flatMap((row) => {
+          const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+          return profile?.username ? [[profile.username, row] as const] : [];
+        }));
+        const mergedRows = profiles.map((profile, index) => {
+          const row = profile.username ? rowsByUsername.get(profile.username) : undefined;
+          const name = profile.full_name || "Thành viên";
+          if (!row) return { name, initials: initialsFromName(name), level: Number(profile.level || 2), points: 0, pointsWon: 0, pointsLost: 0, pointDiff: 0, matches: 0, color: colorForIndex(index), placeholder: true };
+          return { name, initials: initialsFromName(name), level: Number(profile.level || row.level_next_month || 2), points: row.total_points, pointsWon: row.points_for, pointsLost: row.points_against, pointDiff: row.point_diff, matches: row.matches_played, color: colorForIndex(index), placeholder: row.matches_played === 0 };
+        });
+        return mergedRows.sort((a, b) =>
+          b.points - a.points ||
+          b.pointDiff - a.pointDiff ||
+          b.pointsWon - a.pointsWon ||
+          b.matches - a.matches ||
+          a.name.localeCompare(b.name, "vi")
+        );
+      };
+      const [{ data }, { data: liveData }, { data: previousData }, { data: championData }, { data: championFinalSessions }, { data: activeProfiles }, { data: finalSession }, { count: nextMonthRows }] = await Promise.all([
         client.from("monthly_results").select(rankingSelect).eq("month", month).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
-        client.from("monthly_results").select(rankingSelect).eq("month", currentMonthKey).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
+        client.from("monthly_results").select(rankingSelect).eq("month", sessionMonthKey).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
         client.from("monthly_results").select(rankingSelect).eq("month", previousMonthKey).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
         client.from("monthly_results").select(rankingSelect).in("month", championMonthKeys),
         client.from("play_sessions").select("session_date, status").in("session_date", championFinalSessionKeys),
@@ -519,12 +545,10 @@ export default function Home() {
         client.from("monthly_results").select("id", { count: "exact", head: true }).eq("month", selectedNextMonthKey),
       ]);
       const selectedRows = data ? data as MonthlyResultRow[] : [];
-      const selectedHasMatchData = selectedRows.some((row) => row.matches_played > 0);
       const activeProfileRows = (activeProfiles || []) as SupabaseProfile[];
-      const currentRowsForLive = month === currentMonthKey ? selectedRows : currentData ? currentData as MonthlyResultRow[] : [];
-      const currentHasMatchData = currentRowsForLive.some((row) => row.matches_played > 0);
-      setRankingRows(selectedHasMatchData ? mapRows(selectedRows) : zeroRowsFromProfiles(activeProfileRows));
-      setLiveRankingRows(currentHasMatchData ? mapRows(currentRowsForLive) : zeroRowsFromProfiles(activeProfileRows));
+      const liveRowsForSessionMonth = month === sessionMonthKey ? selectedRows : liveData ? liveData as MonthlyResultRow[] : [];
+      setRankingRows(buildRankingRows(selectedRows, activeProfileRows));
+      setLiveRankingRows(buildRankingRows(liveRowsForSessionMonth, activeProfileRows));
       setPreviousRankingRows(previousData ? mapRows(previousData as MonthlyResultRow[]) : []);
       const championRowsByMonth = new Map<string, MonthlyResultRow[]>();
       ((championData || []) as MonthlyResultRow[]).forEach((row) => {
@@ -568,7 +592,7 @@ export default function Home() {
       });
     };
     void loadRanking();
-  }, [rankingMonth, currentMonthKey, previousMonthKey, rankingRefreshTick]);
+  }, [rankingMonth, currentMonthKey, previousMonthKey, sessionMonthKey, rankingRefreshTick]);
   useEffect(() => {
     if (!supabase) return;
     const client = supabase;
@@ -803,7 +827,7 @@ export default function Home() {
         <button className={screen === "home" ? "active" : ""} onClick={() => setScreen("home")}><span>⌂</span> Home</button>
         {isAdmin && <button className={screen === "members" ? "active" : ""} onClick={() => setScreen("members")}><span>♙</span> Thành viên</button>}
         <button className={screen === "schedules" ? "active" : ""} onClick={() => setScreen("schedules")}><span>▤</span> Lịch thi đấu</button>
-        <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(currentMonthLabel); }}><span>▥</span> Bảng xếp hạng</button>
+        <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(sessionMonthLabel); }}><span>▥</span> Bảng xếp hạng</button>
         <button className={screen === "history" ? "active" : ""} onClick={() => setScreen("history")}><span>◷</span> Lịch sử thi đấu</button>
         <button className={screen === "rules" ? "active" : ""} onClick={() => setScreen("rules")}><span>§</span> Thể lệ</button>
       </nav>
@@ -818,13 +842,13 @@ export default function Home() {
         {loginError && <div className="warning">{loginError}</div>}
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
         {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} isAdmin={isAdmin} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
-        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} rankingRows={liveRankingRows} rankingMonth={currentMonthLabel} onSaved={(completed) => { if (completed) setSessionStatus("completed"); setRankingMonth(currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
+        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { if (completed) setSessionStatus("completed"); setRankingMonth(sessionMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}
     </section>
     {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}
     {confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}
     {isAdmin && attendanceChangeNotice && <ConfirmActionModal title="Thay đổi điểm danh" message={`${attendanceChangeNotice} Xác nhận để reset chọn số và lịch thi đấu; điểm danh mới sẽ được giữ lại.`} onCancel={() => setAttendanceChangeNotice(null)} onConfirm={async () => { if (supabase && sessionId) await supabase.rpc("reset_session_after_attendance_change", { p_session_id: sessionId }); setDrawn({}); setStep(0); setAttendanceChangeNotice(null); }} />}
-    {showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={currentMonthLabel} rankClass={profileRankClass} hasRankingData={profileHasRankingData} onClose={() => setShowProfileCard(false)} />}
+    {showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={sessionMonthLabel} rankClass={profileRankClass} hasRankingData={profileHasRankingData} onClose={() => setShowProfileCard(false)} />}
   </main>;
 }
 
