@@ -18,6 +18,7 @@ const targetSaturdayKey = (now: Date) => {
   date.setDate(now.getDate() + ((6 - now.getDay() + 7) % 7));
   return dateKey(date);
 };
+const isTestFlowEnabled = () => process.env.ENABLE_TEST_FLOW === "true" || process.env.NEXT_PUBLIC_ENABLE_TEST_FLOW === "true";
 
 async function getOrCreateSession(admin: SupabaseClient, userId: string, sessionDate: string) {
   const { data: existing, error: existingError } = await admin
@@ -72,7 +73,7 @@ async function loadSessionPayload(request: Request, reset: boolean) {
 
   const now = vietnamNow();
   const day = now.getDay();
-  const shouldUseLiveSession = reset || (day >= 3 && day <= 6);
+  const shouldUseLiveSession = reset || isTestFlowEnabled() || (day >= 3 && day <= 6);
   if (!shouldUseLiveSession) return Response.json({ inactive: true, status: "draft" });
 
   const sessionDate = targetSaturdayKey(now);

@@ -136,7 +136,7 @@ const sortMonthlyResultRows = (rows: MonthlyResultRow[]) => [...rows].sort((a, b
   b.points_for - a.points_for ||
   b.matches_played - a.matches_played
 );
-const TEMP_ENABLE_CHECKIN_FOR_TEST = false;
+const ENABLE_TEST_FLOW = process.env.NEXT_PUBLIC_ENABLE_TEST_FLOW === "true";
 const TEMP_RESET_HOME_ATTENDANCE_FOR_TEST = false;
 const initialMembers: Member[] = [
   { name: "Mạnh", initials: "M", level: 1, color: "#6846e8", present: false, username: "manh", password: "123456", role: "admin", responded: false },
@@ -153,7 +153,10 @@ const initialMembers: Member[] = [
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>(screenFromLocation);
-  const [rankingMonth, setRankingMonth] = useState(() => monthLabel(homeSession(new Date()).date));
+  const [rankingMonth, setRankingMonth] = useState(() => {
+    const initialNow = new Date();
+    return monthLabel(ENABLE_TEST_FLOW ? homeSession(initialNow).date : initialNow);
+  });
   const [step, setStep] = useState(0);
   const [members, setMembers] = useState(initialMembers);
   const [drawn, setDrawn] = useState<Record<string, number>>({});
@@ -170,6 +173,7 @@ export default function Home() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>("draft");
   const [rankingRows, setRankingRows] = useState<RankingRow[]>([]);
+  const [currentRankingRows, setCurrentRankingRows] = useState<RankingRow[]>([]);
   const [liveRankingRows, setLiveRankingRows] = useState<RankingRow[]>([]);
   const [previousRankingRows, setPreviousRankingRows] = useState<RankingRow[]>([]);
   const [championRankingRows, setChampionRankingRows] = useState<RankingRow[]>([]);
@@ -205,9 +209,9 @@ export default function Home() {
   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const rankingMonthOptions = [...new Set([sessionMonthStart, currentMonthStart, previousMonthStart, new Date(now.getFullYear(), now.getMonth() - 2, 1)].map(monthLabel))].filter((month) => !hiddenRankingMonths.has(month));
   const previousMonthKey = localDateKey(previousMonthStart);
-  const isCheckinTestMode = TEMP_ENABLE_CHECKIN_FOR_TEST && now.getDay() !== 3;
-  const isCheckinWindowOpen = TEMP_ENABLE_CHECKIN_FOR_TEST || now.getDay() === 3;
-  const shouldLoadHomeSession = TEMP_ENABLE_CHECKIN_FOR_TEST || now.getDay() >= 3;
+  const isCheckinTestMode = ENABLE_TEST_FLOW && now.getDay() !== 3;
+  const isCheckinWindowOpen = ENABLE_TEST_FLOW || now.getDay() === 3;
+  const shouldLoadHomeSession = ENABLE_TEST_FLOW || now.getDay() >= 3;
   const sessionDateKey = localDateKey(session.date);
   const currentCheckinPromptKey = `${activeUsername || "guest"}:${sessionId || sessionDateKey}`;
   const signedInMember = activeUsername ? members.find((member) => member.username === activeUsername) : null;
@@ -535,8 +539,9 @@ export default function Home() {
           a.name.localeCompare(b.name, "vi")
         );
       };
-      const [{ data }, { data: liveData }, { data: previousData }, { data: championData }, { data: championFinalSessions }, { data: activeProfiles }, { data: finalSession }, { count: nextMonthRows }] = await Promise.all([
+      const [{ data }, { data: currentData }, { data: liveData }, { data: previousData }, { data: championData }, { data: championFinalSessions }, { data: activeProfiles }, { data: finalSession }, { count: nextMonthRows }] = await Promise.all([
         client.from("monthly_results").select(rankingSelect).eq("month", month).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
+        client.from("monthly_results").select(rankingSelect).eq("month", currentMonthKey).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
         client.from("monthly_results").select(rankingSelect).eq("month", sessionMonthKey).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
         client.from("monthly_results").select(rankingSelect).eq("month", previousMonthKey).order("total_points", { ascending: false }).order("point_diff", { ascending: false }).order("points_for", { ascending: false }),
         client.from("monthly_results").select(rankingSelect).in("month", championMonthKeys),
@@ -547,8 +552,10 @@ export default function Home() {
       ]);
       const selectedRows = data ? data as MonthlyResultRow[] : [];
       const activeProfileRows = (activeProfiles || []) as SupabaseProfile[];
-      const liveRowsForSessionMonth = month === sessionMonthKey ? selectedRows : liveData ? liveData as MonthlyResultRow[] : [];
+      const currentRowsForCalendarMonth = month === currentMonthKey ? selectedRows : currentData ? currentData as MonthlyResultRow[] : [];
+      const liveRowsForSessionMonth = month === sessionMonthKey ? selectedRows : sessionMonthKey === currentMonthKey ? currentRowsForCalendarMonth : liveData ? liveData as MonthlyResultRow[] : [];
       setRankingRows(buildRankingRows(selectedRows, activeProfileRows));
+      setCurrentRankingRows(buildRankingRows(currentRowsForCalendarMonth, activeProfileRows));
       setLiveRankingRows(buildRankingRows(liveRowsForSessionMonth, activeProfileRows));
       setPreviousRankingRows(previousData ? mapRows(previousData as MonthlyResultRow[]) : []);
       const championRowsByMonth = new Map<string, MonthlyResultRow[]>();
@@ -814,7 +821,8 @@ export default function Home() {
   const welcomeRows = championRankingRows.length ? championRankingRows : previousRankingRows.length ? previousRankingRows : rankingRows;
   const welcomeRank = welcomeRows.findIndex((row) => row.name === currentUser.name) + 1;
   const welcomeRankClass = welcomeRank > 0 && welcomeRank <= 3 ? `rank-${welcomeRank}` : "rank-none";
-  const profileRows = liveRankingRows.length ? liveRankingRows : rankingRows;
+  const profileRows = ENABLE_TEST_FLOW ? (liveRankingRows.length ? liveRankingRows : currentRankingRows) : (currentRankingRows.length ? currentRankingRows : rankingRows);
+  const profileAchievementMonth = ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel;
   const profileRank = profileRows.findIndex((row) => row.name === currentUser.name) + 1;
   const profileAchievement = profileRank > 0 ? profileRows[profileRank - 1] : null;
   const profileHasRankingData = Boolean(profileAchievement && !profileAchievement.placeholder && profileAchievement.matches > 0);
@@ -828,7 +836,7 @@ export default function Home() {
         <button className={screen === "home" ? "active" : ""} onClick={() => setScreen("home")}><span>⌂</span> Home</button>
         {isAdmin && <button className={screen === "members" ? "active" : ""} onClick={() => setScreen("members")}><span>♙</span> Thành viên</button>}
         <button className={screen === "schedules" ? "active" : ""} onClick={() => setScreen("schedules")}><span>▤</span> Lịch thi đấu</button>
-        <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(sessionMonthLabel); }}><span>▥</span> Bảng xếp hạng</button>
+        <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); }}><span>▥</span> Bảng xếp hạng</button>
         <button className={screen === "history" ? "active" : ""} onClick={() => setScreen("history")}><span>◷</span> Lịch sử thi đấu</button>
         <button className={screen === "rules" ? "active" : ""} onClick={() => setScreen("rules")}><span>§</span> Thể lệ</button>
       </nav>
@@ -843,13 +851,13 @@ export default function Home() {
         {loginError && <div className="warning">{loginError}</div>}
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
         {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} isAdmin={isAdmin} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
-        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { if (completed) setSessionStatus("completed"); setRankingMonth(sessionMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
+        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { if (completed) setSessionStatus("completed"); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}
     </section>
     {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}
     {confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}
     {isAdmin && attendanceChangeNotice && <ConfirmActionModal title="Thay đổi điểm danh" message={`${attendanceChangeNotice} Xác nhận để reset chọn số và lịch thi đấu; điểm danh mới sẽ được giữ lại.`} onCancel={() => setAttendanceChangeNotice(null)} onConfirm={async () => { if (supabase && sessionId) await supabase.rpc("reset_session_after_attendance_change", { p_session_id: sessionId }); setDrawn({}); setStep(0); setAttendanceChangeNotice(null); }} />}
-    {showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={sessionMonthLabel} rankClass={profileRankClass} hasRankingData={profileHasRankingData} onClose={() => setShowProfileCard(false)} />}
+    {showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} onClose={() => setShowProfileCard(false)} />}
   </main>;
 }
 

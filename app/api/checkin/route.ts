@@ -24,6 +24,7 @@ const targetSaturdayKey = (now: Date) => {
   date.setDate(now.getDate() + ((6 - now.getDay() + 7) % 7));
   return dateKey(date);
 };
+const isTestFlowEnabled = () => process.env.ENABLE_TEST_FLOW === "true" || process.env.NEXT_PUBLIC_ENABLE_TEST_FLOW === "true";
 
 async function getOrCreateSession(admin: SupabaseClient, userId: string, sessionDate: string) {
   const { data: existing, error: existingError } = await admin
@@ -96,7 +97,7 @@ export async function POST(request: Request) {
 
     const now = vietnamNow();
     const day = now.getDay();
-    if (day < 3 || day > 6) {
+    if (!isTestFlowEnabled() && (day < 3 || day > 6)) {
       return Response.json({ error: "Điểm danh chỉ mở từ thứ Tư đến thứ Bảy cho buổi chơi tuần này." }, { status: 400 });
     }
 
