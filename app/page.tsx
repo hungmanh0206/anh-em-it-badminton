@@ -639,10 +639,14 @@ export default function Home() {
     void loadHistory();
   }, []);
   useEffect(() => {
+    setScores({});
+    setConfirmedMatches({});
     if (!supabase || !sessionId) return;
     const client = supabase;
+    let cancelled = false;
     const loadSavedMatches = async () => {
       const { data } = await client.from("matches").select("match_no, score_a, score_b").eq("session_id", sessionId).order("match_no");
+      if (cancelled) return;
       const rows = (data || []) as SavedMatchRow[];
       const nextScores: Record<number, [string, string]> = {};
       const nextConfirmed: Record<number, boolean> = {};
@@ -652,12 +656,12 @@ export default function Home() {
           nextConfirmed[match.match_no - 1] = true;
         }
       });
-      setScores((previous) => ({ ...previous, ...nextScores }));
+      setScores(nextScores);
       setConfirmedMatches(nextConfirmed);
     };
     void loadSavedMatches();
     const channel = client.channel("club-match-results").on("postgres_changes", { event: "*", schema: "public", table: "matches", filter: `session_id=eq.${sessionId}` }, loadSavedMatches).subscribe();
-    return () => { void client.removeChannel(channel); };
+    return () => { cancelled = true; void client.removeChannel(channel); };
   }, [sessionId]);
   const drawSelf = async () => {
     if (!activeUser || spinning) return;
@@ -924,7 +928,7 @@ function Schedule({ scenario, drawn, scores, setScores, confirmedMatches, setCon
       <div className="schedule-grid">{scenario.matches.map((match, i) => <Match match={match} i={i} namesBySlot={namesBySlot} key={i} />)}</div>
       <div className="panel-foot"><span>✓ {scenario.title} · Mỗi người 4 trận</span><span>{isAdmin ? "Admin xác nhận từng trận; BXH cập nhật ngay sau khi lưu." : "Thành viên được xem lịch và kết quả, chỉ Admin được sửa điểm."}</span></div>
     </section>
-    <Results matches={scenario.matches} drawn={drawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} onSaved={onSaved} />
+    <Results key={`${sessionId ?? "local"}-${scenario.id}`} matches={scenario.matches} drawn={drawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} onSaved={onSaved} />
     <LiveRankingSnapshot rows={rankingRows} month={rankingMonth} />
   </>;
 }
