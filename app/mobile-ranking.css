@@ -265,3 +265,238 @@
     font-size: 12px !important;
   }
 }
+
+.rank-mobile-stats {
+  display: none;
+}
+
+@media (max-width: 800px) {
+  .rank-table,
+  .live-rank-table,
+  .live-ranking-panel .rank-table {
+    gap: 8px !important;
+  }
+
+  .rank-row.rank-columns {
+    grid-template-columns: 34px minmax(0, 1fr) 44px !important;
+    gap: 4px 8px !important;
+    min-height: 64px !important;
+    padding: 8px 10px !important;
+    border-radius: 15px !important;
+    background: #fff !important;
+    box-shadow: 0 7px 18px rgba(35, 28, 18, 0.07) !important;
+  }
+
+  .rank-row:not(.top-rank) {
+    border-color: rgba(43, 34, 22, 0.08) !important;
+    background: #fff !important;
+  }
+
+  .rank-row.top-rank {
+    box-shadow: 0 9px 22px rgba(43, 31, 12, 0.11) !important;
+  }
+
+  .rank-row.top-1 {
+    border-color: rgba(236, 182, 43, 0.58) !important;
+    background:
+      radial-gradient(circle at 6% 16%, rgba(255, 199, 49, 0.25), transparent 24%),
+      linear-gradient(135deg, #fff8d8 0%, #fffdf5 62%, #ffffff 100%) !important;
+  }
+
+  .rank-row.top-2 {
+    border-color: rgba(169, 178, 194, 0.68) !important;
+    background:
+      radial-gradient(circle at 6% 16%, rgba(183, 192, 207, 0.26), transparent 24%),
+      linear-gradient(135deg, #f0f3f8 0%, #ffffff 70%) !important;
+  }
+
+  .rank-row.top-3 {
+    border-color: rgba(205, 135, 82, 0.58) !important;
+    background:
+      radial-gradient(circle at 6% 16%, rgba(211, 133, 63, 0.22), transparent 24%),
+      linear-gradient(135deg, #fff0e4 0%, #ffffff 72%) !important;
+  }
+
+  .rank-row > b:first-child {
+    grid-column: 1 !important;
+    grid-row: 1 / 3 !important;
+    align-self: center !important;
+    justify-self: center !important;
+  }
+
+  .rank-row .rank-number,
+  .rank-row .medal {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 13px !important;
+    font-weight: 950 !important;
+  }
+
+  .rank-row .rank-number {
+    border-color: rgba(43, 34, 22, 0.11) !important;
+    background: #fff !important;
+    color: #1f1a14 !important;
+    box-shadow: none !important;
+  }
+
+  .rank-row.top-1 .medal {
+    background: linear-gradient(135deg, #ffc107, #ffad00) !important;
+    color: #1f1600 !important;
+    font-size: 0 !important;
+  }
+
+  .rank-row.top-1 .medal::before {
+    content: "🏆";
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .rank-row.top-2 .medal {
+    background: linear-gradient(135deg, #f8fbff, #aeb8c6) !important;
+    color: #303843 !important;
+    border: 1px solid rgba(124, 136, 153, 0.32);
+  }
+
+  .rank-row.top-3 .medal {
+    background: linear-gradient(135deg, #f0a24b, #bd672b) !important;
+    color: #fff9f0 !important;
+    border: 1px solid rgba(151, 78, 30, 0.2);
+  }
+
+  .rank-row .person {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    gap: 6px !important;
+  }
+
+  .rank-row .person .avatar {
+    width: 29px !important;
+    height: 29px !important;
+    font-size: 10px !important;
+  }
+
+  .rank-row .person > b {
+    font-size: 14.5px !important;
+    line-height: 1.05 !important;
+  }
+
+  .rank-row .level {
+    padding: 2px 6px !important;
+    font-size: 8px !important;
+  }
+
+  .rank-row .point-value {
+    grid-column: 3 !important;
+    grid-row: 1 / 3 !important;
+    align-self: center !important;
+    justify-self: end !important;
+    min-width: 36px !important;
+    font-size: 22px !important;
+  }
+
+  .rank-row .point-value::before {
+    content: "Điểm";
+    font-size: 7px !important;
+    letter-spacing: 0.11em !important;
+  }
+
+  .rank-row > span {
+    display: none !important;
+  }
+
+  .rank-mobile-stats {
+    grid-column: 2 / 4 !important;
+    grid-row: 2 !important;
+    display: flex !important;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .rank-mobile-stats span {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 3px;
+    min-width: 0;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #1f1a14 !important;
+    line-height: 1 !important;
+  }
+
+  .rank-mobile-stats em {
+    color: rgba(37, 31, 23, 0.52);
+    font-size: 7px;
+    font-style: normal;
+    font-weight: 950;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .rank-mobile-stats b {
+    color: #14110d;
+    font-size: 11.5px;
+    font-weight: 950;
+  }
+
+  .rank-mobile-stats .positive {
+    color: #047843 !important;
+  }
+
+  .rank-mobile-stats .negative {
+    color: #c63f51 !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .rank-row.rank-columns {
+    grid-template-columns: 31px minmax(0, 1fr) 38px !important;
+    gap: 4px 7px !important;
+    min-height: 60px !important;
+    padding: 8px 9px !important;
+  }
+
+  .rank-row .rank-number,
+  .rank-row .medal {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 12px !important;
+  }
+
+  .rank-row.top-1 .medal::before {
+    font-size: 14px;
+  }
+
+  .rank-row .person {
+    gap: 5px !important;
+  }
+
+  .rank-row .person .avatar {
+    width: 27px !important;
+    height: 27px !important;
+  }
+
+  .rank-row .person > b {
+    font-size: 14px !important;
+  }
+
+  .rank-row .point-value {
+    min-width: 32px !important;
+    font-size: 20px !important;
+  }
+
+  .rank-mobile-stats {
+    gap: 5px;
+  }
+
+  .rank-mobile-stats em {
+    font-size: 6.5px;
+  }
+
+  .rank-mobile-stats b {
+    font-size: 11px;
+  }
+}
