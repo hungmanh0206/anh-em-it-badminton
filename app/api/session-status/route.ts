@@ -15,6 +15,7 @@ type AttendanceWithProfile = {
 };
 
 const allowedLevel1CountsByParticipants = new Map<number, number[]>([
+  [5, [0, 1, 2, 3, 4, 5]],
   [6, [0, 1, 2, 3, 4]],
   [7, [1, 2, 3, 4]],
   [8, [2, 3, 4]],
@@ -23,7 +24,8 @@ const allowedLevel1CountsByParticipants = new Map<number, number[]>([
 ]);
 const toProfile = (profiles: ProfileJoin | ProfileJoin[] | null) => Array.isArray(profiles) ? profiles[0] : profiles;
 const toLevel = (level: ProfileJoin["level"]): 1 | 2 => Number(level) === 1 ? 1 : 2;
-const drawSlotsForLevel = (level: 1 | 2, level1Count: number, level2Count: number) => {
+const drawSlotsForLevel = (level: 1 | 2, level1Count: number, level2Count: number, participantCount = level1Count + level2Count) => {
+  if (participantCount === 5) return [1, 2, 3, 4, 5];
   const count = Math.max(0, level === 1 ? level1Count : level2Count);
   const start = level === 1 ? 1 : 5;
   return Array.from({ length: count }, (_, index) => start + index);
@@ -55,10 +57,10 @@ export async function POST(request: Request) {
     const invalidDraw = attendanceRows.some((attendance) => {
       if (typeof attendance.drawn_number !== "number") return true;
       const level = toLevel(toProfile(attendance.profiles)?.level);
-      return !drawSlotsForLevel(level, level1Count, level2Count).includes(attendance.drawn_number);
+      return !drawSlotsForLevel(level, level1Count, level2Count, attendanceRows.length).includes(attendance.drawn_number);
     });
     if (invalidDraw) {
-      return Response.json({ error: "Cần tất cả người tham gia chọn số đúng dải Level hiện tại trước khi tạo lịch." }, { status: 400 });
+      return Response.json({ error: attendanceRows.length === 5 ? "Cần tất cả người tham gia chọn số 1–5 trước khi tạo lịch." : "Cần tất cả người tham gia chọn số đúng dải Level hiện tại trước khi tạo lịch." }, { status: 400 });
     }
 
     const { error } = await admin

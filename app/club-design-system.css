@@ -636,6 +636,107 @@ header {
   }
 }
 
+.wheel {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.wheel::before,
+.wheel::after {
+  content: none !important;
+}
+
+.wheel-pointer {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  z-index: 8;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  border-left: 13px solid transparent;
+  border-right: 13px solid transparent;
+  border-top: 25px solid var(--club-ink-900);
+  filter:
+    drop-shadow(0 4px 0 var(--club-gold-400))
+    drop-shadow(0 10px 14px rgba(26, 25, 22, 0.22));
+}
+
+.wheel-disc {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 10px solid #fff8e7;
+  border-radius: 999px;
+  background: var(--wheel-gradient, conic-gradient(#fff8df, #fff, #ffe39a, #fffaf0)) !important;
+  box-shadow:
+    0 22px 42px rgba(184, 118, 14, 0.2),
+    0 0 0 1px rgba(144, 98, 20, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.62);
+  transform: rotate(0deg);
+}
+
+.wheel-disc::before {
+  content: "";
+  position: absolute;
+  inset: 20px;
+  z-index: 1;
+  border-radius: 999px;
+  border: 1px dashed rgba(184, 118, 14, 0.28);
+  box-shadow:
+    inset 0 0 0 10px rgba(255, 255, 255, 0.18),
+    inset 0 0 24px rgba(184, 118, 14, 0.1);
+}
+
+.wheel-disc.spinning {
+  animation: clubSpinWheel var(--spin-duration, 3.9s) cubic-bezier(0.12, 0.72, 0.08, 1) forwards !important;
+}
+
+.wheel .wheel-inner {
+  top: 50%;
+  left: 50%;
+  z-index: 7;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+
+.wheel-number.level-1 {
+  border-color: rgba(191, 228, 255, 0.95) !important;
+  color: #0b5fc8 !important;
+  box-shadow:
+    0 8px 18px rgba(29, 127, 242, 0.18),
+    inset 0 0 0 1px rgba(29, 127, 242, 0.22) !important;
+}
+
+.wheel-number.level-2 {
+  border-color: rgba(185, 245, 208, 0.95) !important;
+  color: #08744f !important;
+  box-shadow:
+    0 8px 18px rgba(14, 154, 100, 0.18),
+    inset 0 0 0 1px rgba(14, 154, 100, 0.22) !important;
+}
+
+.wheel-number.level-open {
+  border-color: rgba(255, 183, 0, 0.55) !important;
+  color: var(--club-gold-700) !important;
+  box-shadow:
+    0 8px 18px rgba(184, 118, 14, 0.18),
+    inset 0 0 0 1px rgba(255, 183, 0, 0.28) !important;
+}
+
+@media (max-width: 560px) {
+  .wheel-disc {
+    border-width: 8px;
+  }
+
+  .wheel-disc::before {
+    inset: 17px;
+  }
+}
+
 .draw-roster div {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) auto;

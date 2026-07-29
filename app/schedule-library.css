@@ -320,6 +320,12 @@
   color: var(--slot-level-2);
 }
 
+.slot-token.level-open {
+  border-color: rgba(255, 183, 0, 0.48);
+  background: linear-gradient(180deg, #ffffff, #fff7dc);
+  color: #b8760e;
+}
+
 .schedule-match-card .teams {
   grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr) !important;
   gap: 12px;
@@ -424,7 +430,7 @@
 
   .schedule-filter {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 6px;
     overflow-x: visible;
     padding-bottom: 0;

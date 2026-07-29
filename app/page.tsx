@@ -17,7 +17,7 @@ type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "history"
 type SessionStatus = "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 type AttendanceRow = { choice: "pending" | "attending" | "absent"; drawn_number: number | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
 type HomeSessionPayload = { inactive?: boolean; sessionId?: string | null; sessionDate?: string; status?: SessionStatus; attendances?: AttendanceRow[]; needsReset?: boolean; error?: string };
-const scheduleParticipants = [6, 7, 8, 9, 10] as const;
+const scheduleParticipants = [5, 6, 7, 8, 9, 10] as const;
 type ParticipantCount = typeof scheduleParticipants[number];
 type MatchPattern = readonly [number, number, number, number, string?];
 type ScheduleMatch = { teamA: readonly [number, number]; teamB: readonly [number, number]; type: string };
@@ -41,13 +41,14 @@ const screenFromLocation = () => {
   return isScreenKey(savedScreen) ? savedScreen : "home";
 };
 const slotLevel = (no: number): 1 | 2 => no <= 4 ? 1 : 2;
-const drawSlotsForLevel = (level: 1 | 2, level1Count: number, level2Count: number) => {
+const drawSlotsForLevel = (level: 1 | 2, level1Count: number, level2Count: number, participantCount = level1Count + level2Count) => {
+  if (participantCount === 5) return [1, 2, 3, 4, 5];
   const count = Math.max(0, level === 1 ? level1Count : level2Count);
   const start = level === 1 ? 1 : 5;
   return Array.from({ length: count }, (_, index) => start + index);
 };
-const wheelGradient = (level: 1 | 2, count: number) => {
-  const colors = level === 1 ? ["#1d7ff2", "#bfe4ff", "#0b5fc8", "#eaf6ff"] : ["#0e9a64", "#b9f5d0", "#08744f", "#effdf5"];
+const wheelGradient = (count: number) => {
+  const colors = ["#fff8df", "#ffffff", "#ffe39a", "#fffaf0"];
   const safeCount = Math.max(1, count);
   return `conic-gradient(${Array.from({ length: safeCount }, (_, index) => {
     const start = (index * 360) / safeCount;
@@ -55,13 +56,14 @@ const wheelGradient = (level: 1 | 2, count: number) => {
     return `${colors[index % colors.length]} ${start}deg ${end}deg`;
   }).join(", ")})`;
 };
-const drawSlotRangeLabel = (level: 1 | 2, level1Count: number, level2Count: number) => {
-  const slots = drawSlotsForLevel(level, level1Count, level2Count);
+const drawSlotRangeLabel = (level: 1 | 2, level1Count: number, level2Count: number, participantCount = level1Count + level2Count) => {
+  const slots = drawSlotsForLevel(level, level1Count, level2Count, participantCount);
   if (!slots.length) return "chưa có số";
   return slots.length === 1 ? `số ${slots[0]}` : `số ${slots[0]}–${slots[slots.length - 1]}`;
 };
-const isDrawSlotValid = (level: 1 | 2, slot: number, level1Count: number, level2Count: number) =>
-  drawSlotsForLevel(level, level1Count, level2Count).includes(slot);
+const isDrawSlotValid = (level: 1 | 2, slot: number, level1Count: number, level2Count: number, participantCount = level1Count + level2Count) =>
+  drawSlotsForLevel(level, level1Count, level2Count, participantCount).includes(slot);
+const drawNumberClass = (slot: number, participantCount: number) => participantCount === 5 ? "level-open" : `level-${slotLevel(slot)}`;
 const matchTypeLabel = (team: readonly [number, number]) => team.every((no) => slotLevel(no) === 1) ? "L1 + L1" : team.every((no) => slotLevel(no) === 2) ? "L2 + L2" : "L1 + L2";
 const schedule = (patterns: MatchPattern[]) => patterns.map(([a1, a2, b1, b2, type]) => {
   const teamA = [a1, a2] as const;
@@ -74,20 +76,22 @@ const relaxedOneLevel1 = "Lịch linh hoạt: chỉ có 1 thành viên Level 1 n
 const relaxedThreeThree = "Lịch linh hoạt: 3 Level 1 + 3 Level 2 ưu tiên không lặp đồng đội; 2 trận cuối không áp dụng rule cân Level để vẫn giữ mỗi người 4 trận.";
 const makeScheduleScenario = (participantCount: ParticipantCount, level1Count: number, matches: ScheduleMatch[], relaxedReason?: string): ScheduleScenario => {
   const level2Count = participantCount - level1Count;
+  const isOpenFive = participantCount === 5;
   return {
-    id: `${participantCount}-players-${level1Count}-l1-${level2Count}-l2`,
+    id: isOpenFive ? "5-players-open" : `${participantCount}-players-${level1Count}-l1-${level2Count}-l2`,
     participantCount,
     level1Count,
     level2Count,
-    title: `${participantCount} người · ${level1Count} Level 1 + ${level2Count} Level 2`,
+    title: isOpenFive ? "5 người · không phân Level" : `${participantCount} người · ${level1Count} Level 1 + ${level2Count} Level 2`,
     subtitle: `${matches.length} trận`,
-    badge: `${level1Count}L1 + ${level2Count}L2`,
-    note: relaxedReason ?? `Áp dụng khi buổi chơi có ${level1Count} thành viên Level 1 và ${level2Count} thành viên Level 2.`,
+    badge: isOpenFive ? "1–5" : `${level1Count}L1 + ${level2Count}L2`,
+    note: isOpenFive ? "Áp dụng khi buổi chơi có đúng 5 thành viên tham gia; tất cả chọn số 1–5, không phân Level." : relaxedReason ?? `Áp dụng khi buổi chơi có ${level1Count} thành viên Level 1 và ${level2Count} thành viên Level 2.`,
     matches,
     relaxedReason,
   };
 };
 const scheduleScenarios: ScheduleScenario[] = [
+  makeScheduleScenario(5, 0, schedule([[2, 3, 4, 5, "MỞ"], [1, 4, 3, 5, "MỞ"], [1, 5, 2, 4, "MỞ"], [1, 3, 2, 5, "MỞ"], [1, 2, 3, 4, "MỞ"]])),
   makeScheduleScenario(6, 0, schedule([[5, 10, 6, 7], [5, 6, 8, 9], [7, 8, 9, 10], [5, 7, 6, 10], [5, 8, 6, 9], [7, 9, 8, 10]])),
   makeScheduleScenario(6, 1, schedule([[1, 5, 6, 7], [1, 6, 8, 9], [5, 8, 7, 9], [1, 7, 5, 6], [1, 8, 5, 9], [6, 9, 7, 8]]), relaxedOneLevel1),
   makeScheduleScenario(6, 2, schedule([[1, 5, 2, 6], [1, 7, 2, 8], [5, 6, 7, 8], [1, 6, 2, 5], [1, 8, 2, 7], [5, 7, 6, 8]])),
@@ -105,6 +109,7 @@ const scheduleScenarios: ScheduleScenario[] = [
   makeScheduleScenario(10, 4, schedule([[1, 10, 2, 5], [3, 6, 4, 7], [1, 8, 2, 9], [3, 10, 4, 5], [6, 7, 8, 9], [1, 2, 3, 4], [5, 10, 6, 8], [1, 7, 3, 9], [2, 10, 4, 6], [5, 8, 7, 9]])),
 ];
 const findScheduleScenario = (participantCount: number, level1Count: number) => {
+  if (participantCount === 5) return scheduleScenarios.find((item) => item.participantCount === 5) ?? null;
   const scenario = scheduleScenarios.find((item) => item.participantCount === participantCount && item.level1Count === level1Count);
   return scenario ?? null;
 };
@@ -160,6 +165,7 @@ export default function Home() {
   const [dismissedCheckinPromptKey, setDismissedCheckinPromptKey] = useState<string | null>(null);
   const [loginError, setLoginError] = useState("");
   const [spinning, setSpinning] = useState(false);
+  const [spinTarget, setSpinTarget] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>("draft");
@@ -211,10 +217,10 @@ export default function Home() {
   const level2PresentCount = present.length - level1PresentCount;
   const validDrawn = Object.fromEntries(present.flatMap((member) => {
     const slot = drawn[member.name];
-    return typeof slot === "number" && isDrawSlotValid(member.level, slot, level1PresentCount, level2PresentCount) ? [[member.name, slot]] : [];
+    return typeof slot === "number" && isDrawSlotValid(member.level, slot, level1PresentCount, level2PresentCount, present.length) ? [[member.name, slot]] : [];
   })) as Record<string, number>;
   const currentScheduleScenario = findScheduleScenario(present.length, level1PresentCount);
-  const canSchedule = present.length >= 6 && Boolean(currentScheduleScenario);
+  const canSchedule = present.length >= 5 && Boolean(currentScheduleScenario);
   const allAttendanceDone = members.every((m) => m.responded);
   const allDrawn = present.length > 0 && present.every((member) => typeof validDrawn[member.name] === "number");
   const drawOpen = ["checked_in", "drawn", "scheduled", "completed"].includes(sessionStatus);
@@ -659,17 +665,27 @@ export default function Home() {
     if (!self.present) return setLoginError("Bạn cần điểm danh tham gia trước khi chọn số.");
     if (validDrawn[self.name]) return;
     setLoginError("");
+    setSpinTarget(null);
     setSpinning(true);
-    const revealAfterSpin = (selected?: number) => {
-      window.setTimeout(() => {
-        if (selected) {
-          setDrawn((previous) => {
-            const next = { ...previous, [self.name]: selected };
-            if (!supabase) localStorage.setItem("aemit-drawn-slots", JSON.stringify(next));
-            return next;
-          });
-        }
+    const applySelectedSlot = (selected: number) => {
+      setDrawn((previous) => {
+        const next = { ...previous, [self.name]: selected };
+        if (!supabase) localStorage.setItem("aemit-drawn-slots", JSON.stringify(next));
+        return next;
+      });
+    };
+    const revealAfterSpin = (selected: number, autoAssigned = false) => {
+      if (autoAssigned) {
+        applySelectedSlot(selected);
         setSpinning(false);
+        setSpinTarget(null);
+        return;
+      }
+      setSpinTarget(selected);
+      window.setTimeout(() => {
+        applySelectedSlot(selected);
+        setSpinning(false);
+        setSpinTarget(null);
       }, 3900);
     };
     try {
@@ -680,24 +696,25 @@ export default function Home() {
           headers: { "Content-Type": "application/json", ...(authSession?.access_token ? { Authorization: `Bearer ${authSession.access_token}` } : {}) },
           body: JSON.stringify({ sessionId }),
         });
-        const payload = await response.json().catch(() => ({ error: "Không thể chọn số lúc này." })) as { drawnNumber?: number; error?: string };
+        const payload = await response.json().catch(() => ({ error: "Không thể chọn số lúc này." })) as { drawnNumber?: number; error?: string; autoAssigned?: boolean };
         if (!response.ok || typeof payload.drawnNumber !== "number") throw new Error(payload.error || "Không thể chọn số lúc này.");
-        revealAfterSpin(payload.drawnNumber);
+        revealAfterSpin(payload.drawnNumber, payload.autoAssigned);
         return;
       }
       const latest = JSON.parse(localStorage.getItem("aemit-drawn-slots") || "{}") as Record<string, number>;
-      const pool = drawSlotsForLevel(self.level, level1PresentCount, level2PresentCount);
+      const pool = drawSlotsForLevel(self.level, level1PresentCount, level2PresentCount, present.length);
       const usedSlots = present.flatMap((member) => {
         const slot = latest[member.name];
-        return typeof slot === "number" && isDrawSlotValid(member.level, slot, level1PresentCount, level2PresentCount) ? [slot] : [];
+        return typeof slot === "number" && isDrawSlotValid(member.level, slot, level1PresentCount, level2PresentCount, present.length) ? [slot] : [];
       });
       const available = pool.filter((slot) => !usedSlots.includes(slot));
       if (!available.length) throw new Error("Không còn số trống trong dải Level của bạn.");
       const selected = available[Math.floor(Math.random() * available.length)];
-      revealAfterSpin(selected);
+      revealAfterSpin(selected, available.length === 1);
     } catch (error) {
       window.setTimeout(() => {
         setSpinning(false);
+        setSpinTarget(null);
         setLoginError(error instanceof Error ? error.message : "Không thể chọn số lúc này.");
       }, 800);
     }
@@ -796,7 +813,7 @@ export default function Home() {
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
-        {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} currentUser={currentUser} isAdmin={isAdmin} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
+        {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} isAdmin={isAdmin} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
         {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} rankingRows={liveRankingRows} rankingMonth={currentMonthLabel} onSaved={(completed) => { if (completed) setSessionStatus("completed"); setRankingMonth(currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}
     </section>
@@ -852,29 +869,46 @@ function CheckIn({ members, onContinue, canSchedule, isAdmin, currentUser, isChe
   return <section className="panel checkin">
     <div className="panel-head checkin-head"><div><h2>Điểm danh thành viên</h2></div><div className="count-pill attendance-count-pill"><b>{n}</b><span>có mặt</span></div></div>
     <div className="member-grid">{members.map((m) => <div className="member-card readonly" key={m.name}><div className="avatar" style={{ background: m.color }}>{m.initials}</div><div><b>{m.name}{m.name === currentUser.name && <em>Bạn</em>}</b><small>Level {m.level} · {m.responded ? <span className={"attendance-status " + (m.present ? "present" : "absent")}>{m.present ? "Tham gia" : "Không tham gia"}</span> : <span className="attendance-status pending">Chưa phản hồi</span>}</small></div><span className={"attendance-mark " + (!m.responded ? "waiting" : m.present ? "yes" : "no")}>{m.responded ? (m.present ? "✓" : "×") : ""}</span></div>)}</div>
-    {isCheckinWindowOpen && !canSchedule && <div className="warning">{n < 6 ? "Cần tối thiểu 6 người có mặt để tạo lịch thi đấu tự động." : `Chưa có mẫu lịch phù hợp cho ${n} người (${l1} Level 1 + ${l2} Level 2).`}</div>}
+    {isCheckinWindowOpen && !canSchedule && <div className="warning">{n < 5 ? "Cần tối thiểu 5 người có mặt để tạo lịch thi đấu tự động." : `Chưa có mẫu lịch phù hợp cho ${n} người (${l1} Level 1 + ${l2} Level 2).`}</div>}
     <div className="panel-foot checkin-actions-foot"><div className="attendance-actions"><button className="soft-btn" disabled={!isCheckinWindowOpen} onClick={openSelfCheckin}>{isCheckinWindowOpen ? (currentUser.responded ? "Cập nhật điểm danh của tôi" : "Điểm danh của tôi") : "Mở vào thứ Tư"}</button>{isAdmin && <button className="primary" disabled={!isCheckinWindowOpen || !canSchedule || !allResponded} onClick={onContinue}>Xác nhận điểm danh & mở chọn số <span>→</span></button>}</div></div>
   </section>;
 }
-function Draw({ members, drawn, allDrawn, drawSelf, spinning, currentUser, isAdmin, onContinue }: { members: Member[]; drawn: Record<string, number>; allDrawn: boolean; drawSelf: () => void; spinning: boolean; currentUser: Member; isAdmin: boolean; onContinue: () => void }) {
+function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, currentUser, isAdmin, onContinue }: { members: Member[]; drawn: Record<string, number>; allDrawn: boolean; drawSelf: () => void; spinning: boolean; spinTarget: number | null; currentUser: Member; isAdmin: boolean; onContinue: () => void }) {
+  const participantCount = members.length;
   const level1Count = members.filter((member) => member.level === 1).length;
   const level2Count = members.length - level1Count;
-  const pool = drawSlotsForLevel(currentUser.level, level1Count, level2Count);
-  const rangeLabel = drawSlotRangeLabel(currentUser.level, level1Count, level2Count);
-  const mine = drawn[currentUser.name];
-  const entries = members.map((member) => ({ member, no: drawn[member.name] }));
-  const wheelStyle = { "--spin-duration": "3.9s", "--spin-deg": `${currentUser.level === 1 ? 1738 : 2096}deg`, "--wheel-gradient": wheelGradient(currentUser.level, pool.length) } as CSSProperties;
+  const pool = drawSlotsForLevel(currentUser.level, level1Count, level2Count, participantCount);
+  const rangeLabel = drawSlotRangeLabel(currentUser.level, level1Count, level2Count, participantCount);
+  const actualMine = drawn[currentUser.name];
+  const mine = spinning ? undefined : actualMine;
+  const drawnForWheel = Object.entries(drawn).filter(([name]) => !(spinning && name === currentUser.name));
+  const usedSlots = new Set(drawnForWheel.map(([, slot]) => slot).filter((slot) => pool.includes(slot)));
+  const availableSlots = pool.filter((slot) => !usedSlots.has(slot));
+  const wheelSlots = availableSlots.length ? availableSlots : pool;
+  const targetIndex = typeof spinTarget === "number" ? wheelSlots.indexOf(spinTarget) : -1;
+  const targetAngle = targetIndex >= 0 && wheelSlots.length > 1 ? (targetIndex + 0.5) * (360 / wheelSlots.length) : 0;
+  const isWheelSpinning = spinning && typeof spinTarget === "number";
+  const isHoldingSlot = spinning && typeof spinTarget !== "number";
+  const spinDeg = 1440 - targetAngle;
+  const isOpenFive = participantCount === 5;
+  const modeLabel = isOpenFive ? "SỐ 1–5" : `LEVEL ${currentUser.level}`;
+  const autoLastSlot = !mine && currentUser.present && availableSlots.length === 1 ? availableSlots[0] : null;
+  const entries = members.map((member) => ({ member, no: spinning && member.name === currentUser.name ? undefined : drawn[member.name] }));
+  const wheelStyle = { "--spin-duration": "3.9s", "--spin-deg": `${spinDeg}deg`, "--wheel-gradient": wheelGradient(wheelSlots.length || 1) } as CSSProperties;
   return <section className="panel draw-panel">
-    <div className="panel-head"><div><h2>Chọn số ngẫu nhiên</h2><p>{isAdmin ? "Admin cũng chỉ chọn số cho chính mình. Khi tất cả người tham gia đã có số, Admin xác nhận để tạo lịch." : `Bạn đang ở Level ${currentUser.level}; vòng quay chỉ lấy số trong đúng dải của bạn.`}</p></div><span className="mode">LEVEL {currentUser.level}</span></div>
+    <div className="panel-head"><div><h2>Chọn số ngẫu nhiên</h2><p>{isOpenFive ? "Buổi 5 người không phân Level; tất cả thành viên chọn số trong dải 1–5." : isAdmin ? "Admin cũng chỉ chọn số cho chính mình. Khi tất cả người tham gia đã có số, Admin xác nhận để tạo lịch." : `Bạn đang ở Level ${currentUser.level}; vòng quay chỉ lấy số trong đúng dải của bạn.`}</p></div><span className="mode">{modeLabel}</span></div>
     <div className="draw-body">
-      <div className={"wheel level-wheel level-wheel-" + currentUser.level + (spinning ? " spinning" : "")} style={wheelStyle}>
-        <div className="wheel-numbers">{pool.map((slot, index) => {
-          const angle = (index + 0.5) * (360 / pool.length);
-          return <span key={slot} style={{ "--slot-angle": `${angle}deg`, "--slot-angle-inverse": `${-angle}deg` } as CSSProperties}>{slot}</span>;
-        })}</div>
-        <div className="wheel-inner">{spinning ? <b>…<small>ĐANG QUAY</small></b> : mine ? <b>{mine}<small>SỐ CỦA BẠN</small></b> : <b>?</b>}</div>
+      <div className={"wheel level-wheel level-wheel-" + (isOpenFive ? "open" : currentUser.level)} style={wheelStyle}>
+        <span className="wheel-pointer" aria-hidden="true" />
+        <div className={"wheel-disc" + (isWheelSpinning ? " spinning" : "")}>
+          <div className="wheel-numbers">{wheelSlots.map((slot, index) => {
+            const angle = wheelSlots.length === 1 ? 0 : (index + 0.5) * (360 / wheelSlots.length);
+            return <span className={`wheel-number ${drawNumberClass(slot, participantCount)}`} key={slot} style={{ "--slot-angle": `${angle}deg`, "--slot-angle-inverse": `${-angle}deg` } as CSSProperties}>{slot}</span>;
+          })}</div>
+        </div>
+        <div className="wheel-inner">{isWheelSpinning || isHoldingSlot ? <b>…<small>{isHoldingSlot ? "ĐANG GIỮ SỐ" : "ĐANG QUAY"}</small></b> : mine ? <b>{mine}<small>SỐ CỦA BẠN</small></b> : autoLastSlot ? <b>{autoLastSlot}<small>SỐ CUỐI</small></b> : <b>?</b>}</div>
       </div>
-      <div className="draw-copy"><span className="tag">VÒNG QUAY LEVEL {currentUser.level} · {rangeLabel.toUpperCase()}</span><h2>{spinning ? "Vòng quay đang chọn số…" : mine ? "Bạn đã chọn xong" : currentUser.present ? "Đến lượt bạn chọn số" : "Bạn chưa điểm danh tham gia"}</h2><p>Vòng quay chạy khoảng 4 giây. Số được claim ngay trên hệ thống để không ai bị trùng, sau đó mới reveal ra màn hình.</p><button className="primary" disabled={spinning || !currentUser.present || Boolean(mine)} onClick={drawSelf}>{spinning ? "Đang quay…" : mine ? "Đã có số" : "Chọn số của tôi"} <span>↻</span></button></div>
+      <div className="draw-copy"><span className="tag">CHỌN SỐ · {rangeLabel.toUpperCase()}</span><h2>{isWheelSpinning ? "Vòng quay đang chọn số…" : isHoldingSlot ? "Đang giữ số hợp lệ…" : mine ? "Bạn đã chọn xong" : currentUser.present ? (autoLastSlot ? "Bạn là người cuối trong dải số này" : "Đến lượt bạn chọn số") : "Bạn chưa điểm danh tham gia"}</h2><p>{autoLastSlot ? "Chỉ còn 1 số hợp lệ, bấm để nhận luôn số cuối cùng — không cần quay." : "Vòng quay chạy khoảng 4 giây. Số đã chọn sẽ biến mất khỏi vòng quay để người sau không bị trùng."}</p><button className="primary" disabled={spinning || !currentUser.present || Boolean(mine)} onClick={drawSelf}>{spinning ? "Đang xử lý…" : mine ? "Đã có số" : autoLastSlot ? "Nhận số cuối cùng" : "Chọn số của tôi"} <span>↻</span></button></div>
     </div>
     <div className="draw-list draw-roster">{entries.map(({ member, no }) => <div className={no ? "drawn" : "pending"} key={member.username}><span>{member.name}</span><b>{no ?? "—"}</b><small>Level {member.level}</small></div>)}</div>
     <div className="panel-foot"><span>{allDrawn ? "✓ Tất cả người tham gia đã chọn số. Admin có thể tạo lịch." : "Đang chờ các thành viên tự chọn số của mình."}</span>{isAdmin && <button className="primary" disabled={!allDrawn} onClick={onContinue}>Tạo lịch thi đấu <span>→</span></button>}</div>
@@ -882,10 +916,11 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, currentUser, isAdm
 }
 function Schedule({ scenario, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, isAdmin, rankingRows, rankingMonth, onSaved }: { scenario: ScheduleScenario | null; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; isAdmin: boolean; rankingRows: RankingRow[]; rankingMonth: string; onSaved: (completed: boolean) => void }) {
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
-  if (!scenario) return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Lịch chỉ được tạo khi có tối thiểu 6 thành viên và đúng tổ hợp Level trong thư viện lịch.</p></div></div><div className="empty-ranking">Chưa có lịch phù hợp cho danh sách điểm danh hiện tại.</div></section>;
+  if (!scenario) return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Lịch chỉ được tạo khi có tối thiểu 5 thành viên và đúng tổ hợp trong thư viện lịch.</p></div></div><div className="empty-ranking">Chưa có lịch phù hợp cho danh sách điểm danh hiện tại.</div></section>;
+  const scenarioLabel = scenario.participantCount === 5 ? "5 người · không phân Level" : `${scenario.level1Count} Level 1 + ${scenario.level2Count} Level 2`;
   return <>
     <section className="panel combined-schedule-panel">
-      <div className="panel-head"><div><h2>Lịch thi đấu & nhập điểm</h2><p>Đã chọn mẫu theo danh sách hôm nay: {scenario.level1Count} Level 1 + {scenario.level2Count} Level 2. Nhập điểm ngay bên dưới từng trận.</p></div><span className="count-pill">{scenario.matches.length} trận</span></div>
+      <div className="panel-head"><div><h2>Lịch thi đấu & nhập điểm</h2><p>Đã chọn mẫu theo danh sách hôm nay: {scenarioLabel}. Nhập điểm ngay bên dưới từng trận.</p></div><span className="count-pill">{scenario.matches.length} trận</span></div>
       <div className="schedule-grid">{scenario.matches.map((match, i) => <Match match={match} i={i} namesBySlot={namesBySlot} key={i} />)}</div>
       <div className="panel-foot"><span>✓ {scenario.title} · Mỗi người 4 trận</span><span>{isAdmin ? "Admin xác nhận từng trận; BXH cập nhật ngay sau khi lưu." : "Thành viên được xem lịch và kết quả, chỉ Admin được sửa điểm."}</span></div>
     </section>
@@ -912,7 +947,7 @@ function Rules() {
 
     <section className="rules-flow" aria-label="Quy trình buổi chơi">
       <article><span>01</span><b>Điểm danh</b><p>Thành viên xác nhận tham gia hoặc không tham gia trước khi lập lịch.</p></article>
-      <article><span>02</span><b>Chọn số</b><p>Level 1 nhận số 1–4, Level 2 nhận số 5–10; dải số tự thu gọn theo số người tham gia thực tế.</p></article>
+      <article><span>02</span><b>Chọn số</b><p>Buổi 5 người chọn số 1–5 không phân Level; từ 6 người trở lên, Level 1 nhận số 1–4 và Level 2 nhận số 5–10 theo số người thực tế.</p></article>
       <article><span>03</span><b>Thi đấu & nhập điểm</b><p>Admin xác nhận từng trận, BXH tháng cập nhật ngay sau mỗi kết quả được lưu.</p></article>
     </section>
 
@@ -940,7 +975,7 @@ function Rules() {
 
       <article className="rules-card rules-card-wide">
         <div className="rules-card-title"><span className="rules-index">3</span><h2>Cấu trúc lịch đấu hằng tuần</h2></div>
-        <p>Lịch chỉ được tạo khi có từ 6 thành viên tham gia. Hệ thống sẽ chọn thư viện lịch phù hợp theo tổng số người và số lượng Level 1 / Level 2 của buổi đó.</p>
+        <p>Lịch chỉ được tạo khi có từ 5 thành viên tham gia. Với buổi 5 người, hệ thống dùng lịch riêng không phân Level; từ 6 người trở lên sẽ chọn thư viện lịch phù hợp theo tổng số người và số lượng Level 1 / Level 2 của buổi đó.</p>
         <div className="rules-match-types">
           <div><b><span className="level-one">Level 1</span> + <span className="level-one">Level 1</span></b><span>vs</span><b><span className="level-one">Level 1</span> + <span className="level-one">Level 1</span></b></div>
           <div><b><span className="level-one">Level 1</span> + <span className="level-two">Level 2</span></b><span>vs</span><b><span className="level-one">Level 1</span> + <span className="level-two">Level 2</span></b></div>
@@ -985,14 +1020,14 @@ function Rules() {
 }
 
 function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
-  const [participantFilter, setParticipantFilter] = useState<ParticipantCount>(6);
+  const [participantFilter, setParticipantFilter] = useState<ParticipantCount>(5);
   const visibleScenarios = scenarios.filter((scenario) => scenario.participantCount === participantFilter);
   return <section className="schedule-library">
     <section className="panel schedule-overview">
       <div>
         <p className="eyebrow">THƯ VIỆN LỊCH</p>
         <h2>Mẫu lịch theo số người & Level</h2>
-        <p>Lịch chỉ có khi buổi chơi có từ 6 thành viên trở lên. Trang này chỉ để xem các trường hợp tạo lịch, không chọn hay ghi đè lịch của buổi hiện tại.</p>
+        <p>Lịch chỉ có khi buổi chơi có từ 5 thành viên trở lên. Trang này chỉ để xem các trường hợp tạo lịch, không chọn hay ghi đè lịch của buổi hiện tại.</p>
       </div>
       <div className="schedule-overview-stats">
         <div><b>{participantFilter}</b><span>người tham gia</span></div>
@@ -1018,9 +1053,9 @@ function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
     </div>
   </section>;
 }
-function SlotToken({ no, name }: { no: number; name?: string }) { return <span className={`slot-token level-${slotLevel(no)}`}><b>{no}</b>{name && <small>{name}</small>}</span>; }
-function TeamPair({ team, namesBySlot }: { team: readonly [number, number]; namesBySlot?: Record<number, string> }) { return <span className="team-pair"><SlotToken no={team[0]} name={namesBySlot?.[team[0]]} /><i>+</i><SlotToken no={team[1]} name={namesBySlot?.[team[1]]} /></span>; }
-function Match({ match, i, namesBySlot }: { match: ScheduleMatch; i: number; namesBySlot?: Record<number, string> }) { return <article className="match schedule-match-card"><div className="match-top"><b>TRẬN {String(i + 1).padStart(2, "0")}</b></div><div className="teams"><TeamPair team={match.teamA} namesBySlot={namesBySlot} /><strong>VS</strong><TeamPair team={match.teamB} namesBySlot={namesBySlot} /></div></article>; }
+function SlotToken({ no, name, open }: { no: number; name?: string; open?: boolean }) { return <span className={`slot-token ${open ? "level-open" : `level-${slotLevel(no)}`}`}><b>{no}</b>{name && <small>{name}</small>}</span>; }
+function TeamPair({ team, namesBySlot, open }: { team: readonly [number, number]; namesBySlot?: Record<number, string>; open?: boolean }) { return <span className="team-pair"><SlotToken no={team[0]} name={namesBySlot?.[team[0]]} open={open} /><i>+</i><SlotToken no={team[1]} name={namesBySlot?.[team[1]]} open={open} /></span>; }
+function Match({ match, i, namesBySlot }: { match: ScheduleMatch; i: number; namesBySlot?: Record<number, string> }) { const open = match.type === "MỞ"; return <article className="match schedule-match-card"><div className="match-top"><b>TRẬN {String(i + 1).padStart(2, "0")}</b></div><div className="teams"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={open} /><strong>VS</strong><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={open} /></div></article>; }
 function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, isAdmin, onSaved }: { matches: ScheduleMatch[]; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; isAdmin: boolean; onSaved: (completed: boolean) => void }) {
   const [editing, setEditing] = useState<Record<number, boolean>>({});
   const [saving, setSaving] = useState<number | null>(null);
@@ -1055,7 +1090,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
   return <section className="panel result-entry-panel"><div className="panel-head"><div><h2>Điểm số từng trận</h2><p>{isAdmin ? "Xác nhận từng trận. Mỗi lần xác nhận sẽ cập nhật ngay xuống BXH bên dưới và tab BXH chính." : "Bạn có thể xem điểm từng trận tại đây; chỉ Admin có quyền nhập, sửa và xác nhận."}</p></div><span className="count-pill">{confirmedCount}/{matches.length} trận</span></div>{notice && <div className="warning result-notice">{notice}</div>}<div className="result-list">{matches.map((match, i) => {
     const confirmed = Boolean(confirmedMatches[i]);
     const locked = !isAdmin || (confirmed && !editing[i]);
-    return <div className={"result-row schedule-result-row match-result-row " + (confirmed ? "confirmed" : "")} key={i}><b>{i + 1}</b><TeamPair team={match.teamA} namesBySlot={namesBySlot} /><input disabled={locked} aria-label={`Điểm đội A trận ${i + 1}`} value={scores[i]?.[0] ?? ""} onChange={e => setScores({ ...scores, [i]: [e.target.value, scores[i]?.[1] ?? ""] })}/><em>:</em><input disabled={locked} aria-label={`Điểm đội B trận ${i + 1}`} value={scores[i]?.[1] ?? ""} onChange={e => setScores({ ...scores, [i]: [scores[i]?.[0] ?? "", e.target.value] })}/><TeamPair team={match.teamB} namesBySlot={namesBySlot} /><div className="result-actions">{isAdmin && (confirmed && !editing[i] ? <button className="soft-btn" onClick={() => setEditing({ ...editing, [i]: true })}>Sửa</button> : <button className="primary" disabled={saving === i} onClick={() => void saveMatch(match, i)}>{saving === i ? "Đang lưu…" : confirmed ? "Lưu lại" : "Xác nhận"}</button>)}</div></div>;
+    return <div className={"result-row schedule-result-row match-result-row " + (confirmed ? "confirmed" : "")} key={i}><b>{i + 1}</b><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={match.type === "MỞ"} /><input disabled={locked} aria-label={`Điểm đội A trận ${i + 1}`} value={scores[i]?.[0] ?? ""} onChange={e => setScores({ ...scores, [i]: [e.target.value, scores[i]?.[1] ?? ""] })}/><em>:</em><input disabled={locked} aria-label={`Điểm đội B trận ${i + 1}`} value={scores[i]?.[1] ?? ""} onChange={e => setScores({ ...scores, [i]: [scores[i]?.[0] ?? "", e.target.value] })}/><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={match.type === "MỞ"} /><div className="result-actions">{isAdmin && (confirmed && !editing[i] ? <button className="soft-btn" onClick={() => setEditing({ ...editing, [i]: true })}>Sửa</button> : <button className="primary" disabled={saving === i} onClick={() => void saveMatch(match, i)}>{saving === i ? "Đang lưu…" : confirmed ? "Lưu lại" : "Xác nhận"}</button>)}</div></div>;
   })}</div>{isAdmin && <div className="panel-foot"><span>{confirmedCount === matches.length ? "✓ Toàn bộ trận đã xác nhận và BXH đã được cập nhật." : "Điểm cao hơn được tính là thắng (+1 điểm cho mỗi thành viên đội thắng)."}</span></div>}</section>;
 }
 function LiveRankingSnapshot({ rows, month }: { rows: RankingRow[]; month: string }) {

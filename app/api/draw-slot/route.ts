@@ -19,16 +19,27 @@ type AttendanceWithProfile = {
 };
 
 const openDrawStatuses = new Set(["checked_in", "drawn", "scheduled", "completed"]);
+const allowedLevel1CountsByParticipants = new Map<number, number[]>([
+  [5, [0, 1, 2, 3, 4, 5]],
+  [6, [0, 1, 2, 3, 4]],
+  [7, [1, 2, 3, 4]],
+  [8, [2, 3, 4]],
+  [9, [3, 4]],
+  [10, [4]],
+]);
 
 const toProfile = (profiles: ProfileJoin | ProfileJoin[] | null) => Array.isArray(profiles) ? profiles[0] : profiles;
 const toLevel = (level: ProfileJoin["level"]): 1 | 2 => Number(level) === 1 ? 1 : 2;
-const drawSlotsForLevel = (level: 1 | 2, level1Count: number, level2Count: number) => {
+const hasScheduleScenario = (participantCount: number, level1Count: number) =>
+  allowedLevel1CountsByParticipants.get(participantCount)?.includes(level1Count) ?? false;
+const drawSlotsForLevel = (level: 1 | 2, level1Count: number, level2Count: number, participantCount = level1Count + level2Count) => {
+  if (participantCount === 5) return [1, 2, 3, 4, 5];
   const count = Math.max(0, level === 1 ? level1Count : level2Count);
   const start = level === 1 ? 1 : 5;
   return Array.from({ length: count }, (_, index) => start + index);
 };
-const isDrawSlotValid = (level: 1 | 2, slot: number, level1Count: number, level2Count: number) =>
-  drawSlotsForLevel(level, level1Count, level2Count).includes(slot);
+const isDrawSlotValid = (level: 1 | 2, slot: number, level1Count: number, level2Count: number, participantCount = level1Count + level2Count) =>
+  drawSlotsForLevel(level, level1Count, level2Count, participantCount).includes(slot);
 
 const pickRandom = (items: number[]) => items[Math.floor(Math.random() * items.length)];
 
@@ -64,10 +75,14 @@ export async function POST(request: Request) {
       }
 
       const attendingRows = attendances.filter((attendance) => attendance.choice === "attending");
+      const participantCount = attendingRows.length;
       const level1Count = attendingRows.filter((attendance) => toLevel(toProfile(attendance.profiles)?.level) === 1).length;
       const level2Count = attendingRows.length - level1Count;
+      if (!hasScheduleScenario(participantCount, level1Count)) {
+        return Response.json({ error: participantCount < 5 ? "Cần tối thiểu 5 người tham gia để mở chọn số." : `Chưa có mẫu lịch phù hợp cho ${participantCount} người (${level1Count} Level 1 + ${level2Count} Level 2).` }, { status: 400 });
+      }
       const selfLevel = toLevel(toProfile(selfAttendance.profiles)?.level ?? profile.level);
-      const pool = drawSlotsForLevel(selfLevel, level1Count, level2Count);
+      const pool = drawSlotsForLevel(selfLevel, level1Count, level2Count, participantCount);
       if (!pool.length) return Response.json({ error: "Không có dải số phù hợp với Level của bạn trong buổi này." }, { status: 400 });
 
       const inactiveMemberIdsWithStaleSlots = attendances
@@ -77,7 +92,7 @@ export async function POST(request: Request) {
         .filter((attendance) => typeof attendance.drawn_number === "number")
         .filter((attendance) => {
           const attendanceLevel = toLevel(toProfile(attendance.profiles)?.level);
-          return !isDrawSlotValid(attendanceLevel, Number(attendance.drawn_number), level1Count, level2Count);
+          return !isDrawSlotValid(attendanceLevel, Number(attendance.drawn_number), level1Count, level2Count, participantCount);
         })
         .map((attendance) => attendance.member_id);
       const memberIdsToClear = [...new Set([...inactiveMemberIdsWithStaleSlots, ...invalidMemberIds])];
@@ -93,7 +108,7 @@ export async function POST(request: Request) {
       }
 
       if (typeof selfAttendance.drawn_number === "number" && pool.includes(selfAttendance.drawn_number)) {
-        return Response.json({ drawnNumber: selfAttendance.drawn_number, level: selfLevel, pool });
+        return Response.json({ drawnNumber: selfAttendance.drawn_number, level: selfLevel, pool, autoAssigned: true });
       }
 
       const usedSlots = new Set(attendingRows
@@ -103,7 +118,8 @@ export async function POST(request: Request) {
       const available = pool.filter((slot) => !usedSlots.has(slot));
       if (!available.length) return Response.json({ error: "Không còn số trống trong dải Level của bạn." }, { status: 409 });
 
-      const selected = pickRandom(available);
+      const autoAssigned = available.length === 1;
+      const selected = autoAssigned ? available[0] : pickRandom(available);
       const { data: updatedAttendance, error: updateError } = await admin
         .from("attendances")
         .update({ drawn_number: selected, level_at_time: String(selfLevel) })
@@ -124,7 +140,7 @@ export async function POST(request: Request) {
       );
       const everyoneHasValidSlot = normalizedRows.every((attendance) => {
         const attendanceLevel = toLevel(toProfile(attendance.profiles)?.level);
-        return typeof attendance.drawn_number === "number" && isDrawSlotValid(attendanceLevel, attendance.drawn_number, level1Count, level2Count);
+        return typeof attendance.drawn_number === "number" && isDrawSlotValid(attendanceLevel, attendance.drawn_number, level1Count, level2Count, participantCount);
       });
       if (everyoneHasValidSlot) {
         const { error: statusError } = await admin
@@ -135,7 +151,7 @@ export async function POST(request: Request) {
         if (statusError) throw statusError;
       }
 
-      return Response.json({ drawnNumber: Number(updatedAttendance.drawn_number), level: selfLevel, pool });
+      return Response.json({ drawnNumber: Number(updatedAttendance.drawn_number), level: selfLevel, pool, autoAssigned });
     }
 
     return Response.json({ error: "Có người vừa bốc cùng lúc. Bạn thử lại một lần nữa nhé." }, { status: 409 });
