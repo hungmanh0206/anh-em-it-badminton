@@ -15,6 +15,7 @@ import "./home-hero.css";
 import "./rules-page.css";
 import "./result-entry-responsive.css";
 import "./flow-responsive.css";
+import "./mobile-landscape.css";
 
 export const metadata: Metadata = {
   title: "Anh Em IT — Quản lý CLB Cầu lông",

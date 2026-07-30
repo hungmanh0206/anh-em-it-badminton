@@ -1,0 +1,233 @@
+@media (max-height: 480px) and (max-width: 950px) {
+  .app-shell {
+    display: block !important;
+  }
+
+  .sidebar {
+    display: flex !important;
+    width: 272px !important;
+    max-width: min(272px, 82vw) !important;
+    z-index: 30 !important;
+    transform: translateX(-102%) !important;
+    transition: transform 0.25s ease !important;
+    box-shadow: 16px 0 42px rgba(18, 17, 15, 0.28) !important;
+  }
+
+  .app-shell.sidebar-open .sidebar {
+    transform: translateX(0) !important;
+  }
+
+  .sidebar .brand {
+    justify-content: flex-start !important;
+    padding-bottom: 24px !important;
+  }
+
+  .sidebar .brand div,
+  .sidebar .club-card,
+  .sidebar .profile > div:not(.avatar) {
+    display: block !important;
+  }
+
+  .sidebar nav button {
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+    text-align: left !important;
+  }
+
+  .sidebar nav button span {
+    width: 25px !important;
+    font-size: 17px !important;
+  }
+
+  .content {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    padding: 16px 18px 34px !important;
+  }
+
+  header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 14px !important;
+    margin-bottom: 16px !important;
+    text-align: left !important;
+  }
+
+  .title-group {
+    display: grid !important;
+    grid-template-columns: 40px minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 11px !important;
+    min-width: 0 !important;
+  }
+
+  .mobile-menu {
+    display: grid !important;
+    place-items: center !important;
+    width: 39px !important;
+    height: 39px !important;
+    margin: 0 !important;
+    border-radius: 14px !important;
+  }
+
+  .title-group > div {
+    min-width: 0 !important;
+    padding: 0 !important;
+  }
+
+  .title-group .eyebrow {
+    margin: 0 0 5px !important;
+    font-size: 9px !important;
+    line-height: 1 !important;
+  }
+
+  .title-group h1 {
+    max-width: none !important;
+    margin: 0 !important;
+    font-size: clamp(25px, 4.2vw, 30px) !important;
+    line-height: 1 !important;
+  }
+
+  .welcome-member,
+  .welcome-member.rank-1,
+  .welcome-member.rank-2,
+  .welcome-member.rank-3,
+  .welcome-member.rank-none {
+    justify-self: end !important;
+    align-self: center !important;
+    width: auto !important;
+    max-width: 190px !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    padding: 7px 10px 7px 7px !important;
+    gap: 8px !important;
+    border-radius: 15px !important;
+  }
+
+  .welcome-member .welcome-avatar {
+    flex: 0 0 30px !important;
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 10px !important;
+  }
+
+  .welcome-member .welcome-copy {
+    font-size: 10px !important;
+  }
+
+  .welcome-member b {
+    max-width: 78px !important;
+    font-size: 13.5px !important;
+    line-height: 1 !important;
+  }
+
+  .welcome-member .welcome-level {
+    font-size: 9px !important;
+    line-height: 1 !important;
+  }
+
+  .hero {
+    padding: 18px 20px !important;
+    gap: 16px !important;
+  }
+
+  .hero h2 {
+    margin-top: 7px !important;
+    font-size: 20px !important;
+    line-height: 1.16 !important;
+  }
+
+  .hero-stats {
+    gap: 18px !important;
+  }
+
+  .hero-stats div {
+    padding-left: 16px !important;
+  }
+
+  .hero-stats b {
+    font-size: 22px !important;
+  }
+
+  .workflow {
+    margin: 16px 0 !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .workflow button {
+    min-width: 120px !important;
+    padding-bottom: 12px !important;
+    font-size: 11px !important;
+  }
+
+  .panel-head {
+    padding: 18px 18px 14px !important;
+  }
+
+  .panel-head h2 {
+    font-size: 18px !important;
+  }
+
+  .schedule-overview {
+    padding: 18px 20px !important;
+  }
+
+  .schedule-overview h2 {
+    font-size: 21px !important;
+  }
+
+  .schedule-filter {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 7px !important;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+  }
+
+  .schedule-filter button {
+    min-width: 76px !important;
+    padding: 8px 11px !important;
+    font-size: 11px !important;
+  }
+
+  .draw-panel .draw-body {
+    grid-template-columns: 148px minmax(0, 1fr) !important;
+    gap: 16px !important;
+    margin: 0 18px !important;
+    padding: 16px !important;
+  }
+
+  .draw-panel .wheel {
+    width: 148px !important;
+    height: 148px !important;
+  }
+
+  .draw-panel .draw-roster {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    margin: 14px 18px !important;
+  }
+
+  .result-entry-panel .result-list {
+    padding-inline: 18px !important;
+  }
+
+  .result-entry-panel .match-result-row {
+    grid-template-columns: 34px minmax(120px, 1fr) 96px minmax(120px, 1fr) 46px !important;
+    gap: 7px !important;
+    padding: 10px 11px !important;
+  }
+
+  .result-entry-panel .slot-token small {
+    font-size: 9.4px !important;
+    line-height: 1.06 !important;
+  }
+
+  .result-entry-panel .result-actions .primary,
+  .result-entry-panel .result-actions .soft-btn {
+    min-width: 42px !important;
+  }
+}
+
