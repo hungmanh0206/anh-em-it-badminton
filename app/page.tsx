@@ -209,9 +209,11 @@ export default function Home() {
   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const rankingMonthOptions = [...new Set([sessionMonthStart, currentMonthStart, previousMonthStart, new Date(now.getFullYear(), now.getMonth() - 2, 1)].map(monthLabel))].filter((month) => !hiddenRankingMonths.has(month));
   const previousMonthKey = localDateKey(previousMonthStart);
-  const isCheckinTestMode = ENABLE_TEST_FLOW && now.getDay() !== 3;
-  const isCheckinWindowOpen = ENABLE_TEST_FLOW || now.getDay() === 3;
-  const shouldLoadHomeSession = ENABLE_TEST_FLOW || now.getDay() >= 3;
+  const currentWeekday = now.getDay();
+  const isLiveCheckinWindow = currentWeekday >= 3 && currentWeekday <= 6;
+  const isCheckinTestMode = ENABLE_TEST_FLOW && !isLiveCheckinWindow;
+  const isCheckinWindowOpen = ENABLE_TEST_FLOW || isLiveCheckinWindow;
+  const shouldLoadHomeSession = ENABLE_TEST_FLOW || isLiveCheckinWindow;
   const sessionDateKey = localDateKey(session.date);
   const currentCheckinPromptKey = `${activeUsername || "guest"}:${sessionId || sessionDateKey}`;
   const signedInMember = activeUsername ? members.find((member) => member.username === activeUsername) : null;
