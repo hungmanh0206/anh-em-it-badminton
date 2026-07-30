@@ -191,8 +191,8 @@
     grid-template-areas:
       "meta team-a score team-b action";
     gap: 5px;
-    padding: 8px 7px !important;
-    min-height: 54px;
+    padding: 10px 7px !important;
+    min-height: 76px;
     background:
       linear-gradient(90deg, rgba(255, 248, 223, 0.54), rgba(255, 255, 255, 0.92)) !important;
   }
@@ -233,12 +233,16 @@
   }
 
   .result-entry-panel .match-result-team .team-pair {
-    gap: 3px;
-    padding: 5px 6px;
-    border: 1px solid rgba(230, 204, 151, 0.76);
-    border-radius: 999px;
-    background: rgba(255, 253, 246, 0.88);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+    display: grid !important;
+    grid-template-columns: max-content auto max-content;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
     text-align: center;
     overflow: visible;
   }
@@ -315,9 +319,10 @@
   }
 
   .result-entry-panel .slot-token {
-    display: inline-flex;
+    display: grid;
+    justify-items: center;
     align-items: center;
-    gap: 2px;
+    gap: 3px;
     min-width: 0;
     min-height: 0;
     padding: 0 !important;
@@ -330,11 +335,11 @@
   .result-entry-panel .slot-token b {
     display: inline-grid;
     place-items: center;
-    width: 15px;
-    height: 15px;
+    width: 22px;
+    height: 22px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.96);
-    font-size: 10.5px;
+    font-size: 14px;
     line-height: 1;
     box-shadow: 0 3px 8px rgba(26, 25, 22, 0.08);
   }
@@ -358,7 +363,7 @@
     min-width: max-content;
     max-width: none;
     color: #5f5749 !important;
-    font-size: 6.5px;
+    font-size: 7.4px;
     font-weight: 900;
     line-height: 1;
     overflow: visible;
@@ -368,8 +373,8 @@
 
   .result-entry-panel .team-pair > i {
     color: #b08518 !important;
-    margin: 0 -1px;
-    font-size: 8px;
+    margin: 0 -2px;
+    font-size: 10px;
     font-weight: 950;
   }
 }
@@ -382,7 +387,7 @@
   .result-entry-panel .match-result-row {
     grid-template-columns: 12px minmax(0, 1fr) 58px minmax(0, 1fr) 26px !important;
     gap: 4px;
-    padding: 7px 6px !important;
+    padding: 9px 6px !important;
   }
 
   .result-entry-panel .match-score-controls {
@@ -413,18 +418,18 @@
   }
 
   .result-entry-panel .slot-token b {
-    width: 14px;
-    height: 14px;
-    font-size: 9.5px;
+    width: 20px;
+    height: 20px;
+    font-size: 13px;
   }
 
   .result-entry-panel .slot-token small {
     max-width: none;
-    font-size: 6.1px;
+    font-size: 6.8px;
   }
 
   .result-entry-panel .match-result-team .team-pair {
-    gap: 2px;
-    padding: 4px 5px;
+    gap: 5px;
+    padding: 0;
   }
 }
