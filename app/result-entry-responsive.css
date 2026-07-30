@@ -187,7 +187,7 @@
   }
 
   .result-entry-panel .match-result-row {
-    grid-template-columns: 16px minmax(76px, 1fr) 74px minmax(76px, 1fr) 30px !important;
+    grid-template-columns: 14px minmax(0, 1fr) 66px minmax(0, 1fr) 28px !important;
     grid-template-areas:
       "meta team-a score team-b action";
     gap: 5px;
@@ -225,11 +225,11 @@
   }
 
   .result-entry-panel .match-result-team-a .team-pair {
-    justify-content: flex-end;
+    justify-content: center;
   }
 
   .result-entry-panel .match-result-team-b .team-pair {
-    justify-content: flex-start;
+    justify-content: center;
   }
 
   .result-entry-panel .match-result-team .team-pair {
@@ -239,7 +239,8 @@
     border-radius: 999px;
     background: rgba(255, 253, 246, 0.88);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
-    overflow: hidden;
+    text-align: center;
+    overflow: visible;
   }
 
   .match-result-team-b::before {
@@ -248,7 +249,7 @@
 
   .result-entry-panel .match-score-controls {
     grid-area: score;
-    grid-template-columns: 29px 6px 29px;
+    grid-template-columns: 25px 6px 25px;
     gap: 1px;
     padding: 3px 4px;
     border: 1px solid rgba(230, 204, 151, 0.78);
@@ -260,8 +261,8 @@
   }
 
   .result-entry-panel .match-score-controls input {
-    width: 29px !important;
-    height: 27px;
+    width: 25px !important;
+    height: 26px;
     border: 0 !important;
     border-radius: 999px !important;
     background: transparent !important;
@@ -329,11 +330,11 @@
   .result-entry-panel .slot-token b {
     display: inline-grid;
     place-items: center;
-    width: 18px;
-    height: 18px;
+    width: 15px;
+    height: 15px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.96);
-    font-size: 12px;
+    font-size: 10.5px;
     line-height: 1;
     box-shadow: 0 3px 8px rgba(26, 25, 22, 0.08);
   }
@@ -354,21 +355,21 @@
   }
 
   .result-entry-panel .slot-token small {
-    min-width: 0;
-    max-width: 20px;
+    min-width: max-content;
+    max-width: none;
     color: #5f5749 !important;
-    font-size: 6px;
-    font-weight: 800;
+    font-size: 6.5px;
+    font-weight: 900;
     line-height: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
+    text-overflow: clip;
     white-space: nowrap;
   }
 
   .result-entry-panel .team-pair > i {
     color: #b08518 !important;
     margin: 0 -1px;
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 950;
   }
 }
@@ -379,21 +380,21 @@
   }
 
   .result-entry-panel .match-result-row {
-    grid-template-columns: 14px minmax(68px, 1fr) 64px minmax(68px, 1fr) 27px !important;
+    grid-template-columns: 12px minmax(0, 1fr) 58px minmax(0, 1fr) 26px !important;
     gap: 4px;
     padding: 7px 6px !important;
   }
 
   .result-entry-panel .match-score-controls {
-    grid-template-columns: 26px 5px 26px;
+    grid-template-columns: 23px 4px 23px;
     padding: 3px;
     gap: 1px;
   }
 
   .result-entry-panel .match-score-controls input {
-    width: 26px !important;
-    height: 26px;
-    font-size: 11px;
+    width: 23px !important;
+    height: 24px;
+    font-size: 10.5px;
   }
 
   .result-entry-panel .result-actions .primary,
@@ -412,14 +413,14 @@
   }
 
   .result-entry-panel .slot-token b {
-    width: 16px;
-    height: 16px;
-    font-size: 11px;
+    width: 14px;
+    height: 14px;
+    font-size: 9.5px;
   }
 
   .result-entry-panel .slot-token small {
-    max-width: 17px;
-    font-size: 5.4px;
+    max-width: none;
+    font-size: 6.1px;
   }
 
   .result-entry-panel .match-result-team .team-pair {
