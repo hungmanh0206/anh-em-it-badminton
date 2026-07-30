@@ -8,9 +8,14 @@
     width: 272px !important;
     max-width: min(272px, 82vw) !important;
     z-index: 30 !important;
+    max-height: 100dvh !important;
+    padding: 16px 14px !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
     transform: translateX(-102%) !important;
     transition: transform 0.25s ease !important;
     box-shadow: 16px 0 42px rgba(18, 17, 15, 0.28) !important;
+    -webkit-overflow-scrolling: touch;
   }
 
   .app-shell.sidebar-open .sidebar {
@@ -19,7 +24,7 @@
 
   .sidebar .brand {
     justify-content: flex-start !important;
-    padding-bottom: 24px !important;
+    padding-bottom: 18px !important;
   }
 
   .sidebar .brand div,
@@ -37,6 +42,24 @@
   .sidebar nav button span {
     width: 25px !important;
     font-size: 17px !important;
+  }
+
+  .sidebar .club-card {
+    margin: 18px 3px !important;
+    padding: 13px !important;
+    gap: 6px !important;
+  }
+
+  .sidebar .club-top1 {
+    padding: 10px 11px !important;
+    gap: 4px !important;
+  }
+
+  .sidebar .profile {
+    flex-shrink: 0 !important;
+    min-height: 58px !important;
+    margin: 10px 2px 0 !important;
+    padding: 10px !important;
   }
 
   .content {
@@ -69,7 +92,28 @@
     width: 39px !important;
     height: 39px !important;
     margin: 0 !important;
+    border: 0 !important;
     border-radius: 14px !important;
+    background:
+      radial-gradient(circle at 35% 18%, rgba(255, 214, 109, 0.36), transparent 35%),
+      linear-gradient(180deg, var(--club-ink-900, #1c1a16), var(--club-ink-800, #2a241a)) !important;
+    color: var(--club-gold-300, #ffd66b) !important;
+    box-shadow: 0 12px 26px rgba(26, 25, 22, 0.22) !important;
+  }
+
+  .mobile-menu span {
+    width: 17px !important;
+    height: 2px !important;
+    border-radius: 999px !important;
+    background: currentColor !important;
+    box-shadow: none !important;
+  }
+
+  .mobile-menu:hover {
+    background:
+      radial-gradient(circle at 35% 18%, rgba(255, 214, 109, 0.44), transparent 36%),
+      linear-gradient(180deg, var(--club-ink-800, #2a241a), var(--club-ink-900, #1c1a16)) !important;
+    color: var(--club-gold-100, #fff1bb) !important;
   }
 
   .title-group > div {
@@ -229,5 +273,60 @@
   .result-entry-panel .result-actions .soft-btn {
     min-width: 42px !important;
   }
-}
 
+  .member-profile-popover {
+    top: 12px !important;
+    right: 12px !important;
+    left: auto !important;
+    width: min(372px, calc(100vw - 24px)) !important;
+    max-height: calc(100dvh - 24px) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    border-radius: 20px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .profile-hero-card {
+    padding: 18px 18px 12px !important;
+  }
+
+  .profile-medal {
+    flex-basis: 48px !important;
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .profile-hero-card h2 {
+    font-size: 21px !important;
+  }
+
+  .profile-score-card {
+    margin: 0 14px 12px !important;
+    padding: 12px 14px !important;
+  }
+
+  .profile-score-card b {
+    font-size: 24px !important;
+  }
+
+  .profile-stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    padding: 0 14px 14px !important;
+  }
+
+  .member-profile-popover .profile-stat {
+    min-height: 62px !important;
+    padding: 10px 11px !important;
+    border-radius: 14px !important;
+  }
+
+  .member-profile-popover .profile-stat b {
+    font-size: 17px !important;
+  }
+
+  .profile-note {
+    padding: 11px 16px 14px !important;
+    font-size: 11px !important;
+  }
+}
