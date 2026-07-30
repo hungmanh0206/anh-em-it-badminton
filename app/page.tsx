@@ -310,7 +310,13 @@ export default function Home() {
         const payload = await response.json().catch(() => ({ error: "Không thể lưu điểm danh." })) as HomeSessionPayload;
         if (!response.ok) return setLoginError(payload.error || "Không thể lưu điểm danh.");
         applyHomeSessionPayload(payload);
-        if (payload.needsReset) setAttendanceChangeNotice("Một thành viên vừa thay đổi điểm danh sau khi đã chọn số/lập lịch.");
+        if (payload.needsReset) {
+          setDrawn({});
+          setScores({});
+          setConfirmedMatches({});
+          setRankingRefreshTick((tick) => tick + 1);
+          setAttendanceChangeNotice("Điểm danh đã thay đổi nên số đã chọn, lịch và kết quả tuần này đã được reset. Mọi người cần chọn số lại.");
+        }
         setActiveUser({ ...activeUser, present: attending, responded: true });
         closeCheckinPopup();
         setScreen("home");
@@ -318,6 +324,7 @@ export default function Home() {
           setDismissedCheckinPromptKey(null);
           const nextStatus = payload.status || sessionStatus;
           if (["checked_in", "drawn", "scheduled", "completed"].includes(nextStatus)) setStep(1);
+          else setStep(0);
         } else {
           setDismissedCheckinPromptKey(currentCheckinPromptKey);
           setStep(0);
@@ -615,6 +622,11 @@ export default function Home() {
     return () => { void client.removeChannel(channel); };
   }, []);
   useEffect(() => {
+    if (!attendanceChangeNotice) return;
+    const timer = window.setTimeout(() => setAttendanceChangeNotice(null), 9_000);
+    return () => window.clearTimeout(timer);
+  }, [attendanceChangeNotice]);
+  useEffect(() => {
     if (!supabase || !showProfileCard) return;
     const timer = window.setInterval(() => {
       setRankingRefreshTick((tick) => tick + 1);
@@ -651,17 +663,6 @@ export default function Home() {
       setClosingMonth(false);
     }
   };
-  useEffect(() => {
-    if (!supabase || !activeUser || activeUser.role !== "admin" || !sessionId) return;
-    const client = supabase;
-    const checkRequests = async () => {
-      const { data } = await client.from("attendance_change_requests").select("id, profiles!attendance_change_requests_member_id_fkey(full_name)").eq("session_id", sessionId).eq("status", "pending").limit(1);
-      if (data?.[0]) { const profile = Array.isArray(data[0].profiles) ? data[0].profiles[0] : data[0].profiles; setAttendanceChangeNotice(`${profile?.full_name || "Một thành viên"} vừa thay đổi điểm danh sau khi đã chọn số/lập lịch.`); }
-    };
-    void checkRequests();
-    const channel = client.channel("attendance-change-admin").on("postgres_changes", { event: "INSERT", schema: "public", table: "attendance_change_requests", filter: `session_id=eq.${sessionId}` }, checkRequests).subscribe();
-    return () => { void client.removeChannel(channel); };
-  }, [activeUser, sessionId]);
   useEffect(() => {
     if (!supabase) return;
     const client = supabase;
@@ -793,9 +794,16 @@ export default function Home() {
       setStep(0);
       return;
     }
-    if ((sessionStatus === "scheduled" || sessionStatus === "completed") && currentScheduleScenario && allDrawn) setStep((current) => Math.max(current, 2));
-    else if (drawOpen) setStep((current) => Math.max(current, 1));
-  }, [activeUser, allDrawn, currentScheduleScenario, drawOpen, screen, sessionStatus, signedInMemberPresent]);
+    if ((sessionStatus === "scheduled" || sessionStatus === "completed") && currentScheduleScenario && allDrawn) {
+      setStep((current) => Math.max(current, 2));
+      return;
+    }
+    if (drawOpen && canSchedule && allAttendanceDone) {
+      setStep((current) => current > 1 ? 1 : Math.max(current, 1));
+      return;
+    }
+    setStep((current) => current > 0 ? 0 : current);
+  }, [activeUser, allAttendanceDone, allDrawn, canSchedule, currentScheduleScenario, drawOpen, screen, sessionStatus, signedInMemberPresent]);
 
   useEffect(() => {
     const trigger = document.querySelector(".welcome-member");
@@ -851,6 +859,7 @@ export default function Home() {
         <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>{saturdaySessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>THAM GIA</small></div><div><b>{notAttending.length}</b><small>KHÔNG THAM GIA</small></div><div><b>{String(step + 1).padStart(2, "0")}<em>/{String(steps.length).padStart(2, "0")}</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
+        {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
         {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} isAdmin={isAdmin} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
         {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { if (completed) setSessionStatus("completed"); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
@@ -858,7 +867,6 @@ export default function Home() {
     </section>
     {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}
     {confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}
-    {isAdmin && attendanceChangeNotice && <ConfirmActionModal title="Thay đổi điểm danh" message={`${attendanceChangeNotice} Xác nhận để reset chọn số và lịch thi đấu; điểm danh mới sẽ được giữ lại.`} onCancel={() => setAttendanceChangeNotice(null)} onConfirm={async () => { if (supabase && sessionId) await supabase.rpc("reset_session_after_attendance_change", { p_session_id: sessionId }); setDrawn({}); setStep(0); setAttendanceChangeNotice(null); }} />}
     {showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} onClose={() => setShowProfileCard(false)} />}
   </main>;
 }
