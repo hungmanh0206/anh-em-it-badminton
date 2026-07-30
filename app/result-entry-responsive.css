@@ -110,12 +110,21 @@
 
 .result-entry-panel .result-actions .primary,
 .result-entry-panel .result-actions .soft-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-width: 76px;
   padding: 9px 12px !important;
   border-radius: 12px;
   font-size: 11px;
   font-weight: 900;
   white-space: nowrap;
+}
+
+.result-action-icon {
+  display: none;
+  line-height: 1;
 }
 
 @media (max-width: 1024px) {
@@ -178,30 +187,30 @@
   }
 
   .result-entry-panel .match-result-row {
-    grid-template-columns: 28px minmax(0, 1fr) 91px 50px !important;
+    grid-template-columns: 19px minmax(66px, 1fr) 76px minmax(66px, 1fr) 32px !important;
     grid-template-areas:
-      "meta team-a score action"
-      "meta team-b score action";
-    gap: 7px 8px;
-    padding: 10px !important;
+      "meta team-a score team-b action";
+    gap: 6px;
+    padding: 9px 8px !important;
+    min-height: 58px;
   }
 
   .match-result-meta {
     grid-area: meta;
-    align-self: stretch;
+    align-self: center;
     flex-direction: column;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
   }
 
   .match-result-meta b {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .match-result-meta span {
-    width: 17px;
-    height: 17px;
-    font-size: 10px;
+    width: 14px;
+    height: 14px;
+    font-size: 8px;
   }
 
   .match-result-team-a {
@@ -210,40 +219,32 @@
 
   .match-result-team-b {
     grid-area: team-b;
-    display: flex;
-    align-items: center;
-    gap: 7px;
+    display: block;
   }
 
-  .result-entry-panel .match-result-team-a .team-pair,
+  .result-entry-panel .match-result-team-a .team-pair {
+    justify-content: flex-end;
+  }
+
   .result-entry-panel .match-result-team-b .team-pair {
     justify-content: flex-start;
   }
 
   .match-result-team-b::before {
-    content: "VS";
-    display: inline-grid;
-    place-items: center;
-    flex: 0 0 auto;
-    width: 23px;
-    height: 23px;
-    border-radius: 999px;
-    background: #1a1916;
-    color: #ffdc74;
-    font-size: 7px;
-    font-weight: 950;
+    content: none !important;
   }
 
   .result-entry-panel .match-score-controls {
     grid-area: score;
-    grid-template-columns: 39px 8px 39px;
-    gap: 3px;
+    grid-template-columns: 34px 6px 34px;
+    gap: 2px;
   }
 
   .result-entry-panel .match-score-controls input {
-    width: 39px !important;
-    height: 34px;
-    font-size: 13px;
+    width: 34px !important;
+    height: 32px;
+    border-radius: 12px !important;
+    font-size: 12px;
   }
 
   .result-entry-panel .result-actions {
@@ -253,31 +254,58 @@
 
   .result-entry-panel .result-actions .primary,
   .result-entry-panel .result-actions .soft-btn {
-    width: 48px;
-    min-width: 48px;
-    padding: 8px 4px !important;
-    border-radius: 11px;
-    font-size: 10px;
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 !important;
+    border-radius: 999px;
+    font-size: 0;
+    box-shadow: 0 8px 16px rgba(184, 118, 14, 0.18);
+  }
+
+  .result-entry-panel .result-actions .soft-btn {
+    color: #8a6506;
+    background: #fffaf0;
+    border-color: rgba(255, 183, 0, 0.45);
+  }
+
+  .result-entry-panel .result-actions .primary {
+    color: #15120a;
+    background: linear-gradient(180deg, #ffc933, #ffb300);
+  }
+
+  .result-action-text {
+    display: none;
+  }
+
+  .result-action-icon {
+    display: inline-grid;
+    place-items: center;
+    font-family: system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 950;
   }
 
   .result-entry-panel .slot-token {
-    min-width: 30px;
-    min-height: 32px;
-    padding: 4px 5px;
+    min-width: 28px;
+    min-height: 31px;
+    padding: 3px 4px;
+    border-radius: 10px;
   }
 
   .result-entry-panel .slot-token b {
-    font-size: 16px;
+    font-size: 15px;
   }
 
   .result-entry-panel .slot-token small {
-    max-width: 38px;
-    font-size: 6.5px;
+    max-width: 31px;
+    font-size: 5.6px;
+    line-height: 1.05;
   }
 
   .result-entry-panel .team-pair > i {
-    margin: 0 -1px;
-    font-size: 12px;
+    margin: 0 -2px;
+    font-size: 11px;
   }
 }
 
@@ -287,47 +315,45 @@
   }
 
   .result-entry-panel .match-result-row {
-    grid-template-columns: 24px minmax(0, 1fr) 78px 44px !important;
-    gap: 6px 5px;
-    padding: 9px 8px !important;
+    grid-template-columns: 16px minmax(58px, 1fr) 66px minmax(58px, 1fr) 28px !important;
+    gap: 5px;
+    padding: 8px 7px !important;
   }
 
   .result-entry-panel .match-score-controls {
-    grid-template-columns: 34px 6px 34px;
+    grid-template-columns: 30px 6px 30px;
     gap: 2px;
   }
 
   .result-entry-panel .match-score-controls input {
-    width: 34px !important;
-    height: 32px;
-    font-size: 12px;
+    width: 30px !important;
+    height: 30px;
+    font-size: 11px;
   }
 
   .result-entry-panel .result-actions .primary,
   .result-entry-panel .result-actions .soft-btn {
-    width: 42px;
-    min-width: 42px;
-    font-size: 9px;
+    width: 27px;
+    min-width: 27px;
+    height: 27px;
+  }
+
+  .result-action-icon {
+    font-size: 13px;
   }
 
   .result-entry-panel .slot-token {
-    min-width: 27px;
-    min-height: 30px;
+    min-width: 25px;
+    min-height: 29px;
     padding: 3px 4px;
   }
 
   .result-entry-panel .slot-token b {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .result-entry-panel .slot-token small {
-    max-width: 33px;
-    font-size: 6px;
-  }
-
-  .match-result-team-b::before {
-    width: 20px;
-    height: 20px;
-    font-size: 6px;
+    max-width: 28px;
+    font-size: 5px;
   }
 }
