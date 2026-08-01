@@ -13,6 +13,15 @@ type HistorySessionRow = { id: string; session_date: string; matches?: { count: 
 type MatchRow = { match_no: number; team_a: string[]; team_b: string[]; score_a: number; score_b: number };
 type SavedMatchRow = { match_no: number; score_a: number | null; score_b: number | null };
 type ProfileRow = { id: string; full_name: string };
+type RankingCachePayload = {
+  rankingRows: RankingRow[];
+  currentRankingRows: RankingRow[];
+  liveRankingRows: RankingRow[];
+  previousRankingRows: RankingRow[];
+  championRankingRows: RankingRow[];
+  championRankingLabel: string;
+  storedAt: number;
+};
 type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "history";
 type SessionStatus = "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 type AttendanceRow = { choice: "pending" | "attending" | "absent"; drawn_number: number | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
@@ -143,6 +152,7 @@ const rankingSort = (a: RankingRow, b: RankingRow) =>
   b.pointsWon - a.pointsWon ||
   a.matches - b.matches ||
   a.name.localeCompare(b.name, "vi");
+const rankingCacheTtlMs = 5 * 60 * 1000;
 const ENABLE_TEST_FLOW = process.env.NEXT_PUBLIC_ENABLE_TEST_FLOW === "true";
 const TEMP_RESET_HOME_ATTENDANCE_FOR_TEST = false;
 const initialMembers: Member[] = [
@@ -523,6 +533,7 @@ export default function Home() {
     const selectedNextMonthDate = nextMonthStartDate(selectedMonthDate);
     const selectedNextMonthKey = localDateKey(selectedNextMonthDate);
     const selectedFinalSaturdayKey = localDateKey(finalSaturdayOfMonth(selectedMonthDate));
+    const rankingCacheKey = `aemit-ranking-cache-v3:${month}:${currentMonthKey}:${sessionMonthKey}:${previousMonthKey}`;
     const loadRanking = async () => {
       const rankingSelect = "month, total_points, points_for, points_against, point_diff, matches_played, level_next_month, created_at, profiles!monthly_results_member_id_fkey(username, full_name, level)";
       const championMonthDates = recentMonthStarts(monthStartFromKey(currentMonthKey), 12);
@@ -557,6 +568,22 @@ export default function Home() {
         });
         return mergedRows.sort(rankingSort);
       };
+      try {
+        const cached = window.sessionStorage.getItem(rankingCacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached) as RankingCachePayload;
+          if (Date.now() - parsed.storedAt < rankingCacheTtlMs) {
+            setRankingRows(parsed.rankingRows);
+            setCurrentRankingRows(parsed.currentRankingRows);
+            setLiveRankingRows(parsed.liveRankingRows);
+            setPreviousRankingRows(parsed.previousRankingRows);
+            setChampionRankingRows(parsed.championRankingRows);
+            setChampionRankingLabel(parsed.championRankingLabel);
+          }
+        }
+      } catch {
+        window.sessionStorage.removeItem(rankingCacheKey);
+      }
       const requestedRankingMonths = [...new Set([month, currentMonthKey, sessionMonthKey, previousMonthKey, ...championMonthKeys])];
       const [{ data: allRankingData }, { data: championFinalSessions }, { data: activeProfiles }, { data: finalSession }, { count: nextMonthRows }] = await Promise.all([
         client.from("monthly_results").select(rankingSelect).in("month", requestedRankingMonths),
@@ -576,11 +603,17 @@ export default function Home() {
       const activeProfileRows = (activeProfiles || []) as SupabaseProfile[];
       const currentRowsForCalendarMonth = rankingRowsByMonth.get(currentMonthKey) ?? [];
       const liveRowsForSessionMonth = rankingRowsByMonth.get(sessionMonthKey) ?? [];
-      setRankingRows(buildRankingRows(selectedRows, activeProfileRows));
-      setCurrentRankingRows(buildRankingRows(currentRowsForCalendarMonth, activeProfileRows));
-      setLiveRankingRows(buildRankingRows(liveRowsForSessionMonth, activeProfileRows));
-      setPreviousRankingRows(mapRows(sortMonthlyResultRows(rankingRowsByMonth.get(previousMonthKey) ?? [])));
+      const nextRankingRows = buildRankingRows(selectedRows, activeProfileRows);
+      const nextCurrentRankingRows = buildRankingRows(currentRowsForCalendarMonth, activeProfileRows);
+      const nextLiveRankingRows = buildRankingRows(liveRowsForSessionMonth, activeProfileRows);
+      const nextPreviousRankingRows = mapRows(sortMonthlyResultRows(rankingRowsByMonth.get(previousMonthKey) ?? []));
+      setRankingRows(nextRankingRows);
+      setCurrentRankingRows(nextCurrentRankingRows);
+      setLiveRankingRows(nextLiveRankingRows);
+      setPreviousRankingRows(nextPreviousRankingRows);
       const championRowsByMonth = rankingRowsByMonth;
+      let nextChampionRankingRows: RankingRow[] = [];
+      let nextChampionRankingLabel = monthLabel(monthStartFromKey(previousMonthKey));
       const completedFinalSessionDates = new Set(((championFinalSessions || []) as { session_date: string; status: string | null }[])
         .filter((sessionRow) => sessionRow.status === "completed")
         .map((sessionRow) => sessionRow.session_date));
@@ -594,12 +627,20 @@ export default function Home() {
       });
       if (latestChampionMonth) {
         const championMonthKey = localDateKey(latestChampionMonth);
-        setChampionRankingRows(mapRows(sortMonthlyResultRows(championRowsByMonth.get(championMonthKey) ?? [])));
-        setChampionRankingLabel(monthLabel(latestChampionMonth));
-      } else {
-        setChampionRankingRows([]);
-        setChampionRankingLabel(monthLabel(monthStartFromKey(previousMonthKey)));
+        nextChampionRankingRows = mapRows(sortMonthlyResultRows(championRowsByMonth.get(championMonthKey) ?? []));
+        nextChampionRankingLabel = monthLabel(latestChampionMonth);
       }
+      setChampionRankingRows(nextChampionRankingRows);
+      setChampionRankingLabel(nextChampionRankingLabel);
+      window.sessionStorage.setItem(rankingCacheKey, JSON.stringify({
+        rankingRows: nextRankingRows,
+        currentRankingRows: nextCurrentRankingRows,
+        liveRankingRows: nextLiveRankingRows,
+        previousRankingRows: nextPreviousRankingRows,
+        championRankingRows: nextChampionRankingRows,
+        championRankingLabel: nextChampionRankingLabel,
+        storedAt: Date.now(),
+      } satisfies RankingCachePayload));
       const currentRows = selectedRows.length;
       const finalSessionCompleted = finalSession?.status === "completed";
       const closed = Boolean(nextMonthRows && nextMonthRows > 0);
@@ -673,16 +714,28 @@ export default function Home() {
   useEffect(() => {
     if (!supabase || !activeUsername) return;
     const client = supabase;
+    const historyCacheKey = "aemit-history-cache-v2";
     const loadHistory = async () => {
+      try {
+        const cached = window.sessionStorage.getItem(historyCacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached) as { sessions: HistorySession[]; storedAt: number };
+          if (Date.now() - parsed.storedAt < rankingCacheTtlMs) setHistorySessions(parsed.sessions);
+        }
+      } catch {
+        window.sessionStorage.removeItem(historyCacheKey);
+      }
       const { data } = await client.from("play_sessions").select("id, session_date, matches(count), attendances(choice)").eq("status", "completed").order("session_date", { ascending: false });
       if (!data) return;
-      setHistorySessions((data as HistorySessionRow[]).map((session) => {
+      const nextSessions = (data as HistorySessionRow[]).map((session) => {
         const attendanceRows = session.attendances || [];
         const attendees = attendanceRows.some((row) => typeof row.choice === "string")
           ? attendanceRows.filter((row) => row.choice === "attending").length
           : attendanceRows[0]?.count || 0;
         return { id: session.id, date: session.session_date, matches: session.matches?.[0]?.count || 0, attendees };
-      }));
+      });
+      setHistorySessions(nextSessions);
+      window.sessionStorage.setItem(historyCacheKey, JSON.stringify({ sessions: nextSessions, storedAt: Date.now() }));
     };
     void loadHistory();
   }, [activeUsername, historyRefreshTick]);
@@ -1194,13 +1247,38 @@ function fillRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, widt
   ctx.closePath();
   ctx.fill();
 }
-function downloadRankingImage(month: string, rows: RankingRow[]) {
+function strokeRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  ctx.stroke();
+}
+const rankingMonthForFile = (label: string) => {
+  const date = monthDateFromLabel(label);
+  if (!date) return { display: label, file: label.replace(/[\\/:*?"<>|]/g, "-") };
+  const monthText = String(date.getMonth() + 1).padStart(2, "0");
+  return { display: `Tháng ${monthText}/${date.getFullYear()}`, file: `${monthText}-${date.getFullYear()}` };
+};
+async function downloadRankingImage(month: string, rows: RankingRow[]) {
   if (typeof document === "undefined") return;
-  const ratio = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  await document.fonts?.ready.catch(() => undefined);
+  const ratio = Math.max(1, Math.min(2.4, window.devicePixelRatio || 1));
   const visibleRows = rows.length ? rows : [{ name: "Chưa có dữ liệu", initials: "—", level: 2, points: 0, pointsWon: 0, pointsLost: 0, pointDiff: 0, matches: 0, color: "#b8760e", placeholder: true }];
   const width = 1080;
-  const rowHeight = 78;
-  const height = 176 + visibleRows.length * rowHeight + 54;
+  const rowHeight = 82;
+  const height = 226 + visibleRows.length * rowHeight + 62;
+  const headingFont = `"Bricolage Grotesque", "Be Vietnam Pro", Arial, sans-serif`;
+  const bodyFont = `"DM Sans", "Be Vietnam Pro", Arial, sans-serif`;
+  const { display, file } = rankingMonthForFile(month);
   const canvas = document.createElement("canvas");
   canvas.width = width * ratio;
   canvas.height = height * ratio;
@@ -1209,92 +1287,129 @@ function downloadRankingImage(month: string, rows: RankingRow[]) {
   ctx.scale(ratio, ratio);
   const bg = ctx.createLinearGradient(0, 0, width, height);
   bg.addColorStop(0, "#fffaf0");
-  bg.addColorStop(0.52, "#fffdf8");
-  bg.addColorStop(1, "#fff3c9");
+  bg.addColorStop(0.62, "#fffdf8");
+  bg.addColorStop(1, "#ffefbd");
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, width, height);
-  ctx.fillStyle = "rgba(255, 183, 0, 0.16)";
+  ctx.fillStyle = "rgba(255, 183, 0, 0.18)";
   ctx.beginPath();
-  ctx.arc(width - 110, 92, 170, 0, Math.PI * 2);
+  ctx.arc(width - 82, 88, 190, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#15120e";
-  ctx.font = "900 44px Arial, sans-serif";
-  ctx.fillText("Bảng xếp hạng", 56, 72);
-  ctx.fillStyle = "#b8760e";
-  ctx.font = "900 24px Arial, sans-serif";
-  ctx.fillText(month, 56, 108);
-  ctx.fillStyle = "rgba(21, 18, 14, 0.62)";
-  ctx.font = "700 17px Arial, sans-serif";
-  ctx.fillText("Anh Em IT Badminton Club", 56, 136);
-  const headerY = 156;
-  ctx.fillStyle = "#17140f";
-  fillRoundRect(ctx, 42, headerY, width - 84, 42, 18);
   ctx.fillStyle = "#fff7df";
-  ctx.font = "900 13px Arial, sans-serif";
-  ctx.fillText("HẠNG", 70, headerY + 27);
-  ctx.fillText("THÀNH VIÊN", 158, headerY + 27);
-  ctx.fillText("ĐIỂM", 570, headerY + 27);
-  ctx.fillText("THẮNG", 690, headerY + 27);
-  ctx.fillText("THUA", 805, headerY + 27);
-  ctx.fillText("HIỆU", 910, headerY + 27);
-  ctx.fillText("TRẬN", 994, headerY + 27);
+  fillRoundRect(ctx, 34, 30, width - 68, 150, 30);
+  const hero = ctx.createLinearGradient(34, 30, width - 34, 180);
+  hero.addColorStop(0, "#17140f");
+  hero.addColorStop(0.58, "#2a210d");
+  hero.addColorStop(1, "#946b00");
+  ctx.fillStyle = hero;
+  fillRoundRect(ctx, 34, 30, width - 68, 150, 30);
+  ctx.fillStyle = "rgba(255, 214, 109, 0.14)";
+  ctx.beginPath();
+  ctx.arc(width - 112, 126, 118, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ffcf4a";
+  ctx.font = `900 16px ${bodyFont}`;
+  ctx.letterSpacing = "0.08em";
+  ctx.fillText("ANH EM IT BADMINTON CLUB", 72, 68);
+  ctx.letterSpacing = "0";
+  ctx.fillStyle = "#fffaf0";
+  ctx.font = `900 48px ${headingFont}`;
+  ctx.fillText("Bảng xếp hạng", 72, 122);
+  ctx.fillStyle = "#ffd66b";
+  ctx.font = `900 24px ${bodyFont}`;
+  ctx.fillText(display, 72, 154);
+  ctx.textAlign = "right";
+  ctx.fillStyle = "#fff3c9";
+  ctx.font = `900 54px ${headingFont}`;
+  ctx.fillText(String(visibleRows[0]?.points ?? 0), width - 86, 112);
+  ctx.fillStyle = "rgba(255, 250, 240, 0.72)";
+  ctx.font = `800 15px ${bodyFont}`;
+  ctx.fillText("điểm dẫn đầu", width - 86, 139);
+  ctx.textAlign = "left";
+  const headerY = 198;
+  ctx.fillStyle = "#17140f";
+  fillRoundRect(ctx, 42, headerY, width - 84, 44, 18);
+  ctx.fillStyle = "#fff7df";
+  ctx.font = `900 13px ${bodyFont}`;
+  ctx.fillText("HẠNG", 72, headerY + 28);
+  ctx.fillText("THÀNH VIÊN", 158, headerY + 28);
+  ctx.textAlign = "right";
+  ctx.fillText("ĐIỂM", 612, headerY + 28);
+  ctx.fillText("THẮNG", 735, headerY + 28);
+  ctx.fillText("THUA", 850, headerY + 28);
+  ctx.fillText("HIỆU", 952, headerY + 28);
+  ctx.fillText("TRẬN", 1020, headerY + 28);
+  ctx.textAlign = "left";
   visibleRows.forEach((row, index) => {
-    const y = 210 + index * rowHeight;
+    const y = 258 + index * rowHeight;
     const isTop = index < 3 && !row.placeholder;
-    ctx.fillStyle = index === 0 ? "#fff6cf" : index === 1 ? "#f3f5f8" : index === 2 ? "#fff0e6" : "#ffffff";
-    fillRoundRect(ctx, 42, y, width - 84, 62, 20);
+    const rowGradient = ctx.createLinearGradient(42, y, width - 42, y + 66);
+    rowGradient.addColorStop(0, index === 0 ? "#fff6cf" : index === 1 ? "#eef2f7" : index === 2 ? "#fff0e6" : "#ffffff");
+    rowGradient.addColorStop(1, "#fffdf8");
+    ctx.fillStyle = rowGradient;
+    fillRoundRect(ctx, 42, y, width - 84, 66, 20);
     ctx.strokeStyle = isTop ? ["#e8b229", "#aeb6c5", "#cd8752"][index] : "rgba(32, 27, 20, 0.08)";
     ctx.lineWidth = isTop ? 2 : 1;
-    ctx.strokeRect(52, y + 0.5, width - 104, 61);
+    strokeRoundRect(ctx, 42.5, y + 0.5, width - 85, 65, 20);
     ctx.fillStyle = index === 0 ? "#ffb700" : index === 1 ? "#c6cedb" : index === 2 ? "#d88639" : "#fffaf0";
     ctx.beginPath();
-    ctx.arc(83, y + 31, 20, 0, Math.PI * 2);
+    ctx.arc(84, y + 33, 21, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = index === 0 ? "#211700" : "#17140f";
-    ctx.font = "900 18px Arial, sans-serif";
+    ctx.fillStyle = "#17140f";
+    ctx.font = `900 18px ${bodyFont}`;
     ctx.textAlign = "center";
-    ctx.fillText(index === 0 && !row.placeholder ? "🏆" : String(index + 1), 83, y + 38);
+    ctx.fillText(String(index + 1), 84, y + 40);
     ctx.fillStyle = row.color;
     ctx.beginPath();
-    ctx.arc(142, y + 31, 19, 0, Math.PI * 2);
+    ctx.arc(142, y + 33, 19, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#ffffff";
-    ctx.font = "900 13px Arial, sans-serif";
-    ctx.fillText(row.initials, 142, y + 36);
+    ctx.font = `900 12px ${bodyFont}`;
+    ctx.fillText(row.initials, 142, y + 38);
     ctx.textAlign = "left";
     ctx.fillStyle = "#15120e";
-    ctx.font = "900 22px Arial, sans-serif";
-    ctx.fillText(row.name, 176, y + 29);
+    ctx.font = `900 24px ${headingFont}`;
+    ctx.fillText(row.name, 176, y + 30);
     ctx.fillStyle = "#b8760e";
-    ctx.font = "900 13px Arial, sans-serif";
-    ctx.fillText(`Level ${row.level}`, 176, y + 49);
+    ctx.font = `900 13px ${bodyFont}`;
+    ctx.fillText(`Level ${row.level}`, 176, y + 52);
     ctx.textAlign = "right";
     ctx.fillStyle = index === 0 ? "#d28a00" : index === 1 ? "#657080" : index === 2 ? "#b96125" : "#15120e";
-    ctx.font = "900 30px Arial, sans-serif";
-    ctx.fillText(String(row.points), 610, y + 42);
+    ctx.font = `900 34px ${headingFont}`;
+    ctx.fillText(String(row.points), 612, y + 44);
     ctx.fillStyle = "#15120e";
-    ctx.font = "800 18px Arial, sans-serif";
-    ctx.fillText(String(row.pointsWon), 735, y + 39);
-    ctx.fillText(String(row.pointsLost), 846, y + 39);
+    ctx.font = `900 18px ${bodyFont}`;
+    ctx.fillText(String(row.pointsWon), 735, y + 41);
+    ctx.fillText(String(row.pointsLost), 850, y + 41);
     ctx.fillStyle = row.pointDiff >= 0 ? "#047843" : "#c63f51";
-    ctx.fillText(`${row.pointDiff > 0 ? "+" : ""}${row.pointDiff}`, 948, y + 39);
+    ctx.fillText(`${row.pointDiff > 0 ? "+" : ""}${row.pointDiff}`, 952, y + 41);
     ctx.fillStyle = "#15120e";
-    ctx.fillText(String(row.matches), 1024, y + 39);
+    ctx.fillText(String(row.matches), 1020, y + 41);
     ctx.textAlign = "left";
   });
   ctx.fillStyle = "rgba(21, 18, 14, 0.56)";
-  ctx.font = "700 14px Arial, sans-serif";
+  ctx.font = `800 14px ${bodyFont}`;
   ctx.fillText(`Xuất lúc ${new Date().toLocaleString("vi-VN")}`, 56, height - 28);
-  const slug = month.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "thang";
-  const link = document.createElement("a");
-  link.download = `bang-xep-hang-${slug}.png`;
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+  canvas.toBlob((blob) => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Bảng xếp hạng tháng ${file}.png`;
+    link.rel = "noopener";
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    window.setTimeout(() => {
+      link.remove();
+      URL.revokeObjectURL(url);
+    }, 1500);
+  }, "image/png", 0.96);
 }
 function Ranking({ month, rows, onMonthChange, monthOptions, isAdmin, closeStatus, closeNotice, closingMonth, onCloseMonth }: { month: string; rows: RankingRow[]; onMonthChange: (month: string) => void; monthOptions: string[]; isAdmin: boolean; closeStatus: MonthCloseStatus | null; closeNotice: string; closingMonth: boolean; onCloseMonth: () => void }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
   return <section className="ranking">
-    <div className="ranking-toolbar"><label>Tháng<select value={month} onChange={(e) => onMonthChange(e.target.value)}>{monthOptions.map((option) => <option key={option}>{option}</option>)}</select></label><div className="ranking-toolbar-actions"><button type="button" className="soft-btn ranking-export-btn" onClick={() => downloadRankingImage(month, rows)}>Lưu ảnh BXH</button><p>{closeStatus?.closed ? "BXH tháng này đã chốt, dữ liệu chỉ còn xem." : "Admin chốt BXH sau khi buổi cuối tháng hoàn tất để tạo tháng mới."}</p></div></div>
+    <div className="ranking-toolbar"><div className="ranking-filter-row"><label>Tháng<select value={month} onChange={(e) => onMonthChange(e.target.value)}>{monthOptions.map((option) => <option key={option}>{option}</option>)}</select></label><button type="button" className="soft-btn ranking-export-btn" onClick={() => void downloadRankingImage(month, rows)}><span className="ranking-export-full">Lưu ảnh BXH</span><span className="ranking-export-short">Lưu ảnh</span></button></div><p className="ranking-note">{closeStatus?.closed ? "BXH tháng này đã chốt, dữ liệu chỉ còn xem." : "Admin chốt BXH sau khi buổi cuối tháng hoàn tất để tạo tháng mới."}</p></div>
     {isAdmin && closeStatus && <div className={"month-close-card " + (closeStatus.closed ? "closed" : closeStatus.eligible ? "ready" : "waiting")}>
       <div>
         <span>{closeStatus.closed ? "ĐÃ CHỐT THÁNG" : closeStatus.eligible ? "SẴN SÀNG CHỐT" : "CHỜ ĐỦ ĐIỀU KIỆN"}</span>
