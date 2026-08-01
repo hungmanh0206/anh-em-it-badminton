@@ -300,11 +300,17 @@
   }
 }
 
+.draw-panel .draw-roster {
+  align-items: stretch !important;
+  gap: 10px !important;
+  margin: 18px 25px 16px !important;
+}
+
 .draw-panel .draw-roster div {
   grid-template-columns: minmax(0, 1fr) 34px !important;
   align-items: center !important;
   min-height: 54px;
-  gap: 1px 10px !important;
+  gap: 5px 12px !important;
   padding: 11px 13px !important;
 }
 
@@ -314,7 +320,7 @@
   font-size: 15px !important;
   font-weight: 1000 !important;
   letter-spacing: -0.03em;
-  line-height: 1.05;
+  line-height: 1.14;
 }
 
 .draw-panel .draw-roster b {
@@ -335,7 +341,7 @@
   color: rgba(22, 18, 13, 0.62) !important;
   font-size: 9px !important;
   font-weight: 900 !important;
-  line-height: 1;
+  line-height: 1.18;
 }
 
 .draw-panel .draw-roster .pending b {
@@ -343,9 +349,15 @@
 }
 
 @media (max-width: 900px) {
+  .draw-panel .draw-roster {
+    gap: 10px !important;
+    margin: 16px 18px !important;
+  }
+
   .draw-panel .draw-roster div {
     grid-template-columns: minmax(0, 1fr) 32px !important;
     min-height: 52px;
+    gap: 5px 11px !important;
   }
 
   .draw-panel .draw-roster span {
@@ -358,9 +370,15 @@
 }
 
 @media (max-width: 560px) {
+  .draw-panel .draw-roster {
+    gap: 8px !important;
+    margin: 14px 12px !important;
+  }
+
   .draw-panel .draw-roster div {
     grid-template-columns: minmax(0, 1fr) 30px !important;
     min-height: 50px;
+    gap: 4px 10px !important;
     padding: 10px 11px !important;
   }
 
@@ -381,6 +399,7 @@
   .draw-panel .draw-roster div {
     grid-template-columns: minmax(0, 1fr) 28px !important;
     min-height: 48px;
+    gap: 4px 9px !important;
     padding: 9px 10px !important;
   }
 
