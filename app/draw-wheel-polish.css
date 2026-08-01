@@ -1,0 +1,301 @@
+.draw-panel-head {
+  align-items: center !important;
+}
+
+.draw-mode-pill {
+  min-height: 42px !important;
+  padding: 0 17px !important;
+  border-width: 1.5px !important;
+  color: #9a6200 !important;
+  font-size: 12px !important;
+  font-weight: 1000 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+  box-shadow: 0 12px 24px rgba(184, 118, 14, 0.14) !important;
+}
+
+.draw-panel .draw-body {
+  overflow: visible !important;
+}
+
+.draw-panel .wheel {
+  width: 224px !important;
+  height: 224px !important;
+  overflow: visible !important;
+}
+
+.draw-panel .wheel-disc {
+  overflow: visible !important;
+  border-width: 12px !important;
+}
+
+.draw-panel .wheel-numbers {
+  overflow: visible !important;
+}
+
+.draw-panel .wheel-numbers span,
+.draw-panel .wheel-number {
+  width: 42px !important;
+  height: 42px !important;
+  margin: -21px !important;
+  border-width: 3px !important;
+  background:
+    radial-gradient(circle at 34% 20%, #ffffff 0 28%, #fffdf4 58%, #fff3c6 100%) !important;
+  font-size: 19px !important;
+  font-weight: 1000 !important;
+  line-height: 1 !important;
+  transform: rotate(var(--slot-angle)) translateY(-79px) rotate(var(--slot-angle-inverse)) !important;
+}
+
+.draw-panel .wheel-number.level-1 {
+  background:
+    radial-gradient(circle at 34% 20%, #ffffff 0 28%, #f3f9ff 58%, #d9eeff 100%) !important;
+}
+
+.draw-panel .wheel-number.level-2 {
+  background:
+    radial-gradient(circle at 34% 20%, #ffffff 0 28%, #f1fff7 58%, #d7f8e5 100%) !important;
+}
+
+.draw-panel .wheel-number.level-open {
+  background:
+    radial-gradient(circle at 34% 20%, #ffffff 0 28%, #fffaf0 58%, #ffe6a3 100%) !important;
+}
+
+.draw-panel .wheel-inner {
+  width: 112px !important;
+  height: 112px !important;
+  padding: 0 12px !important;
+}
+
+.draw-panel .wheel-inner b {
+  display: grid !important;
+  place-items: center !important;
+  gap: 5px;
+  color: var(--club-ink-900) !important;
+  font-size: 50px !important;
+  font-weight: 1000 !important;
+  line-height: 0.86 !important;
+  letter-spacing: -0.06em !important;
+}
+
+.draw-panel .wheel-inner small {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 18px;
+  max-width: 82px;
+  padding: 4px 7px !important;
+  border-radius: 999px;
+  background: rgba(255, 183, 0, 0.14);
+  color: #9a6200 !important;
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 8.5px !important;
+  font-weight: 1000 !important;
+  letter-spacing: 0.03em !important;
+  line-height: 1 !important;
+  text-align: center;
+  text-transform: none !important;
+  white-space: nowrap;
+}
+
+.draw-panel .draw-copy .draw-range-tag {
+  display: inline-flex !important;
+  align-items: center;
+  min-height: 26px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px 10px !important;
+  border: 1px solid rgba(255, 183, 0, 0.42);
+  border-radius: 999px;
+  background: rgba(255, 250, 238, 0.88);
+  color: #a16600 !important;
+  font-size: 10.5px !important;
+  font-weight: 1000 !important;
+  letter-spacing: 0.03em !important;
+  line-height: 1 !important;
+  text-transform: none !important;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(184, 118, 14, 0.1);
+}
+
+@media (max-width: 900px) {
+  .draw-panel .draw-body {
+    grid-template-columns: 178px minmax(0, 1fr) !important;
+  }
+
+  .draw-panel .wheel {
+    width: 172px !important;
+    height: 172px !important;
+  }
+
+  .draw-panel .wheel-disc {
+    border-width: 9px !important;
+  }
+
+  .draw-panel .wheel-disc::before {
+    inset: 15px !important;
+  }
+
+  .draw-panel .wheel-numbers span,
+  .draw-panel .wheel-number {
+    width: 34px !important;
+    height: 34px !important;
+    margin: -17px !important;
+    font-size: 16px !important;
+    transform: rotate(var(--slot-angle)) translateY(-61px) rotate(var(--slot-angle-inverse)) !important;
+  }
+
+  .draw-panel .wheel-inner {
+    width: 86px !important;
+    height: 86px !important;
+    padding-inline: 8px !important;
+  }
+
+  .draw-panel .wheel-inner b {
+    gap: 4px;
+    font-size: 38px !important;
+  }
+
+  .draw-panel .wheel-inner small {
+    min-height: 16px;
+    max-width: 68px;
+    padding: 3px 6px !important;
+    font-size: 7.2px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .draw-mode-pill {
+    min-height: 38px !important;
+    padding: 0 14px !important;
+    font-size: 11px !important;
+  }
+
+  .draw-panel .draw-body {
+    grid-template-columns: 144px minmax(0, 1fr) !important;
+    gap: 14px !important;
+    padding: 15px !important;
+  }
+
+  .draw-panel .wheel {
+    width: 140px !important;
+    height: 140px !important;
+  }
+
+  .draw-panel .wheel-pointer {
+    top: -9px !important;
+    border-left-width: 11px !important;
+    border-right-width: 11px !important;
+    border-top-width: 22px !important;
+  }
+
+  .draw-panel .wheel-disc {
+    border-width: 8px !important;
+  }
+
+  .draw-panel .wheel-disc::before {
+    inset: 12px !important;
+  }
+
+  .draw-panel .wheel-numbers span,
+  .draw-panel .wheel-number {
+    width: 29px !important;
+    height: 29px !important;
+    margin: -14.5px !important;
+    border-width: 2.5px !important;
+    font-size: 13.5px !important;
+    transform: rotate(var(--slot-angle)) translateY(-49px) rotate(var(--slot-angle-inverse)) !important;
+  }
+
+  .draw-panel .wheel-inner {
+    width: 72px !important;
+    height: 72px !important;
+    border-width: 4px !important;
+    padding-inline: 6px !important;
+  }
+
+  .draw-panel .wheel-inner b {
+    gap: 3px;
+    font-size: 32px !important;
+  }
+
+  .draw-panel .wheel-inner small {
+    min-height: 15px;
+    max-width: 58px;
+    padding: 3px 5px !important;
+    font-size: 6.4px !important;
+    letter-spacing: 0.01em !important;
+  }
+
+  .draw-panel .draw-copy .draw-range-tag {
+    min-height: 24px;
+    padding: 5px 8px !important;
+    font-size: 8.8px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .draw-panel .draw-body {
+    grid-template-columns: 132px minmax(0, 1fr) !important;
+    gap: 11px !important;
+    padding: 13px !important;
+  }
+
+  .draw-panel .wheel {
+    width: 128px !important;
+    height: 128px !important;
+  }
+
+  .draw-panel .wheel-numbers span,
+  .draw-panel .wheel-number {
+    width: 27px !important;
+    height: 27px !important;
+    margin: -13.5px !important;
+    font-size: 12.5px !important;
+    transform: rotate(var(--slot-angle)) translateY(-44px) rotate(var(--slot-angle-inverse)) !important;
+  }
+
+  .draw-panel .wheel-inner {
+    width: 66px !important;
+    height: 66px !important;
+  }
+
+  .draw-panel .wheel-inner b {
+    font-size: 29px !important;
+  }
+
+  .draw-panel .wheel-inner small {
+    max-width: 54px;
+    font-size: 6px !important;
+  }
+}
+
+@media (max-height: 480px) and (max-width: 950px) {
+  .draw-panel .draw-body {
+    grid-template-columns: 166px minmax(0, 1fr) !important;
+  }
+
+  .draw-panel .wheel {
+    width: 160px !important;
+    height: 160px !important;
+  }
+
+  .draw-panel .wheel-numbers span,
+  .draw-panel .wheel-number {
+    width: 32px !important;
+    height: 32px !important;
+    margin: -16px !important;
+    font-size: 15px !important;
+    transform: rotate(var(--slot-angle)) translateY(-57px) rotate(var(--slot-angle-inverse)) !important;
+  }
+
+  .draw-panel .wheel-inner {
+    width: 82px !important;
+    height: 82px !important;
+  }
+
+  .draw-panel .wheel-inner b {
+    font-size: 36px !important;
+  }
+}
