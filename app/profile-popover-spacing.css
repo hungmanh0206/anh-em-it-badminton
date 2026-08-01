@@ -3,14 +3,15 @@
   right: 36px !important;
   width: min(372px, calc(100vw - 24px)) !important;
   border-radius: 26px !important;
-  border-color: rgba(184, 118, 14, 0.16) !important;
+  border-color: rgba(184, 118, 14, 0.24) !important;
   background:
-    radial-gradient(circle at 92% 0%, rgba(255, 183, 0, 0.18), transparent 34%),
-    radial-gradient(circle at 0% 100%, rgba(255, 243, 201, 0.58), transparent 36%),
-    linear-gradient(145deg, #fffaf0 0%, #fffdf8 54%, #fff4d6 100%) !important;
+    radial-gradient(circle at 92% 0%, rgba(255, 183, 0, 0.16), transparent 32%),
+    radial-gradient(circle at 0% 100%, rgba(255, 230, 156, 0.36), transparent 34%),
+    linear-gradient(145deg, #ffffff 0%, #fffdf8 48%, #fff1c9 100%) !important;
   box-shadow:
-    0 24px 58px rgba(45, 35, 13, 0.18),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.76) !important;
+    0 26px 62px rgba(26, 21, 11, 0.25),
+    0 0 0 4px rgba(255, 183, 0, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.86) !important;
 }
 
 .member-profile-popover.profile-rank-none {
@@ -146,9 +147,20 @@
 
 @media (max-width: 560px) {
   .member-profile-popover {
-    top: 96px !important;
-    right: 12px !important;
-    left: 12px !important;
+    top: 92px !important;
+    right: 14px !important;
+    left: 14px !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-width: 1.5px !important;
+    background:
+      radial-gradient(circle at 88% 0%, rgba(255, 183, 0, 0.18), transparent 30%),
+      linear-gradient(155deg, #ffffff 0%, #fffdf8 50%, #ffe9ab 100%) !important;
+    box-shadow:
+      0 18px 44px rgba(23, 18, 8, 0.32),
+      0 0 0 4px rgba(255, 183, 0, 0.12),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.9) !important;
     max-height: calc(100dvh - 112px) !important;
   }
 
