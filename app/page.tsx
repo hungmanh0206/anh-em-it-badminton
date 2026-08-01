@@ -172,55 +172,6 @@ const initialMembers: Member[] = [
   { name: "Phú", initials: "P", level: 2, color: "#3f9c59", present: false, username: "phu", password: "123456", responded: false },
 ];
 
-type AvatarPerson = { name: string; initials?: string; username?: string; color?: string };
-type AvatarPreset = { key: string; skin: string; hair: string; shirt: string; glasses?: boolean; chubby?: boolean; beard?: boolean };
-const avatarPresets: AvatarPreset[] = [
-  { key: "manh", skin: "#f0b987", hair: "#17120e", shirt: "#6846e8", glasses: true },
-  { key: "hung", skin: "#eeb082", hair: "#24150f", shirt: "#1e9a74", glasses: true },
-  { key: "quy", skin: "#d99a6b", hair: "#12100d", shirt: "#5f46e8" },
-  { key: "thanh", skin: "#efb178", hair: "#2a1710", shirt: "#df8d2a" },
-  { key: "dat", skin: "#f1bf8f", hair: "#15110d", shirt: "#6ba9de" },
-  { key: "ducanh", skin: "#f0b58a", hair: "#1a130f", shirt: "#3b82c4", chubby: true },
-  { key: "son", skin: "#e6a678", hair: "#20120d", shirt: "#8a5be8" },
-  { key: "hai", skin: "#e9a372", hair: "#18110d", shirt: "#ef6a4e", beard: true },
-  { key: "phu", skin: "#f2bd8f", hair: "#17120e", shirt: "#e7ad26" },
-  { key: "nam", skin: "#eab083", hair: "#11100f", shirt: "#24a892" },
-];
-const normalizeAvatarKey = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/\s+/g, "");
-const avatarPresetFor = (person: AvatarPerson) => {
-  const key = normalizeAvatarKey(`${person.username || ""} ${person.name}`);
-  return avatarPresets.find((preset) => key.includes(preset.key)) ?? avatarPresets[Math.abs(key.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0)) % avatarPresets.length];
-};
-
-function MemberAvatar({ person, className = "", rank }: { person: AvatarPerson; className?: string; rank?: number }) {
-  const preset = avatarPresetFor(person);
-  const style = {
-    "--avatar-skin": preset.skin,
-    "--avatar-hair": preset.hair,
-    "--avatar-shirt": person.color || preset.shirt,
-  } as CSSProperties;
-  return <span className={`avatar member-avatar avatar-${preset.key} ${preset.glasses ? "has-glasses" : ""} ${preset.chubby ? "is-chubby" : ""} ${preset.beard ? "has-beard" : ""} ${className}`} style={style} aria-hidden="true">
-    <span className="avatar-portrait">
-      <span className="avatar-neck" />
-      <span className="avatar-shirt" />
-      <span className="avatar-ear avatar-ear-left" />
-      <span className="avatar-ear avatar-ear-right" />
-      <span className="avatar-face">
-        <span className="avatar-eye avatar-eye-left" />
-        <span className="avatar-eye avatar-eye-right" />
-        <span className="avatar-nose" />
-        <span className="avatar-mouth" />
-        <span className="avatar-beard" />
-        <span className="avatar-glasses avatar-glasses-left" />
-        <span className="avatar-glasses avatar-glasses-right" />
-        <span className="avatar-glasses-bridge" />
-      </span>
-      <span className="avatar-hair" />
-    </span>
-    {rank && rank > 0 && rank <= 3 ? <span className={`avatar-rank avatar-rank-${rank}`}>{rank === 1 ? "🏆" : rank}</span> : null}
-  </span>;
-}
-
 export default function Home() {
   const [screen, setScreen] = useState<Screen>(screenFromLocation);
   const [rankingMonth, setRankingMonth] = useState(() => {
@@ -1026,10 +977,10 @@ export default function Home() {
         <button className={screen === "rules" ? "active" : ""} onClick={() => setScreen("rules")}><span>§</span> Thể lệ</button>
       </nav>
       <div className="club-card"><span>🏆</span><b>{currentMonthLabel}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div><div className={`club-top1 ${champion ? "" : "empty"}`}><small>NHÀ VÔ ĐỊCH {championRankingLabel.toUpperCase()}</small><b>{champion ? `👑 ${champion.name}` : "Chưa ghi danh"}</b><span>{champion ? `${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số` : `Chưa có dữ liệu BXH ${championRankingLabel}.`}</span></div></div>
-      <div className="profile"><MemberAvatar person={currentUser} className="small" /><div><b>{currentUser.name}</b><small>{isAdmin ? "Quản trị viên" : "Thành viên"}</small></div><button className="logout" onClick={() => { void supabase?.auth.signOut(); setActiveUser(null); }}>Đăng xuất</button></div>
+      <div className="profile"><div className="avatar small" style={{ background: currentUser.color }}>{currentUser.initials}</div><div><b>{currentUser.name}</b><small>{isAdmin ? "Quản trị viên" : "Thành viên"}</small></div><button className="logout" onClick={() => { void supabase?.auth.signOut(); setActiveUser(null); }}>Đăng xuất</button></div>
     </aside>
     <section className="content">
-      <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><MemberAvatar person={currentUser} className="welcome-avatar" rank={welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : undefined} /><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
+      <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className="welcome-avatar" style={{ background: currentUser.color }} aria-hidden="true">{welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
       {screen === "members" ? <Members members={members} /> : screen === "rules" ? <Rules /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : <>
         <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>{saturdaySessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>THAM GIA</small></div><div><b>{notAttending.length}</b><small>KHÔNG THAM GIA</small></div><div><b>{String(step + 1).padStart(2, "0")}<em>/{String(steps.length).padStart(2, "0")}</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
@@ -1060,7 +1011,7 @@ function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass
   return <aside className={`member-profile-popover profile-${rankClass}`} role="dialog" aria-modal="true" aria-label={`Thông tin hồ sơ ${member.name}`}>
     <button className="modal-close profile-close" onClick={onClose} aria-label="Đóng">×</button>
     <div className="profile-hero-card">
-      <MemberAvatar person={member} className="profile-avatar" rank={isTopRank ? rank : undefined} />
+      <span className="profile-medal" style={{ background: member.color }} aria-hidden="true">{isTopRank ? rank : member.initials}</span>
       <div className="profile-identity">
         <p>{hasRankingData && rank > 0 ? `${positionLabel} · ${achievementMonth}` : "Hồ sơ tháng hiện tại"}</p>
         <h2>{member.name}</h2>
@@ -1092,7 +1043,7 @@ function CheckIn({ members, onContinue, canSchedule, isAdmin, currentUser, isChe
   const allResponded = members.every((m) => m.responded);
   return <section className="panel checkin">
     <div className="panel-head checkin-head"><div><h2>Điểm danh thành viên</h2></div><div className="count-pill attendance-count-pill"><b>{n}</b><span>có mặt</span></div></div>
-    <div className="member-grid">{members.map((m) => <div className="member-card readonly" key={m.name}><MemberAvatar person={m} /><div><b>{m.name}{m.name === currentUser.name && <em>Bạn</em>}</b><small>Level {m.level} · {m.responded ? <span className={"attendance-status " + (m.present ? "present" : "absent")}>{m.present ? "Tham gia" : "Không tham gia"}</span> : <span className="attendance-status pending">Chưa phản hồi</span>}</small></div><span className={"attendance-mark " + (!m.responded ? "waiting" : m.present ? "yes" : "no")}>{m.responded ? (m.present ? "✓" : "×") : ""}</span></div>)}</div>
+    <div className="member-grid">{members.map((m) => <div className="member-card readonly" key={m.name}><div className="avatar" style={{ background: m.color }}>{m.initials}</div><div><b>{m.name}{m.name === currentUser.name && <em>Bạn</em>}</b><small>Level {m.level} · {m.responded ? <span className={"attendance-status " + (m.present ? "present" : "absent")}>{m.present ? "Tham gia" : "Không tham gia"}</span> : <span className="attendance-status pending">Chưa phản hồi</span>}</small></div><span className={"attendance-mark " + (!m.responded ? "waiting" : m.present ? "yes" : "no")}>{m.responded ? (m.present ? "✓" : "×") : ""}</span></div>)}</div>
     {isCheckinWindowOpen && !canSchedule && <div className="warning">{n < 5 ? "Cần tối thiểu 5 người có mặt để tạo lịch thi đấu tự động." : `Chưa có mẫu lịch phù hợp cho ${n} người (${l1} Level 1 + ${l2} Level 2).`}</div>}
     <div className="panel-foot checkin-actions-foot"><div className="attendance-actions"><button className="soft-btn" disabled={!isCheckinWindowOpen} onClick={openSelfCheckin}>{isCheckinWindowOpen ? (currentUser.responded ? "Cập nhật điểm danh của tôi" : "Điểm danh của tôi") : "Mở vào thứ Tư"}</button>{isAdmin && <button className="primary" disabled={!isCheckinWindowOpen || !canSchedule || !allResponded} onClick={onContinue}>Xác nhận điểm danh & mở chọn số <span>→</span></button>}</div></div>
   </section>;
@@ -1328,7 +1279,7 @@ function LiveRankingSnapshot({ rows, month }: { rows: RankingRow[]; month: strin
     <div className="panel-head"><div><h2>Bảng xếp hạng theo tuần</h2></div><span className="count-pill weekly-count-pill"><b>{completedMatches}</b><small>trận đã tính</small></span></div>
     <div className="rank-table live-rank-table"><div className="rank-head rank-columns"><span>Vị trí</span><span>Thành viên</span><span>Điểm</span><span>Điểm thắng</span><span>Điểm thua</span><span>Hiệu số</span><span>Số trận</span></div>{rows.length ? rows.map((row, i) => {
       const isTopRank = hasRankingData && i < 3;
-      return <div className={"rank-row rank-columns " + (isTopRank ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={isTopRank ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><MemberAvatar person={row} className="small" /><b>{row.name}</b><span className="level">L{row.level}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span><div className="rank-mobile-stats" aria-hidden="true"><span><em>Thắng</em><b>{row.pointsWon}</b></span><span><em>Thua</em><b>{row.pointsLost}</b></span><span><em>Hiệu</em><b className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</b></span><span><em>Trận</em><b>{row.matches}</b></span></div></div>;
+      return <div className={"rank-row rank-columns " + (isTopRank ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={isTopRank ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className="avatar small" style={{ background: row.color }}>{row.initials}</div><b>{row.name}</b><span className="level">L{row.level}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span><div className="rank-mobile-stats" aria-hidden="true"><span><em>Thắng</em><b>{row.pointsWon}</b></span><span><em>Thua</em><b>{row.pointsLost}</b></span><span><em>Hiệu</em><b className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</b></span><span><em>Trận</em><b>{row.matches}</b></span></div></div>;
     }) : <div className="empty-ranking">Chưa có dữ liệu BXH cho tháng hiện tại.</div>}</div>
   </section>;
 }
@@ -1360,64 +1311,6 @@ function strokeRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, wi
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
-  ctx.stroke();
-}
-function drawCanvasMemberAvatar(ctx: CanvasRenderingContext2D, person: AvatarPerson, centerX: number, centerY: number, size: number) {
-  const preset = avatarPresetFor(person);
-  const radius = size / 2;
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-  ctx.clip();
-  const bg = ctx.createLinearGradient(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
-  bg.addColorStop(0, "#fff8df");
-  bg.addColorStop(1, person.color || preset.shirt);
-  ctx.fillStyle = bg;
-  ctx.fillRect(centerX - radius, centerY - radius, size, size);
-  ctx.fillStyle = person.color || preset.shirt;
-  ctx.beginPath();
-  ctx.ellipse(centerX, centerY + radius * 0.82, radius * 0.62, radius * 0.42, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = preset.skin;
-  ctx.beginPath();
-  ctx.roundRect(centerX - radius * 0.16, centerY + radius * 0.22, radius * 0.32, radius * 0.34, radius * 0.08);
-  ctx.fill();
-  const faceWidth = radius * (preset.chubby ? 1.16 : 0.98);
-  ctx.beginPath();
-  ctx.ellipse(centerX, centerY + radius * 0.06, faceWidth * 0.5, radius * 0.58, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = preset.hair;
-  ctx.beginPath();
-  ctx.ellipse(centerX, centerY - radius * 0.44, faceWidth * 0.55, radius * 0.32, -0.1, Math.PI, 0);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(centerX - radius * 0.24, centerY - radius * 0.28, radius * 0.3, radius * 0.22, -0.35, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#17120f";
-  ctx.beginPath();
-  ctx.arc(centerX - radius * 0.18, centerY + radius * 0.02, radius * 0.035, 0, Math.PI * 2);
-  ctx.arc(centerX + radius * 0.18, centerY + radius * 0.02, radius * 0.035, 0, Math.PI * 2);
-  ctx.fill();
-  if (preset.glasses) {
-    ctx.strokeStyle = "#17120f";
-    ctx.lineWidth = Math.max(1.2, size * 0.035);
-    ctx.beginPath();
-    ctx.roundRect(centerX - radius * 0.34, centerY - radius * 0.07, radius * 0.27, radius * 0.18, radius * 0.06);
-    ctx.roundRect(centerX + radius * 0.07, centerY - radius * 0.07, radius * 0.27, radius * 0.18, radius * 0.06);
-    ctx.moveTo(centerX - radius * 0.07, centerY + radius * 0.02);
-    ctx.lineTo(centerX + radius * 0.07, centerY + radius * 0.02);
-    ctx.stroke();
-  }
-  ctx.strokeStyle = "#6f3526";
-  ctx.lineWidth = Math.max(1, size * 0.03);
-  ctx.beginPath();
-  ctx.arc(centerX, centerY + radius * 0.25, radius * 0.16, 0.15, Math.PI - 0.15);
-  ctx.stroke();
-  ctx.restore();
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
-  ctx.lineWidth = Math.max(2, size * 0.08);
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, radius - ctx.lineWidth / 2, 0, Math.PI * 2);
   ctx.stroke();
 }
 const rankingMonthForFile = (label: string) => {
@@ -1517,7 +1410,14 @@ async function downloadRankingImage(month: string, rows: RankingRow[]) {
     ctx.font = `900 18px ${bodyFont}`;
     ctx.textAlign = "center";
     ctx.fillText(String(index + 1), 84, y + 40);
-    drawCanvasMemberAvatar(ctx, row, 142, y + 33, 38);
+    ctx.fillStyle = row.color;
+    ctx.beginPath();
+    ctx.arc(142, y + 33, 19, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `900 12px ${bodyFont}`;
+    ctx.textAlign = "center";
+    ctx.fillText(row.initials, 142, y + 38);
     ctx.textAlign = "left";
     ctx.fillStyle = "#15120e";
     ctx.font = `900 24px ${headingFont}`;
@@ -1573,7 +1473,7 @@ function Ranking({ month, rows, onMonthChange, monthOptions, isAdmin, closeStatu
     </div>}
     <div className="rank-table"><div className="rank-head rank-columns"><span>Vị trí</span><span>Thành viên</span><span>Điểm</span><span>Điểm thắng</span><span>Điểm thua</span><span>Hiệu số</span><span>Số trận</span></div>{rows.length ? rows.map((row, i) => {
       const isTopRank = hasRankingData && i < 3;
-      return <div className={"rank-row rank-columns " + (isTopRank ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={isTopRank ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><MemberAvatar person={row} className="small" /><b>{row.name}</b><span className="level">L{row.level}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span><div className="rank-mobile-stats" aria-hidden="true"><span><em>Thắng</em><b>{row.pointsWon}</b></span><span><em>Thua</em><b>{row.pointsLost}</b></span><span><em>Hiệu</em><b className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</b></span><span><em>Trận</em><b>{row.matches}</b></span></div></div>;
+      return <div className={"rank-row rank-columns " + (isTopRank ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={isTopRank ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className="avatar small" style={{ background: row.color }}>{row.initials}</div><b>{row.name}</b><span className="level">L{row.level}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span><div className="rank-mobile-stats" aria-hidden="true"><span><em>Thắng</em><b>{row.pointsWon}</b></span><span><em>Thua</em><b>{row.pointsLost}</b></span><span><em>Hiệu</em><b className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</b></span><span><em>Trận</em><b>{row.matches}</b></span></div></div>;
     }) : <div className="empty-ranking">Chưa có thành viên hoạt động để hiển thị BXH {month}.</div>}</div>
   </section>;
 }
@@ -1672,7 +1572,7 @@ function Members({ members }: { members: Member[] }) {
         <div><h2>Danh sách thành viên</h2><p>Quản lý thông tin các thành viên CLB.</p></div>
         <input className="search" placeholder="⌕  Tìm tên, username, level..." value={searchTerm} onChange={(event) => { setSearchTerm(event.target.value); setOpenMenu(null); }} />
       </div>
-      <div className="member-table">{visibleMembers.length ? visibleMembers.map((member) => <div key={member.username}><div className="person"><MemberAvatar person={member} /><div><b>{member.name}</b><small>@{member.username}</small></div></div><span className="status">● Hoạt động</span><div className="member-actions"><button className="more" aria-label={`Thao tác ${member.name}`} onClick={() => setOpenMenu(openMenu === member.username ? null : member.username)}>•••</button>{openMenu === member.username && <div className="member-menu"><button onClick={() => { setEditing(member); setFullName(member.name); setOpenMenu(null); }}>Sửa thành viên</button><button className="danger-text" onClick={() => { remove(member); setOpenMenu(null); }}>Xóa thành viên</button></div>}</div></div>) : <div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div>}</div>
+      <div className="member-table">{visibleMembers.length ? visibleMembers.map((member) => <div key={member.username}><div className="person"><div className="avatar" style={{ background: member.color }}>{member.initials}</div><div><b>{member.name}</b><small>@{member.username}</small></div></div><span className="status">● Hoạt động</span><div className="member-actions"><button className="more" aria-label={`Thao tác ${member.name}`} onClick={() => setOpenMenu(openMenu === member.username ? null : member.username)}>•••</button>{openMenu === member.username && <div className="member-menu"><button onClick={() => { setEditing(member); setFullName(member.name); setOpenMenu(null); }}>Sửa thành viên</button><button className="danger-text" onClick={() => { remove(member); setOpenMenu(null); }}>Xóa thành viên</button></div>}</div></div>) : <div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div>}</div>
     </section>
     {editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={() => setEditing(null)}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><div className="editor-actions"><button className="soft-btn" onClick={() => setEditing(null)}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>Lưu</button></div></section></div>}
     {confirm && <ConfirmActionModal title={confirm.title} message={confirm.message} onCancel={() => setConfirm(null)} onConfirm={async () => { try { await confirm.action(); } finally { setConfirm(null); } }} />}
