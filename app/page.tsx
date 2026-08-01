@@ -22,6 +22,10 @@ type RankingCachePayload = {
   championRankingLabel: string;
   storedAt: number;
 };
+type AppDataCachePayload = RankingCachePayload & {
+  historySessions: HistorySession[];
+  monthCloseStatus: MonthCloseStatus | null;
+};
 type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "history";
 type SessionStatus = "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 type AttendanceRow = { choice: "pending" | "attending" | "absent"; drawn_number: number | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
@@ -534,7 +538,50 @@ export default function Home() {
     const selectedNextMonthKey = localDateKey(selectedNextMonthDate);
     const selectedFinalSaturdayKey = localDateKey(finalSaturdayOfMonth(selectedMonthDate));
     const rankingCacheKey = `aemit-ranking-cache-v3:${month}:${currentMonthKey}:${sessionMonthKey}:${previousMonthKey}`;
+    const appDataCacheKey = `aemit-app-data-cache-v1:${month}:${currentMonthKey}:${sessionMonthKey}:${previousMonthKey}`;
     const loadRanking = async () => {
+      const useAggregatedAppData = true;
+      const applyAppData = (payload: AppDataCachePayload) => {
+        setRankingRows(payload.rankingRows);
+        setCurrentRankingRows(payload.currentRankingRows);
+        setLiveRankingRows(payload.liveRankingRows);
+        setPreviousRankingRows(payload.previousRankingRows);
+        setChampionRankingRows(payload.championRankingRows);
+        setChampionRankingLabel(payload.championRankingLabel);
+        setHistorySessions(payload.historySessions);
+        setMonthCloseStatus(payload.monthCloseStatus);
+      };
+      if (useAggregatedAppData) {
+        try {
+          const cached = window.sessionStorage.getItem(appDataCacheKey);
+          if (cached) {
+            const parsed = JSON.parse(cached) as AppDataCachePayload;
+            if (Date.now() - parsed.storedAt < rankingCacheTtlMs) applyAppData(parsed);
+          }
+        } catch {
+          window.sessionStorage.removeItem(appDataCacheKey);
+        }
+        try {
+          const { data: { session: authSession } } = await client.auth.getSession();
+          const params = new URLSearchParams({ month, currentMonth: currentMonthKey, sessionMonth: sessionMonthKey, previousMonth: previousMonthKey });
+          const response = await fetch(`/api/app-data?${params.toString()}`, {
+            headers: { ...(authSession?.access_token ? { Authorization: `Bearer ${authSession.access_token}` } : {}) },
+            cache: "no-store",
+          });
+          const payload = await response.json().catch(() => ({ error: "Không thể tải dữ liệu CLB." })) as AppDataCachePayload & { error?: string };
+          if (!response.ok) {
+            setLoginError(payload.error || "Không thể tải dữ liệu CLB.");
+            return;
+          }
+          const nextPayload = { ...payload, storedAt: Date.now() } satisfies AppDataCachePayload;
+          setLoginError("");
+          applyAppData(nextPayload);
+          window.sessionStorage.setItem(appDataCacheKey, JSON.stringify(nextPayload));
+        } catch (error) {
+          setLoginError(error instanceof Error ? error.message : "Không thể tải dữ liệu CLB.");
+        }
+        return;
+      }
       const rankingSelect = "month, total_points, points_for, points_against, point_diff, matches_played, level_next_month, created_at, profiles!monthly_results_member_id_fkey(username, full_name, level)";
       const championMonthDates = recentMonthStarts(monthStartFromKey(currentMonthKey), 12);
       const championMonthKeys = championMonthDates.map(localDateKey);
@@ -657,7 +704,7 @@ export default function Home() {
       });
     };
     void loadRanking();
-  }, [activeUsername, rankingMonth, currentMonthKey, previousMonthKey, sessionMonthKey, rankingRefreshTick]);
+  }, [activeUsername, rankingMonth, currentMonthKey, previousMonthKey, sessionMonthKey, rankingRefreshTick, historyRefreshTick]);
   useEffect(() => {
     if (!supabase || !activeUsername) return;
     const client = supabase;
@@ -713,6 +760,8 @@ export default function Home() {
   };
   useEffect(() => {
     if (!supabase || !activeUsername) return;
+    const historyLoadedByAppData = Boolean(activeUsername);
+    if (historyLoadedByAppData) return;
     const client = supabase;
     const historyCacheKey = "aemit-history-cache-v2";
     const loadHistory = async () => {
