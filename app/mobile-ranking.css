@@ -309,18 +309,23 @@
   }
 
   .ranking-filter-row {
-    width: 100%;
+    width: fit-content;
+    max-width: 100%;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 148px auto;
+    justify-content: start;
     align-items: end;
     gap: 8px;
   }
 
   .ranking-filter-row label {
     min-width: 0;
+    width: 148px;
   }
 
   .ranking-toolbar .ranking-filter-row select {
+    width: 100% !important;
+    min-width: 0 !important;
     min-height: 38px;
     padding: 8px 10px;
     font-size: 12px;
@@ -530,6 +535,18 @@
 }
 
 @media (max-width: 420px) {
+  .ranking-filter-row {
+    grid-template-columns: 136px auto;
+  }
+
+  .ranking-filter-row label {
+    width: 136px;
+  }
+
+  .ranking-toolbar .ranking-filter-row select {
+    padding-inline: 9px 26px;
+  }
+
   .rank-row.rank-columns {
     grid-template-columns: 31px minmax(0, 1fr) 38px !important;
     gap: 4px 7px !important;
