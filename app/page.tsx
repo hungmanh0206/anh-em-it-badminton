@@ -9,7 +9,8 @@ type MonthCloseStatus = { monthKey: string; monthLabel: string; nextMonthKey: st
 type HistorySession = { id: string; date: string; matches: number; attendees: number };
 type SupabaseProfile = { id?: string; username?: string | null; full_name?: string | null; level?: number | string | null; role?: "admin" | "member" | string | null; is_active?: boolean | null };
 type MonthlyResultRow = { month?: string | null; total_points: number; points_for: number; points_against: number; point_diff: number; matches_played: number; level_next_month: number | null; created_at?: string | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
-type HistorySessionRow = { id: string; session_date: string; matches?: { count: number }[] | null; attendances?: { count?: number; choice?: string | null }[] | null };
+type HistoryMatchSummary = { count?: number | null; team_a?: string[] | null; team_b?: string[] | null };
+type HistorySessionRow = { id: string; session_date: string; matches?: HistoryMatchSummary[] | null; attendances?: { count?: number; choice?: string | null }[] | null };
 type MatchRow = { match_no: number; team_a: string[]; team_b: string[]; score_a: number; score_b: number };
 type SavedMatchRow = { match_no: number; score_a: number | null; score_b: number | null };
 type ProfileRow = { id: string; full_name: string };
@@ -35,6 +36,26 @@ type ParticipantCount = typeof scheduleParticipants[number];
 type MatchPattern = readonly [number, number, number, number, string?];
 type ScheduleMatch = { teamA: readonly [number, number]; teamB: readonly [number, number]; type: string };
 type ScheduleScenario = { id: string; participantCount: ParticipantCount; level1Count: number; level2Count: number; title: string; subtitle: string; badge: string; note: string; matches: ScheduleMatch[]; relaxedReason?: string };
+const matchCountFromHistoryRows = (matches: HistoryMatchSummary[] | null | undefined) => {
+  const rows = matches || [];
+  if (rows.length === 1 && typeof rows[0].count === "number" && !rows[0].team_a && !rows[0].team_b) return rows[0].count || 0;
+  return rows.length;
+};
+const attendeeCountFromMatches = (matches: HistoryMatchSummary[] | null | undefined) => {
+  const memberIds = new Set<string>();
+  (matches || []).forEach((match) => {
+    [...(match.team_a || []), ...(match.team_b || [])].forEach((memberId) => {
+      if (memberId) memberIds.add(memberId);
+    });
+  });
+  return memberIds.size;
+};
+const attendeeCountFromAttendances = (attendances: HistorySessionRow["attendances"]) => {
+  const rows = attendances || [];
+  return rows.some((row) => typeof row.choice === "string")
+    ? rows.filter((row) => row.choice === "attending").length
+    : rows[0]?.count || 0;
+};
 const screenTitles: Record<Screen, string> = {
   home: "Home",
   members: "Quản lý thành viên",
@@ -538,7 +559,7 @@ export default function Home() {
     const selectedNextMonthKey = localDateKey(selectedNextMonthDate);
     const selectedFinalSaturdayKey = localDateKey(finalSaturdayOfMonth(selectedMonthDate));
     const rankingCacheKey = `aemit-ranking-cache-v3:${month}:${currentMonthKey}:${sessionMonthKey}:${previousMonthKey}`;
-    const appDataCacheKey = `aemit-app-data-cache-v1:${month}:${currentMonthKey}:${sessionMonthKey}:${previousMonthKey}`;
+    const appDataCacheKey = `aemit-app-data-cache-v2:${month}:${currentMonthKey}:${sessionMonthKey}:${previousMonthKey}`;
     const loadRanking = async () => {
       const useAggregatedAppData = true;
       const applyAppData = (payload: AppDataCachePayload) => {
@@ -763,7 +784,7 @@ export default function Home() {
     const historyLoadedByAppData = Boolean(activeUsername);
     if (historyLoadedByAppData) return;
     const client = supabase;
-    const historyCacheKey = "aemit-history-cache-v2";
+    const historyCacheKey = "aemit-history-cache-v3";
     const loadHistory = async () => {
       try {
         const cached = window.sessionStorage.getItem(historyCacheKey);
@@ -774,14 +795,16 @@ export default function Home() {
       } catch {
         window.sessionStorage.removeItem(historyCacheKey);
       }
-      const { data } = await client.from("play_sessions").select("id, session_date, matches(count), attendances(choice)").eq("status", "completed").order("session_date", { ascending: false });
+      const { data } = await client.from("play_sessions").select("id, session_date, matches(match_no, team_a, team_b), attendances(choice)").eq("status", "completed").order("session_date", { ascending: false });
       if (!data) return;
       const nextSessions = (data as HistorySessionRow[]).map((session) => {
-        const attendanceRows = session.attendances || [];
-        const attendees = attendanceRows.some((row) => typeof row.choice === "string")
-          ? attendanceRows.filter((row) => row.choice === "attending").length
-          : attendanceRows[0]?.count || 0;
-        return { id: session.id, date: session.session_date, matches: session.matches?.[0]?.count || 0, attendees };
+        const matchAttendees = attendeeCountFromMatches(session.matches);
+        return {
+          id: session.id,
+          date: session.session_date,
+          matches: matchCountFromHistoryRows(session.matches),
+          attendees: matchAttendees || attendeeCountFromAttendances(session.attendances),
+        };
       });
       setHistorySessions(nextSessions);
       window.sessionStorage.setItem(historyCacheKey, JSON.stringify({ sessions: nextSessions, storedAt: Date.now() }));

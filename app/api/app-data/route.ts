@@ -36,10 +36,16 @@ type RankingRow = {
   placeholder?: boolean;
 };
 
+type HistoryMatchSummary = {
+  count?: number | null;
+  team_a?: string[] | null;
+  team_b?: string[] | null;
+};
+
 type HistorySessionRow = {
   id: string;
   session_date: string;
-  matches?: { count: number }[] | null;
+  matches?: HistoryMatchSummary[] | null;
   attendances?: { count?: number; choice?: string | null }[] | null;
 };
 
@@ -60,6 +66,26 @@ const finalSaturdayOfMonth = (date: Date) => {
 const recentMonthStarts = (start: Date, count: number) => Array.from({ length: count }, (_, index) => new Date(start.getFullYear(), start.getMonth() - index, 1));
 const initialsFromName = (name: string) => name.split(" ").map((part) => part[0]).slice(-2).join("");
 const profileFromJoin = (value: SupabaseProfile | SupabaseProfile[] | null | undefined) => Array.isArray(value) ? value[0] : value;
+const matchCountFromHistoryRows = (matches: HistoryMatchSummary[] | null | undefined) => {
+  const rows = matches || [];
+  if (rows.length === 1 && typeof rows[0].count === "number" && !rows[0].team_a && !rows[0].team_b) return rows[0].count || 0;
+  return rows.length;
+};
+const attendeeCountFromMatches = (matches: HistoryMatchSummary[] | null | undefined) => {
+  const memberIds = new Set<string>();
+  (matches || []).forEach((match) => {
+    [...(match.team_a || []), ...(match.team_b || [])].forEach((memberId) => {
+      if (memberId) memberIds.add(memberId);
+    });
+  });
+  return memberIds.size;
+};
+const attendeeCountFromAttendances = (attendances: HistorySessionRow["attendances"]) => {
+  const rows = attendances || [];
+  return rows.some((row) => typeof row.choice === "string")
+    ? rows.filter((row) => row.choice === "attending").length
+    : rows[0]?.count || 0;
+};
 
 const sortMonthlyResultRows = (rows: MonthlyResultRow[]) => [...rows].sort((a, b) =>
   b.total_points - a.total_points ||
@@ -198,7 +224,7 @@ export async function GET(request: Request) {
       admin.from("profiles").select("username, full_name, level").eq("is_active", true).order("full_name"),
       admin.from("play_sessions").select("status").eq("session_date", selectedFinalSaturdayKey).maybeSingle(),
       admin.from("monthly_results").select("id", { count: "exact", head: true }).eq("month", selectedNextMonthKey),
-      admin.from("play_sessions").select("id, session_date, matches(count), attendances(choice)").eq("status", "completed").order("session_date", { ascending: false }),
+      admin.from("play_sessions").select("id, session_date, matches(match_no, team_a, team_b), attendances(choice)").eq("status", "completed").order("session_date", { ascending: false }),
     ]);
 
     const queryError = rankingError || championSessionError || profileError || finalSessionError || nextMonthError || historyError;
@@ -241,15 +267,12 @@ export async function GET(request: Request) {
     }
 
     const historySessions = ((historyData || []) as HistorySessionRow[]).map((session) => {
-      const attendanceRows = session.attendances || [];
-      const attendees = attendanceRows.some((row) => typeof row.choice === "string")
-        ? attendanceRows.filter((row) => row.choice === "attending").length
-        : attendanceRows[0]?.count || 0;
+      const matchAttendees = attendeeCountFromMatches(session.matches);
       return {
         id: session.id,
         date: session.session_date,
-        matches: session.matches?.[0]?.count || 0,
-        attendees,
+        matches: matchCountFromHistoryRows(session.matches),
+        attendees: matchAttendees || attendeeCountFromAttendances(session.attendances),
       };
     });
 
