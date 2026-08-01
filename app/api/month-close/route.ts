@@ -112,7 +112,7 @@ export async function POST(request: Request) {
       b.total_points - a.total_points ||
       b.point_diff - a.point_diff ||
       b.points_for - a.points_for ||
-      b.matches_played - a.matches_played ||
+      a.matches_played - b.matches_played ||
       String(a.created_at || "").localeCompare(String(b.created_at || ""))
     );
     const assignments = sortedRows.map((row, index) => ({

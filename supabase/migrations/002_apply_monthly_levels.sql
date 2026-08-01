@@ -16,7 +16,7 @@ begin
   with ranked as (
     select member_id,
            row_number() over (
-             order by points desc, point_diff desc, points_won desc, matches_played desc
+             order by total_points desc, point_diff desc, points_for desc, matches_played asc
            ) as position
       from public.monthly_results
      where month = date_trunc('month', p_month)::date

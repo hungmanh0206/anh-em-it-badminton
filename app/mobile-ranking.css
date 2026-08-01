@@ -274,7 +274,50 @@
   display: none;
 }
 
+.ranking-toolbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.ranking-toolbar-actions > p {
+  max-width: 330px;
+  color: var(--club-ink-600, #6f6878);
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.ranking-export-btn {
+  min-height: 38px;
+  padding: 9px 14px !important;
+  border-color: rgba(255, 183, 0, 0.42) !important;
+  color: #8d5a00 !important;
+  font-weight: 900 !important;
+  white-space: nowrap;
+}
+
 @media (max-width: 800px) {
+  .ranking-toolbar-actions {
+    width: 100%;
+    align-items: stretch;
+    justify-content: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 0;
+  }
+
+  .ranking-toolbar-actions > p {
+    max-width: none;
+    text-align: left;
+  }
+
+  .ranking-export-btn {
+    width: 100%;
+  }
+
   .rank-table,
   .live-rank-table,
   .live-ranking-panel .rank-table {
