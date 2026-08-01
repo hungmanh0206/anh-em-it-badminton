@@ -3,6 +3,33 @@
   right: 36px !important;
   width: min(372px, calc(100vw - 24px)) !important;
   border-radius: 26px !important;
+  border-color: rgba(184, 118, 14, 0.16) !important;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(255, 183, 0, 0.18), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(255, 243, 201, 0.58), transparent 36%),
+    linear-gradient(145deg, #fffaf0 0%, #fffdf8 54%, #fff4d6 100%) !important;
+  box-shadow:
+    0 24px 58px rgba(45, 35, 13, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.76) !important;
+}
+
+.member-profile-popover.profile-rank-none {
+  --profile-accent: #b8760e;
+  --profile-accent-soft: rgba(255, 183, 0, 0.16);
+  --profile-glow: rgba(184, 118, 14, 0.18);
+}
+
+.member-profile-popover::before {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.82), transparent 30%),
+    linear-gradient(135deg, rgba(255, 209, 90, 0.2), rgba(255, 255, 255, 0)) !important;
+}
+
+@media (min-width: 901px) {
+  .member-profile-popover {
+    top: 36px !important;
+    right: 52px !important;
+  }
 }
 
 .profile-hero-card {
@@ -52,7 +79,11 @@
   gap: 12px !important;
   margin: 0 16px 12px !important;
   padding: 14px 15px !important;
+  border-color: rgba(184, 118, 14, 0.12) !important;
   border-radius: 19px !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 249, 233, 0.78)),
+    linear-gradient(135deg, var(--profile-accent-soft), rgba(255, 255, 255, 0)) !important;
 }
 
 .profile-score-card > div {
@@ -87,7 +118,9 @@
   align-content: space-between !important;
   gap: 6px !important;
   padding: 11px 12px !important;
+  border-color: rgba(184, 118, 14, 0.1) !important;
   border-radius: 16px !important;
+  background: rgba(255, 253, 248, 0.92) !important;
 }
 
 .member-profile-popover .profile-stat b {
