@@ -3,11 +3,12 @@
 import { type CSSProperties, useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-type Member = { name: string; initials: string; level: 1 | 2; color: string; present: boolean; username: string; password: string; role?: "admin" | "member"; responded?: boolean };
+type MemberRole = "admin" | "sub-admin" | "member";
+type Member = { name: string; initials: string; level: 1 | 2; color: string; present: boolean; username: string; password: string; role?: MemberRole; responded?: boolean };
 type RankingRow = { name: string; initials: string; level: number; points: number; pointsWon: number; pointsLost: number; pointDiff: number; matches: number; color: string; placeholder?: boolean };
 type MonthCloseStatus = { monthKey: string; monthLabel: string; nextMonthKey: string; nextMonthLabel: string; finalSessionCompleted: boolean; closed: boolean; eligible: boolean; currentRows: number; message: string };
 type HistorySession = { id: string; date: string; matches: number; attendees: number };
-type SupabaseProfile = { id?: string; username?: string | null; full_name?: string | null; level?: number | string | null; role?: "admin" | "member" | string | null; is_active?: boolean | null };
+type SupabaseProfile = { id?: string; username?: string | null; full_name?: string | null; level?: number | string | null; role?: MemberRole | string | null; description?: string | null; is_active?: boolean | null };
 type MonthlyResultRow = { month?: string | null; total_points: number; points_for: number; points_against: number; point_diff: number; matches_played: number; level_next_month: number | null; created_at?: string | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
 type HistoryMatchSummary = { count?: number | null; team_a?: string[] | null; team_b?: string[] | null };
 type HistorySessionRow = { id: string; session_date: string; matches?: HistoryMatchSummary[] | null; attendances?: { count?: number; choice?: string | null }[] | null };
@@ -31,6 +32,14 @@ type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "history"
 type SessionStatus = "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 type AttendanceRow = { choice: "pending" | "attending" | "absent"; drawn_number: number | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
 type HomeSessionPayload = { inactive?: boolean; sessionId?: string | null; sessionDate?: string; status?: SessionStatus; attendances?: AttendanceRow[]; needsReset?: boolean; error?: string };
+const subAdminRoleMarker = "[aemit-role:sub-admin]";
+const effectiveRole = (role?: string | null, description?: string | null): MemberRole => {
+  if (role === "admin") return "admin";
+  if (role === "sub-admin" || String(description || "").includes(subAdminRoleMarker)) return "sub-admin";
+  return "member";
+};
+const memberRoleLabel = (role?: MemberRole | string | null) => role === "admin" ? "Quản trị viên" : role === "sub-admin" ? "Sub-admin" : "Thành viên";
+const isScoreManagerRole = (role?: MemberRole | string | null) => role === "admin" || role === "sub-admin";
 const scheduleParticipants = [5, 6, 7, 8, 9, 10] as const;
 type ParticipantCount = typeof scheduleParticipants[number];
 type MatchPattern = readonly [number, number, number, number, string?];
@@ -291,7 +300,7 @@ export default function Home() {
       setStep(0);
       return;
     }
-    if (activeUser?.role !== "admin" && !signedInMemberPresent) {
+    if (!isScoreManagerRole(activeUser?.role) && !signedInMemberPresent) {
       setStep(0);
       return setLoginError("Bạn cần cập nhật điểm danh sang tham gia trước khi vào chọn số, lịch thi đấu hoặc xem kết quả buổi này.");
     }
@@ -326,7 +335,7 @@ export default function Home() {
       const profile = attendance ? (Array.isArray(attendance.profiles) ? attendance.profiles[0] : attendance.profiles) : null;
       const nextName = profile?.full_name || member.name;
       if (attendance?.choice === "attending" && typeof attendance.drawn_number === "number") nextDrawn[nextName] = attendance.drawn_number;
-      return attendance ? { ...member, name: nextName, level: Number(profile?.level || member.level) as 1 | 2, role: (profile?.role as "admin" | "member" | undefined) ?? member.role, present: attendance.choice === "attending", responded: attendance.choice !== "pending" } : { ...member, present: false, responded: false };
+      return attendance ? { ...member, name: nextName, level: Number(profile?.level || member.level) as 1 | 2, role: effectiveRole(profile?.role, profile?.description), present: attendance.choice === "attending", responded: attendance.choice !== "pending" } : { ...member, present: false, responded: false };
     }));
     setDrawn(nextDrawn);
   }, []);
@@ -336,10 +345,10 @@ export default function Home() {
     if (supabase) {
       const { error } = await supabase.auth.signInWithPassword({ email: `${normalized}@anhemit.club`, password });
       if (error) return setLoginError("Tên đăng nhập hoặc mật khẩu chưa đúng.");
-      const { data: profile } = await supabase.from("profiles").select("full_name, username, level, role").eq("username", normalized).single();
+      const { data: profile } = await supabase.from("profiles").select("full_name, username, level, role, description").eq("username", normalized).single();
       const localUser = members.find((m) => m.username === normalized);
       if (profile && localUser) {
-        const user = { ...localUser, name: profile.full_name, level: Number(profile.level) as 1 | 2, role: profile.role };
+        const user = { ...localUser, name: profile.full_name, level: Number(profile.level) as 1 | 2, role: effectiveRole(profile.role, profile.description) };
         setActiveUser(user); setLoginError(""); closeCheckinPopup(); return;
       }
     }
@@ -407,10 +416,10 @@ export default function Home() {
       const username = savedSession?.user.email?.split("@")[0];
       if (username) {
         const [{ data: profile }, localUser] = await Promise.all([
-          client.from("profiles").select("full_name, username, level, role").eq("username", username).single(),
+          client.from("profiles").select("full_name, username, level, role, description").eq("username", username).single(),
           Promise.resolve(initialMembers.find((member) => member.username === username)),
         ]);
-        if (profile && localUser) setActiveUser({ ...localUser, name: profile.full_name, level: Number(profile.level) as 1 | 2, role: profile.role });
+        if (profile && localUser) setActiveUser({ ...localUser, name: profile.full_name, level: Number(profile.level) as 1 | 2, role: effectiveRole(profile.role, profile.description) });
       }
       setAuthRestoring(false);
     };
@@ -465,11 +474,11 @@ export default function Home() {
     const applyPendingProfiles = (profiles: SupabaseProfile[]) => {
       setMembers((previous) => previous.map((member) => {
         const profile = profiles.find((item) => item.username === member.username);
-        return profile ? { ...member, name: profile.full_name || member.name, level: Number(profile.level || member.level) as 1 | 2, role: (profile.role as "admin" | "member" | undefined) ?? member.role, present: false, responded: false } : { ...member, present: false, responded: false };
+        return profile ? { ...member, name: profile.full_name || member.name, level: Number(profile.level || member.level) as 1 | 2, role: effectiveRole(profile.role, profile.description), present: false, responded: false } : { ...member, present: false, responded: false };
       }));
     };
     const resetHomeWorkflow = async () => {
-      const { data: profiles } = await client.from("profiles").select("username, full_name, level, role").eq("is_active", true).order("full_name");
+      const { data: profiles } = await client.from("profiles").select("username, full_name, level, role, description").eq("is_active", true).order("full_name");
       if (cancelled) return;
       applyPendingProfiles((profiles || []) as SupabaseProfile[]);
       setSessionId(null);
@@ -938,8 +947,8 @@ export default function Home() {
 
   useEffect(() => {
     if (!activeUser || screen !== "home") return;
-    const isAdminUser = activeUser.role === "admin";
-    if (!isAdminUser && !signedInMemberPresent) {
+    const isScoreManager = isScoreManagerRole(activeUser.role);
+    if (!isScoreManager && !signedInMemberPresent) {
       setStep(0);
       return;
     }
@@ -977,6 +986,7 @@ export default function Home() {
   if (!activeUser) return <Login onLogin={signIn} error={loginError} />;
   const currentUser = members.find((member) => member.username === activeUser.username) ?? activeUser;
   const isAdmin = currentUser.role === "admin";
+  const canManageScores = isScoreManagerRole(currentUser.role);
   const welcomeRows = championRankingRows.length ? championRankingRows : previousRankingRows.length ? previousRankingRows : rankingRows;
   const welcomeRank = welcomeRows.findIndex((row) => row.name === currentUser.name) + 1;
   const welcomeRankClass = welcomeRank > 0 && welcomeRank <= 3 ? `rank-${welcomeRank}` : "rank-none";
@@ -1000,18 +1010,18 @@ export default function Home() {
         <button className={screen === "rules" ? "active" : ""} onClick={() => setScreen("rules")}><span>§</span> Thể lệ</button>
       </nav>
       <div className="club-card"><span>🏆</span><b>{currentMonthLabel}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div><div className={`club-top1 ${champion ? "" : "empty"}`}><small>NHÀ VÔ ĐỊCH {championRankingLabel.toUpperCase()}</small><b>{champion ? `👑 ${champion.name}` : "Chưa ghi danh"}</b><span>{champion ? `${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số` : `Chưa có dữ liệu BXH ${championRankingLabel}.`}</span></div></div>
-      <div className="profile"><div className="avatar small" style={{ background: currentUser.color }}>{currentUser.initials}</div><div><b>{currentUser.name}</b><small>{isAdmin ? "Quản trị viên" : "Thành viên"}</small></div><button className="logout" onClick={() => { void supabase?.auth.signOut(); setActiveUser(null); }}>Đăng xuất</button></div>
+      <div className="profile"><div className="avatar small" style={{ background: currentUser.color }}>{currentUser.initials}</div><div><b>{currentUser.name}</b><small>{memberRoleLabel(currentUser.role)}</small></div><button className="logout" onClick={() => { void supabase?.auth.signOut(); setActiveUser(null); }}>Đăng xuất</button></div>
     </aside>
     <section className="content">
       <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className="welcome-avatar" style={{ background: currentUser.color }} aria-hidden="true">{welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
-      {screen === "members" ? <Members members={members} /> : screen === "rules" ? <Rules /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : <>
+      {screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : <>
         <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>{saturdaySessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>THAM GIA</small></div><div><b>{notAttending.length}</b><small>KHÔNG THAM GIA</small></div><div><b>{String(step + 1).padStart(2, "0")}<em>/{String(steps.length).padStart(2, "0")}</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
         {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
         {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} isAdmin={isAdmin} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
-        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { if (completed) { setSessionStatus("completed"); setHistoryRefreshTick((tick) => tick + 1); } setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
+        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { if (completed) { setSessionStatus("completed"); setHistoryRefreshTick((tick) => tick + 1); } setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}
     </section>
     {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}
@@ -1030,7 +1040,7 @@ function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass
   const pointsWon = achievement?.pointsWon ?? 0;
   const pointsLost = achievement?.pointsLost ?? 0;
   const matches = achievement?.matches ?? 0;
-  const roleLabel = member.role === "admin" ? "Quản trị viên" : "Thành viên";
+  const roleLabel = memberRoleLabel(member.role);
   return <aside className={`member-profile-popover profile-${rankClass}`} role="dialog" aria-modal="true" aria-label={`Thông tin hồ sơ ${member.name}`}>
     <button className="modal-close profile-close" onClick={onClose} aria-label="Đóng">×</button>
     <div className="profile-hero-card">
@@ -1112,7 +1122,7 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, curren
     {isAdmin && <div className="panel-foot draw-actions-foot"><button className="primary" disabled={!allDrawn} onClick={onContinue}>Tạo lịch thi đấu <span>→</span></button></div>}
   </section>;
 }
-function Schedule({ scenario, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, isAdmin, rankingRows, rankingMonth, onSaved }: { scenario: ScheduleScenario | null; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; isAdmin: boolean; rankingRows: RankingRow[]; rankingMonth: string; onSaved: (completed: boolean) => void }) {
+function Schedule({ scenario, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, rankingRows, rankingMonth, onSaved }: { scenario: ScheduleScenario | null; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; canManageScores: boolean; rankingRows: RankingRow[]; rankingMonth: string; onSaved: (completed: boolean) => void }) {
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
   if (!scenario) return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Lịch chỉ được tạo khi có tối thiểu 5 thành viên và đúng tổ hợp trong thư viện lịch.</p></div></div><div className="empty-ranking">Chưa có lịch phù hợp cho danh sách điểm danh hiện tại.</div></section>;
   return <>
@@ -1120,7 +1130,7 @@ function Schedule({ scenario, drawn, scores, setScores, confirmedMatches, setCon
       <div className="panel-head"><div><h2>Lịch thi đấu & nhập điểm</h2></div><span className="count-pill schedule-count-pill">{scenario.matches.length} trận</span></div>
       <div className="schedule-grid">{scenario.matches.map((match, i) => <Match match={match} i={i} namesBySlot={namesBySlot} key={i} />)}</div>
     </section>
-    <Results key={`${sessionId ?? "local"}-${scenario.id}`} matches={scenario.matches} drawn={drawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} isAdmin={isAdmin} onSaved={onSaved} />
+    <Results key={`${sessionId ?? "local"}-${scenario.id}`} matches={scenario.matches} drawn={drawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} onSaved={onSaved} />
     <LiveRankingSnapshot rows={rankingRows} month={rankingMonth} />
   </>;
 }
@@ -1252,7 +1262,7 @@ function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
 function SlotToken({ no, name, open }: { no: number; name?: string; open?: boolean }) { return <span className={`slot-token ${open ? "level-open" : `level-${slotLevel(no)}`}`}><b>{no}</b>{name && <small>{name}</small>}</span>; }
 function TeamPair({ team, namesBySlot, open }: { team: readonly [number, number]; namesBySlot?: Record<number, string>; open?: boolean }) { return <span className="team-pair"><SlotToken no={team[0]} name={namesBySlot?.[team[0]]} open={open} /><i>+</i><SlotToken no={team[1]} name={namesBySlot?.[team[1]]} open={open} /></span>; }
 function Match({ match, i, namesBySlot }: { match: ScheduleMatch; i: number; namesBySlot?: Record<number, string> }) { const open = match.type === "MỞ"; return <article className="match schedule-match-card"><div className="match-top"><b>TRẬN {String(i + 1).padStart(2, "0")}</b></div><div className="teams"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={open} /><strong>VS</strong><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={open} /></div></article>; }
-function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, isAdmin, onSaved }: { matches: ScheduleMatch[]; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; isAdmin: boolean; onSaved: (completed: boolean) => void }) {
+function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, onSaved }: { matches: ScheduleMatch[]; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; canManageScores: boolean; onSaved: (completed: boolean) => void }) {
   const [editing, setEditing] = useState<Record<number, boolean>>({});
   const [saving, setSaving] = useState<number | null>(null);
   const [notice, setNotice] = useState("");
@@ -1285,13 +1295,13 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
   };
   return <section className="panel result-entry-panel"><div className="panel-head"><div><h2>Điểm số từng trận</h2></div><span className="count-pill match-count-pill"><b>{confirmedCount}</b><small>/{matches.length} trận</small></span></div>{notice && <div className="warning result-notice">{notice}</div>}<div className="result-list">{matches.map((match, i) => {
     const confirmed = Boolean(confirmedMatches[i]);
-    const locked = !isAdmin || (confirmed && !editing[i]);
+    const locked = !canManageScores || (confirmed && !editing[i]);
     return <div className={"result-row schedule-result-row match-result-row " + (confirmed ? "confirmed" : "")} key={i}>
       <div className="match-result-meta"><b>{i + 1}</b>{confirmed && <span aria-label="Đã xác nhận">✓</span>}</div>
       <div className="match-result-team match-result-team-a"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
       <div className="match-score-controls"><input disabled={locked} aria-label={`Điểm đội A trận ${i + 1}`} value={scores[i]?.[0] ?? ""} onChange={e => setScores({ ...scores, [i]: [e.target.value, scores[i]?.[1] ?? ""] })}/><em>:</em><input disabled={locked} aria-label={`Điểm đội B trận ${i + 1}`} value={scores[i]?.[1] ?? ""} onChange={e => setScores({ ...scores, [i]: [scores[i]?.[0] ?? "", e.target.value] })}/></div>
       <div className="match-result-team match-result-team-b"><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
-      <div className="result-actions">{isAdmin && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" onClick={() => setEditing({ ...editing, [i]: true })}><span className="result-action-icon" aria-hidden="true">✎</span><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving === i} onClick={() => void saveMatch(match, i)}><span className="result-action-icon" aria-hidden="true">{saving === i ? "…" : confirmed ? "✓" : "✓"}</span><span className="result-action-text">{saving === i ? "Đang lưu…" : confirmed ? "Lưu lại" : "Xác nhận"}</span></button>)}</div>
+      <div className="result-actions">{canManageScores && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" onClick={() => setEditing({ ...editing, [i]: true })}><span className="result-action-icon" aria-hidden="true">✎</span><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving === i} onClick={() => void saveMatch(match, i)}><span className="result-action-icon" aria-hidden="true">{saving === i ? "…" : confirmed ? "✓" : "✓"}</span><span className="result-action-text">{saving === i ? "Đang lưu…" : confirmed ? "Lưu lại" : "Xác nhận"}</span></button>)}</div>
     </div>;
   })}</div></section>;
 }
@@ -1548,11 +1558,13 @@ function History({ sessions, currentMonth }: { sessions: HistorySession[]; curre
     {detail && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="history-detail"><button className="modal-close" onClick={() => setDetail(null)}>×</button><p className="eyebrow">KẾT QUẢ THI ĐẤU</p><h2>{detail.title}</h2><div className="history-match-list">{detail.rows.map((match) => <article className="history-match-row" key={match.no}><span className="history-match-index">Trận {match.no}</span><span className="history-team history-team-a">{match.a}</span><strong className="history-score"><span>{match.sa}</span><i>:</i><span>{match.sb}</span></strong><span className="history-team history-team-b">{match.b}</span></article>)}</div></section></div>}
   </>;
 }
-function Members({ members }: { members: Member[] }) {
+function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated: (username: string, role: MemberRole) => void }) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [editing, setEditing] = useState<Member | null>(null);
   const [fullName, setFullName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [roleNotice, setRoleNotice] = useState("");
+  const [roleSaving, setRoleSaving] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<{ title: string; message: string; action: () => Promise<void> } | null>(null);
   const normalizeSearch = (value: string) => value
     .normalize("NFD")
@@ -1562,7 +1574,7 @@ function Members({ members }: { members: Member[] }) {
     .trim();
   const normalizedSearch = normalizeSearch(searchTerm);
   const visibleMembers = normalizedSearch
-    ? members.filter((member) => normalizeSearch(`${member.name} ${member.username} ${member.initials} level ${member.level} l${member.level}`).includes(normalizedSearch))
+    ? members.filter((member) => normalizeSearch(`${member.name} ${member.username} ${member.initials} ${memberRoleLabel(member.role)} level ${member.level} l${member.level}`).includes(normalizedSearch))
     : members;
   useEffect(() => {
     const closeOutside = (event: PointerEvent) => {
@@ -1585,6 +1597,32 @@ function Members({ members }: { members: Member[] }) {
     if (supabase) { const { error } = await supabase.rpc("admin_remove_member", { p_username: member.username }); if (error) { window.alert(error.message); return; } }
     window.location.reload();
   }});
+  const updateRole = (member: Member, nextRole: "member" | "sub-admin") => {
+    if (member.username === "manh" || member.role === "admin") return;
+    const currentRole = effectiveRole(member.role);
+    if (currentRole === nextRole) return;
+    setConfirm({ title: "Xác nhận phân quyền", message: `Đổi quyền của ${member.name} thành ${memberRoleLabel(nextRole)}?`, action: async () => {
+      setRoleSaving(member.username);
+      setRoleNotice("");
+      try {
+        if (!supabase) throw new Error("Chưa có Supabase để lưu phân quyền.");
+        const { data: { session } } = await supabase.auth.getSession();
+        const response = await fetch("/api/member-role", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+          body: JSON.stringify({ username: member.username, role: nextRole }),
+        });
+        const payload = await response.json().catch(() => ({ error: "Không thể lưu phân quyền." })) as { error?: string; role?: MemberRole };
+        if (!response.ok) throw new Error(payload.error || "Không thể lưu phân quyền.");
+        onRoleUpdated(member.username, payload.role || nextRole);
+        setRoleNotice(`Đã cập nhật ${member.name} thành ${memberRoleLabel(payload.role || nextRole)}.`);
+      } catch (error) {
+        window.alert(error instanceof Error ? error.message : "Không thể lưu phân quyền.");
+      } finally {
+        setRoleSaving(null);
+      }
+    }});
+  };
   return <>
     <section className="member-summary">
       <div><b>{members.length}</b><span>Tổng thành viên</span></div>
@@ -1593,9 +1631,24 @@ function Members({ members }: { members: Member[] }) {
     <section className="panel">
       <div className="panel-head">
         <div><h2>Danh sách thành viên</h2><p>Quản lý thông tin các thành viên CLB.</p></div>
-        <input className="search" placeholder="⌕  Tìm tên, username, level..." value={searchTerm} onChange={(event) => { setSearchTerm(event.target.value); setOpenMenu(null); }} />
+        <input className="search" placeholder="⌕  Tìm tên, username, quyền..." value={searchTerm} onChange={(event) => { setSearchTerm(event.target.value); setOpenMenu(null); }} />
       </div>
-      <div className="member-table">{visibleMembers.length ? visibleMembers.map((member) => <div key={member.username}><div className="person"><div className="avatar" style={{ background: member.color }}>{member.initials}</div><div><b>{member.name}</b><small>@{member.username}</small></div></div><span className="status">● Hoạt động</span><div className="member-actions"><button className="more" aria-label={`Thao tác ${member.name}`} onClick={() => setOpenMenu(openMenu === member.username ? null : member.username)}>•••</button>{openMenu === member.username && <div className="member-menu"><button onClick={() => { setEditing(member); setFullName(member.name); setOpenMenu(null); }}>Sửa thành viên</button><button className="danger-text" onClick={() => { remove(member); setOpenMenu(null); }}>Xóa thành viên</button></div>}</div></div>) : <div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div>}</div>
+      {roleNotice && <div className="member-role-notice">{roleNotice}</div>}
+      <div className="member-table">{visibleMembers.length ? visibleMembers.map((member) => {
+        const role = effectiveRole(member.role);
+        const roleLocked = role === "admin" || member.username === "manh";
+        return <div key={member.username}>
+          <div className="person"><div className="avatar" style={{ background: member.color }}>{member.initials}</div><div><b>{member.name}</b><small>@{member.username}</small></div></div>
+          <span className="status">● Hoạt động</span>
+          <div className="member-role-control">
+            {roleLocked ? <span className="member-role-badge admin">Admin</span> : <select className="member-role-select" value={role === "sub-admin" ? "sub-admin" : "member"} disabled={roleSaving === member.username} onChange={(event) => updateRole(member, event.target.value as "member" | "sub-admin")} aria-label={`Phân quyền ${member.name}`}>
+              <option value="member">Thành viên</option>
+              <option value="sub-admin">Sub-admin</option>
+            </select>}
+          </div>
+          <div className="member-actions"><button className="more" aria-label={`Thao tác ${member.name}`} onClick={() => setOpenMenu(openMenu === member.username ? null : member.username)}>•••</button>{openMenu === member.username && <div className="member-menu"><button onClick={() => { setEditing(member); setFullName(member.name); setOpenMenu(null); }}>Sửa thành viên</button>{!roleLocked && <button className="danger-text" onClick={() => { remove(member); setOpenMenu(null); }}>Xóa thành viên</button>}</div>}</div>
+        </div>;
+      }) : <div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div>}</div>
     </section>
     {editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={() => setEditing(null)}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><div className="editor-actions"><button className="soft-btn" onClick={() => setEditing(null)}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>Lưu</button></div></section></div>}
     {confirm && <ConfirmActionModal title={confirm.title} message={confirm.message} onCancel={() => setConfirm(null)} onConfirm={async () => { try { await confirm.action(); } finally { setConfirm(null); } }} />}

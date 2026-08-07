@@ -291,7 +291,7 @@ async function ensureAttendanceRows(admin: SupabaseClient, sessionId: string) {
 async function loadSessionPayload(admin: SupabaseClient, session: PlaySession) {
   const [{ data: refreshedSession, error: sessionError }, { data: attendances, error: attendanceError }] = await Promise.all([
     admin.from("play_sessions").select("status").eq("id", session.id).single(),
-    admin.from("attendances").select("choice, drawn_number, profiles!attendances_member_id_fkey(username, full_name, level, role)").eq("session_id", session.id),
+    admin.from("attendances").select("choice, drawn_number, profiles!attendances_member_id_fkey(username, full_name, level, role, description)").eq("session_id", session.id),
   ]);
   if (sessionError) throw sessionError;
   if (attendanceError) throw attendanceError;

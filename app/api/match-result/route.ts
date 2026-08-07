@@ -1,4 +1,4 @@
-import { jsonError, requireAdmin } from "@/lib/supabase-admin";
+import { jsonError, requireScoreManager } from "@/lib/supabase-admin";
 
 type Body = {
   sessionId?: string;
@@ -42,7 +42,7 @@ const assertScore = (score: unknown) => Number.isInteger(score) && Number(score)
 
 export async function POST(request: Request) {
   try {
-    const { admin } = await requireAdmin(request);
+    const { admin } = await requireScoreManager(request);
     const body = await request.json() as Body;
     if (!body.sessionId || !Number.isInteger(body.matchNo) || !Array.isArray(body.teamA) || !Array.isArray(body.teamB)) {
       return Response.json({ error: "Thiếu dữ liệu trận đấu." }, { status: 400 });

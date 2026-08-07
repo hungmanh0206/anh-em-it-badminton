@@ -18,6 +18,7 @@ import "./flow-responsive.css";
 import "./mobile-landscape.css";
 import "./draw-wheel-polish.css";
 import "./profile-popover-spacing.css";
+import "./member-role.css";
 
 export const metadata: Metadata = {
   title: "Anh Em IT — Quản lý CLB Cầu lông",

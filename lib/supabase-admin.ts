@@ -1,5 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
+export type MemberRole = "admin" | "sub-admin" | "member";
+export const SUB_ADMIN_ROLE_MARKER = "[aemit-role:sub-admin]";
+
 export class ApiError extends Error {
   status: number;
 
@@ -20,10 +23,17 @@ export function createSupabaseAdmin() {
 
 type AuthProfile = {
   id: string;
-  role: "admin" | "member" | string;
+  role: MemberRole;
   full_name?: string | null;
   username?: string | null;
   level?: "1" | "2" | number | string | null;
+  description?: string | null;
+};
+
+export const effectiveMemberRole = (role?: string | null, description?: string | null): MemberRole => {
+  if (role === "admin") return "admin";
+  if (role === "sub-admin" || String(description || "").includes(SUB_ADMIN_ROLE_MARKER)) return "sub-admin";
+  return "member";
 };
 
 export async function requireUser(request: Request) {
@@ -34,15 +44,27 @@ export async function requireUser(request: Request) {
   const { data: authData, error: authError } = await admin.auth.getUser(token);
   if (authError || !authData.user) throw new ApiError(401, "Phiên đăng nhập không hợp lệ.");
 
-  const { data: profile, error: profileError } = await admin.from("profiles").select("id, role, full_name, username, level").eq("id", authData.user.id).single();
+  const { data: profile, error: profileError } = await admin.from("profiles").select("id, role, full_name, username, level, description").eq("id", authData.user.id).single();
   if (profileError || !profile) throw new ApiError(403, "Không tìm thấy hồ sơ người dùng.");
 
-  return { admin, user: authData.user, profile: profile as AuthProfile };
+  const normalizedProfile = {
+    ...profile,
+    role: effectiveMemberRole(profile.role, profile.description),
+  } as AuthProfile;
+
+  return { admin, user: authData.user, profile: normalizedProfile };
 }
 
 export async function requireAdmin(request: Request) {
   const context = await requireUser(request);
   if (context.profile.role !== "admin") throw new ApiError(403, "Chỉ Admin được thực hiện thao tác này.");
+
+  return context;
+}
+
+export async function requireScoreManager(request: Request) {
+  const context = await requireUser(request);
+  if (!["admin", "sub-admin"].includes(context.profile.role)) throw new ApiError(403, "Chỉ Admin hoặc Sub-admin được nhập, sửa và xác nhận điểm.");
 
   return context;
 }
