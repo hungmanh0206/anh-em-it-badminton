@@ -69,6 +69,13 @@ export async function requireScoreManager(request: Request) {
   return context;
 }
 
+export async function requireSessionManager(request: Request) {
+  const context = await requireUser(request);
+  if (!["admin", "sub-admin"].includes(context.profile.role)) throw new ApiError(403, "Chỉ Admin hoặc Sub-admin được điều phối buổi chơi.");
+
+  return context;
+}
+
 export function jsonError(error: unknown) {
   if (error instanceof ApiError) return Response.json({ error: error.message }, { status: error.status });
   return Response.json({ error: error instanceof Error ? error.message : "Có lỗi xảy ra." }, { status: 500 });

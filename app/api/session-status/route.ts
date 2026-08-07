@@ -1,4 +1,4 @@
-import { jsonError, requireAdmin } from "@/lib/supabase-admin";
+import { jsonError, requireSessionManager } from "@/lib/supabase-admin";
 
 type Body = {
   sessionId?: string;
@@ -38,7 +38,7 @@ const hasScheduleScenario = (participantCount: number, level1Count: number) =>
 
 export async function POST(request: Request) {
   try {
-    const { admin } = await requireAdmin(request);
+    const { admin } = await requireSessionManager(request);
     const body = await request.json() as Body;
     if (!body.sessionId || body.status !== "scheduled") return Response.json({ error: "Trạng thái phiên không hợp lệ." }, { status: 400 });
 

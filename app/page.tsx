@@ -345,7 +345,7 @@ export default function Home() {
       setStep(0);
       return setLoginError("Bạn cần cập nhật điểm danh sang tham gia trước khi vào chọn số, lịch thi đấu hoặc xem kết quả buổi này.");
     }
-    if (next > step && activeUser?.role !== "admin") {
+    if (next > step && !isScoreManagerRole(activeUser?.role)) {
       if (next === 1 && drawOpen) return setStep(1);
       if (next === 2 && scheduleOpen && currentScheduleScenario) return setStep(2);
       return;
@@ -985,16 +985,56 @@ export default function Home() {
       }
     }
     setSessionStatus("scheduled");
+    writeBrowserCache(homeSessionCacheKey(sessionDateKey), {
+      sessionId,
+      sessionDate: sessionDateKey,
+      status: "scheduled",
+      attendances: members.map((member) => ({
+        choice: member.present ? "attending" : member.responded ? "absent" : "pending",
+        drawn_number: typeof drawn[member.name] === "number" ? drawn[member.name] : null,
+        profiles: {
+          username: member.username,
+          full_name: member.name,
+          level: member.level,
+          role: member.role,
+        },
+      })),
+      storedAt: Date.now(),
+    });
     setStep(2);
   };
   const confirmAttendanceAndOpenDraw = async () => {
     if (supabase) {
       if (!sessionId) return setLoginError("Phiên điểm danh chưa sẵn sàng. Vui lòng tải lại trang hoặc thử lại sau vài giây.");
-      const { error } = await supabase.rpc("confirm_attendance", { p_session_id: sessionId });
-      if (error) return setLoginError(error.message);
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      const response = await fetch("/api/confirm-attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(authSession?.access_token ? { Authorization: `Bearer ${authSession.access_token}` } : {}) },
+        body: JSON.stringify({ sessionId }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({ error: "Không thể xác nhận điểm danh." }));
+        return setLoginError(payload.error || "Không thể xác nhận điểm danh.");
+      }
     }
     setLoginError("");
     setSessionStatus("checked_in");
+    writeBrowserCache(homeSessionCacheKey(sessionDateKey), {
+      sessionId,
+      sessionDate: sessionDateKey,
+      status: "checked_in",
+      attendances: members.map((member) => ({
+        choice: member.present ? "attending" : member.responded ? "absent" : "pending",
+        drawn_number: typeof drawn[member.name] === "number" ? drawn[member.name] : null,
+        profiles: {
+          username: member.username,
+          full_name: member.name,
+          level: member.level,
+          role: member.role,
+        },
+      })),
+      storedAt: Date.now(),
+    });
     setStep(1);
   };
 
@@ -1039,7 +1079,8 @@ export default function Home() {
   if (!activeUser) return <Login onLogin={signIn} error={loginError} />;
   const currentUser = members.find((member) => member.username === activeUser.username) ?? activeUser;
   const isAdmin = currentUser.role === "admin";
-  const canManageScores = isScoreManagerRole(currentUser.role);
+  const canManageSession = isScoreManagerRole(currentUser.role);
+  const canManageScores = canManageSession;
   const welcomeRows = championRankingRows.length ? championRankingRows : previousRankingRows.length ? previousRankingRows : rankingRows;
   const welcomeRank = welcomeRows.findIndex((row) => row.name === currentUser.name) + 1;
   const welcomeRankClass = welcomeRank > 0 && welcomeRank <= 3 ? `rank-${welcomeRank}` : "rank-none";
@@ -1072,8 +1113,8 @@ export default function Home() {
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
         {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
-        {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} isAdmin={isAdmin} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
-        {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} isAdmin={isAdmin} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
+        {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
+        {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
         {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { if (completed) { setSessionStatus("completed"); setHistoryRefreshTick((tick) => tick + 1); } setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}
     </section>
@@ -1122,7 +1163,7 @@ function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass
   </aside>;
 }
 
-function CheckIn({ members, onContinue, canSchedule, isAdmin, currentUser, isCheckinWindowOpen, openSelfCheckin }: { members: Member[]; setMembers: (m: Member[]) => void; onContinue: () => void; canSchedule: boolean; isAdmin: boolean; currentUser: Member; isCheckinWindowOpen: boolean; isCheckinTestMode: boolean; openSelfCheckin: () => void }) {
+function CheckIn({ members, onContinue, canSchedule, canManageSession, currentUser, isCheckinWindowOpen, openSelfCheckin }: { members: Member[]; setMembers: (m: Member[]) => void; onContinue: () => void; canSchedule: boolean; canManageSession: boolean; currentUser: Member; isCheckinWindowOpen: boolean; isCheckinTestMode: boolean; openSelfCheckin: () => void }) {
   const n = members.filter((m) => m.present).length;
   const l1 = members.filter((m) => m.present && m.level === 1).length;
   const l2 = n - l1;
@@ -1131,10 +1172,10 @@ function CheckIn({ members, onContinue, canSchedule, isAdmin, currentUser, isChe
     <div className="panel-head checkin-head"><div><h2>Điểm danh thành viên</h2></div><div className="count-pill attendance-count-pill"><b>{n}</b><span>có mặt</span></div></div>
     <div className="member-grid">{members.map((m) => <div className="member-card readonly" key={m.name}><div className="avatar" style={{ background: m.color }}>{m.initials}</div><div><b>{m.name}{m.name === currentUser.name && <em>Bạn</em>}</b><small>Level {m.level} · {m.responded ? <span className={"attendance-status " + (m.present ? "present" : "absent")}>{m.present ? "Tham gia" : "Không tham gia"}</span> : <span className="attendance-status pending">Chưa phản hồi</span>}</small></div><span className={"attendance-mark " + (!m.responded ? "waiting" : m.present ? "yes" : "no")}>{m.responded ? (m.present ? "✓" : "×") : ""}</span></div>)}</div>
     {isCheckinWindowOpen && !canSchedule && <div className="warning">{n < 5 ? "Cần tối thiểu 5 người có mặt để tạo lịch thi đấu tự động." : `Chưa có mẫu lịch phù hợp cho ${n} người (${l1} Level 1 + ${l2} Level 2).`}</div>}
-    <div className="panel-foot checkin-actions-foot"><div className="attendance-actions"><button className="soft-btn" disabled={!isCheckinWindowOpen} onClick={openSelfCheckin}>{isCheckinWindowOpen ? (currentUser.responded ? "Cập nhật điểm danh của tôi" : "Điểm danh của tôi") : "Mở vào thứ Tư"}</button>{isAdmin && <button className="primary" disabled={!isCheckinWindowOpen || !canSchedule || !allResponded} onClick={onContinue}>Xác nhận điểm danh & mở chọn số <span>→</span></button>}</div></div>
+    <div className="panel-foot checkin-actions-foot"><div className="attendance-actions"><button className="soft-btn" disabled={!isCheckinWindowOpen} onClick={openSelfCheckin}>{isCheckinWindowOpen ? (currentUser.responded ? "Cập nhật điểm danh của tôi" : "Điểm danh của tôi") : "Mở vào thứ Tư"}</button>{canManageSession && <button className="primary" disabled={!isCheckinWindowOpen || !canSchedule || !allResponded} onClick={onContinue}>Xác nhận điểm danh & mở chọn số <span>→</span></button>}</div></div>
   </section>;
 }
-function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, currentUser, isAdmin, onContinue }: { members: Member[]; drawn: Record<string, number>; allDrawn: boolean; drawSelf: () => void; spinning: boolean; spinTarget: number | null; currentUser: Member; isAdmin: boolean; onContinue: () => void }) {
+function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, currentUser, canManageSession, onContinue }: { members: Member[]; drawn: Record<string, number>; allDrawn: boolean; drawSelf: () => void; spinning: boolean; spinTarget: number | null; currentUser: Member; canManageSession: boolean; onContinue: () => void }) {
   const participantCount = members.length;
   const level1Count = members.filter((member) => member.level === 1).length;
   const level2Count = members.length - level1Count;
@@ -1172,7 +1213,7 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, curren
       <div className="draw-copy"><span className="tag draw-range-tag">Chọn số · {rangeLabel}</span><h2>{isWheelSpinning ? "Vòng quay đang chọn số…" : isHoldingSlot ? "Đang giữ số hợp lệ…" : mine ? "Bạn đã chọn xong" : currentUser.present ? (autoLastSlot ? "Bạn là người cuối trong dải số này" : "Đến lượt bạn chọn số") : "Bạn chưa điểm danh tham gia"}</h2><button className="primary" disabled={spinning || !currentUser.present || Boolean(mine)} onClick={drawSelf}>{spinning ? "Đang xử lý…" : mine ? "Đã có số" : autoLastSlot ? "Nhận số cuối cùng" : "Chọn số của tôi"} <span>↻</span></button></div>
     </div>
     <div className="draw-list draw-roster">{entries.map(({ member, no }) => <div className={no ? "drawn" : "pending"} key={member.username}><span>{member.name}</span><b>{no ?? "—"}</b><small>Level {member.level}</small></div>)}</div>
-    {isAdmin && <div className="panel-foot draw-actions-foot"><button className="primary" disabled={!allDrawn} onClick={onContinue}>Tạo lịch thi đấu <span>→</span></button></div>}
+    {canManageSession && <div className="panel-foot draw-actions-foot"><button className="primary" disabled={!allDrawn} onClick={onContinue}>Tạo lịch thi đấu <span>→</span></button></div>}
   </section>;
 }
 function Schedule({ scenario, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, rankingRows, rankingMonth, onSaved }: { scenario: ScheduleScenario | null; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; canManageScores: boolean; rankingRows: RankingRow[]; rankingMonth: string; onSaved: (completed: boolean) => void }) {
