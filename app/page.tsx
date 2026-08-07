@@ -187,6 +187,47 @@ const rankingSort = (a: RankingRow, b: RankingRow) =>
   a.matches - b.matches ||
   a.name.localeCompare(b.name, "vi");
 const rankingCacheTtlMs = 5 * 60 * 1000;
+const instantCacheTtlMs = 24 * 60 * 60 * 1000;
+const homeSessionCacheTtlMs = 6 * 60 * 60 * 1000;
+const homeSessionCacheKey = (sessionKey: string) => `aemit-home-session-cache-v2:${sessionKey}`;
+type TimedCachePayload = { storedAt?: number };
+type CachedHomeSessionPayload = HomeSessionPayload & { storedAt: number };
+const readBrowserCache = <T extends TimedCachePayload>(key: string, maxAgeMs: number): T | null => {
+  if (typeof window === "undefined") return null;
+  for (const storage of [window.sessionStorage, window.localStorage]) {
+    try {
+      const raw = storage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw) as T;
+      if (!parsed.storedAt || Date.now() - parsed.storedAt > maxAgeMs) continue;
+      return parsed;
+    } catch {
+      storage.removeItem(key);
+    }
+  }
+  return null;
+};
+const writeBrowserCache = <T extends TimedCachePayload>(key: string, payload: T) => {
+  if (typeof window === "undefined") return;
+  const nextPayload = { ...payload, storedAt: payload.storedAt ?? Date.now() };
+  for (const storage of [window.sessionStorage, window.localStorage]) {
+    try {
+      storage.setItem(key, JSON.stringify(nextPayload));
+    } catch {
+      // Storage can be unavailable in private browsing; fresh network data still works.
+    }
+  }
+};
+const removeBrowserCache = (key: string) => {
+  if (typeof window === "undefined") return;
+  for (const storage of [window.sessionStorage, window.localStorage]) {
+    try {
+      storage.removeItem(key);
+    } catch {
+      // Ignore storage cleanup errors.
+    }
+  }
+};
 const ENABLE_TEST_FLOW = process.env.NEXT_PUBLIC_ENABLE_TEST_FLOW === "true";
 const TEMP_RESET_HOME_ATTENDANCE_FOR_TEST = false;
 const initialMembers: Member[] = [
@@ -345,12 +386,18 @@ export default function Home() {
     if (supabase) {
       const { error } = await supabase.auth.signInWithPassword({ email: `${normalized}@anhemit.club`, password });
       if (error) return setLoginError("Tên đăng nhập hoặc mật khẩu chưa đúng.");
-      const { data: profile } = await supabase.from("profiles").select("full_name, username, level, role, description").eq("username", normalized).single();
       const localUser = members.find((m) => m.username === normalized);
+      if (localUser) {
+        setActiveUser(localUser);
+        setLoginError("");
+        closeCheckinPopup();
+      }
+      const { data: profile } = await supabase.from("profiles").select("full_name, username, level, role, description").eq("username", normalized).single();
       if (profile && localUser) {
         const user = { ...localUser, name: profile.full_name, level: Number(profile.level) as 1 | 2, role: effectiveRole(profile.role, profile.description) };
         setActiveUser(user); setLoginError(""); closeCheckinPopup(); return;
       }
+      if (localUser) return;
     }
     const user = members.find((m) => m.username === normalized && m.password === password);
     if (!user) return setLoginError("Tên đăng nhập hoặc mật khẩu chưa đúng.");
@@ -369,6 +416,7 @@ export default function Home() {
         });
         const payload = await response.json().catch(() => ({ error: "Không thể lưu điểm danh." })) as HomeSessionPayload;
         if (!response.ok) return setLoginError(payload.error || "Không thể lưu điểm danh.");
+        writeBrowserCache(homeSessionCacheKey(sessionDateKey), { ...payload, storedAt: Date.now() });
         applyHomeSessionPayload(payload);
         if (payload.needsReset) {
           setDrawn({});
@@ -415,10 +463,12 @@ export default function Home() {
       const { data: { session: savedSession } } = await client.auth.getSession();
       const username = savedSession?.user.email?.split("@")[0];
       if (username) {
-        const [{ data: profile }, localUser] = await Promise.all([
-          client.from("profiles").select("full_name, username, level, role, description").eq("username", username).single(),
-          Promise.resolve(initialMembers.find((member) => member.username === username)),
-        ]);
+        const localUser = initialMembers.find((member) => member.username === username);
+        if (localUser) {
+          setActiveUser(localUser);
+          setAuthRestoring(false);
+        }
+        const { data: profile } = await client.from("profiles").select("full_name, username, level, role, description").eq("username", username).single();
         if (profile && localUser) setActiveUser({ ...localUser, name: profile.full_name, level: Number(profile.level) as 1 | 2, role: effectiveRole(profile.role, profile.description) });
       }
       setAuthRestoring(false);
@@ -471,6 +521,7 @@ export default function Home() {
     if (!supabase || !activeUsername) return;
     const client = supabase;
     let cancelled = false;
+    const cacheKey = homeSessionCacheKey(sessionDateKey);
     const applyPendingProfiles = (profiles: SupabaseProfile[]) => {
       setMembers((previous) => previous.map((member) => {
         const profile = profiles.find((item) => item.username === member.username);
@@ -488,13 +539,20 @@ export default function Home() {
       setConfirmedMatches({});
       setStep(0);
       setAttendanceSynced(true);
+      removeBrowserCache(cacheKey);
       if (checkinPopupMode === "auto") closeCheckinPopup();
     };
     if (!shouldLoadHomeSession) {
       void resetHomeWorkflow();
       return () => { cancelled = true; };
     }
-    setAttendanceSynced(false);
+    const cachedHomeSession = readBrowserCache<CachedHomeSessionPayload>(cacheKey, homeSessionCacheTtlMs);
+    if (cachedHomeSession?.sessionId && !cachedHomeSession.inactive) {
+      applyHomeSessionPayload(cachedHomeSession);
+      setAttendanceSynced(true);
+    } else {
+      setAttendanceSynced(false);
+    }
     const loadLiveAttendance = async () => {
       try {
         const { data: { session: authSession } } = await client.auth.getSession();
@@ -508,9 +566,11 @@ export default function Home() {
           return;
         }
         if (payload.inactive || !payload.sessionId) {
+          removeBrowserCache(cacheKey);
           await resetHomeWorkflow();
           return;
         }
+        writeBrowserCache(cacheKey, { ...payload, storedAt: Date.now() });
         applyHomeSessionPayload(payload);
       } finally {
         if (!cancelled) setAttendanceSynced(true);
@@ -582,15 +642,8 @@ export default function Home() {
         setMonthCloseStatus(payload.monthCloseStatus);
       };
       if (useAggregatedAppData) {
-        try {
-          const cached = window.sessionStorage.getItem(appDataCacheKey);
-          if (cached) {
-            const parsed = JSON.parse(cached) as AppDataCachePayload;
-            if (Date.now() - parsed.storedAt < rankingCacheTtlMs) applyAppData(parsed);
-          }
-        } catch {
-          window.sessionStorage.removeItem(appDataCacheKey);
-        }
+        const cached = readBrowserCache<AppDataCachePayload>(appDataCacheKey, instantCacheTtlMs);
+        if (cached) applyAppData(cached);
         try {
           const { data: { session: authSession } } = await client.auth.getSession();
           const params = new URLSearchParams({ month, currentMonth: currentMonthKey, sessionMonth: sessionMonthKey, previousMonth: previousMonthKey });
@@ -606,7 +659,7 @@ export default function Home() {
           const nextPayload = { ...payload, storedAt: Date.now() } satisfies AppDataCachePayload;
           setLoginError("");
           applyAppData(nextPayload);
-          window.sessionStorage.setItem(appDataCacheKey, JSON.stringify(nextPayload));
+          writeBrowserCache(appDataCacheKey, nextPayload);
         } catch (error) {
           setLoginError(error instanceof Error ? error.message : "Không thể tải dữ liệu CLB.");
         }
