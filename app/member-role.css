@@ -1,5 +1,5 @@
 .member-table > div:not(.empty-ranking) {
-  grid-template-columns: minmax(220px, 1fr) 120px 150px 34px;
+  grid-template-columns: minmax(220px, 1fr) 130px 34px;
   gap: 12px;
 }
 
@@ -64,9 +64,32 @@
   font-size: 12px;
 }
 
+.member-role-field {
+  margin-top: 16px;
+}
+
+.member-role-field small {
+  color: #756f62;
+  font-size: 11px;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+.member-role-editor-select,
+.member-role-editor-badge {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  border-radius: 13px;
+}
+
+.member-role-editor-select {
+  padding-left: 13px;
+}
+
 @media (max-width: 800px) {
   .member-table > div:not(.empty-ranking) {
-    grid-template-columns: minmax(0, 1fr) 142px 34px;
+    grid-template-columns: minmax(0, 1fr) 34px;
   }
 
   .member-table .status {
@@ -76,7 +99,7 @@
 
 @media (max-width: 560px) {
   .member-table > div:not(.empty-ranking) {
-    grid-template-columns: minmax(0, 1fr) 118px 32px;
+    grid-template-columns: minmax(0, 1fr) 32px;
     gap: 9px;
     padding: 12px 14px;
   }
@@ -91,18 +114,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .member-role-select,
-  .member-role-badge {
-    min-width: 112px;
-    height: 34px;
-    font-size: 11px;
-  }
-
-  .member-role-select {
-    padding-left: 10px;
-    padding-right: 24px;
   }
 
   .member-role-notice {

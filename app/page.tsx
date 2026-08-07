@@ -1562,6 +1562,7 @@ function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated:
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [editing, setEditing] = useState<Member | null>(null);
   const [fullName, setFullName] = useState("");
+  const [editRole, setEditRole] = useState<"member" | "sub-admin">("member");
   const [searchTerm, setSearchTerm] = useState("");
   const [roleNotice, setRoleNotice] = useState("");
   const [roleSaving, setRoleSaving] = useState<string | null>(null);
@@ -1586,43 +1587,62 @@ function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated:
     document.addEventListener("pointerdown", closeOutside);
     return () => document.removeEventListener("pointerdown", closeOutside);
   }, []);
+  const saveMemberRole = async (member: Member, nextRole: "member" | "sub-admin") => {
+    setRoleSaving(member.username);
+    setRoleNotice("");
+    try {
+      if (!supabase) throw new Error("Chưa có Supabase để lưu phân quyền.");
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch("/api/member-role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+        body: JSON.stringify({ username: member.username, role: nextRole }),
+      });
+      const payload = await response.json().catch(() => ({ error: "Không thể lưu phân quyền." })) as { error?: string; role?: MemberRole };
+      if (!response.ok) throw new Error(payload.error || "Không thể lưu phân quyền.");
+      onRoleUpdated(member.username, payload.role || nextRole);
+      setRoleNotice(`Đã cập nhật ${member.name} thành ${memberRoleLabel(payload.role || nextRole)}.`);
+    } finally {
+      setRoleSaving(null);
+    }
+  };
   const save = async () => {
     if (!editing || !fullName.trim()) return;
+    const currentRole = effectiveRole(editing.role);
+    const roleLocked = currentRole === "admin" || editing.username === "manh";
+    const nextRole = editRole;
+    const roleChanged = !roleLocked && currentRole !== nextRole;
+    const nameChanged = fullName.trim() !== editing.name;
     setConfirm({ title: "Xác nhận cập nhật", message: `Lưu thông tin mới cho ${editing.name}?`, action: async () => {
-      if (supabase) { const { error } = await supabase.rpc("admin_update_member", { p_username: editing.username, p_full_name: fullName.trim() }); if (error) { window.alert(error.message); return; } }
-      window.location.reload();
-    }});
-  };
-  const remove = (member: Member) => setConfirm({ title: "Xác nhận xóa thành viên", message: `Xóa ${member.name} khỏi danh sách hoạt động? Lịch sử thi đấu vẫn được giữ lại.`, action: async () => {
-    if (supabase) { const { error } = await supabase.rpc("admin_remove_member", { p_username: member.username }); if (error) { window.alert(error.message); return; } }
-    window.location.reload();
-  }});
-  const updateRole = (member: Member, nextRole: "member" | "sub-admin") => {
-    if (member.username === "manh" || member.role === "admin") return;
-    const currentRole = effectiveRole(member.role);
-    if (currentRole === nextRole) return;
-    setConfirm({ title: "Xác nhận phân quyền", message: `Đổi quyền của ${member.name} thành ${memberRoleLabel(nextRole)}?`, action: async () => {
-      setRoleSaving(member.username);
-      setRoleNotice("");
       try {
-        if (!supabase) throw new Error("Chưa có Supabase để lưu phân quyền.");
-        const { data: { session } } = await supabase.auth.getSession();
-        const response = await fetch("/api/member-role", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
-          body: JSON.stringify({ username: member.username, role: nextRole }),
-        });
-        const payload = await response.json().catch(() => ({ error: "Không thể lưu phân quyền." })) as { error?: string; role?: MemberRole };
-        if (!response.ok) throw new Error(payload.error || "Không thể lưu phân quyền.");
-        onRoleUpdated(member.username, payload.role || nextRole);
-        setRoleNotice(`Đã cập nhật ${member.name} thành ${memberRoleLabel(payload.role || nextRole)}.`);
+        if (supabase) {
+          if (nameChanged) { const { error } = await supabase.rpc("admin_update_member", { p_username: editing.username, p_full_name: fullName.trim() }); if (error) throw error; }
+          if (roleChanged) await saveMemberRole(editing, nextRole);
+        }
+        if (nameChanged) window.location.reload();
+        else setEditing(null);
       } catch (error) {
-        window.alert(error instanceof Error ? error.message : "Không thể lưu phân quyền.");
-      } finally {
-        setRoleSaving(null);
+        window.alert(error instanceof Error ? error.message : "Không thể lưu thông tin thành viên.");
       }
     }});
   };
+  const remove = (member: Member) => setConfirm({ title: "Xác nhận xóa thành viên", message: `Xóa ${member.name} khỏi danh sách hoạt động? Lịch sử thi đấu vẫn được giữ lại.`, action: async () => {
+    try {
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const response = await fetch("/api/member-remove", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+          body: JSON.stringify({ username: member.username }),
+        });
+        const payload = await response.json().catch(() => ({ error: "Không thể xóa thành viên." })) as { error?: string };
+        if (!response.ok) throw new Error(payload.error || "Không thể xóa thành viên.");
+      }
+      window.location.reload();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Không thể xóa thành viên.");
+    }
+  }});
   return <>
     <section className="member-summary">
       <div><b>{members.length}</b><span>Tổng thành viên</span></div>
@@ -1636,21 +1656,15 @@ function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated:
       {roleNotice && <div className="member-role-notice">{roleNotice}</div>}
       <div className="member-table">{visibleMembers.length ? visibleMembers.map((member) => {
         const role = effectiveRole(member.role);
-        const roleLocked = role === "admin" || member.username === "manh";
+        const canDelete = role === "member";
         return <div key={member.username}>
           <div className="person"><div className="avatar" style={{ background: member.color }}>{member.initials}</div><div><b>{member.name}</b><small>@{member.username}</small></div></div>
           <span className="status">● Hoạt động</span>
-          <div className="member-role-control">
-            {roleLocked ? <span className="member-role-badge admin">Admin</span> : <select className="member-role-select" value={role === "sub-admin" ? "sub-admin" : "member"} disabled={roleSaving === member.username} onChange={(event) => updateRole(member, event.target.value as "member" | "sub-admin")} aria-label={`Phân quyền ${member.name}`}>
-              <option value="member">Thành viên</option>
-              <option value="sub-admin">Sub-admin</option>
-            </select>}
-          </div>
-          <div className="member-actions"><button className="more" aria-label={`Thao tác ${member.name}`} onClick={() => setOpenMenu(openMenu === member.username ? null : member.username)}>•••</button>{openMenu === member.username && <div className="member-menu"><button onClick={() => { setEditing(member); setFullName(member.name); setOpenMenu(null); }}>Sửa thành viên</button>{!roleLocked && <button className="danger-text" onClick={() => { remove(member); setOpenMenu(null); }}>Xóa thành viên</button>}</div>}</div>
+          <div className="member-actions"><button className="more" aria-label={`Thao tác ${member.name}`} onClick={() => setOpenMenu(openMenu === member.username ? null : member.username)}>•••</button>{openMenu === member.username && <div className="member-menu"><button onClick={() => { setEditing(member); setFullName(member.name); setEditRole(role === "sub-admin" ? "sub-admin" : "member"); setOpenMenu(null); }}>Sửa thành viên</button>{canDelete && <button className="danger-text" onClick={() => { remove(member); setOpenMenu(null); }}>Xóa thành viên</button>}</div>}</div>
         </div>;
       }) : <div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div>}</div>
     </section>
-    {editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={() => setEditing(null)}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><div className="editor-actions"><button className="soft-btn" onClick={() => setEditing(null)}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>Lưu</button></div></section></div>}
+    {editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={() => setEditing(null)}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <select className="member-role-select member-role-editor-select" value={editRole} disabled={roleSaving === editing.username} onChange={(event) => setEditRole(event.target.value as "member" | "sub-admin")}><option value="member">Thành viên</option><option value="sub-admin">Sub-admin</option></select>}<small>{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? "Mạnh luôn là Admin, không thể đổi quyền." : editRole === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label><div className="editor-actions"><button className="soft-btn" onClick={() => setEditing(null)}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></section></div>}
     {confirm && <ConfirmActionModal title={confirm.title} message={confirm.message} onCancel={() => setConfirm(null)} onConfirm={async () => { try { await confirm.action(); } finally { setConfirm(null); } }} />}
   </>;
 }
