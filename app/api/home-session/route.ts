@@ -1,4 +1,5 @@
 import { ApiError, jsonError, requireUser } from "@/lib/supabase-admin";
+import { isCheckinWindowOpenForDate, normalizeSessionDateKey, rescheduledOriginalDateKey, targetSessionDateKey } from "@/lib/session-dates";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type Profile = {
@@ -8,37 +9,60 @@ type Profile = {
 
 type PlaySession = {
   id: string;
+  session_date: string;
   status: "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 };
 
 const vietnamNow = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
-const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-const targetSaturdayKey = (now: Date) => {
-  const date = new Date(now);
-  date.setDate(now.getDate() + ((6 - now.getDay() + 7) % 7));
-  return dateKey(date);
-};
 const isTestFlowEnabled = () => process.env.ENABLE_TEST_FLOW === "true" || process.env.NEXT_PUBLIC_ENABLE_TEST_FLOW === "true";
 
 async function getOrCreateSession(admin: SupabaseClient, userId: string, sessionDate: string) {
+  const normalizedSessionDate = normalizeSessionDateKey(sessionDate);
   const { data: existing, error: existingError } = await admin
     .from("play_sessions")
-    .select("id, status")
-    .eq("session_date", sessionDate)
+    .select("id, session_date, status")
+    .eq("session_date", normalizedSessionDate)
     .maybeSingle();
   if (existingError) throw existingError;
   if (existing) return existing as PlaySession;
 
+  const originalDate = rescheduledOriginalDateKey(normalizedSessionDate);
+  if (originalDate) {
+    const { data: originalSession, error: originalError } = await admin
+      .from("play_sessions")
+      .select("id, session_date, status")
+      .eq("session_date", originalDate)
+      .maybeSingle();
+    if (originalError) throw originalError;
+    if (originalSession) {
+      const { data: movedSession, error: moveError } = await admin
+        .from("play_sessions")
+        .update({ session_date: normalizedSessionDate })
+        .eq("id", originalSession.id)
+        .select("id, session_date, status")
+        .single();
+      if (!moveError && movedSession) return movedSession as PlaySession;
+
+      const { data: raced, error: racedError } = await admin
+        .from("play_sessions")
+        .select("id, session_date, status")
+        .eq("session_date", normalizedSessionDate)
+        .maybeSingle();
+      if (racedError || !raced) throw moveError;
+      return raced as PlaySession;
+    }
+  }
+
   const { data: created, error: createError } = await admin
     .from("play_sessions")
-    .insert({ session_date: sessionDate, created_by: userId })
-    .select("id, status")
+    .insert({ session_date: normalizedSessionDate, created_by: userId })
+    .select("id, session_date, status")
     .single();
   if (createError) {
     const { data: raced, error: racedError } = await admin
       .from("play_sessions")
-      .select("id, status")
-      .eq("session_date", sessionDate)
+      .select("id, session_date, status")
+      .eq("session_date", normalizedSessionDate)
       .single();
     if (racedError) throw createError;
     return raced as PlaySession;
@@ -72,11 +96,10 @@ async function loadSessionPayload(request: Request, reset: boolean) {
   if (reset && profile.role !== "admin") throw new ApiError(403, "Chỉ Admin được reset phiên Home.");
 
   const now = vietnamNow();
-  const day = now.getDay();
-  const shouldUseLiveSession = reset || isTestFlowEnabled() || (day >= 3 && day <= 6);
+  const shouldUseLiveSession = reset || isTestFlowEnabled() || isCheckinWindowOpenForDate(now);
   if (!shouldUseLiveSession) return Response.json({ inactive: true, status: "draft" });
 
-  const sessionDate = targetSaturdayKey(now);
+  const sessionDate = targetSessionDateKey(now);
   const session = await getOrCreateSession(admin, user.id, sessionDate);
   if (reset && session.status === "completed") {
     throw new ApiError(400, "Buổi này đã hoàn tất nên không reset dữ liệu lịch sử.");
@@ -107,7 +130,7 @@ async function loadSessionPayload(request: Request, reset: boolean) {
 
   return Response.json({
     sessionId: session.id,
-    sessionDate,
+    sessionDate: session.session_date,
     status: refreshedSession?.status || session.status,
     attendances: attendances || [],
     reset,

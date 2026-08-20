@@ -1,4 +1,5 @@
 import { ApiError, jsonError, requireAdmin } from "@/lib/supabase-admin";
+import { normalizeSessionDateKey, rescheduledOriginalDateKey, targetSessionDateKey } from "@/lib/session-dates";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type Profile = {
@@ -17,12 +18,6 @@ type Body = {
 };
 
 const vietnamNow = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
-const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-const targetSaturdayKey = (now: Date) => {
-  const date = new Date(now);
-  date.setDate(now.getDate() + ((6 - now.getDay() + 7) % 7));
-  return dateKey(date);
-};
 const monthStart = (dateText: string) => {
   const date = new Date(`${dateText}T00:00:00`);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-01`;
@@ -31,17 +26,37 @@ const isDateKey = (value: unknown): value is string => typeof value === "string"
 const isTestFlowEnabled = () => process.env.ENABLE_TEST_FLOW === "true" || process.env.NEXT_PUBLIC_ENABLE_TEST_FLOW === "true";
 
 async function getOrCreateSession(admin: SupabaseClient, userId: string, sessionDate: string) {
+  const normalizedSessionDate = normalizeSessionDateKey(sessionDate);
   const { data: existing, error: existingError } = await admin
     .from("play_sessions")
     .select("id, session_date")
-    .eq("session_date", sessionDate)
+    .eq("session_date", normalizedSessionDate)
     .maybeSingle();
   if (existingError) throw existingError;
   if (existing) return existing as PlaySession;
 
+  const originalDate = rescheduledOriginalDateKey(normalizedSessionDate);
+  if (originalDate) {
+    const { data: originalSession, error: originalError } = await admin
+      .from("play_sessions")
+      .select("id, session_date")
+      .eq("session_date", originalDate)
+      .maybeSingle();
+    if (originalError) throw originalError;
+    if (originalSession) {
+      const { data: movedSession, error: moveError } = await admin
+        .from("play_sessions")
+        .update({ session_date: normalizedSessionDate })
+        .eq("id", originalSession.id)
+        .select("id, session_date")
+        .single();
+      if (!moveError && movedSession) return movedSession as PlaySession;
+    }
+  }
+
   const { data: created, error: createError } = await admin
     .from("play_sessions")
-    .insert({ session_date: sessionDate, created_by: userId })
+    .insert({ session_date: normalizedSessionDate, created_by: userId })
     .select("id, session_date")
     .single();
   if (createError) throw createError;
@@ -85,7 +100,7 @@ export async function POST(request: Request) {
 
     const { admin, user } = await requireAdmin(request);
     const body = await request.json().catch(() => ({})) as Body;
-    const sessionDate = isDateKey(body.sessionDate) ? body.sessionDate : targetSaturdayKey(vietnamNow());
+    const sessionDate = normalizeSessionDateKey(isDateKey(body.sessionDate) ? body.sessionDate : targetSessionDateKey(vietnamNow()));
     const session = await getOrCreateSession(admin, user.id, sessionDate);
     const shouldResetMonthly = body.resetMonthly !== false;
 

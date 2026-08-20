@@ -1,4 +1,5 @@
 import { ApiError, jsonError, requireUser } from "@/lib/supabase-admin";
+import { isCheckinWindowOpenForDate, normalizeSessionDateKey, rescheduledOriginalDateKey, targetSessionDateKey } from "@/lib/session-dates";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type Body = {
@@ -47,12 +48,6 @@ type MonthlyResult = {
 };
 
 const vietnamNow = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
-const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-const targetSaturdayKey = (now: Date) => {
-  const date = new Date(now);
-  date.setDate(now.getDate() + ((6 - now.getDay() + 7) % 7));
-  return dateKey(date);
-};
 const isTestFlowEnabled = () => process.env.ENABLE_TEST_FLOW === "true" || process.env.NEXT_PUBLIC_ENABLE_TEST_FLOW === "true";
 const monthStart = (dateText: string) => {
   const date = new Date(`${dateText}T00:00:00`);
@@ -242,29 +237,62 @@ async function resetWorkflowAfterAttendanceChange(admin: SupabaseClient, session
 }
 
 async function getOrCreateSession(admin: SupabaseClient, userId: string, sessionDate: string) {
+  const normalizedSessionDate = normalizeSessionDateKey(sessionDate);
   const { data: existing, error: existingError } = await admin
     .from("play_sessions")
     .select("id, session_date, status")
-    .eq("session_date", sessionDate)
+    .eq("session_date", normalizedSessionDate)
     .maybeSingle();
   if (existingError) throw existingError;
   if (existing) return existing as PlaySession;
 
+  const originalDate = rescheduledOriginalDateKey(normalizedSessionDate);
+  if (originalDate) {
+    const { data: originalSession, error: originalError } = await admin
+      .from("play_sessions")
+      .select("id, session_date, status")
+      .eq("session_date", originalDate)
+      .maybeSingle();
+    if (originalError) throw originalError;
+    if (originalSession) return await moveSessionToDate(admin, originalSession as PlaySession, normalizedSessionDate);
+  }
+
   const { data: created, error: createError } = await admin
     .from("play_sessions")
-    .insert({ session_date: sessionDate, created_by: userId })
+    .insert({ session_date: normalizedSessionDate, created_by: userId })
     .select("id, session_date, status")
     .single();
   if (createError) {
     const { data: raced, error: racedError } = await admin
       .from("play_sessions")
       .select("id, session_date, status")
-      .eq("session_date", sessionDate)
+      .eq("session_date", normalizedSessionDate)
       .single();
     if (racedError) throw createError;
     return raced as PlaySession;
   }
   return created as PlaySession;
+}
+
+async function moveSessionToDate(admin: SupabaseClient, session: PlaySession, sessionDate: string) {
+  const normalizedSessionDate = normalizeSessionDateKey(sessionDate);
+  if (session.session_date === normalizedSessionDate) return session;
+
+  const { data: movedSession, error: moveError } = await admin
+    .from("play_sessions")
+    .update({ session_date: normalizedSessionDate })
+    .eq("id", session.id)
+    .select("id, session_date, status")
+    .single();
+  if (!moveError && movedSession) return movedSession as PlaySession;
+
+  const { data: raced, error: racedError } = await admin
+    .from("play_sessions")
+    .select("id, session_date, status")
+    .eq("session_date", normalizedSessionDate)
+    .maybeSingle();
+  if (racedError || !raced) throw moveError;
+  return raced as PlaySession;
 }
 
 async function ensureAttendanceRows(admin: SupabaseClient, sessionId: string) {
@@ -311,9 +339,8 @@ export async function POST(request: Request) {
     if (typeof body.attending !== "boolean") return Response.json({ error: "Thiếu lựa chọn điểm danh." }, { status: 400 });
 
     const now = vietnamNow();
-    const day = now.getDay();
-    if (!isTestFlowEnabled() && (day < 3 || day > 6)) {
-      return Response.json({ error: "Điểm danh chỉ mở từ thứ Tư đến thứ Bảy cho buổi chơi tuần này." }, { status: 400 });
+    if (!isTestFlowEnabled() && !isCheckinWindowOpenForDate(now)) {
+      return Response.json({ error: "Điểm danh chỉ mở từ thứ Tư đến hết ngày thi đấu của tuần này." }, { status: 400 });
     }
 
     let session: PlaySession | null = null;
@@ -325,8 +352,9 @@ export async function POST(request: Request) {
         .single();
       if (error) throw error;
       session = data as PlaySession;
+      session = await moveSessionToDate(admin, session, normalizeSessionDateKey(session.session_date));
     } else {
-      session = await getOrCreateSession(admin, user.id, targetSaturdayKey(now));
+      session = await getOrCreateSession(admin, user.id, targetSessionDateKey(now));
     }
     if (!session) throw new ApiError(404, "Không tìm thấy phiên điểm danh.");
 

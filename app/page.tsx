@@ -2,6 +2,7 @@
 
 import { type CSSProperties, useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { isCheckinWindowOpenForDate, sessionDatesOfMonth, sessionStateForDate, sessionWeekdayLabel, sessionWeekInMonth, targetSessionDateKey } from "@/lib/session-dates";
 
 type MemberRole = "admin" | "sub-admin" | "member";
 type Member = { name: string; initials: string; level: 1 | 2; color: string; present: boolean; username: string; password: string; role?: MemberRole; responded?: boolean };
@@ -168,9 +169,9 @@ const monthDateFromLabel = (label: string) => {
 };
 const nextMonthStartDate = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 1);
 const shortDateLabel = (date: Date) => date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
-const saturdaySessionTitle = (date: Date) => `Buổi ${Math.floor((date.getDate() - 1) / 7) + 1} - Thứ 7 ngày ${shortDateLabel(date)}`;
-function homeSession(now: Date) { const day = now.getDay(); const offset = (6 - day + 7) % 7; const date = new Date(now); date.setDate(now.getDate() + offset); const state = day === 6 ? "ĐANG DIỄN RA" : day < 3 ? "CHỜ THỨ TƯ" : "CHƯA DIỄN RA"; return { date, state }; }
-function monthlyProgress(now: Date) { const year = now.getFullYear(), month = now.getMonth(); const saturdays: Date[] = []; for (let d = new Date(year, month, 1); d.getMonth() === month; d.setDate(d.getDate() + 1)) if (d.getDay() === 6) saturdays.push(new Date(d)); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return { total: saturdays.length, completed: saturdays.filter((d) => d < today).length }; }
+const sessionTitle = (date: Date) => `Buổi ${sessionWeekInMonth(date)} - ${sessionWeekdayLabel(date)} ngày ${shortDateLabel(date)}`;
+function homeSession(now: Date) { const date = new Date(`${targetSessionDateKey(now)}T00:00:00`); return { date, state: sessionStateForDate(now) }; }
+function monthlyProgress(now: Date) { const sessions = sessionDatesOfMonth(now); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return { total: sessions.length, completed: sessions.filter((date) => date < today).length }; }
 function finalSaturdayOfMonth(date: Date) { const finalSaturday = new Date(date.getFullYear(), date.getMonth() + 1, 0); while (finalSaturday.getDay() !== 6) finalSaturday.setDate(finalSaturday.getDate() - 1); return finalSaturday; }
 const recentMonthStarts = (start: Date, count: number) => Array.from({ length: count }, (_, index) => new Date(start.getFullYear(), start.getMonth() - index, 1));
 const sortMonthlyResultRows = (rows: MonthlyResultRow[]) => [...rows].sort((a, b) =>
@@ -302,8 +303,7 @@ export default function Home() {
   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const rankingMonthOptions = [...new Set([sessionMonthStart, currentMonthStart, previousMonthStart, new Date(now.getFullYear(), now.getMonth() - 2, 1)].map(monthLabel))].filter((month) => !hiddenRankingMonths.has(month));
   const previousMonthKey = localDateKey(previousMonthStart);
-  const currentWeekday = now.getDay();
-  const isLiveCheckinWindow = currentWeekday >= 3 && currentWeekday <= 6;
+  const isLiveCheckinWindow = isCheckinWindowOpenForDate(now);
   const isCheckinTestMode = ENABLE_TEST_FLOW && !isLiveCheckinWindow;
   const isCheckinWindowOpen = ENABLE_TEST_FLOW || isLiveCheckinWindow;
   const shouldLoadHomeSession = ENABLE_TEST_FLOW || isLiveCheckinWindow;
@@ -1109,7 +1109,7 @@ export default function Home() {
     <section className="content">
       <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className="welcome-avatar" style={{ background: currentUser.color }} aria-hidden="true">{welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
       {screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : <>
-        <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>{saturdaySessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>THAM GIA</small></div><div><b>{notAttending.length}</b><small>KHÔNG THAM GIA</small></div><div><b>{String(step + 1).padStart(2, "0")}<em>/{String(steps.length).padStart(2, "0")}</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
+        <section className="hero"><div><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div><div className="hero-stats"><div><b>{present.length}</b><small>THAM GIA</small></div><div><b>{notAttending.length}</b><small>KHÔNG THAM GIA</small></div><div><b>{String(step + 1).padStart(2, "0")}<em>/{String(steps.length).padStart(2, "0")}</em></b><small>BƯỚC HIỆN TẠI</small></div></div></section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
         {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
@@ -1616,8 +1616,8 @@ function History({ sessions, currentMonth }: { sessions: HistorySession[]; curre
       const date = new Date(`${session.date}T00:00:00`);
       return {
         ...session,
-        week: `Tuần ${Math.ceil(date.getDate() / 7)} · Thứ Bảy ${date.toLocaleDateString("vi-VN")}`,
-        title: saturdaySessionTitle(date),
+        week: `Tuần ${sessionWeekInMonth(date)} · ${sessionWeekdayLabel(date)} ${date.toLocaleDateString("vi-VN")}`,
+        title: sessionTitle(date),
         detail: `${session.matches} trận · ${session.attendees} tham gia`,
       };
     });
