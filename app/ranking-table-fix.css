@@ -1,25 +1,58 @@
-/* Final ranking UI pass: keep medal highlights polished and prevent older table styles from leaking through. */
+/* Ranking table final polish: compact, balanced columns, clean medal highlights. */
 .rank-table {
-  background: #fffdf8 !important;
+  width: 100% !important;
   border: 1px solid rgba(43, 34, 22, 0.1) !important;
-  border-radius: 18px !important;
+  border-radius: 16px !important;
   overflow: hidden !important;
-  box-shadow: 0 18px 42px rgba(35, 28, 18, 0.09) !important;
+  background: #fff !important;
+  box-shadow: 0 14px 34px rgba(35, 28, 18, 0.08) !important;
+}
+
+.rank-head.rank-columns,
+.rank-row.rank-columns {
+  display: grid !important;
+  grid-template-columns: 58px minmax(170px, 230px) 64px 96px 96px 76px 66px !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  column-gap: 12px !important;
+  padding-left: 22px !important;
+  padding-right: 22px !important;
 }
 
 .rank-head.rank-columns {
-  min-height: 56px !important;
-  background: linear-gradient(90deg, #161411 0%, #2c2105 100%) !important;
-  color: #f7ecd0 !important;
+  min-height: 46px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border: 0 !important;
+  background: linear-gradient(90deg, #14120f 0%, #2a210a 100%) !important;
+  color: #fff3d2 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
   letter-spacing: 0.055em !important;
 }
 
+.rank-head.rank-columns span,
+.rank-row.rank-columns > span,
+.rank-row.rank-columns > .point-value {
+  justify-self: center !important;
+  text-align: center !important;
+}
+
+.rank-head.rank-columns span:nth-child(2),
+.rank-row.rank-columns .person {
+  justify-self: start !important;
+  text-align: left !important;
+}
+
 .rank-row.rank-columns {
-  isolation: isolate;
-  min-height: 68px !important;
-  border-top: 1px solid rgba(43, 34, 22, 0.08) !important;
+  min-height: 58px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border-top: 1px solid rgba(43, 34, 22, 0.075) !important;
   background: #fff !important;
+  box-shadow: none !important;
   transform: none !important;
+  transition: background 0.18s ease !important;
 }
 
 .rank-row.rank-columns:hover {
@@ -31,106 +64,113 @@
   justify-self: center !important;
 }
 
-.rank-row .rank-number {
+.rank-row .rank-number,
+.rank-table .rank-row.rank-columns.top-rank .medal {
   display: grid !important;
-  width: 34px !important;
-  height: 34px !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
   place-items: center !important;
-  border: 1px solid rgba(43, 34, 22, 0.1) !important;
   border-radius: 999px !important;
-  background: #fffaf0 !important;
-  color: #15120e !important;
-  font-size: 14px !important;
-  font-weight: 900 !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
   line-height: 1 !important;
+}
+
+.rank-row .rank-number {
+  border: 1px solid rgba(43, 34, 22, 0.1) !important;
+  background: #fffaf0 !important;
+  color: #14110d !important;
   box-shadow: none !important;
 }
 
 .rank-table .rank-row.rank-columns.top-rank {
+  position: relative !important;
   border-left: 0 !important;
   overflow: hidden !important;
 }
 
 .rank-table .rank-row.rank-columns.top-1 {
-  background:
-    radial-gradient(circle at 70px 50%, rgba(255, 183, 0, 0.2), transparent 115px),
-    linear-gradient(90deg, #fff6cf 0%, #fffdf6 40%, #ffffff 74%) !important;
-  box-shadow: inset 5px 0 0 #ffb700 !important;
+  background: linear-gradient(90deg, rgba(255, 183, 0, 0.18) 0%, rgba(255, 246, 207, 0.66) 150px, #ffffff 390px) !important;
+  box-shadow: inset 4px 0 0 #ffb700 !important;
 }
 
 .rank-table .rank-row.rank-columns.top-2 {
-  background:
-    radial-gradient(circle at 70px 50%, rgba(174, 182, 197, 0.24), transparent 115px),
-    linear-gradient(90deg, #eef2f7 0%, #fbfcfe 42%, #ffffff 74%) !important;
-  box-shadow: inset 5px 0 0 #aeb6c5 !important;
+  background: linear-gradient(90deg, rgba(174, 182, 197, 0.28) 0%, rgba(242, 245, 249, 0.76) 150px, #ffffff 390px) !important;
+  box-shadow: inset 4px 0 0 #aeb6c5 !important;
 }
 
 .rank-table .rank-row.rank-columns.top-3 {
-  background:
-    radial-gradient(circle at 70px 50%, rgba(205, 135, 82, 0.22), transparent 115px),
-    linear-gradient(90deg, #fff0e3 0%, #fffaf6 42%, #ffffff 74%) !important;
-  box-shadow: inset 5px 0 0 #cd8752 !important;
-}
-
-.rank-table .rank-row.rank-columns.top-rank .medal {
-  display: grid !important;
-  width: 34px !important;
-  height: 34px !important;
-  place-items: center !important;
-  border-radius: 999px !important;
-  font-size: 14px !important;
-  font-weight: 950 !important;
-  line-height: 1 !important;
-  box-shadow: 0 8px 17px rgba(35, 28, 18, 0.16) !important;
+  background: linear-gradient(90deg, rgba(205, 135, 82, 0.22) 0%, rgba(255, 240, 227, 0.72) 150px, #ffffff 390px) !important;
+  box-shadow: inset 4px 0 0 #cd8752 !important;
 }
 
 .rank-table .rank-row.rank-columns.top-1 .medal {
-  border: 1px solid rgba(255, 183, 0, 0.48) !important;
-  background: linear-gradient(135deg, #fff7d6 0%, #ffc226 100%) !important;
+  border: 1px solid rgba(255, 183, 0, 0.5) !important;
+  background: #fff1b8 !important;
   color: transparent !important;
   font-size: 0 !important;
+  box-shadow: 0 7px 14px rgba(255, 183, 0, 0.24) !important;
 }
 
 .rank-table .rank-row.rank-columns.top-1 .medal::before {
   content: "" !important;
   display: block !important;
-  width: 27px !important;
-  height: 27px !important;
+  width: 21px !important;
+  height: 21px !important;
   background: var(--icon-trophy) center / contain no-repeat !important;
-  filter: drop-shadow(0 4px 7px rgba(137, 89, 0, 0.2));
+  filter: drop-shadow(0 3px 5px rgba(132, 86, 0, 0.18));
 }
 
 .rank-table .rank-row.rank-columns.top-2 .medal {
-  border: 1px solid rgba(124, 136, 153, 0.32) !important;
-  background: linear-gradient(135deg, #ffffff 0%, #c7d0dd 100%) !important;
-  color: #273140 !important;
+  border: 1px solid rgba(124, 136, 153, 0.3) !important;
+  background: linear-gradient(135deg, #ffffff 0%, #d4dbe6 100%) !important;
+  color: #2a3340 !important;
+  box-shadow: 0 7px 14px rgba(90, 100, 118, 0.16) !important;
 }
 
 .rank-table .rank-row.rank-columns.top-3 .medal {
-  border: 1px solid rgba(151, 78, 30, 0.22) !important;
-  background: linear-gradient(135deg, #f5b36b 0%, #c46b2d 100%) !important;
+  border: 1px solid rgba(151, 78, 30, 0.2) !important;
+  background: linear-gradient(135deg, #f3ad62 0%, #c96f31 100%) !important;
   color: #fff9f0 !important;
+  box-shadow: 0 7px 14px rgba(172, 93, 38, 0.18) !important;
 }
 
 .rank-row .person {
   min-width: 0 !important;
-  gap: 10px !important;
+  gap: 9px !important;
+}
+
+.rank-row .person .avatar.small {
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 9px !important;
 }
 
 .rank-row .person > b {
+  max-width: 100% !important;
+  overflow: hidden !important;
   color: #17120d !important;
+  font-size: 13px !important;
   font-weight: 900 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 .rank-row .level {
-  border: 1px solid rgba(255, 183, 0, 0.44) !important;
-  background: rgba(255, 250, 236, 0.86) !important;
+  margin-left: 0 !important;
+  padding: 2px 6px !important;
+  border: 1px solid rgba(255, 183, 0, 0.42) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 250, 236, 0.9) !important;
   color: #b67500 !important;
+  font-size: 8px !important;
+  font-weight: 900 !important;
 }
 
 .rank-table .rank-row.rank-columns .point-value {
   color: #14110d !important;
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 950 !important;
   line-height: 1 !important;
   letter-spacing: -0.035em !important;
@@ -138,63 +178,81 @@
 
 .rank-table .rank-row.rank-columns.top-1 .point-value {
   color: #c47a00 !important;
-  font-size: 24px !important;
+  font-size: 23px !important;
 }
 
 .rank-table .rank-row.rank-columns.top-2 .point-value {
   color: #68717f !important;
-  font-size: 24px !important;
+  font-size: 23px !important;
 }
 
 .rank-table .rank-row.rank-columns.top-3 .point-value {
   color: #b86220 !important;
-  font-size: 24px !important;
+  font-size: 23px !important;
 }
 
-@media (min-width: 801px) {
-  .rank-head.rank-columns,
-  .rank-row.rank-columns {
-    grid-template-columns: 76px minmax(180px, 1.65fr) 88px 118px 118px 98px 90px !important;
-    gap: 10px !important;
-    padding-left: 24px !important;
-    padding-right: 24px !important;
-  }
+.rank-row.rank-columns > span {
+  color: #615b6b !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
 
-  .rank-row.rank-columns > span,
-  .rank-row.rank-columns > .point-value {
-    justify-self: center !important;
-    text-align: center !important;
-  }
+.rank-row.rank-columns > span.positive,
+.rank-row.rank-columns > span.negative {
+  font-weight: 900 !important;
+}
 
-  .rank-row.rank-columns .person {
-    justify-self: start !important;
+@media (min-width: 1181px) {
+  .ranking .rank-table,
+  .live-ranking-panel .rank-table {
+    max-width: 1240px !important;
   }
 }
 
 @media (min-width: 801px) and (max-width: 1180px) {
   .rank-head.rank-columns,
   .rank-row.rank-columns {
-    grid-template-columns: 58px minmax(138px, 1.45fr) 64px 82px 82px 72px 62px !important;
-    gap: 6px !important;
-    padding-left: 14px !important;
-    padding-right: 14px !important;
+    grid-template-columns: 48px minmax(126px, 178px) 54px 74px 74px 62px 54px !important;
+    column-gap: 8px !important;
+    padding-left: 13px !important;
+    padding-right: 13px !important;
   }
 
-  .rank-table .rank-row.rank-columns.top-rank .medal,
-  .rank-row .rank-number {
-    width: 30px !important;
-    height: 30px !important;
+  .rank-head.rank-columns {
+    min-height: 42px !important;
+    font-size: 8px !important;
+  }
+
+  .rank-row.rank-columns {
+    min-height: 52px !important;
+  }
+
+  .rank-row .rank-number,
+  .rank-table .rank-row.rank-columns.top-rank .medal {
+    width: 27px !important;
+    height: 27px !important;
+    min-width: 27px !important;
+    font-size: 12px !important;
   }
 
   .rank-table .rank-row.rank-columns.top-1 .medal::before {
-    width: 23px !important;
-    height: 23px !important;
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  .rank-row .person .avatar.small {
+    width: 25px !important;
+    height: 25px !important;
+  }
+
+  .rank-row .person > b {
+    font-size: 12px !important;
   }
 
   .rank-table .rank-row.rank-columns.top-1 .point-value,
   .rank-table .rank-row.rank-columns.top-2 .point-value,
   .rank-table .rank-row.rank-columns.top-3 .point-value {
-    font-size: 21px !important;
+    font-size: 20px !important;
   }
 }
 
@@ -213,6 +271,10 @@
     box-shadow: none !important;
   }
 
+  .rank-head.rank-columns {
+    display: none !important;
+  }
+
   .rank-row.rank-columns {
     min-height: 62px !important;
     overflow: hidden !important;
@@ -222,11 +284,12 @@
   .rank-row .medal {
     width: 29px !important;
     height: 29px !important;
+    min-width: 29px !important;
   }
 
   .rank-table .rank-row.rank-columns.top-1 .medal::before {
-    width: 22px !important;
-    height: 22px !important;
+    width: 21px !important;
+    height: 21px !important;
   }
 
   .rank-table .rank-row.rank-columns .point-value {
