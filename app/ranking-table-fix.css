@@ -543,3 +543,69 @@
     margin: 0 16px 22px !important;
   }
 }
+
+/* Final containment fix: remove legacy max-height and use real vertical flow. */
+.panel.live-ranking-panel,
+.live-ranking-panel {
+  height: auto !important;
+  max-height: none !important;
+  overflow: hidden !important;
+}
+
+.ranking .rank-table,
+.live-ranking-panel .rank-table,
+.live-rank-table {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  row-gap: 0 !important;
+  gap: 16px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding-bottom: 26px !important;
+}
+
+.live-ranking-panel .rank-table {
+  width: calc(100% - 50px) !important;
+  max-width: calc(100% - 50px) !important;
+  margin: 0 25px 18px !important;
+}
+
+.rank-row.rank-columns {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}
+
+.rank-row.rank-columns + .rank-row.rank-columns {
+  margin-top: 0 !important;
+}
+
+@media (min-width: 801px) {
+  .ranking .rank-table,
+  .live-ranking-panel .rank-table,
+  .live-rank-table {
+    gap: 17px !important;
+    padding-bottom: 30px !important;
+  }
+
+  .rank-row.rank-columns {
+    min-height: 68px !important;
+  }
+}
+
+@media (max-width: 800px) {
+  .ranking .rank-table,
+  .live-ranking-panel .rank-table,
+  .live-rank-table {
+    gap: 9px !important;
+    max-height: none !important;
+    padding-bottom: 14px !important;
+  }
+
+  .live-ranking-panel .rank-table {
+    width: calc(100% - 32px) !important;
+    max-width: calc(100% - 32px) !important;
+    margin: 0 16px 16px !important;
+  }
+}
