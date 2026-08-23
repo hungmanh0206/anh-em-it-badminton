@@ -1,0 +1,227 @@
+:root {
+  --icon-home: url("/app-icons/home.png?v=3d-icons");
+  --icon-members: url("/app-icons/members.png?v=3d-icons");
+  --icon-schedule: url("/app-icons/schedule.png?v=3d-icons");
+  --icon-ranking: url("/app-icons/ranking.png?v=3d-icons");
+  --icon-history: url("/app-icons/history.png?v=3d-icons");
+  --icon-rules: url("/app-icons/rules.png?v=3d-icons");
+  --icon-trophy: url("/app-icons/trophy.png?v=3d-icons");
+  --icon-crown: url("/app-icons/crown.png?v=3d-icons");
+  --icon-check: url("/app-icons/check.png?v=3d-icons");
+  --icon-success: url("/app-icons/success.png?v=3d-icons");
+  --icon-error: url("/app-icons/error.png?v=3d-icons");
+  --icon-target: url("/app-icons/target.png?v=3d-icons");
+  --icon-pencil: url("/app-icons/pencil.png?v=3d-icons");
+  --icon-save: url("/app-icons/save.png?v=3d-icons");
+  --icon-logout: url("/app-icons/logout.png?v=3d-icons");
+  --icon-clipboard: url("/app-icons/clipboard.png?v=3d-icons");
+  --icon-gift: url("/app-icons/gift.png?v=3d-icons");
+  --icon-star: url("/app-icons/star.png?v=3d-icons");
+}
+
+.app-icon {
+  display: inline-block;
+  width: 1.45em;
+  height: 1.45em;
+  flex: 0 0 auto;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  vertical-align: -0.32em;
+}
+
+.app-icon-home { background-image: var(--icon-home); }
+.app-icon-members { background-image: var(--icon-members); }
+.app-icon-schedule { background-image: var(--icon-schedule); }
+.app-icon-ranking { background-image: var(--icon-ranking); }
+.app-icon-history { background-image: var(--icon-history); }
+.app-icon-rules { background-image: var(--icon-rules); }
+.app-icon-trophy { background-image: var(--icon-trophy); }
+.app-icon-crown { background-image: var(--icon-crown); }
+.app-icon-check { background-image: var(--icon-check); }
+.app-icon-success { background-image: var(--icon-success); }
+.app-icon-error { background-image: var(--icon-error); }
+.app-icon-target { background-image: var(--icon-target); }
+.app-icon-pencil { background-image: var(--icon-pencil); }
+.app-icon-save { background-image: var(--icon-save); }
+.app-icon-logout { background-image: var(--icon-logout); }
+.app-icon-clipboard { background-image: var(--icon-clipboard); }
+.app-icon-gift { background-image: var(--icon-gift); }
+.app-icon-star { background-image: var(--icon-star); }
+
+.sidebar nav button {
+  display: flex !important;
+  align-items: center !important;
+  gap: 11px !important;
+}
+
+.sidebar nav button .nav-app-icon {
+  width: 28px !important;
+  height: 28px !important;
+  filter: drop-shadow(0 7px 10px rgba(0, 0, 0, 0.24));
+}
+
+.sidebar nav button.active .nav-app-icon {
+  transform: translateY(-1px) scale(1.06);
+  filter: drop-shadow(0 9px 13px rgba(255, 183, 0, 0.28));
+}
+
+.club-card > .club-card-icon {
+  width: 34px;
+  height: 34px;
+  margin-bottom: 1px;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.24));
+}
+
+.inline-app-icon {
+  width: 1.35em;
+  height: 1.35em;
+  margin-right: 5px;
+}
+
+.modal-icon.app-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 17px;
+  border-radius: 20px;
+  background-color: #fff4cc;
+  background-size: 78% auto;
+  box-shadow: 0 14px 30px rgba(255, 183, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.attendance-mark.yes,
+.attendance-mark.no {
+  font-size: 0 !important;
+}
+
+.attendance-mark.yes::before,
+.attendance-mark.no::before {
+  content: "";
+  width: 22px;
+  height: 22px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.attendance-mark.yes::before {
+  background-image: var(--icon-check);
+}
+
+.attendance-mark.no::before {
+  background-image: var(--icon-error);
+}
+
+.result-icon-button .result-action-icon {
+  display: inline-block;
+  width: 19px;
+  height: 19px;
+  font-size: 0 !important;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  vertical-align: -4px;
+}
+
+.result-icon-button.edit .result-action-icon {
+  background-image: var(--icon-pencil);
+}
+
+.result-icon-button.save .result-action-icon {
+  background-image: var(--icon-check);
+}
+
+.result-icon-button.save:disabled .result-action-icon {
+  background-image: var(--icon-save);
+}
+
+.rank-table .rank-row.rank-columns.top-1 .medal::before {
+  content: "" !important;
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: var(--icon-trophy) center / contain no-repeat;
+}
+
+.rules-prizes .app-icon {
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  filter: drop-shadow(0 8px 12px rgba(35, 27, 12, 0.14));
+}
+
+.logout {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 5px;
+}
+
+.logout::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  background: var(--icon-logout) center / contain no-repeat;
+}
+
+@media (max-width: 800px) {
+  .sidebar nav button .nav-app-icon {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  .club-card > .club-card-icon {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+.button-app-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 2px;
+  vertical-align: -5px;
+  filter: drop-shadow(0 5px 9px rgba(35, 27, 12, 0.16));
+}
+
+.modal-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.attendance-mark.yes::before,
+.attendance-mark.no::before {
+  display: block;
+}
+
+.welcome-member.rank-1 .welcome-rank::before,
+.welcome-member.rank-2 .welcome-rank::before,
+.welcome-member.rank-3 .welcome-rank::before {
+  display: block;
+  width: 17px;
+  height: 17px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  filter: drop-shadow(0 5px 9px rgba(35, 27, 12, 0.18));
+}
+
+.welcome-member.rank-1 .welcome-rank::before { background-image: var(--icon-trophy); }
+.welcome-member.rank-2 .welcome-rank::before { background-image: var(--icon-crown); }
+.welcome-member.rank-3 .welcome-rank::before { background-image: var(--icon-star); }
+
+.sidebar .club-top1::before {
+  width: 38px !important;
+  height: 38px !important;
+  background: var(--icon-trophy) center / contain no-repeat !important;
+  font-size: 0 !important;
+}
+
+.rank-row.top-1 .medal::before {
+  content: "" !important;
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: var(--icon-trophy) center / contain no-repeat;
+}

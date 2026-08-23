@@ -1355,7 +1355,7 @@ header {
 }
 
 .welcome-member.rank-1 .welcome-rank::before {
-  content: "🥇";
+  content: "";
 }
 
 .welcome-member.rank-1 b {
@@ -1374,7 +1374,7 @@ header {
 }
 
 .welcome-member.rank-2 .welcome-rank::before {
-  content: "🥈";
+  content: "";
 }
 
 .welcome-member.rank-3 {
@@ -1387,7 +1387,7 @@ header {
 }
 
 .welcome-member.rank-3 .welcome-rank::before {
-  content: "🥉";
+  content: "";
 }
 
 .welcome-member.rank-none {
@@ -2424,7 +2424,7 @@ header {
 }
 
 .sidebar .club-top1::before {
-  content: "🏸";
+  content: "";
   position: absolute;
   right: 9px;
   top: 8px;

@@ -33,6 +33,10 @@ type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "history"
 type SessionStatus = "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 type AttendanceRow = { choice: "pending" | "attending" | "absent"; drawn_number: number | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
 type HomeSessionPayload = { inactive?: boolean; sessionId?: string | null; sessionDate?: string; status?: SessionStatus; attendances?: AttendanceRow[]; needsReset?: boolean; error?: string };
+type AppIconName = "home" | "members" | "schedule" | "ranking" | "history" | "rules" | "trophy" | "crown" | "check" | "success" | "error" | "target" | "pencil" | "save" | "logout" | "clipboard" | "gift";
+function AppIcon({ name, className = "" }: { name: AppIconName; className?: string }) {
+  return <span className={`app-icon app-icon-${name}${className ? ` ${className}` : ""}`} aria-hidden="true" />;
+}
 const subAdminRoleMarker = "[aemit-role:sub-admin]";
 const effectiveRole = (role?: string | null, description?: string | null): MemberRole => {
   if (role === "admin") return "admin";
@@ -1096,14 +1100,14 @@ export default function Home() {
     <aside className="sidebar">
       <div className="brand"><span className="brand-mark" aria-hidden="true" /><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></div>
       <nav onClick={() => setSidebarOpen(false)}>
-        <button className={screen === "home" ? "active" : ""} onClick={() => setScreen("home")}><span>⌂</span> Home</button>
-        {isAdmin && <button className={screen === "members" ? "active" : ""} onClick={() => setScreen("members")}><span>♙</span> Thành viên</button>}
-        <button className={screen === "schedules" ? "active" : ""} onClick={() => setScreen("schedules")}><span>▤</span> Lịch thi đấu</button>
-        <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); }}><span>▥</span> Bảng xếp hạng</button>
-        <button className={screen === "history" ? "active" : ""} onClick={() => setScreen("history")}><span>◷</span> Lịch sử thi đấu</button>
-        <button className={screen === "rules" ? "active" : ""} onClick={() => setScreen("rules")}><span>§</span> Thể lệ</button>
+        <button className={screen === "home" ? "active" : ""} onClick={() => setScreen("home")}><AppIcon name="home" className="nav-app-icon" /> Home</button>
+        {isAdmin && <button className={screen === "members" ? "active" : ""} onClick={() => setScreen("members")}><AppIcon name="members" className="nav-app-icon" /> Thành viên</button>}
+        <button className={screen === "schedules" ? "active" : ""} onClick={() => setScreen("schedules")}><AppIcon name="schedule" className="nav-app-icon" /> Lịch thi đấu</button>
+        <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); }}><AppIcon name="ranking" className="nav-app-icon" /> Bảng xếp hạng</button>
+        <button className={screen === "history" ? "active" : ""} onClick={() => setScreen("history")}><AppIcon name="history" className="nav-app-icon" /> Lịch sử thi đấu</button>
+        <button className={screen === "rules" ? "active" : ""} onClick={() => setScreen("rules")}><AppIcon name="rules" className="nav-app-icon" /> Thể lệ</button>
       </nav>
-      <div className="club-card"><span>🏆</span><b>{currentMonthLabel}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div><div className={`club-top1 ${champion ? "" : "empty"}`}><small>NHÀ VÔ ĐỊCH {championRankingLabel.toUpperCase()}</small><b>{champion ? `👑 ${champion.name}` : "Chưa ghi danh"}</b><span>{champion ? `${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số` : `Chưa có dữ liệu BXH ${championRankingLabel}.`}</span></div></div>
+      <div className="club-card"><AppIcon name="trophy" className="club-card-icon" /><b>{currentMonthLabel}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div><div className={`club-top1 ${champion ? "" : "empty"}`}><small>NHÀ VÔ ĐỊCH {championRankingLabel.toUpperCase()}</small><b>{champion ? <><AppIcon name="crown" className="inline-app-icon" /> {champion.name}</> : "Chưa ghi danh"}</b><span>{champion ? `${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số` : `Chưa có dữ liệu BXH ${championRankingLabel}.`}</span></div></div>
       <div className="profile"><div className="avatar small" style={{ background: currentUser.color }}>{currentUser.initials}</div><div><b>{currentUser.name}</b><small>{memberRoleLabel(currentUser.role)}</small></div><button className="logout" onClick={() => { void supabase?.auth.signOut(); setActiveUser(null); }}>Đăng xuất</button></div>
     </aside>
     <section className="content">
@@ -1133,7 +1137,7 @@ function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass
   const pointDiff = achievement?.pointDiff;
   const pointDiffLabel = typeof pointDiff === "number" ? `${pointDiff > 0 ? "+" : ""}${pointDiff}` : "0";
   const positionLabel = hasRankingData && rank > 0 ? `Top ${rank}` : "—";
-  const positionDisplay = isTopRank ? (rank === 1 ? "🏆 Top 1" : rank === 2 ? "🥈 Top 2" : "🥉 Top 3") : positionLabel;
+  const positionDisplay = isTopRank ? (rank === 1 ? <><AppIcon name="trophy" className="inline-app-icon" /> Top 1</> : `Top ${rank}`) : positionLabel;
   const points = achievement?.points ?? 0;
   const pointsWon = achievement?.pointsWon ?? 0;
   const pointsLost = achievement?.pointsLost ?? 0;
@@ -1312,10 +1316,10 @@ function Rules() {
       <article className="rules-card rules-card-wide rules-prize-card">
         <div className="rules-card-title"><span className="rules-index">6</span><h2>Cơ cấu giải thưởng</h2></div>
         <div className="rules-prizes">
-          <div className="gold"><span>🏅</span><b>Vô địch</b><p>1 áo cầu lông, tối đa 200k. Nếu chọn áo đắt hơn, người nhận tự bù phần chênh lệch.</p></div>
-          <div className="silver"><span>🥈</span><b>Á quân</b><p>2 cuốn cán Yonex xịn hoặc 1 đôi tất cầu lông cao cấp, khoảng 80–100k.</p></div>
-          <div className="bronze"><span>🥉</span><b>Giải ba</b><p>1 đôi tất thủ công hoặc 1 cuốn cán Yonex xịn, khoảng 40–50k.</p></div>
-          <div><span>🎖️</span><b>Giải tư</b><p>2 cuốn cán rẻ, khoảng 20k.</p></div>
+          <div className="gold"><AppIcon name="trophy" /><b>Vô địch</b><p>1 áo cầu lông, tối đa 200k. Nếu chọn áo đắt hơn, người nhận tự bù phần chênh lệch.</p></div>
+          <div className="silver"><AppIcon name="gift" /><b>Á quân</b><p>2 cuốn cán Yonex xịn hoặc 1 đôi tất cầu lông cao cấp, khoảng 80–100k.</p></div>
+          <div className="bronze"><AppIcon name="gift" /><b>Giải ba</b><p>1 đôi tất thủ công hoặc 1 cuốn cán Yonex xịn, khoảng 40–50k.</p></div>
+          <div><AppIcon name="gift" /><b>Giải tư</b><p>2 cuốn cán rẻ, khoảng 20k.</p></div>
         </div>
         <p className="rules-total">Tổng giá trị giải thưởng dự kiến: <strong>350k</strong>.</p>
       </article>
@@ -1773,8 +1777,8 @@ function Login({ onLogin, error }: { onLogin: (username: string, password: strin
 }
 
 function CheckinModal({ member, onAnswer, onSkip }: { member: Member; onAnswer: (attending: boolean) => void; onSkip: () => void }) {
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Điểm danh buổi chơi" onPointerDown={(event) => { if (event.target === event.currentTarget) onSkip(); }}><section className="checkin-modal"><button className="modal-close" onClick={onSkip} aria-label="Đóng">×</button><span className="modal-icon">🏸</span><p className="eyebrow">BUỔI CHƠI THỨ BẢY</p><h2>Chào {member.name}, bạn có tham gia không?</h2><p>Hãy phản hồi để Admin chốt danh sách và mở chọn số vào thứ Tư. Bạn vẫn có thể thay đổi sau trong trang chính.</p><div className="modal-actions"><button className="primary" onClick={() => onAnswer(true)}>✓ Tôi tham gia</button><button className="secondary" onClick={() => onAnswer(false)}>Tôi không tham gia</button></div><button className="skip" onClick={onSkip}>Để sau</button></section></div>;
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Điểm danh buổi chơi" onPointerDown={(event) => { if (event.target === event.currentTarget) onSkip(); }}><section className="checkin-modal"><button className="modal-close" onClick={onSkip} aria-label="Đóng">×</button><span className="modal-icon app-icon app-icon-check" aria-hidden="true" /><p className="eyebrow">BUỔI CHƠI THỨ BẢY</p><h2>Chào {member.name}, bạn có tham gia không?</h2><p>Hãy phản hồi để Admin chốt danh sách và mở chọn số vào thứ Tư. Bạn vẫn có thể thay đổi sau trong trang chính.</p><div className="modal-actions"><button className="primary" onClick={() => onAnswer(true)}><AppIcon name="check" className="button-app-icon" /> Tôi tham gia</button><button className="secondary" onClick={() => onAnswer(false)}><AppIcon name="error" className="button-app-icon" /> Tôi không tham gia</button></div><button className="skip" onClick={onSkip}>Để sau</button></section></div>;
 }
 function ConfirmActionModal({ title, message, onCancel, onConfirm }: { title: string; message: string; onCancel: () => void; onConfirm: () => void | Promise<void> }) {
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" onPointerDown={(event) => { if (event.target === event.currentTarget) onCancel(); }}><section className="confirm-modal"><span className="modal-icon">?</span><h2>{title}</h2><p>{message}</p><div className="modal-actions confirm-actions"><button className="secondary" onClick={onCancel}>Không</button><button className="primary" onClick={() => void onConfirm()}>Có, xác nhận</button></div></section></div>;
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" onPointerDown={(event) => { if (event.target === event.currentTarget) onCancel(); }}><section className="confirm-modal"><span className="modal-icon app-icon app-icon-clipboard" aria-hidden="true" /><h2>{title}</h2><p>{message}</p><div className="modal-actions confirm-actions"><button className="secondary" onClick={onCancel}>Không</button><button className="primary" onClick={() => void onConfirm()}>Có, xác nhận</button></div></section></div>;
 }
