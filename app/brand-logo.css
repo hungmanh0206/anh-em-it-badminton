@@ -1,0 +1,122 @@
+:root {
+  --club-logo-image: url("/club-logo.png?v=club-3d-logo");
+}
+
+.brand-mark,
+.login-brand > span {
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  background:
+    var(--club-logo-image) center / 88% auto no-repeat,
+    radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0) 34%),
+    linear-gradient(145deg, #fff8df 0%, #ffd66d 52%, #ffb700 100%) !important;
+  border: 1px solid rgba(255, 183, 0, 0.34) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 26px rgba(255, 183, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+}
+
+.brand-mark::before,
+.brand-mark::after,
+.login-brand > span::before,
+.login-brand > span::after {
+  content: none !important;
+}
+
+.sidebar .brand .brand-mark {
+  width: 48px !important;
+  height: 48px !important;
+  flex: 0 0 48px !important;
+  background:
+    var(--club-logo-image) center / 91% auto no-repeat,
+    radial-gradient(circle at 34% 24%, rgba(255, 214, 109, 0.48), transparent 39%),
+    linear-gradient(145deg, #17140f 0%, #372900 58%, #8a6500 100%) !important;
+  border-color: rgba(255, 214, 109, 0.32) !important;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.36), 0 0 0 1px rgba(255, 214, 109, 0.08) !important;
+}
+
+.login-brand > span {
+  width: 54px !important;
+  height: 54px !important;
+  flex-basis: 54px !important;
+  background-size: 89% auto, auto, auto !important;
+}
+
+.hero {
+  gap: clamp(18px, 3vw, 34px) !important;
+  min-height: 154px;
+}
+
+.hero-copy,
+.hero-stats {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-copy {
+  min-width: min(390px, 44vw);
+}
+
+.hero-logo {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  width: clamp(104px, 13vw, 172px);
+  max-height: 160px;
+  object-fit: contain;
+  margin-left: auto;
+  transform: rotate(-6deg);
+  filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.28));
+  pointer-events: none;
+  user-select: none;
+}
+
+.rules-hero::after {
+  background: var(--club-logo-image) center / contain no-repeat !important;
+  opacity: 0.16 !important;
+}
+
+@media (max-width: 800px) {
+  .sidebar .brand .brand-mark {
+    width: 42px !important;
+    height: 42px !important;
+    flex-basis: 42px !important;
+    border-radius: 14px !important;
+  }
+
+  .hero {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center !important;
+    gap: 12px 14px !important;
+  }
+
+  .hero-copy {
+    min-width: 0;
+  }
+
+  .hero-logo {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    align-self: center;
+    width: clamp(72px, 21vw, 98px);
+    max-height: 100px;
+    margin: 0;
+    transform: rotate(-7deg);
+  }
+
+  .hero-stats {
+    grid-column: 1 / -1;
+    margin-top: 4px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero-logo {
+    width: 66px;
+  }
+}

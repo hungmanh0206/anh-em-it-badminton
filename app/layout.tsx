@@ -19,21 +19,21 @@ import "./mobile-landscape.css";
 import "./draw-wheel-polish.css";
 import "./profile-popover-spacing.css";
 import "./member-role.css";
+import "./brand-logo.css";
 
 export const metadata: Metadata = {
   title: "Anh Em IT — Quản lý CLB Cầu lông",
   description: "Quản lý buổi chơi, lịch đấu và bảng xếp hạng CLB Anh Em IT.",
-  manifest: "/site.webmanifest?v=sapp-badminton-icons",
+  manifest: "/site.webmanifest?v=club-3d-logo",
   icons: {
     icon: [
-      { url: "/favicon.ico?v=sapp-badminton-icons", sizes: "any" },
-      { url: "/favicon.svg?v=sapp-badminton-icons", type: "image/svg+xml" },
-      { url: "/icon-32.png?v=sapp-badminton-icons", sizes: "32x32", type: "image/png" },
-      { url: "/icon-192.png?v=sapp-badminton-icons", sizes: "192x192", type: "image/png" },
+      { url: "/favicon.ico?v=club-3d-logo", sizes: "any" },
+      { url: "/icon-32.png?v=club-3d-logo", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png?v=club-3d-logo", sizes: "192x192", type: "image/png" },
     ],
-    shortcut: "/favicon.ico?v=sapp-badminton-icons",
+    shortcut: "/favicon.ico?v=club-3d-logo",
     apple: [
-      { url: "/apple-touch-icon.png?v=sapp-badminton-icons", sizes: "180x180", type: "image/png" },
+      { url: "/apple-touch-icon.png?v=club-3d-logo", sizes: "180x180", type: "image/png" },
     ],
   },
 };
