@@ -187,3 +187,33 @@
     font-size: 16px !important;
   }
 }
+
+/* Desktop ranking point color correction: only top 1/2/3 keep medal colors. */
+@media (min-width: 801px) {
+  .rank-table .rank-row.rank-columns .point-value {
+    color: #14110d !important;
+    font-size: 18px !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.03em !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-1 .point-value,
+  .rank-table .rank-row.rank-columns.top-2 .point-value,
+  .rank-table .rank-row.rank-columns.top-3 .point-value {
+    font-size: 21px !important;
+    font-weight: 950 !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-1 .point-value {
+    color: #c47a00 !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-2 .point-value {
+    color: #68717f !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-3 .point-value {
+    color: #b86220 !important;
+  }
+}
+
