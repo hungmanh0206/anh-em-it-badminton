@@ -1,0 +1,83 @@
+/* Ranking spacing lock v2: one flat card list, no top-3 group spacing. */
+:root {
+  --ranking-card-gap: 16px;
+}
+
+.panel.live-ranking-panel,
+.live-ranking-panel,
+.ranking {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.ranking .rank-table,
+.live-ranking-panel .rank-table,
+.rank-table.live-rank-table {
+  display: block !important;
+  height: auto !important;
+  max-height: none !important;
+  gap: 0 !important;
+  row-gap: 0 !important;
+  column-gap: 0 !important;
+  overflow: visible !important;
+}
+
+.ranking .rank-table > .rank-row.rank-columns,
+.live-ranking-panel .rank-table > .rank-row.rank-columns,
+.rank-table.live-rank-table > .rank-row.rank-columns,
+.ranking .rank-table > .rank-row.rank-columns.top-rank,
+.live-ranking-panel .rank-table > .rank-row.rank-columns.top-rank,
+.rank-table.live-rank-table > .rank-row.rank-columns.top-rank {
+  margin-top: 0 !important;
+  margin-right: 0 !important;
+  margin-bottom: var(--ranking-card-gap) !important;
+  margin-left: 0 !important;
+  transform: none !important;
+}
+
+.ranking .rank-table > .rank-row.rank-columns:last-child,
+.live-ranking-panel .rank-table > .rank-row.rank-columns:last-child,
+.rank-table.live-rank-table > .rank-row.rank-columns:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Keep the medal colors, but remove the heavier top-group shadow that made top 1/2/3 look separated. */
+.ranking .rank-table > .rank-row.rank-columns,
+.live-ranking-panel .rank-table > .rank-row.rank-columns,
+.rank-table.live-rank-table > .rank-row.rank-columns {
+  box-shadow: 0 6px 14px rgba(35, 28, 18, 0.06) !important;
+}
+
+.ranking .rank-table > .rank-row.rank-columns.top-1,
+.live-ranking-panel .rank-table > .rank-row.rank-columns.top-1,
+.rank-table.live-rank-table > .rank-row.rank-columns.top-1 {
+  box-shadow: 0 6px 14px rgba(255, 183, 0, 0.09) !important;
+}
+
+.ranking .rank-table > .rank-row.rank-columns.top-2,
+.live-ranking-panel .rank-table > .rank-row.rank-columns.top-2,
+.rank-table.live-rank-table > .rank-row.rank-columns.top-2 {
+  box-shadow: 0 6px 14px rgba(90, 100, 118, 0.08) !important;
+}
+
+.ranking .rank-table > .rank-row.rank-columns.top-3,
+.live-ranking-panel .rank-table > .rank-row.rank-columns.top-3,
+.rank-table.live-rank-table > .rank-row.rank-columns.top-3 {
+  box-shadow: 0 6px 14px rgba(172, 93, 38, 0.08) !important;
+}
+
+.ranking .rank-table > .rank-row.rank-columns:hover,
+.live-ranking-panel .rank-table > .rank-row.rank-columns:hover,
+.rank-table.live-rank-table > .rank-row.rank-columns:hover,
+.ranking .rank-table > .rank-row.rank-columns.top-rank:hover,
+.live-ranking-panel .rank-table > .rank-row.rank-columns.top-rank:hover,
+.rank-table.live-rank-table > .rank-row.rank-columns.top-rank:hover {
+  transform: none !important;
+}
+
+@media (max-width: 800px) {
+  :root {
+    --ranking-card-gap: 16px;
+  }
+}
