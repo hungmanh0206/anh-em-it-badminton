@@ -70,8 +70,28 @@
   margin-left: auto;
   transform: rotate(-6deg);
   filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.28));
+  transform-origin: 54% 58%;
+  animation: heroLogoFloat 5.4s ease-in-out infinite;
+  will-change: transform, filter;
   pointer-events: none;
   user-select: none;
+}
+
+@keyframes heroLogoFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-6deg) scale(1);
+    filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.28));
+  }
+
+  45% {
+    transform: translate3d(0, -7px, 0) rotate(-3.5deg) scale(1.025);
+    filter: drop-shadow(0 25px 30px rgba(0, 0, 0, 0.22));
+  }
+
+  70% {
+    transform: translate3d(0, -3px, 0) rotate(-7.5deg) scale(1.012);
+  }
 }
 
 .rules-hero::after {
@@ -107,6 +127,7 @@
     max-height: 100px;
     margin: 0;
     transform: rotate(-7deg);
+    animation-name: heroLogoFloatMobile;
   }
 
   .hero-stats {
@@ -115,8 +136,28 @@
   }
 }
 
+@keyframes heroLogoFloatMobile {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-7deg) scale(1);
+    filter: drop-shadow(0 14px 19px rgba(0, 0, 0, 0.24));
+  }
+
+  50% {
+    transform: translate3d(0, -4px, 0) rotate(-4.5deg) scale(1.018);
+    filter: drop-shadow(0 19px 23px rgba(0, 0, 0, 0.2));
+  }
+}
+
 @media (max-width: 420px) {
   .hero-logo {
     width: 66px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-logo {
+    animation: none !important;
+    will-change: auto;
   }
 }
