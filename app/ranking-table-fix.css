@@ -609,3 +609,67 @@
     margin: 0 16px 16px !important;
   }
 }
+
+/* Stable BXH card stack: use row margins instead of wrapper gap so every
+   position, including the 3→4 transition, has the exact same spacing. */
+.panel.live-ranking-panel,
+.live-ranking-panel {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.ranking .rank-table,
+.live-ranking-panel .rank-table,
+.live-rank-table {
+  display: block !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.live-ranking-panel .rank-table {
+  width: calc(100% - 50px) !important;
+  max-width: calc(100% - 50px) !important;
+  margin: 0 25px 28px !important;
+}
+
+.rank-table > .rank-head.rank-columns {
+  display: none !important;
+}
+
+.rank-table > .rank-row.rank-columns {
+  margin: 0 0 20px !important;
+}
+
+.rank-table > .rank-row.rank-columns:last-child {
+  margin-bottom: 0 !important;
+}
+
+@media (min-width: 801px) {
+  .rank-table > .rank-row.rank-columns {
+    margin-bottom: 22px !important;
+  }
+
+  .rank-table > .rank-row.rank-columns:last-child {
+    margin-bottom: 0 !important;
+  }
+}
+
+@media (max-width: 800px) {
+  .live-ranking-panel .rank-table {
+    width: calc(100% - 32px) !important;
+    max-width: calc(100% - 32px) !important;
+    margin: 0 16px 18px !important;
+  }
+
+  .rank-table > .rank-row.rank-columns {
+    margin-bottom: 10px !important;
+  }
+
+  .rank-table > .rank-row.rank-columns:last-child {
+    margin-bottom: 0 !important;
+  }
+}
