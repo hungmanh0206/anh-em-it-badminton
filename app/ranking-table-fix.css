@@ -673,3 +673,48 @@
     margin-bottom: 0 !important;
   }
 }
+
+/* BXH global spacing lock: every ranking card uses the same 16px border-to-border gap. */
+:root {
+  --rank-card-gap: 16px;
+}
+
+.ranking .rank-table,
+.live-ranking-panel .rank-table,
+.live-rank-table {
+  display: block !important;
+  gap: 0 !important;
+  row-gap: 0 !important;
+  column-gap: 0 !important;
+}
+
+.rank-table > .rank-row.rank-columns {
+  margin-top: 0 !important;
+  margin-right: 0 !important;
+  margin-bottom: var(--rank-card-gap) !important;
+  margin-left: 0 !important;
+}
+
+.rank-table > .rank-row.rank-columns:last-child {
+  margin-bottom: 0 !important;
+}
+
+@media (min-width: 801px) {
+  .rank-table > .rank-row.rank-columns {
+    margin-bottom: var(--rank-card-gap) !important;
+  }
+
+  .rank-table > .rank-row.rank-columns:last-child {
+    margin-bottom: 0 !important;
+  }
+}
+
+@media (max-width: 800px) {
+  .rank-table > .rank-row.rank-columns {
+    margin-bottom: var(--rank-card-gap) !important;
+  }
+
+  .rank-table > .rank-row.rank-columns:last-child {
+    margin-bottom: 0 !important;
+  }
+}
