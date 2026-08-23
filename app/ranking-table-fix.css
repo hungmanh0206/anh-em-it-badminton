@@ -434,3 +434,112 @@
     white-space: nowrap !important;
   }
 }
+
+/* Hard repair after QA: full-width rows, even gaps, no clipped last rank. */
+.live-ranking-panel,
+.ranking {
+  overflow: visible !important;
+}
+
+.ranking .rank-table,
+.live-ranking-panel .rank-table,
+.live-rank-table {
+  width: 100% !important;
+  max-width: none !important;
+  overflow: visible !important;
+  gap: 13px !important;
+  padding-bottom: 14px !important;
+}
+
+.live-ranking-panel .rank-table {
+  width: calc(100% - 50px) !important;
+  max-width: calc(100% - 50px) !important;
+  margin: 0 25px 34px !important;
+}
+
+@media (min-width: 801px) {
+  .rank-row.rank-columns {
+    grid-template-columns: 44px minmax(190px, 1fr) 92px 92px 92px 78px 92px !important;
+    gap: 10px !important;
+    min-height: 66px !important;
+    padding: 10px 18px !important;
+    align-items: center !important;
+  }
+
+  .rank-row.rank-columns > span,
+  .rank-row.rank-columns > .point-value {
+    width: 100% !important;
+    min-height: 44px !important;
+    justify-self: stretch !important;
+  }
+
+  .rank-row .person {
+    gap: 10px !important;
+  }
+
+  .rank-row .person > b {
+    font-size: 15px !important;
+  }
+
+  .rank-row .rank-number,
+  .rank-table .rank-row.rank-columns.top-rank .medal {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-1 .medal::before {
+    width: 23px !important;
+    height: 23px !important;
+  }
+
+  .rank-table .rank-row.rank-columns .point-value {
+    font-size: 24px !important;
+  }
+
+  .rank-table .rank-row.rank-columns.top-1 .point-value,
+  .rank-table .rank-row.rank-columns.top-2 .point-value,
+  .rank-table .rank-row.rank-columns.top-3 .point-value {
+    font-size: 26px !important;
+  }
+}
+
+@media (min-width: 801px) and (max-width: 1080px) {
+  .rank-row.rank-columns {
+    grid-template-columns: 34px minmax(126px, 1fr) 58px 58px 58px 48px 58px !important;
+    gap: 7px !important;
+    min-height: 58px !important;
+    padding: 8px 10px !important;
+  }
+
+  .rank-row.rank-columns > span,
+  .rank-row.rank-columns > .point-value {
+    min-height: 38px !important;
+  }
+
+  .rank-row .rank-number,
+  .rank-table .rank-row.rank-columns.top-rank .medal {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+  }
+
+  .rank-table .rank-row.rank-columns .point-value {
+    font-size: 19px !important;
+  }
+}
+
+@media (max-width: 800px) {
+  .ranking .rank-table,
+  .live-ranking-panel .rank-table,
+  .live-rank-table {
+    gap: 8px !important;
+    padding-bottom: 10px !important;
+  }
+
+  .live-ranking-panel .rank-table {
+    width: calc(100% - 32px) !important;
+    max-width: calc(100% - 32px) !important;
+    margin: 0 16px 22px !important;
+  }
+}
