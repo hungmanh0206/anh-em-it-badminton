@@ -1,0 +1,48 @@
+/* Keep attendance status markers classic: text ✓ / ×, not 3D image icons. */
+.attendance-mark.yes,
+.checkin .attendance-mark.yes {
+  display: inline-grid !important;
+  place-items: center !important;
+  background: #16a46f !important;
+  color: #ffffff !important;
+  border-color: #b8efd8 !important;
+  box-shadow: 0 8px 18px rgba(22, 164, 111, 0.28) !important;
+  font-size: 23px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-indent: 0 !important;
+}
+
+.attendance-mark.no,
+.checkin .attendance-mark.no {
+  display: inline-grid !important;
+  place-items: center !important;
+  background: #e24b5e !important;
+  color: #ffffff !important;
+  border-color: #ffd1d8 !important;
+  box-shadow: 0 8px 18px rgba(226, 75, 94, 0.24) !important;
+  font-size: 25px !important;
+  font-weight: 950 !important;
+  line-height: 0.92 !important;
+  text-indent: 0 !important;
+}
+
+.attendance-mark.yes::before,
+.attendance-mark.no::before,
+.checkin .attendance-mark.yes::before,
+.checkin .attendance-mark.no::before {
+  content: none !important;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: none !important;
+  background-image: none !important;
+}
+
+.attendance-mark.waiting,
+.checkin .attendance-mark.waiting {
+  background: #f3efe6 !important;
+  border-color: #ded6c8 !important;
+  color: transparent !important;
+  box-shadow: inset 0 2px 4px rgba(35, 28, 18, 0.06) !important;
+}
