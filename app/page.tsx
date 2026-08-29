@@ -1371,6 +1371,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
   const confirmedCount = Object.values(confirmedMatches).filter(Boolean).length;
   const saveMatch = async (match: ScheduleMatch, index: number) => {
+    // Serialize score writes so monthly totals cannot lose updates.
     if (saving !== null) return;
     if (!supabase || !sessionId) return setNotice("Chưa có phiên Supabase để lưu kết quả.");
     const [scoreAText, scoreBText] = scores[index] ?? ["", ""];
