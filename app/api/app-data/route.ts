@@ -1,4 +1,8 @@
+import { ELO_INITIAL_RATING } from "@/lib/elo/constants";
+import { rankEloPlayers, replayEloMatches } from "@/lib/elo/calculate-elo";
+import { isMissingEloFeature } from "@/lib/elo/server";
 import { ApiError, jsonError, requireUser } from "@/lib/supabase-admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +39,29 @@ type RankingRow = {
   color: string;
   placeholder?: boolean;
 };
+
+type EloRankingRow = {
+  memberId: string;
+  username: string;
+  name: string;
+  initials: string;
+  level: number;
+  eloRating: number;
+  rank: number;
+  matches: number;
+  color: string;
+};
+
+type EloStatus = {
+  source: "database" | "calculated" | "unavailable";
+  processedMatches: number;
+  message: string;
+};
+
+type EloRatingRow = { member_id: string; elo_rating: number | string | null; updated_at?: string | null };
+type EloStoredMatch = { id: string; match_no: number; team_a: string[] | null; team_b: string[] | null; score_a: number | null; score_b: number | null };
+type EloSessionRow = { session_date: string; matches?: EloStoredMatch[] | null };
+
 
 type HistoryMatchSummary = {
   count?: number | null;
@@ -185,6 +212,137 @@ function buildRankingRows(rows: MonthlyResultRow[], profiles: SupabaseProfile[])
   }).sort(rankingSort);
 }
 
+const isScoredEloMatch = (match: EloStoredMatch) =>
+  Array.isArray(match.team_a) &&
+  Array.isArray(match.team_b) &&
+  match.team_a.length === 2 &&
+  match.team_b.length === 2 &&
+  typeof match.score_a === "number" &&
+  typeof match.score_b === "number" &&
+  match.score_a !== match.score_b;
+
+const buildEloRows = (rankedRows: Array<{ memberId: string; name?: string; username?: string; eloRating: number; rank: number; level: number; matches?: number }>, activeProfiles: SupabaseProfile[]): EloRankingRow[] => {
+  const profileById = new Map(activeProfiles.flatMap((profile) => profile.id ? [[profile.id, profile] as const] : []));
+  return rankedRows
+    .filter((row) => profileById.has(row.memberId))
+    .map((row, index) => {
+      const profile = profileById.get(row.memberId);
+      const name = profile?.full_name || row.name || "Thành viên";
+      return {
+        memberId: row.memberId,
+        username: profile?.username || row.username || row.memberId,
+        name,
+        initials: initialsFromName(name),
+        level: row.level,
+        eloRating: Math.round(Number(row.eloRating || ELO_INITIAL_RATING) * 10) / 10,
+        rank: row.rank,
+        matches: Number(row.matches || 0),
+        color: colorForIndex(index),
+      };
+    });
+};
+
+async function loadPersistedEloRows(admin: SupabaseClient, activeProfiles: SupabaseProfile[]) {
+  const memberIds = activeProfiles.flatMap((profile) => profile.id ? [profile.id] : []);
+  if (!memberIds.length) return null;
+
+  const { data, error } = await admin
+    .from("elo_ratings")
+    .select("member_id, elo_rating, updated_at")
+    .in("member_id", memberIds);
+  if (error) {
+    if (isMissingEloFeature(error)) return null;
+    throw error;
+  }
+
+  const ratingRows = (data || []) as EloRatingRow[];
+  if (!ratingRows.length) return null;
+
+  const ratingByMember = new Map(ratingRows.map((row) => [row.member_id, Number(row.elo_rating ?? ELO_INITIAL_RATING)]));
+  const latestUpdatedAt = ratingRows.map((row) => row.updated_at).filter(Boolean).sort().at(-1);
+  const ranked = rankEloPlayers(activeProfiles.flatMap((profile) => profile.id ? [{
+    memberId: profile.id,
+    username: profile.username || profile.id,
+    name: profile.full_name || "Thành viên",
+    eloRating: ratingByMember.get(profile.id) ?? ELO_INITIAL_RATING,
+    matches: 0,
+  }] : []));
+
+  return {
+    rows: buildEloRows(ranked, activeProfiles),
+    status: {
+      source: "database" as const,
+      processedMatches: 0,
+      message: latestUpdatedAt ? `ELO đang lấy từ bảng đã backfill, cập nhật gần nhất ${new Date(String(latestUpdatedAt)).toLocaleString("vi-VN")}.` : "ELO đang lấy từ bảng đã backfill.",
+    },
+  };
+}
+
+async function buildCalculatedEloRows(admin: SupabaseClient, activeProfiles: SupabaseProfile[]) {
+  const { data, error } = await admin
+    .from("play_sessions")
+    .select("session_date, matches(id, match_no, team_a, team_b, score_a, score_b)")
+    .order("session_date", { ascending: true });
+  if (error) throw error;
+
+  const sessions = (data || []) as EloSessionRow[];
+  const matches = sessions.flatMap((session) => (session.matches || [])
+    .filter(isScoredEloMatch)
+    .map((match) => ({
+      id: match.id,
+      date: session.session_date,
+      sessionNumber: 0,
+      matchNumber: match.match_no,
+      teamA: match.team_a as string[],
+      teamB: match.team_b as string[],
+      scoreA: match.score_a as number,
+      scoreB: match.score_b as number,
+    })));
+
+  const replay = replayEloMatches({
+    players: activeProfiles.flatMap((profile) => profile.id ? [{
+      memberId: profile.id,
+      username: profile.username || profile.id,
+      name: profile.full_name || "Thành viên",
+      rating: ELO_INITIAL_RATING,
+    }] : []),
+    matches,
+ });
+
+ return {
+   rows: buildEloRows(replay.ratings, activeProfiles),
+   status: {
+     source: "calculated" as const,
+     processedMatches: replay.processedMatches,
+     message: "ELO đang được replay từ các trận đã lưu vì bảng ELO chưa được apply/backfill trong database.",
+   },
+ };
+}
+
+async function loadEloRanking(admin: SupabaseClient, activeProfiles: SupabaseProfile[]) {
+ try {
+   const persisted = await loadPersistedEloRows(admin, activeProfiles);
+   if (persisted) return persisted;
+   return await buildCalculatedEloRows(admin, activeProfiles);
+ } catch (error) {
+   console.warn("Unable to load ELO ranking", error instanceof Error ? error.message : error);
+   const ranked = rankEloPlayers(activeProfiles.flatMap((profile) => profile.id ? [{
+     memberId: profile.id,
+     username: profile.username || profile.id,
+     name: profile.full_name || "Thành viên",
+     eloRating: ELO_INITIAL_RATING,
+     matches: 0,
+   }] : []));
+   return {
+     rows: buildEloRows(ranked, activeProfiles),
+     status: {
+       source: "unavailable" as const,
+       processedMatches: 0,
+       message: "Chưa tải được dữ liệu ELO, đang hiển thị mốc khởi điểm 1000 cho từng thành viên.",
+     },
+   };
+ }
+}
 function requireDateKey(value: string | null, fallback: string, name: string) {
   const key = value || fallback;
   if (!dateKeyPattern.test(key)) throw new ApiError(400, `${name} không hợp lệ.`);
@@ -239,6 +397,7 @@ export async function GET(request: Request) {
     });
 
     const activeProfileRows = (activeProfiles || []) as SupabaseProfile[];
+    const { rows: eloRows, status: eloStatus } = await loadEloRanking(admin, activeProfileRows);
     const selectedRows = rankingRowsByMonth.get(month) ?? [];
     const currentRowsForCalendarMonth = rankingRowsByMonth.get(currentMonthKey) ?? [];
     const liveRowsForSessionMonth = rankingRowsByMonth.get(sessionMonthKey) ?? [];
@@ -287,6 +446,8 @@ export async function GET(request: Request) {
       previousRankingRows,
       championRankingRows,
       championRankingLabel,
+      eloRows,
+      eloStatus,
       historySessions,
       monthCloseStatus: {
         monthKey: month,

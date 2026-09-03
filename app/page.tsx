@@ -7,6 +7,8 @@ import { isCheckinWindowOpenForDate, sessionDatesOfMonth, sessionStateForDate, s
 type MemberRole = "admin" | "sub-admin" | "member";
 type Member = { name: string; initials: string; level: 1 | 2; color: string; present: boolean; username: string; password: string; role?: MemberRole; responded?: boolean };
 type RankingRow = { name: string; initials: string; level: number; points: number; pointsWon: number; pointsLost: number; pointDiff: number; matches: number; color: string; placeholder?: boolean };
+type EloRankingRow = { memberId: string; username: string; name: string; initials: string; level: number; eloRating: number; rank: number; matches: number; color: string };
+type EloStatus = { source: "database" | "calculated" | "unavailable"; processedMatches: number; message: string };
 type MonthCloseStatus = { monthKey: string; monthLabel: string; nextMonthKey: string; nextMonthLabel: string; finalSessionCompleted: boolean; closed: boolean; eligible: boolean; currentRows: number; message: string };
 type HistorySession = { id: string; date: string; matches: number; attendees: number };
 type SupabaseProfile = { id?: string; username?: string | null; full_name?: string | null; level?: number | string | null; role?: MemberRole | string | null; description?: string | null; is_active?: boolean | null };
@@ -26,10 +28,12 @@ type RankingCachePayload = {
   storedAt: number;
 };
 type AppDataCachePayload = RankingCachePayload & {
+  eloRows: EloRankingRow[];
+  eloStatus: EloStatus | null;
   historySessions: HistorySession[];
   monthCloseStatus: MonthCloseStatus | null;
 };
-type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "history";
+type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "elo" | "history";
 type SessionStatus = "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 type AttendanceRow = { choice: "pending" | "attending" | "absent"; drawn_number: number | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
 type HomeSessionPayload = { inactive?: boolean; sessionId?: string | null; sessionDate?: string; status?: SessionStatus; attendances?: AttendanceRow[]; needsReset?: boolean; error?: string };
@@ -76,6 +80,7 @@ const screenTitles: Record<Screen, string> = {
   rules: "Thể lệ",
   schedules: "Lịch thi đấu",
   ranking: "Bảng xếp hạng",
+  elo: "BXH ELO",
   history: "Lịch sử thi đấu",
 };
 const screenKeys = Object.keys(screenTitles) as Screen[];
@@ -274,6 +279,8 @@ export default function Home() {
   const [liveRankingRows, setLiveRankingRows] = useState<RankingRow[]>([]);
   const [previousRankingRows, setPreviousRankingRows] = useState<RankingRow[]>([]);
   const [championRankingRows, setChampionRankingRows] = useState<RankingRow[]>([]);
+  const [eloRows, setEloRows] = useState<EloRankingRow[]>([]);
+  const [eloStatus, setEloStatus] = useState<EloStatus | null>(null);
   const [championRankingLabel, setChampionRankingLabel] = useState(() => {
     const initialDate = new Date();
     return monthLabel(new Date(initialDate.getFullYear(), initialDate.getMonth() - 1, 1));
@@ -632,7 +639,7 @@ export default function Home() {
     const selectedNextMonthKey = localDateKey(selectedNextMonthDate);
     const selectedFinalSaturdayKey = localDateKey(finalSaturdayOfMonth(selectedMonthDate));
     const rankingCacheKey = `aemit-ranking-cache-v3:${month}:${currentMonthKey}:${sessionMonthKey}:${previousMonthKey}`;
-    const appDataCacheKey = `aemit-app-data-cache-v2:${month}:${currentMonthKey}:${sessionMonthKey}:${previousMonthKey}`;
+    const appDataCacheKey = `aemit-app-data-cache-v3:${month}:${currentMonthKey}:${sessionMonthKey}:${previousMonthKey}`;
     const loadRanking = async () => {
       const useAggregatedAppData = true;
       const applyAppData = (payload: AppDataCachePayload) => {
@@ -642,6 +649,8 @@ export default function Home() {
         setPreviousRankingRows(payload.previousRankingRows);
         setChampionRankingRows(payload.championRankingRows);
         setChampionRankingLabel(payload.championRankingLabel);
+        setEloRows(payload.eloRows || []);
+        setEloStatus(payload.eloStatus || null);
         setHistorySessions(payload.historySessions);
         setMonthCloseStatus(payload.monthCloseStatus);
       };
@@ -798,6 +807,9 @@ export default function Home() {
     const channel = client
       .channel("club-ranking-live")
       .on("postgres_changes", { event: "*", schema: "public", table: "monthly_results" }, () => {
+        setRankingRefreshTick((tick) => tick + 1);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "elo_ratings" }, () => {
         setRankingRefreshTick((tick) => tick + 1);
       })
       .subscribe();
@@ -1104,6 +1116,7 @@ export default function Home() {
         {isAdmin && <button className={screen === "members" ? "active" : ""} onClick={() => setScreen("members")}><AppIcon name="members" className="nav-app-icon" /> Thành viên</button>}
         <button className={screen === "schedules" ? "active" : ""} onClick={() => setScreen("schedules")}><AppIcon name="schedule" className="nav-app-icon" /> Lịch thi đấu</button>
         <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); }}><AppIcon name="ranking" className="nav-app-icon" /> Bảng xếp hạng</button>
+        <button className={screen === "elo" ? "active" : ""} onClick={() => setScreen("elo")}><AppIcon name="target" className="nav-app-icon" /> BXH ELO</button>
         <button className={screen === "history" ? "active" : ""} onClick={() => setScreen("history")}><AppIcon name="history" className="nav-app-icon" /> Lịch sử thi đấu</button>
         <button className={screen === "rules" ? "active" : ""} onClick={() => setScreen("rules")}><AppIcon name="rules" className="nav-app-icon" /> Thể lệ</button>
       </nav>
@@ -1112,7 +1125,7 @@ export default function Home() {
     </aside>
     <section className="content">
       <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className="welcome-avatar" style={{ background: currentUser.color }} aria-hidden="true">{welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
-      {screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : <>
+      {screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : <>
         <section className="hero">
           <div className="hero-copy"><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div>
           <img className="hero-logo" src="/club-logo.png?v=club-3d-logo" alt="" aria-hidden="true" />
@@ -1266,7 +1279,7 @@ function Rules() {
           <li>Thi đấu theo thể thức đánh đôi, mỗi trận gồm 2 người đấu với 2 người.</li>
           <li>Lịch đấu ưu tiên công bằng về số trận, đồng đội và đối thủ.</li>
           <li>Hạn chế tối đa việc trùng lặp cặp đấu trong cùng một buổi.</li>
-          <li>Phân nhóm dựa trên BXH tháng trước để trận đấu vừa sức và hấp dẫn hơn.</li>
+          <li>Phân nhóm Level dựa trên BXH ELO hiện hành để trận đấu vừa sức và hấp dẫn hơn.</li>
         </ul>
       </article>
 
@@ -1276,8 +1289,8 @@ function Rules() {
           {memberNames.map((name) => <span key={name}><b>{name}</b></span>)}
         </div>
         <div className="rules-level-grid">
-          <div><span className="level-chip level-one">Level 1</span><b>Hạng 1–4</b><p>Nhóm đang dẫn đầu theo BXH tháng trước.</p></div>
-          <div><span className="level-chip level-two">Level 2</span><b>Hạng 5–10</b><p>Nhóm còn lại, được cập nhật sau khi chốt BXH tháng.</p></div>
+          <div><span className="level-chip level-one">Level 1</span><b>Top 4 ELO</b><p>Nhóm có ELO cao nhất tại thời điểm hiện hành.</p></div>
+          <div><span className="level-chip level-two">Level 2</span><b>Còn lại</b><p>Nhóm còn lại theo BXH ELO; tự cập nhật khi ELO thay đổi.</p></div>
         </div>
       </article>
 
@@ -1297,7 +1310,7 @@ function Rules() {
         <ol>
           <li>Mỗi thành viên tham gia sẽ thi đấu đúng 4 trận trong buổi.</li>
           <li>Không để hai người làm đồng đội quá 1 lần/tuần nếu lịch cho phép.</li>
-          <li>Phân bổ đối thủ dựa trên level và thứ hạng hiện có.</li>
+          <li>Phân bổ đối thủ dựa trên Level hiện hành; Level được xác định từ ELO, không phải điểm thưởng tháng.</li>
           <li>Ưu tiên đa dạng đội hình, tránh cảm giác “gặp mãi một cặp”.</li>
           <li>Khuyến khích giao lưu giữa các cấp độ để mọi trận đều mới mẻ.</li>
         </ol>
@@ -1610,6 +1623,43 @@ function Ranking({ month, rows, onMonthChange, monthOptions, isAdmin, closeStatu
       const isTopRank = hasRankingData && i < 3;
       return <div className={"rank-row rank-columns " + (isTopRank ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={isTopRank ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className="avatar small" style={{ background: row.color }}>{row.initials}</div><b>{row.name}</b><span className="level">L{row.level}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span><div className="rank-mobile-stats" aria-hidden="true"><span><em>Thắng</em><b>{row.pointsWon}</b></span><span><em>Thua</em><b>{row.pointsLost}</b></span><span><em>Hiệu</em><b className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</b></span><span><em>Trận</em><b>{row.matches}</b></span></div></div>;
     }) : <div className="empty-ranking">Chưa có thành viên hoạt động để hiển thị BXH {month}.</div>}</div>
+  </section>;
+}
+function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus | null }) {
+  const leader = rows[0];
+  const sourceLabel = status?.source === "database" ? "Database" : status?.source === "calculated" ? "Replay" : "Tạm thời";
+  return <section className="elo-page">
+    <section className="panel elo-hero-panel">
+      <div className="elo-hero-copy">
+        <p className="eyebrow">ELO RATING</p>
+        <h2>Bảng xếp hạng trình độ</h2>
+        <p>ELO phản ánh trình độ tương đối dựa trên kết quả thi đấu và sức mạnh đối thủ. Top 4 ELO hiện tại là Level 1, còn lại là Level 2; ELO không ảnh hưởng đến điểm BXH hoặc giải thưởng tháng.</p>
+      </div>
+      <div className="elo-hero-stats">
+        <div><span>Level 1</span><b>Top 4</b></div>
+        <div><span>Đã replay</span><b>{status?.processedMatches ?? 0}</b></div>
+        <div><span>Dẫn đầu</span><b>{leader ? Math.round(leader.eloRating) : "—"}</b></div>
+      </div>
+    </section>
+
+    <section className="panel elo-ranking-panel">
+      <div className="panel-head elo-panel-head">
+        <div><h2>BXH ELO thành viên</h2><p>Level được cập nhật theo thứ hạng ELO hiện tại; nếu bằng ELO thì dùng mã thành viên ổn định để tie-break.</p></div>
+        <span className="count-pill elo-source-pill"><b>{sourceLabel}</b><small>{rows.length} thành viên</small></span>
+      </div>
+      {status && <div className={`elo-status elo-${status.source}`}>{status.message}</div>}
+      <div className="elo-list">
+        {rows.length ? rows.map((row, index) => {
+          const isTopRank = index < 3;
+          return <article className={`elo-row ${isTopRank ? `top-rank top-${index + 1}` : ""}`} key={row.memberId}>
+            <div className={isTopRank ? `elo-rank medal m${index}` : "elo-rank"}>{index === 0 ? <AppIcon name="trophy" className="inline-app-icon" /> : row.rank}</div>
+            <div className="person elo-person"><div className="avatar small" style={{ background: row.color }}>{row.initials}</div><div><b>{row.name}</b><small>@{row.username}</small></div><span className="level">L{row.level}</span></div>
+            <div className="elo-rating-value"><span>ELO</span><b>{row.eloRating.toLocaleString("vi-VN", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</b></div>
+            <div className="elo-row-meta"><span>{row.matches} trận ELO</span><b>{row.level === 1 ? "Level 1" : "Level 2"}</b></div>
+          </article>;
+        }) : <div className="empty-ranking">Chưa có thành viên hoạt động để hiển thị BXH ELO.</div>}
+      </div>
+    </section>
   </section>;
 }
 function History({ sessions, currentMonth }: { sessions: HistorySession[]; currentMonth: string }) {

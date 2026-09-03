@@ -1,3 +1,4 @@
+import { recalculateEloIfAvailable } from "@/lib/elo/server";
 import { ApiError, jsonError, requireUser } from "@/lib/supabase-admin";
 import { isCheckinWindowOpenForDate, normalizeSessionDateKey, rescheduledOriginalDateKey, targetSessionDateKey } from "@/lib/session-dates";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -211,6 +212,7 @@ async function resetWorkflowAfterAttendanceChange(admin: SupabaseClient, session
   if (matchesDeleteError) throw matchesDeleteError;
   if (drawResetError) throw drawResetError;
   if (requestCleanupError) throw requestCleanupError;
+  await recalculateEloIfAvailable(admin);
 
   const { data: attendances, error: attendanceError } = await admin
     .from("attendances")

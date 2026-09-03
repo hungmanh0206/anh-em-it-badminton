@@ -25,6 +25,7 @@ import "./attendance-mark-classic.css";
 import "./sidebar-profile-compact.css";
 import "./ranking-table-fix.css";
 import "./ranking-spacing-16.css";
+import "./elo-ranking.css";
 
 export const metadata: Metadata = {
   title: "Anh Em IT — Quản lý CLB Cầu lông",

@@ -1,3 +1,4 @@
+import { recalculateEloIfAvailable } from "@/lib/elo/server";
 import { jsonError, requireScoreManager } from "@/lib/supabase-admin";
 
 type Body = {
@@ -39,7 +40,6 @@ const nextMonthStart = (dateText: string) => {
 };
 
 const assertScore = (score: unknown) => Number.isInteger(score) && Number(score) >= 0;
-
 export async function POST(request: Request) {
   try {
     const { admin } = await requireScoreManager(request);
@@ -188,6 +188,7 @@ export async function POST(request: Request) {
     const completed = Boolean(body.totalMatches && count && count >= body.totalMatches);
     const { error: statusError } = await admin.from("play_sessions").update({ status: completed ? "completed" : "scheduled" }).eq("id", body.sessionId);
     if (statusError) throw statusError;
+    await recalculateEloIfAvailable(admin);
 
     return Response.json({ ok: true, completed });
   } catch (error) {

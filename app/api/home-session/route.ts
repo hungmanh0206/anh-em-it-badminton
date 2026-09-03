@@ -1,3 +1,4 @@
+import { recalculateEloIfAvailable } from "@/lib/elo/server";
 import { ApiError, jsonError, requireUser } from "@/lib/supabase-admin";
 import { isCheckinWindowOpenForDate, normalizeSessionDateKey, rescheduledOriginalDateKey, targetSessionDateKey } from "@/lib/session-dates";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -116,6 +117,7 @@ async function loadSessionPayload(request: Request, reset: boolean) {
     if (requestsError) throw requestsError;
     if (attendancesError) throw attendancesError;
     if (sessionError) throw sessionError;
+    await recalculateEloIfAvailable(admin);
     session.status = "draft";
   }
 

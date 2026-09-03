@@ -1,4 +1,7 @@
+import { ELO_INITIAL_RATING } from "@/lib/elo/constants";
+import { isMissingEloFeature, snapshotEloMonthIfAvailable } from "@/lib/elo/server";
 import { jsonError, requireAdmin } from "@/lib/supabase-admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 type Body = {
   month?: string;
@@ -46,6 +49,39 @@ const emptyMonthlyRow = (month: string, memberId: string, level: "1" | "2") => (
   matches_played: 0,
   level_next_month: level,
 });
+
+type EloRatingRow = { member_id: string; elo_rating: number | string | null };
+
+async function loadEloLevelAssignments(admin: SupabaseClient, activeProfiles: Profile[]) {
+  const memberIds = activeProfiles.map((profile) => profile.id);
+  if (!memberIds.length) return null;
+
+  const { data, error } = await admin
+    .from("elo_ratings")
+    .select("member_id, elo_rating")
+    .in("member_id", memberIds);
+  if (error) {
+    if (isMissingEloFeature(error)) return null;
+    throw error;
+  }
+
+  const ratingRows = (data || []) as EloRatingRow[];
+  if (!ratingRows.length) return null;
+
+  const ratingByMember = new Map(ratingRows.map((row) => [row.member_id, Number(row.elo_rating ?? ELO_INITIAL_RATING)]));
+  return activeProfiles
+    .map((profile) => ({
+      memberId: profile.id,
+      eloRating: ratingByMember.get(profile.id) ?? ELO_INITIAL_RATING,
+    }))
+    .sort((a, b) => b.eloRating - a.eloRating || a.memberId.localeCompare(b.memberId))
+    .map((row, index) => ({
+      memberId: row.memberId,
+      rank: index + 1,
+      nextLevel: index < 4 ? "1" as const : "2" as const,
+    }));
+}
+
 
 export async function POST(request: Request) {
   try {
@@ -115,10 +151,13 @@ export async function POST(request: Request) {
       a.matches_played - b.matches_played ||
       String(a.created_at || "").localeCompare(String(b.created_at || ""))
     );
-    const assignments = sortedRows.map((row, index) => ({
-      memberId: row.member_id,
-      rank: index + 1,
-      nextLevel: index < 4 ? "1" as const : "2" as const,
+    const monthlyRankByMember = new Map(sortedRows.map((row, index) => [row.member_id, index + 1] as const));
+    const eloAssignments = await loadEloLevelAssignments(admin, activeProfiles);
+    const eloLevelByMember = new Map((eloAssignments ?? activeProfiles.map((profile) => ({ memberId: profile.id, nextLevel: profile.level }))).map((assignment) => [assignment.memberId, assignment.nextLevel] as const));
+    const assignments = activeProfiles.map((profile) => ({
+      memberId: profile.id,
+      rank: monthlyRankByMember.get(profile.id) ?? 999,
+      nextLevel: eloLevelByMember.get(profile.id) ?? profile.level,
     }));
 
     for (const assignment of assignments) {
@@ -135,6 +174,8 @@ export async function POST(request: Request) {
         .eq("id", assignment.memberId);
       if (updateProfileError) throw updateProfileError;
     }
+
+    await snapshotEloMonthIfAvailable(admin, month);
 
     const nextMonthRows = assignments.map((assignment) => emptyMonthlyRow(nextMonth, assignment.memberId, assignment.nextLevel));
     const { error: createNextMonthError } = await admin
