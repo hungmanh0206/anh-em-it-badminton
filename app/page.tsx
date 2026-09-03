@@ -540,7 +540,7 @@ export default function Home() {
       }));
     };
     const resetHomeWorkflow = async () => {
-      const { data: profiles } = await client.from("profiles").select("username, full_name, level, role, description").eq("is_active", true).order("full_name");
+      const { data: profiles } = await client.from("profiles").select("id, username, full_name, level, role, description").eq("is_active", true).order("full_name");
       if (cancelled) return;
       applyPendingProfiles((profiles || []) as SupabaseProfile[]);
       setSessionId(null);
@@ -638,8 +638,8 @@ export default function Home() {
     const selectedNextMonthDate = nextMonthStartDate(selectedMonthDate);
     const selectedNextMonthKey = localDateKey(selectedNextMonthDate);
     const selectedFinalSaturdayKey = localDateKey(finalSaturdayOfMonth(selectedMonthDate));
-    const rankingCacheKey = `aemit-ranking-cache-v3:${month}:${currentMonthKey}:${sessionMonthKey}:${previousMonthKey}`;
-    const appDataCacheKey = `aemit-app-data-cache-v3:${month}:${currentMonthKey}:${sessionMonthKey}:${previousMonthKey}`;
+    const rankingCacheKey = `aemit-ranking-cache-v4:${month}:${currentMonthKey}:${sessionMonthKey}:${previousMonthKey}`;
+    const appDataCacheKey = `aemit-app-data-cache-v4:${month}:${currentMonthKey}:${sessionMonthKey}:${previousMonthKey}`;
     const loadRanking = async () => {
       const useAggregatedAppData = true;
       const applyAppData = (payload: AppDataCachePayload) => {
@@ -678,7 +678,7 @@ export default function Home() {
         }
         return;
       }
-      const rankingSelect = "month, total_points, points_for, points_against, point_diff, matches_played, level_next_month, created_at, profiles!monthly_results_member_id_fkey(username, full_name, level)";
+      const rankingSelect = "month, total_points, points_for, points_against, point_diff, matches_played, level_next_month, created_at, profiles!monthly_results_member_id_fkey(id, username, full_name, level)";
       const championMonthDates = recentMonthStarts(monthStartFromKey(currentMonthKey), 12);
       const championMonthKeys = championMonthDates.map(localDateKey);
       const championFinalSessionKeys = championMonthDates.map((date) => localDateKey(finalSaturdayOfMonth(date)));
@@ -731,7 +731,7 @@ export default function Home() {
       const [{ data: allRankingData }, { data: championFinalSessions }, { data: activeProfiles }, { data: finalSession }, { count: nextMonthRows }] = await Promise.all([
         client.from("monthly_results").select(rankingSelect).in("month", requestedRankingMonths),
         client.from("play_sessions").select("session_date, status").in("session_date", championFinalSessionKeys),
-        client.from("profiles").select("username, full_name, level").eq("is_active", true).order("full_name"),
+        client.from("profiles").select("id, username, full_name, level").eq("is_active", true).order("full_name"),
         client.from("play_sessions").select("status").eq("session_date", selectedFinalSaturdayKey).maybeSingle(),
         client.from("monthly_results").select("id", { count: "exact", head: true }).eq("month", selectedNextMonthKey),
       ]);

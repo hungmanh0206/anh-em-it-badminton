@@ -367,7 +367,7 @@ export async function GET(request: Request) {
     const championMonthKeys = championMonthDates.map(dateKey);
     const championFinalSessionKeys = championMonthDates.map((date) => dateKey(finalSaturdayOfMonth(date)));
     const requestedRankingMonths = [...new Set([month, currentMonthKey, sessionMonthKey, previousMonthKey, ...championMonthKeys])];
-    const rankingSelect = "month, total_points, points_for, points_against, point_diff, matches_played, level_next_month, created_at, profiles!monthly_results_member_id_fkey(username, full_name, level)";
+    const rankingSelect = "month, total_points, points_for, points_against, point_diff, matches_played, level_next_month, created_at, profiles!monthly_results_member_id_fkey(id, username, full_name, level)";
 
     const [
       { data: allRankingData, error: rankingError },
@@ -379,7 +379,7 @@ export async function GET(request: Request) {
     ] = await Promise.all([
       admin.from("monthly_results").select(rankingSelect).in("month", requestedRankingMonths),
       admin.from("play_sessions").select("session_date, status").in("session_date", championFinalSessionKeys),
-      admin.from("profiles").select("username, full_name, level").eq("is_active", true).order("full_name"),
+      admin.from("profiles").select("id, username, full_name, level").eq("is_active", true).order("full_name"),
       admin.from("play_sessions").select("status").eq("session_date", selectedFinalSaturdayKey).maybeSingle(),
       admin.from("monthly_results").select("id", { count: "exact", head: true }).eq("month", selectedNextMonthKey),
       admin.from("play_sessions").select("id, session_date, matches(match_no, team_a, team_b), attendances(choice)").eq("status", "completed").order("session_date", { ascending: false }),
