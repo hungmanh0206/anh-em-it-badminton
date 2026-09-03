@@ -80,7 +80,7 @@ const screenTitles: Record<Screen, string> = {
   rules: "Thể lệ",
   schedules: "Lịch thi đấu",
   ranking: "Bảng xếp hạng",
-  elo: "BXH ELO",
+  elo: "ELO",
   history: "Lịch sử thi đấu",
 };
 const screenKeys = Object.keys(screenTitles) as Screen[];
@@ -1117,7 +1117,7 @@ export default function Home() {
         {isAdmin && <button className={screen === "members" ? "active" : ""} onClick={() => setScreen("members")}><AppIcon name="members" className="nav-app-icon" /> Thành viên</button>}
         <button className={screen === "schedules" ? "active" : ""} onClick={() => setScreen("schedules")}><AppIcon name="schedule" className="nav-app-icon" /> Lịch thi đấu</button>
         <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); }}><AppIcon name="ranking" className="nav-app-icon" /> Bảng xếp hạng</button>
-        <button className={screen === "elo" ? "active" : ""} onClick={() => setScreen("elo")}><AppIcon name="target" className="nav-app-icon" /> BXH ELO</button>
+        <button className={screen === "elo" ? "active" : ""} onClick={() => setScreen("elo")}><AppIcon name="target" className="nav-app-icon" /> ELO</button>
         <button className={screen === "history" ? "active" : ""} onClick={() => setScreen("history")}><AppIcon name="history" className="nav-app-icon" /> Lịch sử thi đấu</button>
         <button className={screen === "rules" ? "active" : ""} onClick={() => setScreen("rules")}><AppIcon name="rules" className="nav-app-icon" /> Thể lệ</button>
       </nav>
@@ -1636,19 +1636,19 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
     <section className="panel elo-hero-panel">
       <div className="elo-hero-copy">
         <p className="eyebrow">ELO RATING</p>
-        <h2>Bảng xếp hạng trình độ</h2>
-        <p>ELO phản ánh trình độ tương đối dựa trên kết quả thi đấu và sức mạnh đối thủ. Top 4 ELO hiện tại là Level 1, còn lại là Level 2; ELO không ảnh hưởng đến điểm BXH hoặc giải thưởng tháng.</p>
+        <h2>Bảng ELO thành viên</h2>
+        <p>Top 4 ELO hiện tại là Level 1, còn lại là Level 2. Sau mỗi trận đã lưu, ELO và level sẽ cập nhật để tuần sau xếp lịch đúng trình độ mới.</p>
       </div>
-      <div className="elo-hero-stats">
+      <div className="elo-hero-stats" aria-label="Tổng quan ELO">
         <div><span>Level 1</span><b>Top 4</b></div>
-        <div><span>Đã replay</span><b>{status?.processedMatches ?? 0}</b></div>
+        <div><span>Đã tính</span><b>{status?.processedMatches ?? 0}</b></div>
         <div><span>Dẫn đầu</span><b>{leader ? Math.round(leader.eloRating) : "—"}</b></div>
       </div>
     </section>
 
     <section className="panel elo-ranking-panel">
       <div className="panel-head elo-panel-head">
-        <div><h2>BXH ELO thành viên</h2><p>Level được cập nhật theo thứ hạng ELO hiện tại; nếu bằng ELO thì dùng mã thành viên ổn định để tie-break.</p></div>
+        <div><h2>Thứ hạng ELO</h2><p>Level lấy theo thứ hạng ELO hiện tại, tách riêng với BXH điểm thưởng tháng.</p></div>
         <span className="count-pill elo-source-pill"><b>{sourceLabel}</b><small>{rows.length} thành viên</small></span>
       </div>
       {status && <div className={`elo-status elo-${status.source}`}>{status.message}</div>}
@@ -1657,11 +1657,11 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
           const isTopRank = index < 3;
           return <article className={`elo-row ${isTopRank ? `top-rank top-${index + 1}` : ""}`} key={row.memberId}>
             <div className={isTopRank ? `elo-rank medal m${index}` : "elo-rank"}>{index === 0 ? <AppIcon name="trophy" className="inline-app-icon" /> : row.rank}</div>
-            <div className="person elo-person"><div className="avatar small" style={{ background: row.color }}>{row.initials}</div><div><b>{row.name}</b><small>@{row.username}</small></div><span className="level">L{row.level}</span></div>
+            <div className="person elo-person"><div className="avatar small" style={{ background: row.color }}>{row.initials}</div><div><b>{row.name}</b><small>@{row.username}</small></div></div>
             <div className="elo-rating-value"><span>ELO</span><b>{row.eloRating.toLocaleString("vi-VN", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</b></div>
-            <div className="elo-row-meta"><span>{row.matches} trận ELO</span><b>{row.level === 1 ? "Level 1" : "Level 2"}</b></div>
+            <div className="elo-row-meta"><span>{row.matches} trận</span><b>{row.level === 1 ? "Level 1" : "Level 2"}</b></div>
           </article>;
-        }) : <div className="empty-ranking">Chưa có thành viên hoạt động để hiển thị BXH ELO.</div>}
+        }) : <div className="empty-ranking">Chưa có thành viên hoạt động để hiển thị ELO.</div>}
       </div>
     </section>
   </section>;
