@@ -22,6 +22,7 @@ import "./member-role.css";
 import "./brand-logo.css";
 import "./app-icons.css";
 import "./attendance-mark-classic.css";
+import "./sidebar-profile-compact.css";
 import "./ranking-table-fix.css";
 import "./ranking-spacing-16.css";
 
@@ -53,6 +54,7 @@ export default function RootLayout({
     </html>
   );
 }
+
 
 
 

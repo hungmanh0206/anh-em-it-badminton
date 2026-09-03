@@ -1,0 +1,75 @@
+/* Sidebar profile compact polish: readable member identity + clean logout control. */
+.sidebar .profile {
+  min-height: 66px !important;
+  margin: auto 2px 0 !important;
+  padding: 11px 10px !important;
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) 38px !important;
+  align-items: center !important;
+  gap: 9px !important;
+  overflow: hidden !important;
+  border-radius: 18px !important;
+  background:
+    linear-gradient(135deg, rgba(255, 249, 226, 0.12), rgba(255, 183, 0, 0.045)),
+    rgba(255, 255, 255, 0.035) !important;
+}
+
+.sidebar .profile .avatar.small {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  border-radius: 999px !important;
+}
+
+.sidebar .profile > div:not(.avatar) {
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 3px !important;
+}
+
+.sidebar .profile b {
+  max-width: none !important;
+  overflow: hidden !important;
+  color: #fffaf0 !important;
+  font-size: 15px !important;
+  line-height: 1.06 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.sidebar .profile small {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  color: rgba(255, 244, 198, 0.72) !important;
+  font-size: 10.5px !important;
+  line-height: 1.05 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.sidebar .logout {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  padding: 0 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border-radius: 13px !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
+
+.sidebar .logout::before {
+  width: 21px !important;
+  height: 21px !important;
+  margin: 0 !important;
+}
+
+@media (max-width: 800px) {
+  .sidebar .profile {
+    min-height: 66px !important;
+    grid-template-columns: 42px minmax(0, 1fr) 38px !important;
+  }
+}

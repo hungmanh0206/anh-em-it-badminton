@@ -88,30 +88,7 @@
   background-size: 78% auto;
   box-shadow: 0 14px 30px rgba(255, 183, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
-
-.attendance-mark.yes,
-.attendance-mark.no {
-  font-size: 0 !important;
-}
-
-.attendance-mark.yes::before,
-.attendance-mark.no::before {
-  content: "";
-  width: 22px;
-  height: 22px;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-}
-
-.attendance-mark.yes::before {
-  background-image: var(--icon-check);
-}
-
-.attendance-mark.no::before {
-  background-image: var(--icon-error);
-}
-
+
 .result-icon-button .result-action-icon {
   display: inline-block;
   width: 19px;
@@ -189,12 +166,7 @@
   justify-content: center;
   gap: 6px;
 }
-
-.attendance-mark.yes::before,
-.attendance-mark.no::before {
-  display: block;
-}
-
+
 .welcome-member.rank-1 .welcome-rank::before,
 .welcome-member.rank-2 .welcome-rank::before,
 .welcome-member.rank-3 .welcome-rank::before {
@@ -225,3 +197,4 @@
   height: 20px;
   background: var(--icon-trophy) center / contain no-repeat;
 }
+
