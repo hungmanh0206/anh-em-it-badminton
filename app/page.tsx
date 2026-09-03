@@ -1106,6 +1106,7 @@ export default function Home() {
   const profileAchievement = profileRank > 0 ? profileRows[profileRank - 1] : null;
   const profileHasRankingData = Boolean(profileAchievement && !profileAchievement.placeholder && profileAchievement.matches > 0);
   const profileRankClass = profileHasRankingData && profileRank > 0 && profileRank <= 3 ? `rank-${profileRank}` : "rank-none";
+  const profileElo = eloRows.find((row) => row.username === currentUser.username || row.name === currentUser.name) ?? null;
   const champion = championRankingRows[0];
 
   return <main className={"app-shell " + (sidebarOpen ? "sidebar-open" : "")}>
@@ -1141,11 +1142,11 @@ export default function Home() {
     </section>
     {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}
     {confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}
-    {showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} onClose={() => setShowProfileCard(false)} />}
+    {showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} elo={profileElo} onClose={() => setShowProfileCard(false)} />}
   </main>;
 }
 
-function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass, hasRankingData, onClose }: { member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; hasRankingData: boolean; onClose: () => void }) {
+function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass, hasRankingData, elo, onClose }: { member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; hasRankingData: boolean; elo: EloRankingRow | null; onClose: () => void }) {
   const isTopRank = hasRankingData && rank > 0 && rank <= 3;
   const pointDiff = achievement?.pointDiff;
   const pointDiffLabel = typeof pointDiff === "number" ? `${pointDiff > 0 ? "+" : ""}${pointDiff}` : "0";
@@ -1156,6 +1157,8 @@ function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass
   const pointsLost = achievement?.pointsLost ?? 0;
   const matches = achievement?.matches ?? 0;
   const roleLabel = memberRoleLabel(member.role);
+  const eloDisplay = typeof elo?.eloRating === "number" ? elo.eloRating.toLocaleString("vi-VN", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "1.000,0";
+  const eloRankDisplay = typeof elo?.rank === "number" ? `Top ${elo.rank} ELO` : "ELO hiện tại";
   return <aside className={`member-profile-popover profile-${rankClass}`} role="dialog" aria-modal="true" aria-label={`Thông tin hồ sơ ${member.name}`}>
     <button className="modal-close profile-close" onClick={onClose} aria-label="Đóng">×</button>
     <div className="profile-hero-card">
@@ -1163,7 +1166,8 @@ function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass
       <div className="profile-identity">
         <p>{hasRankingData && rank > 0 ? `${positionLabel} · ${achievementMonth}` : "Hồ sơ tháng hiện tại"}</p>
         <h2>{member.name}</h2>
-        <span>{roleLabel} · Level {member.level}</span>
+        <span className="profile-role-line">{roleLabel} · Level {member.level}</span>
+        <span className="profile-elo-badge"><strong>ELO {eloDisplay}</strong><em>{eloRankDisplay}</em></span>
       </div>
     </div>
     <div className="profile-score-card">
