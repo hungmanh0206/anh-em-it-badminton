@@ -28,6 +28,7 @@ type MonthlyResultRow = {
 };
 
 type RankingRow = {
+  username?: string;
   name: string;
   initials: string;
   level: number;
@@ -135,6 +136,7 @@ function zeroRowsFromProfiles(profiles: SupabaseProfile[]) {
     .map((profile, index) => {
       const name = profile.full_name || "Thành viên";
       return {
+        username: profile.username || name,
         name,
         initials: initialsFromName(name),
         level: Number(profile.level || 2),
@@ -185,6 +187,7 @@ function buildRankingRows(rows: MonthlyResultRow[], profiles: SupabaseProfile[])
     const name = profile.full_name || "Thành viên";
     if (!row) {
       return {
+        username: profile.username || name,
         name,
         initials: initialsFromName(name),
         level: Number(profile.level || 2),
@@ -198,6 +201,7 @@ function buildRankingRows(rows: MonthlyResultRow[], profiles: SupabaseProfile[])
       };
     }
     return {
+      username: profile.username || name,
       name,
       initials: initialsFromName(name),
       level: Number(profile.level || row.level_next_month || 2),

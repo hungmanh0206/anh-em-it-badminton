@@ -10,8 +10,9 @@
     "build": "next build",
     "sites:build": "vinext build",
     "start": "next start",
-    "test": "npm run test:elo && npm run build",
+    "test": "npm run test:elo && npm run test:schedule && npm run build",
     "test:elo": "node --test tests/elo.test.mjs",
+    "test:schedule": "node --test tests/schedule-reorder.test.mjs",
     "elo:backfill": "node scripts/elo-backfill.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"

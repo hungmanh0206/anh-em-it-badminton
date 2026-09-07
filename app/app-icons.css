@@ -1,22 +1,22 @@
 :root {
-  --icon-home: url("/app-icons/home.png?v=3d-icons");
-  --icon-members: url("/app-icons/members.png?v=3d-icons");
-  --icon-schedule: url("/app-icons/schedule.png?v=3d-icons");
-  --icon-ranking: url("/app-icons/ranking.png?v=3d-icons");
-  --icon-history: url("/app-icons/history.png?v=3d-icons");
-  --icon-rules: url("/app-icons/rules.png?v=3d-icons");
-  --icon-trophy: url("/app-icons/trophy.png?v=3d-icons");
-  --icon-crown: url("/app-icons/crown.png?v=3d-icons");
-  --icon-check: url("/app-icons/check.png?v=3d-icons");
-  --icon-success: url("/app-icons/success.png?v=3d-icons");
-  --icon-error: url("/app-icons/error.png?v=3d-icons");
-  --icon-target: url("/app-icons/target.png?v=3d-icons");
-  --icon-pencil: url("/app-icons/pencil.png?v=3d-icons");
-  --icon-save: url("/app-icons/save.png?v=3d-icons");
-  --icon-logout: url("/app-icons/logout.png?v=3d-icons");
-  --icon-clipboard: url("/app-icons/clipboard.png?v=3d-icons");
-  --icon-gift: url("/app-icons/gift.png?v=3d-icons");
-  --icon-star: url("/app-icons/star.png?v=3d-icons");
+  --icon-home: url("/app-icons/home.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-members: url("/app-icons/members.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-schedule: url("/app-icons/schedule.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-ranking: url("/app-icons/ranking.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-history: url("/app-icons/history.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-rules: url("/app-icons/rules.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-trophy: url("/app-icons/trophy.png?v=trophy-glass-nobg-v2-20260904");
+  --icon-crown: url("/app-icons/crown.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-check: url("/app-icons/check.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-success: url("/app-icons/success.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-error: url("/app-icons/error.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-target: url("/app-icons/target.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-pencil: url("/app-icons/pencil.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-save: url("/app-icons/save.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-logout: url("/app-icons/logout.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-clipboard: url("/app-icons/clipboard.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-gift: url("/app-icons/gift.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-star: url("/app-icons/star.png?v=sidebar-icons-v2-nobg-20260904");
 }
 
 .app-icon {
@@ -198,3 +198,110 @@
   background: var(--icon-trophy) center / contain no-repeat;
 }
 
+
+/* Sidebar icon replacement and score-action text polish. */
+.sidebar nav button {
+  min-height: 47px !important;
+  gap: 12px !important;
+}
+
+.sidebar nav button .nav-app-icon {
+  width: 34px !important;
+  height: 34px !important;
+  flex-basis: 34px !important;
+  transform: translateY(-1px);
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.28));
+}
+
+.sidebar nav button.active .nav-app-icon {
+  transform: translateY(-2px) scale(1.08);
+  filter: drop-shadow(0 10px 16px rgba(255, 183, 0, 0.35));
+}
+
+.result-icon-button .result-action-icon {
+  display: none !important;
+  background: none !important;
+}
+
+.result-icon-button .result-action-text {
+  display: inline !important;
+}
+
+@media (max-width: 800px) {
+  .sidebar nav button {
+    min-height: 50px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .sidebar nav button .nav-app-icon {
+    width: 36px !important;
+    height: 36px !important;
+    flex-basis: 36px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .result-entry-panel .match-result-row {
+    grid-template-columns: 14px minmax(0, 1fr) 66px minmax(0, 1fr) 58px !important;
+    gap: 5px !important;
+  }
+
+  .result-entry-panel .result-actions .primary,
+  .result-entry-panel .result-actions .soft-btn {
+    width: auto !important;
+    min-width: 52px !important;
+    height: 30px !important;
+    padding: 0 8px !important;
+    border-radius: 999px !important;
+    font-size: 9.5px !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+    box-shadow: 0 7px 15px rgba(184, 118, 14, 0.13) !important;
+  }
+
+  .result-entry-panel .result-actions .soft-btn {
+    border-color: rgba(43, 34, 22, 0.1) !important;
+    background: #fffdf8 !important;
+    color: #6f5630 !important;
+  }
+
+  .result-entry-panel .result-actions .primary {
+    background: linear-gradient(180deg, #ffc933, #ffb300) !important;
+    color: #15120a !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .result-entry-panel .match-result-row {
+    grid-template-columns: 12px minmax(0, 1fr) 58px minmax(0, 1fr) 50px !important;
+  }
+
+  .result-entry-panel .result-actions .primary,
+  .result-entry-panel .result-actions .soft-btn {
+    min-width: 48px !important;
+    height: 28px !important;
+    padding: 0 7px !important;
+    font-size: 9px !important;
+  }
+}
+/* Avatar art without the global Liquid Glass theme. */
+.avatar.avatar-art,
+.welcome-avatar.avatar-art,
+.profile-medal.avatar-art {
+  border: 0 !important;
+  background: var(--avatar-image) center / contain no-repeat !important;
+  color: transparent !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.avatar.avatar-art::before,
+.avatar.avatar-art::after,
+.welcome-avatar.avatar-art::before,
+.welcome-avatar.avatar-art::after,
+.profile-medal.avatar-art::before,
+.profile-medal.avatar-art::after {
+  content: none !important;
+  display: none !important;
+}

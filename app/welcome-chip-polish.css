@@ -1,0 +1,181 @@
+/* Final header greeting chip polish */
+.welcome-member,
+.welcome-member.rank-1,
+.welcome-member.rank-2,
+.welcome-member.rank-3,
+.welcome-member.rank-none {
+  --welcome-accent: #ffb700;
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 9px !important;
+  width: fit-content !important;
+  min-width: 0 !important;
+  max-width: min(100%, 238px) !important;
+  min-height: 50px !important;
+  margin: 0 0 0 auto !important;
+  padding: 6px 13px 6px 7px !important;
+  border: 1px solid rgba(255, 183, 0, 0.28) !important;
+  border-radius: 18px !important;
+  background:
+    radial-gradient(circle at 16% 12%, rgba(255, 183, 0, 0.18), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 248, 225, 0.9)) !important;
+  box-shadow:
+    0 10px 22px rgba(60, 45, 12, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+  color: var(--club-ink-900, #1a1916) !important;
+  cursor: pointer;
+  overflow: hidden !important;
+}
+
+.welcome-member::before,
+.welcome-member::after,
+.welcome-member b::after {
+  content: none !important;
+  display: none !important;
+}
+
+.welcome-member.rank-2 { --welcome-accent: #b7c0cc; }
+.welcome-member.rank-3 { --welcome-accent: #d9975f; }
+
+.welcome-member:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 183, 0, 0.48) !important;
+  box-shadow:
+    0 13px 28px rgba(60, 45, 12, 0.14),
+    0 0 0 3px rgba(255, 183, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82) !important;
+}
+
+.welcome-member span {
+  padding: 0 !important;
+}
+
+.welcome-member .welcome-avatar {
+  flex: 0 0 40px !important;
+  width: 40px !important;
+  height: 40px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background-size: contain !important;
+  filter: drop-shadow(0 7px 10px rgba(75, 45, 0, 0.2));
+}
+
+.welcome-text {
+  display: grid !important;
+  min-width: 0 !important;
+  gap: 4px !important;
+  line-height: 1 !important;
+}
+
+.welcome-line {
+  display: flex !important;
+  align-items: baseline !important;
+  min-width: 0 !important;
+  gap: 5px !important;
+  white-space: nowrap !important;
+}
+
+.welcome-member .welcome-copy {
+  color: var(--club-ink-700, #3d3a33) !important;
+  font-size: 11px !important;
+  font-weight: 850 !important;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+}
+
+.welcome-member b {
+  max-width: 112px !important;
+  overflow: hidden !important;
+  color: #15120a !important;
+  font-size: 15px !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.welcome-member .welcome-level {
+  display: inline-flex !important;
+  align-items: center !important;
+  width: fit-content !important;
+  margin: 0 !important;
+  padding: 3px 7px !important;
+  border: 1px solid rgba(255, 183, 0, 0.26) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 183, 0, 0.16) !important;
+  color: #8a5b00 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+}
+
+.welcome-member .welcome-level::before {
+  content: none !important;
+  display: none !important;
+}
+
+@media (max-width: 800px) {
+  .welcome-member,
+  .welcome-member.rank-1,
+  .welcome-member.rank-2,
+  .welcome-member.rank-3,
+  .welcome-member.rank-none {
+    min-height: 48px !important;
+    padding: 6px 11px 6px 6px !important;
+    gap: 8px !important;
+  }
+
+  .welcome-member .welcome-avatar {
+    flex-basis: 38px !important;
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .welcome-member b {
+    max-width: 96px !important;
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .welcome-member,
+  .welcome-member.rank-1,
+  .welcome-member.rank-2,
+  .welcome-member.rank-3,
+  .welcome-member.rank-none {
+    grid-area: greeting !important;
+    justify-self: end !important;
+    max-width: calc(100vw - 92px) !important;
+    min-height: 44px !important;
+    border-radius: 16px !important;
+    padding: 5px 10px 5px 5px !important;
+  }
+
+  .welcome-member .welcome-avatar {
+    flex: 0 0 34px !important;
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .welcome-text {
+    gap: 3px !important;
+  }
+
+  .welcome-member .welcome-copy {
+    font-size: 10px !important;
+  }
+
+  .welcome-member b {
+    max-width: 74px !important;
+    font-size: 13px !important;
+  }
+
+  .welcome-member .welcome-level {
+    padding: 2px 6px !important;
+    font-size: 9.5px !important;
+  }
+}

@@ -1,0 +1,112 @@
+/* Shared top-rank medal art for all ranking surfaces. */
+:root {
+  --rank-medal-1: url("/app-icons/rank-1.png?v=ranking-medals-nobg-20260904");
+  --rank-medal-2: url("/app-icons/rank-2.png?v=ranking-medals-nobg-20260904");
+  --rank-medal-3: url("/app-icons/rank-3.png?v=ranking-medals-nobg-20260904");
+  --rank-medal-4: url("/app-icons/rank-4.png?v=ranking-medals-nobg-20260904");
+}
+
+.rank-table .rank-row.rank-columns.top-rank .medal,
+.elo-row.top-rank .elo-rank.medal {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  height: 44px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: contain !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  overflow: visible !important;
+  text-shadow: none !important;
+  filter: drop-shadow(0 8px 12px rgba(26, 20, 8, 0.16));
+}
+
+.rank-table .rank-row.rank-columns.top-rank .medal::before,
+.rank-table .rank-row.rank-columns.top-rank .medal::after,
+.elo-row.top-rank .elo-rank.medal::before,
+.elo-row.top-rank .elo-rank.medal::after {
+  content: none !important;
+  display: none !important;
+}
+
+.rank-table .rank-row.rank-columns.top-1 .medal,
+.elo-row.top-1 .elo-rank.medal {
+  background-image: var(--rank-medal-1) !important;
+}
+
+.rank-table .rank-row.rank-columns.top-2 .medal,
+.elo-row.top-2 .elo-rank.medal {
+  background-image: var(--rank-medal-2) !important;
+}
+
+.rank-table .rank-row.rank-columns.top-3 .medal,
+.elo-row.top-3 .elo-rank.medal {
+  background-image: var(--rank-medal-3) !important;
+}
+
+.elo-row.top-rank .elo-rank.medal {
+  width: 48px !important;
+  min-width: 48px !important;
+  height: 48px !important;
+}
+
+
+.rules-prizes div {
+  grid-template-columns: 58px minmax(0, 1fr) !important;
+  column-gap: 14px !important;
+  min-height: 118px !important;
+}
+
+.rules-prizes .prize-medal-icon {
+  display: block !important;
+  grid-row: 1 / span 2 !important;
+  width: 58px !important;
+  height: 58px !important;
+  margin: -3px 0 0 -2px !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: contain !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 9px 13px rgba(26, 20, 8, 0.14));
+}
+
+.rules-prizes .prize-medal-1 { background-image: var(--rank-medal-1) !important; }
+.rules-prizes .prize-medal-2 { background-image: var(--rank-medal-2) !important; }
+.rules-prizes .prize-medal-3 { background-image: var(--rank-medal-3) !important; }
+.rules-prizes .prize-medal-4 { background-image: var(--rank-medal-4) !important; }
+
+.rules-prizes .fourth {
+  background: var(--club-white);
+  border-color: rgba(127, 105, 191, 0.28);
+}
+@media (max-width: 800px) {
+  .rank-table .rank-row.rank-columns.top-rank .medal {
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+  }
+
+  .elo-row.top-rank .elo-rank.medal {
+    width: 42px !important;
+    min-width: 42px !important;
+    height: 42px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .rank-table .rank-row.rank-columns.top-rank .medal,
+  .elo-row.top-rank .elo-rank.medal {
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+  }
+}

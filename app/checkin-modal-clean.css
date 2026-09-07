@@ -1,0 +1,31 @@
+/* Remove old app icons from the attendance prompt modal. */
+.checkin-modal {
+  padding-top: 34px !important;
+}
+
+.checkin-modal .modal-icon,
+.checkin-modal .button-app-icon {
+  display: none !important;
+}
+
+.checkin-modal .eyebrow {
+  display: inline-flex !important;
+  width: fit-content !important;
+  margin: 0 auto 10px !important;
+  padding: 5px 9px !important;
+  border: 1px solid rgba(255, 183, 0, 0.28) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 183, 0, 0.12) !important;
+  color: #9b6800 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.04em !important;
+}
+
+.checkin-modal h2 {
+  margin-top: 0 !important;
+}
+
+.checkin-modal .modal-actions button {
+  gap: 0 !important;
+}
