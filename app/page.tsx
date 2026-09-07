@@ -1403,6 +1403,8 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
   const confirmedCount = Object.values(confirmedMatches).filter(Boolean).length;
   const saveMatch = async (match: ScheduleMatch, index: number) => {
+    // Serialize score writes so monthly totals cannot lose updates.
+    if (saving !== null) return;
     if (!supabase || !sessionId) return setNotice("Chưa có phiên Supabase để lưu kết quả.");
     const [scoreAText, scoreBText] = scores[index] ?? ["", ""];
     const scoreA = Number(scoreAText);
@@ -1441,7 +1443,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
       <div className="match-result-team match-result-team-a"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
       <div className="match-score-controls"><input className={scoreAClassName} disabled={locked} aria-label={`Điểm đội A trận ${i + 1}`} value={scoreAText} onChange={e => setScores({ ...scores, [i]: [e.target.value, scoreBText] })}/><em>:</em><input className={scoreBClassName} disabled={locked} aria-label={`Điểm đội B trận ${i + 1}`} value={scoreBText} onChange={e => setScores({ ...scores, [i]: [scoreAText, e.target.value] })}/></div>
       <div className="match-result-team match-result-team-b"><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
-      <div className="result-actions">{canManageScores && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" onClick={() => setEditing({ ...editing, [i]: true })}><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving === i} onClick={() => void saveMatch(match, i)}><span className="result-action-text">{saving === i ? "Lưu..." : confirmed ? "Lưu lại" : "Xác nhận"}</span></button>)}</div>
+      <div className="result-actions">{canManageScores && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" disabled={saving !== null} onClick={() => setEditing({ ...editing, [i]: true })}><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving !== null} onClick={() => void saveMatch(match, i)}><span className="result-action-text">{saving === i ? "Lưu..." : confirmed ? "Lưu lại" : "Xác nhận"}</span></button>)}</div>
     </div>;
   })}</div></section>;
 }
