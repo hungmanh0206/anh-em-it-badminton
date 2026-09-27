@@ -361,6 +361,17 @@ export default function Home() {
   const drawOpen = ["checked_in", "drawn", "scheduled", "completed"].includes(sessionStatus);
   const scheduleOpen = ["scheduled", "completed"].includes(sessionStatus);
   const steps = ["Điểm danh", "Chọn số", "Lịch thi đấu"];
+  // Whether the workflow tab `next` can be opened right now (mirrors the checks in goStep).
+  const canGoStep = (next: number) => {
+    if (next === 0) return true;
+    const isManager = isScoreManagerRole(activeUser?.role);
+    if (!isManager && !signedInMemberPresent) return false;
+    if (next > step && !isManager) return next === 1 ? drawOpen : next === 2 ? scheduleOpen && Boolean(currentScheduleScenario) : false;
+    if (next > step + 1) return false;
+    if (next === 1 && !drawOpen && (!isCheckinWindowOpen || !canSchedule || !allAttendanceDone)) return false;
+    if (next === 2 && (!scheduleOpen || !currentScheduleScenario || !allDrawn)) return false;
+    return true;
+  };
   const goStep = (next: number) => {
     if (next === 0) {
       setLoginError("");
@@ -376,7 +387,7 @@ export default function Home() {
       if (next === 2 && scheduleOpen && currentScheduleScenario) return setStep(2);
       return;
     }
-    if (next > step + 1 || (next === 1 && !drawOpen && (!isCheckinWindowOpen || !canSchedule || !allAttendanceDone)) || (next === 2 && (!currentScheduleScenario || !allDrawn))) return;
+    if (next > step + 1 || (next === 1 && !drawOpen && (!isCheckinWindowOpen || !canSchedule || !allAttendanceDone)) || (next === 2 && (!scheduleOpen || !currentScheduleScenario || !allDrawn))) return;
     setStep(next);
   };
   const closeCheckinPopup = () => {
@@ -1166,7 +1177,7 @@ export default function Home() {
           <img className="hero-logo" src="/club-logo.png?v=club-glass-logo" alt="" aria-hidden="true" />
           <div className="hero-stats"><div><b>{present.length}</b><small>THAM GIA</small></div><div><b>{notAttending.length}</b><small>KHÔNG THAM GIA</small></div><div><b>{String(step + 1).padStart(2, "0")}<em>/{String(steps.length).padStart(2, "0")}</em></b><small>BƯỚC HIỆN TẠI</small></div></div>
         </section>
-        <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
+        <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : canGoStep(i) ? "" : "locked"} aria-disabled={i !== step && !canGoStep(i)} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
         {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}

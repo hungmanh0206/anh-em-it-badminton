@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     if (new Set(allSlots).size !== 4) return Response.json({ error: "Một trận không được lặp người chơi." }, { status: 400 });
 
     const [{ data: playSession, error: sessionError }, { data: attendances, error: attendanceError }, { data: oldMatch, error: oldMatchError }] = await Promise.all([
-      admin.from("play_sessions").select("id, session_date").eq("id", body.sessionId).single(),
+      admin.from("play_sessions").select("id, session_date, status").eq("id", body.sessionId).single(),
       admin.from("attendances").select("member_id, drawn_number").eq("session_id", body.sessionId).in("drawn_number", allSlots),
       admin.from("matches").select("team_a, team_b, score_a, score_b").eq("session_id", body.sessionId).eq("match_no", body.matchNo).maybeSingle(),
     ]);
@@ -65,6 +65,10 @@ export async function POST(request: Request) {
     if (attendanceError) throw attendanceError;
     if (oldMatchError) throw oldMatchError;
     if (!playSession) return Response.json({ error: "Không tìm thấy buổi chơi." }, { status: 404 });
+    // Scores are only accepted once an admin has confirmed the schedule for this session.
+    if (!["scheduled", "completed"].includes(String(playSession.status))) {
+      return Response.json({ error: "Lịch thi đấu chưa được xác nhận nên chưa thể nhập điểm." }, { status: 400 });
+    }
 
     const slotToMember = new Map((attendances || []).map((attendance) => [attendance.drawn_number, attendance.member_id]));
     const teamAIds = body.teamA.map((slot) => slotToMember.get(slot));

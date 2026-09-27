@@ -360,3 +360,9 @@
     font-size: 15px;
   }
 }
+
+/* Workflow tabs that cannot be opened yet (e.g. schedule before an admin confirms it). */
+.workflow button.locked {
+  opacity: 0.45;
+  cursor: not-allowed !important;
+}
