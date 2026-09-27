@@ -8,7 +8,11 @@
   gap: 0 !important;
   row-gap: 0 !important;
   padding: 0 !important;
+  /* clip (not hidden) keeps the rounded corners without turning the list into a scroll container;
+     with the legacy overscroll-behavior: contain, a scroll container swallowed wheel scrolling. */
   overflow: hidden !important;
+  overflow: clip !important;
+  overscroll-behavior: auto !important;
   border: 1px solid rgba(30, 25, 18, 0.09) !important;
   border-radius: 18px !important;
   background: #fff !important;
