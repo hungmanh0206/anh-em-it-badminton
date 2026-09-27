@@ -1724,28 +1724,46 @@ function EloGuideModal({ onClose }: { onClose: () => void }) {
         <ol className="elo-guide-steps">
           <li><b>ELO đội</b> = trung bình ELO của 2 người trong đội.</li>
           <li><b>Khả năng thắng kỳ vọng</b> của đội: <code>E = 1 / (1 + 10^((ELO đối thủ − ELO đội) / 400))</code></li>
-          <li><b>Điểm thay đổi</b>: <code>Δ = 32 × (Kết quả − E)</code>, với Kết quả = 1 nếu thắng, 0 nếu thua.</li>
-          <li>Cả 2 người trong đội cùng nhận <b>Δ</b>; đội đối thủ nhận đúng phần ngược lại (<b>−Δ</b>).</li>
+          <li><b>Tổng điểm của trận</b>: đội thắng được cộng <code>2 × 32 × (1 − E đội thắng)</code>, đội thua bị trừ đúng bằng số đó.</li>
+          <li><b>Chia trong đội</b> theo độ chênh ELO giữa 2 đồng đội: <code>Mức chia = chênh ELO ÷ 2000</code> (tối đa 100%).
+            <ul className="elo-guide-list">
+              <li>Đồng đội gần bằng điểm → chia gần như đều.</li>
+              <li>Đồng đội càng lệch → đội thắng: người ELO <b>thấp</b> hơn được cộng nhiều hơn; đội thua: người ELO <b>cao</b> hơn bị trừ nhiều hơn.</li>
+            </ul>
+          </li>
         </ol>
       </div>
 
       <div className="elo-guide-section">
         <h3>3. Ví dụ</h3>
-        <div className="elo-guide-table" role="table">
-          <div role="row" className="elo-guide-table-head"><span role="columnheader">Trận</span><span role="columnheader">Đội thắng</span><span role="columnheader">Đội thua</span></div>
-          <div role="row"><span role="cell">Hai đội ngang nhau (1000 vs 1000)</span><span role="cell" className="positive">+16</span><span role="cell" className="negative">−16</span></div>
-          <div role="row"><span role="cell">Đội mạnh hơn (1100) thắng đội 1000</span><span role="cell" className="positive">+11,5</span><span role="cell" className="negative">−11,5</span></div>
-          <div role="row"><span role="cell">Đội yếu hơn (1000) thắng đội 1100</span><span role="cell" className="positive">+20,5</span><span role="cell" className="negative">−20,5</span></div>
+        <div className="elo-guide-example">
+          <p className="elo-guide-example-title">Hai đội ngang nhau (1000 + 1000 vs 1000 + 1000)</p>
+          <p>Mỗi người đội thắng <b className="positive">+16</b>, mỗi người đội thua <b className="negative">−16</b>.</p>
         </div>
-        <p className="elo-guide-note">Thắng đội mạnh hơn được cộng nhiều hơn; thua đội yếu hơn bị trừ nhiều hơn.</p>
+        <div className="elo-guide-example">
+          <p className="elo-guide-example-title">Đội mạnh hơn (1100 + 1100) thắng đội 1000 + 1000</p>
+          <p>Mỗi người đội thắng <b className="positive">+11,5</b>, mỗi người đội thua <b className="negative">−11,5</b> — thắng đội yếu hơn được cộng ít.</p>
+        </div>
+        <div className="elo-guide-example">
+          <p className="elo-guide-example-title">Đồng đội lệch trình: A (750) + B (1200) vs C (1100) + D (980)</p>
+          <div className="elo-guide-table" role="table">
+            <div role="row" className="elo-guide-table-head"><span role="columnheader">Người chơi</span><span role="columnheader">A + B thắng</span><span role="columnheader">A + B thua</span></div>
+            <div role="row"><span role="cell">A (750)</span><span role="cell" className="positive">+21,1</span><span role="cell" className="negative">−11,2</span></div>
+            <div role="row"><span role="cell">B (1200)</span><span role="cell" className="positive">+16,8</span><span role="cell" className="negative">−14,9</span></div>
+            <div role="row"><span role="cell">C (1100)</span><span role="cell" className="negative">−19,1</span><span role="cell" className="positive">+12,9</span></div>
+            <div role="row"><span role="cell">D (980)</span><span role="cell" className="negative">−18,8</span><span role="cell" className="positive">+13,2</span></div>
+          </div>
+          <p className="elo-guide-note">Tổng điểm cộng của đội thắng luôn bằng tổng điểm trừ của đội thua: khi A + B thắng là 37,9 điểm, khi A + B thua là 26,1 điểm.</p>
+        </div>
       </div>
 
       <div className="elo-guide-section">
         <h3>4. Lưu ý</h3>
         <ul className="elo-guide-list">
           <li>Chỉ tính <b>thắng / thua</b>, không tính cách biệt điểm số của trận. Trận không có kết quả hòa.</li>
-          <li>Mỗi khi lưu hoặc sửa kết quả, ELO được <b>tính lại từ đầu</b> theo thứ tự các trận (ngày thi đấu, số trận), nên sửa một trận cũ sẽ cập nhật lại các trận sau.</li>
-          <li>ELO hiển thị làm tròn 1 chữ số thập phân.</li>
+          <li>Điểm được làm tròn đến <b>0,1</b> sao cho tổng thay đổi của 4 người trong trận <b>luôn bằng 0</b>.</li>
+          <li>Cách chia theo chênh lệch áp dụng cho các trận <b>từ ngày 27/09/2026</b>. Các trận trước đó giữ nguyên cách tính cũ (2 đồng đội nhận như nhau) nên ELO đã có không thay đổi.</li>
+          <li>Mỗi khi lưu hoặc sửa kết quả, ELO được <b>tính lại</b> theo thứ tự các trận (ngày thi đấu, số trận), nên sửa một trận cũ sẽ cập nhật lại các trận sau.</li>
         </ul>
       </div>
 

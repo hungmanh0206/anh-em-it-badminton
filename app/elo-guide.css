@@ -162,3 +162,46 @@
     width: 100%;
   }
 }
+
+/* Worked examples: one card per scenario. */
+.elo-guide-example {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(30, 25, 18, 0.08);
+  border-radius: 12px;
+  background: #fffdf8;
+}
+
+.elo-guide-example > p {
+  margin: 0 !important;
+}
+
+.elo-guide-example .elo-guide-table {
+  margin-top: 10px;
+  background: #fff;
+}
+
+.elo-guide-example .elo-guide-note {
+  margin-top: 8px !important;
+}
+
+.elo-guide-example-title {
+  margin-bottom: 4px !important;
+  color: #17140f !important;
+  font-weight: 800 !important;
+}
+
+.elo-guide-example b.positive,
+.elo-guide-table .positive { color: #1f8a5b; }
+.elo-guide-example b.negative,
+.elo-guide-table .negative { color: #c2413b; }
+
+.elo-guide-steps .elo-guide-list {
+  margin-top: 6px;
+  padding-left: 18px;
+  list-style: disc;
+}
+
+.elo-guide-table > div {
+  grid-template-columns: minmax(0, 1fr) 96px 96px;
+}

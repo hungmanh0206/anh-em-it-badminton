@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { calculateDoublesElo, rankEloPlayers, replayEloMatches } from "../lib/elo/calculate-elo.js";
-import { ELO_ACCEPTANCE_TOLERANCE } from "../lib/elo/constants.js";
+import { ELO_ACCEPTANCE_TOLERANCE, ELO_SPLIT_FROM_DATE, ELO_SPLIT_GAP } from "../lib/elo/constants.js";
 import { buildHistoricalEloReport } from "../lib/elo/backfill-report.js";
 
 const team = (prefix, rating) => [
@@ -70,4 +70,49 @@ test("historical July-August backfill matches the acceptance table", () => {
   for (const row of report.rows) {
     assert.ok(Math.abs(row.diff) <= ELO_ACCEPTANCE_TOLERANCE, `${row.name}: actual ${row.actual}, expected ${row.expected}, diff ${row.diff}`);
   }
+});
+
+// ---- Zero-sum split inside each team (ELO_SPLIT_GAP), used from ELO_SPLIT_FROM_DATE ----
+const withRatings = (ratings) => ratings.map((rating, index) => ({ memberId: `P${index}`, rating }));
+const splitMatch = (a, b, winner) => calculateDoublesElo({ teamA: withRatings(a), teamB: withRatings(b).map((p, i) => ({ ...p, memberId: `Q${i}` })), winner, splitGap: ELO_SPLIT_GAP });
+const deltasOf = (result) => [...result.teamA.players, ...result.teamB.players].map((player) => player.delta);
+const tenthsSum = (values) => values.reduce((sum, value) => sum + Math.round(value * 10), 0);
+
+test("split rule: Mạnh 756.6 + Thành 1191.5 beat Quý 1163.1 + Nam 916.3", () => {
+  assert.deepEqual(deltasOf(splitMatch([756.6, 1191.5], [1163.1, 916.3], "A")), [21, 17, -19.7, -18.3]);
+});
+
+test("split rule: Mạnh 756.6 + Thành 1191.5 lose to Quý 1163.1 + Nam 916.3", () => {
+  assert.deepEqual(deltasOf(splitMatch([756.6, 1191.5], [1163.1, 916.3], "B")), [-11.2, -14.8, 12.4, 13.6]);
+});
+
+test("split rule: equal partners still share equally", () => {
+  assert.deepEqual(deltasOf(splitMatch([1000, 1000], [1000, 1000], "A")), [16, 16, -16, -16]);
+});
+
+test("split rule: every match is exactly zero-sum in 0.1 units", () => {
+  let seed = 7;
+  const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 2 ** 32; };
+  for (let i = 0; i < 2000; i++) {
+    const r = () => Math.round((700 + rand() * 700) * 10) / 10;
+    const result = splitMatch([r(), r()], [r(), r()], rand() < 0.5 ? "A" : "B");
+    const deltas = deltasOf(result);
+    assert.equal(tenthsSum(deltas), 0);
+    deltas.forEach((delta) => assert.equal(Math.round(delta * 10), delta * 10));
+  }
+});
+
+test("split rule: winners' lower-rated partner gains more, losers' higher-rated partner loses more", () => {
+  const [low, high, loserHigh, loserLow] = deltasOf(splitMatch([800, 1200], [1150, 950], "A"));
+  assert.ok(low > high);
+  assert.ok(loserHigh < loserLow);
+});
+
+test("matches before ELO_SPLIT_FROM_DATE keep the equal split; later matches use the split rule", () => {
+  const players = [{ memberId: "A1", rating: 800 }, { memberId: "A2", rating: 1200 }, { memberId: "B1", rating: 1000 }, { memberId: "B2", rating: 1000 }];
+  const match = (id, date) => ({ id, date, sessionNumber: 0, matchNumber: 1, teamA: ["A1", "A2"], teamB: ["B1", "B2"], scoreA: 21, scoreB: 15 });
+  const before = replayEloMatches({ players, matches: [match("old", "2026-09-26")] }).history.filter((row) => row.team === "A");
+  assert.equal(before[0].eloChange, before[1].eloChange);
+  const after = replayEloMatches({ players, matches: [match("new", ELO_SPLIT_FROM_DATE)] }).history.filter((row) => row.team === "A");
+  assert.notEqual(after[0].eloChange, after[1].eloChange);
 });
