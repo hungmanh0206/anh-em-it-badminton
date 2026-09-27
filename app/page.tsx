@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useCallback, useEffect, useState } from "react";
+import { type CSSProperties, type ReactNode, useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { isCheckinWindowOpenForDate, sessionDatesOfMonth, sessionStateForDate, sessionWeekdayLabel, sessionWeekInMonth, targetSessionDateKey } from "@/lib/session-dates";
 import { reorderMatchesForRest } from "@/lib/schedule-reorder";
@@ -1106,7 +1106,7 @@ export default function Home() {
       if (!target.closest(".welcome-member, .member-profile-popover")) setShowProfileCard(false);
       if (!target.closest(".sidebar, .mobile-menu")) setSidebarOpen(false);
       if (target.closest(".modal-backdrop") && !target.closest(".checkin-modal, .confirm-modal, .history-detail, .member-editor")) {
-        (document.querySelector(".modal-backdrop .modal-close") as HTMLButtonElement | null)?.click();
+        (document.querySelector(".presence:not(.presence-leaving) .modal-backdrop .modal-close") as HTMLButtonElement | null)?.click();
       }
     };
     trigger?.addEventListener("click", toggleProfile);
@@ -1149,10 +1149,10 @@ export default function Home() {
       <div className="club-card"><AppIcon name="trophy" className="club-card-icon" /><b>{currentMonthLabel}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div><div className={`club-top1 ${champion ? "" : "empty"}`}><small>NHÀ VÔ ĐỊCH {championRankingLabel.toUpperCase()}</small><b>{champion ? <><AppIcon name="crown" className="inline-app-icon" /> {champion.name}</> : "Chưa ghi danh"}</b><span>{champion ? `${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số` : `Chưa có dữ liệu BXH ${championRankingLabel}.`}</span></div></div>
       <div className="profile"><div className={avatarClassName("avatar small", currentUser)} style={avatarStyle(currentUser)}>{currentUser.initials}</div><div><b>{currentUser.name}</b><small>{memberRoleLabel(currentUser.role)}</small></div><button className="logout" aria-label="Đăng xuất" title="Đăng xuất" onClick={() => { setSidebarOpen(false); setLogoutConfirmOpen(true); }}>Đăng xuất</button></div>
     </aside>
-    {logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setActiveUser(null); }} />}
+    <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setActiveUser(null); }} />}</Presence>
     <section className="content">
       <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className={avatarClassName("welcome-avatar", currentUser)} style={avatarStyle(currentUser)} aria-hidden="true">{welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
-      {screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : <>
+      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : <>
         <section className="hero">
           <div className="hero-copy"><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div>
           <img className="hero-logo" src="/club-logo.png?v=club-glass-logo" alt="" aria-hidden="true" />
@@ -1164,12 +1164,35 @@ export default function Home() {
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
         {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
         {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { if (completed) { setSessionStatus("completed"); setHistoryRefreshTick((tick) => tick + 1); } setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
-      </>}
+      </>}</div>
     </section>
-    {showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}
-    {confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}
-    {showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} elo={profileElo} onClose={() => setShowProfileCard(false)} />}
+    <Presence show={Boolean(showCheckin)}>{showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}</Presence>
+    <Presence show={Boolean(confirmation)}>{confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}</Presence>
+    <Presence show={Boolean(showProfileCard)}>{showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} elo={profileElo} onClose={() => setShowProfileCard(false)} />}</Presence>
   </main>;
+}
+
+// Keeps the last visible content mounted while it plays its exit animation (see motion.css).
+function Presence({ show, children }: { show: boolean; children: ReactNode }) {
+  const [lastChildren, setLastChildren] = useState(children);
+  const [wasShown, setWasShown] = useState(show);
+  const [leaving, setLeaving] = useState(false);
+  if (show && lastChildren !== children) setLastChildren(children);
+  if (show !== wasShown) {
+    setWasShown(show);
+    setLeaving(!show);
+  }
+  // Fallback in case the exit animation is disabled or never reports animationend.
+  useEffect(() => {
+    if (!leaving) return;
+    const timer = window.setTimeout(() => setLeaving(false), 400);
+    return () => window.clearTimeout(timer);
+  }, [leaving]);
+  if (!show && !leaving) return null;
+  return <div
+    className={leaving ? "presence presence-leaving" : "presence"}
+    onAnimationEnd={(event) => { if (leaving && event.target === event.currentTarget.firstElementChild) setLeaving(false); }}
+  >{show ? children : lastChildren}</div>;
 }
 
 function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass, hasRankingData, elo, onClose }: { member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; hasRankingData: boolean; elo: EloRankingRow | null; onClose: () => void }) {
@@ -1745,7 +1768,7 @@ function History({ sessions, currentMonth }: { sessions: HistorySession[]; curre
       </div>
       <div className="history-list">{visible.length ? visible.map((session) => <article key={session.id}><div><span>{session.week}</span><h3>{session.title}</h3><p>{session.detail}</p></div><button className="soft-btn" onClick={() => void showDetail(session)}>Xem chi tiết →</button></article>) : <div className="empty-ranking">Chưa có dữ liệu cho bộ lọc này.</div>}</div>
     </section>
-    {detail && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="history-detail"><button className="modal-close" onClick={() => setDetail(null)}>×</button><p className="eyebrow">KẾT QUẢ THI ĐẤU</p><h2>{detail.title}</h2><div className="history-match-list">{detail.rows.map((match) => <article className="history-match-row" key={match.no}><span className="history-match-index">Trận {match.no}</span><span className="history-team history-team-a">{match.a}</span><strong className="history-score"><span>{match.sa}</span><i>:</i><span>{match.sb}</span></strong><span className="history-team history-team-b">{match.b}</span></article>)}</div></section></div>}
+    <Presence show={Boolean(detail)}>{detail && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="history-detail"><button className="modal-close" onClick={() => setDetail(null)}>×</button><p className="eyebrow">KẾT QUẢ THI ĐẤU</p><h2>{detail.title}</h2><div className="history-match-list">{detail.rows.map((match) => <article className="history-match-row" key={match.no}><span className="history-match-index">Trận {match.no}</span><span className="history-team history-team-a">{match.a}</span><strong className="history-score"><span>{match.sa}</span><i>:</i><span>{match.sb}</span></strong><span className="history-team history-team-b">{match.b}</span></article>)}</div></section></div>}</Presence>
   </>;
 }
 function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated: (username: string, role: MemberRole) => void }) {
@@ -1854,8 +1877,8 @@ function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated:
         </div>;
       }) : <div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div>}</div>
     </section>
-    {editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={() => setEditing(null)}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <select className="member-role-select member-role-editor-select" value={editRole} disabled={roleSaving === editing.username} onChange={(event) => setEditRole(event.target.value as "member" | "sub-admin")}><option value="member">Thành viên</option><option value="sub-admin">Sub-admin</option></select>}<small>{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? "Mạnh luôn là Admin, không thể đổi quyền." : editRole === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label><div className="editor-actions"><button className="soft-btn" onClick={() => setEditing(null)}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></section></div>}
-    {confirm && <ConfirmActionModal title={confirm.title} message={confirm.message} onCancel={() => setConfirm(null)} onConfirm={async () => { try { await confirm.action(); } finally { setConfirm(null); } }} />}
+    <Presence show={Boolean(editing)}>{editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={() => setEditing(null)}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <select className="member-role-select member-role-editor-select" value={editRole} disabled={roleSaving === editing.username} onChange={(event) => setEditRole(event.target.value as "member" | "sub-admin")}><option value="member">Thành viên</option><option value="sub-admin">Sub-admin</option></select>}<small>{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? "Mạnh luôn là Admin, không thể đổi quyền." : editRole === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label><div className="editor-actions"><button className="soft-btn" onClick={() => setEditing(null)}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></section></div>}</Presence>
+    <Presence show={Boolean(confirm)}>{confirm && <ConfirmActionModal title={confirm.title} message={confirm.message} onCancel={() => setConfirm(null)} onConfirm={async () => { try { await confirm.action(); } finally { setConfirm(null); } }} />}</Presence>
   </>;
 }
 

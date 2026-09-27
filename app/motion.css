@@ -1,0 +1,274 @@
+/* Motion system: page transitions, modal/popover enter + exit, list reveals and interaction feedback.
+   Keyframes animate the individual `translate` / `scale` properties so they compose with the many
+   existing `transform: ... !important` rules instead of fighting them. */
+:root {
+  --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --motion-ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --motion-fast: 160ms;
+  --motion-base: 240ms;
+  --motion-slow: 380ms;
+}
+
+@keyframes motionFadeUp {
+  from { opacity: 0; translate: 0 12px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes motionFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes motionFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes motionDialogIn {
+  from { opacity: 0; translate: 0 14px; scale: 0.96; }
+  to { opacity: 1; translate: 0 0; scale: 1; }
+}
+
+@keyframes motionDialogOut {
+  from { opacity: 1; translate: 0 0; scale: 1; }
+  to { opacity: 0; translate: 0 10px; scale: 0.97; }
+}
+
+@keyframes motionPopIn {
+  from { opacity: 0; translate: 0 -8px; scale: 0.95; }
+  to { opacity: 1; translate: 0 0; scale: 1; }
+}
+
+@keyframes motionPopOut {
+  from { opacity: 1; translate: 0 0; scale: 1; }
+  to { opacity: 0; translate: 0 -6px; scale: 0.96; }
+}
+
+@keyframes motionRowIn {
+  from { opacity: 0; translate: 0 8px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes motionNoticeIn {
+  from { opacity: 0; translate: 0 -6px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+/* ---------- Page transitions ---------- */
+.screen-view {
+  animation: motionFadeIn var(--motion-base) var(--motion-ease-out) both;
+}
+
+.screen-view > * {
+  animation: motionFadeUp var(--motion-slow) var(--motion-ease-out) both;
+}
+
+.screen-view > *:nth-child(2) { animation-delay: 50ms; }
+.screen-view > *:nth-child(3) { animation-delay: 100ms; }
+.screen-view > *:nth-child(4) { animation-delay: 150ms; }
+.screen-view > *:nth-child(5) { animation-delay: 190ms; }
+.screen-view > *:nth-child(n + 6) { animation-delay: 220ms; }
+
+.content > header h1 {
+  transition: opacity var(--motion-fast) ease;
+}
+
+/* ---------- Modals (enter) ---------- */
+.presence {
+  display: contents;
+}
+
+.modal-backdrop {
+  animation: motionFadeIn var(--motion-base) var(--motion-ease-out) both;
+}
+
+.modal-backdrop > .checkin-modal,
+.modal-backdrop > .confirm-modal,
+.modal-backdrop > .history-detail,
+.modal-backdrop > .member-editor,
+.modal-backdrop > section {
+  animation: motionDialogIn var(--motion-slow) var(--motion-ease-spring) both;
+  animation-delay: 30ms;
+}
+
+/* ---------- Modals (exit, while <Presence> keeps them mounted) ---------- */
+.presence-leaving > * {
+  pointer-events: none !important;
+}
+
+.presence-leaving > .modal-backdrop {
+  animation: motionFadeOut 200ms var(--motion-ease-in) both;
+}
+
+.presence-leaving > .modal-backdrop > * {
+  animation: motionDialogOut 180ms var(--motion-ease-in) both !important;
+}
+
+/* ---------- Profile popover ---------- */
+.member-profile-popover {
+  transform-origin: top right;
+  animation: motionPopIn var(--motion-base) var(--motion-ease-spring) both;
+}
+
+.presence-leaving > .member-profile-popover {
+  animation: motionPopOut 180ms var(--motion-ease-in) both;
+}
+
+/* ---------- Mobile / tablet sidebar drawer ---------- */
+.sidebar {
+  transition: transform 280ms var(--motion-ease-out), box-shadow 280ms ease !important;
+}
+
+@media (max-width: 800px), (max-height: 480px) and (max-width: 950px) {
+  .app-shell::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 29;
+    background: rgba(18, 16, 12, 0.42);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 280ms var(--motion-ease-out);
+  }
+
+  .app-shell.sidebar-open::after {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* ---------- Navigation ---------- */
+.sidebar nav button {
+  transition: background-color var(--motion-fast) ease, color var(--motion-fast) ease, border-color var(--motion-fast) ease, translate var(--motion-fast) var(--motion-ease-out) !important;
+}
+
+.sidebar nav button:hover:not(.active) {
+  translate: 3px 0;
+}
+
+.sidebar nav button .nav-app-icon {
+  transition: scale var(--motion-fast) var(--motion-ease-spring);
+}
+
+.sidebar nav button:hover .nav-app-icon,
+.sidebar nav button.active .nav-app-icon {
+  scale: 1.08;
+}
+
+.workflow button,
+.workflow button span {
+  transition: color var(--motion-base) ease, background-color var(--motion-base) ease, border-color var(--motion-base) ease !important;
+}
+
+/* ---------- Buttons & inputs ---------- */
+.primary,
+.secondary,
+.soft-btn,
+.new-btn,
+.icon-btn,
+.text-btn,
+.skip,
+.logout,
+.mobile-menu,
+.modal-close,
+.more {
+  transition:
+    background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    opacity var(--motion-fast) ease,
+    translate var(--motion-fast) var(--motion-ease-out),
+    scale 120ms var(--motion-ease-out) !important;
+}
+
+.primary:not(:disabled):hover,
+.new-btn:not(:disabled):hover {
+  translate: 0 -1px;
+}
+
+.primary:not(:disabled):active,
+.secondary:not(:disabled):active,
+.soft-btn:not(:disabled):active,
+.new-btn:not(:disabled):active,
+.icon-btn:not(:disabled):active,
+.text-btn:not(:disabled):active,
+.skip:not(:disabled):active,
+.logout:active,
+.mobile-menu:active,
+.more:active {
+  scale: 0.96;
+  translate: 0 0;
+}
+
+input,
+select,
+textarea {
+  transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, background-color var(--motion-fast) ease;
+}
+
+/* ---------- Cards & list reveals ---------- */
+.member-card,
+.match,
+.schedule-match-card,
+.history-list article,
+.member-table > div,
+.result-row,
+.draw-list > div,
+.rank-row,
+.elo-row {
+  transition: background-color var(--motion-fast) ease, border-color var(--motion-fast) ease, box-shadow var(--motion-base) ease, translate var(--motion-fast) var(--motion-ease-out);
+}
+
+.member-card:not(:disabled):hover,
+.history-list article:hover,
+.schedule-match-card:hover {
+  translate: 0 -2px;
+}
+
+.rank-table > .rank-row,
+.elo-list > .elo-row,
+.member-grid > *,
+.schedule-grid > *,
+.history-list > *,
+.result-list > *,
+.draw-list > *,
+.member-table > div {
+  animation: motionRowIn var(--motion-slow) var(--motion-ease-out) both;
+}
+
+:is(.rank-table > .rank-row, .elo-list > .elo-row, .member-grid > *, .schedule-grid > *, .history-list > *, .result-list > *, .draw-list > *, .member-table > div):nth-child(2) { animation-delay: 30ms; }
+:is(.rank-table > .rank-row, .elo-list > .elo-row, .member-grid > *, .schedule-grid > *, .history-list > *, .result-list > *, .draw-list > *, .member-table > div):nth-child(3) { animation-delay: 60ms; }
+:is(.rank-table > .rank-row, .elo-list > .elo-row, .member-grid > *, .schedule-grid > *, .history-list > *, .result-list > *, .draw-list > *, .member-table > div):nth-child(4) { animation-delay: 90ms; }
+:is(.rank-table > .rank-row, .elo-list > .elo-row, .member-grid > *, .schedule-grid > *, .history-list > *, .result-list > *, .draw-list > *, .member-table > div):nth-child(5) { animation-delay: 120ms; }
+:is(.rank-table > .rank-row, .elo-list > .elo-row, .member-grid > *, .schedule-grid > *, .history-list > *, .result-list > *, .draw-list > *, .member-table > div):nth-child(6) { animation-delay: 150ms; }
+:is(.rank-table > .rank-row, .elo-list > .elo-row, .member-grid > *, .schedule-grid > *, .history-list > *, .result-list > *, .draw-list > *, .member-table > div):nth-child(7) { animation-delay: 180ms; }
+:is(.rank-table > .rank-row, .elo-list > .elo-row, .member-grid > *, .schedule-grid > *, .history-list > *, .result-list > *, .draw-list > *, .member-table > div):nth-child(8) { animation-delay: 210ms; }
+:is(.rank-table > .rank-row, .elo-list > .elo-row, .member-grid > *, .schedule-grid > *, .history-list > *, .result-list > *, .draw-list > *, .member-table > div):nth-child(n + 9) { animation-delay: 240ms; }
+
+/* Notices slide in when they appear. */
+.warning,
+.month-close-feedback,
+.elo-status {
+  animation: motionNoticeIn var(--motion-base) var(--motion-ease-out) both;
+}
+
+/* Login card */
+.login-card {
+  animation: motionDialogIn 520ms var(--motion-ease-out) both;
+}
+
+/* ---------- Reduced motion ---------- */
+/* Durations collapse to ~0 instead of `none` so animationend still fires and <Presence> can unmount. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
