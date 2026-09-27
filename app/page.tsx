@@ -1108,7 +1108,7 @@ export default function Home() {
       if (!(target instanceof Element)) return;
       if (!target.closest(".welcome-member, .member-profile-popover")) setShowProfileCard(false);
       if (!target.closest(".sidebar, .mobile-menu")) setSidebarOpen(false);
-      if (target.closest(".modal-backdrop") && !target.closest(".checkin-modal, .confirm-modal, .history-detail, .member-editor")) {
+      if (target.closest(".modal-backdrop") && !target.closest(".checkin-modal, .confirm-modal, .history-detail, .member-editor, .elo-guide-modal")) {
         (document.querySelector(".presence:not(.presence-leaving) .modal-backdrop .modal-close") as HTMLButtonElement | null)?.click();
       }
     };
@@ -1706,7 +1706,61 @@ function Ranking({ month, rows, onMonthChange, monthOptions, isAdmin, closeStatu
     }) : <div className="empty-ranking">Chưa có thành viên hoạt động để hiển thị BXH {month}.</div>}</div>
   </section>;
 }
+function EloGuideModal({ onClose }: { onClose: () => void }) {
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="elo-guide-title">
+    <section className="elo-guide-modal">
+      <button className="modal-close" onClick={onClose} aria-label="Đóng">×</button>
+      <p className="eyebrow">ELO RATING</p>
+      <h2 id="elo-guide-title">Cách tính điểm ELO</h2>
+      <p className="elo-guide-lead">ELO đo trình độ của từng thành viên và được cập nhật sau mỗi trận đã lưu. ELO tách riêng với BXH điểm thưởng tháng.</p>
+
+      <div className="elo-guide-section">
+        <h3>1. Điểm khởi đầu</h3>
+        <p>Mọi thành viên bắt đầu với <b>1000</b> điểm ELO.</p>
+      </div>
+
+      <div className="elo-guide-section">
+        <h3>2. Tính cho mỗi trận đánh đôi</h3>
+        <ol className="elo-guide-steps">
+          <li><b>ELO đội</b> = trung bình ELO của 2 người trong đội.</li>
+          <li><b>Khả năng thắng kỳ vọng</b> của đội: <code>E = 1 / (1 + 10^((ELO đối thủ − ELO đội) / 400))</code></li>
+          <li><b>Điểm thay đổi</b>: <code>Δ = 32 × (Kết quả − E)</code>, với Kết quả = 1 nếu thắng, 0 nếu thua.</li>
+          <li>Cả 2 người trong đội cùng nhận <b>Δ</b>; đội đối thủ nhận đúng phần ngược lại (<b>−Δ</b>).</li>
+        </ol>
+      </div>
+
+      <div className="elo-guide-section">
+        <h3>3. Ví dụ</h3>
+        <div className="elo-guide-table" role="table">
+          <div role="row" className="elo-guide-table-head"><span role="columnheader">Trận</span><span role="columnheader">Đội thắng</span><span role="columnheader">Đội thua</span></div>
+          <div role="row"><span role="cell">Hai đội ngang nhau (1000 vs 1000)</span><span role="cell" className="positive">+16</span><span role="cell" className="negative">−16</span></div>
+          <div role="row"><span role="cell">Đội mạnh hơn (1100) thắng đội 1000</span><span role="cell" className="positive">+11,5</span><span role="cell" className="negative">−11,5</span></div>
+          <div role="row"><span role="cell">Đội yếu hơn (1000) thắng đội 1100</span><span role="cell" className="positive">+20,5</span><span role="cell" className="negative">−20,5</span></div>
+        </div>
+        <p className="elo-guide-note">Thắng đội mạnh hơn được cộng nhiều hơn; thua đội yếu hơn bị trừ nhiều hơn.</p>
+      </div>
+
+      <div className="elo-guide-section">
+        <h3>4. Lưu ý</h3>
+        <ul className="elo-guide-list">
+          <li>Chỉ tính <b>thắng / thua</b>, không tính cách biệt điểm số của trận. Trận không có kết quả hòa.</li>
+          <li>Mỗi khi lưu hoặc sửa kết quả, ELO được <b>tính lại từ đầu</b> theo thứ tự các trận (ngày thi đấu, số trận), nên sửa một trận cũ sẽ cập nhật lại các trận sau.</li>
+          <li>ELO hiển thị làm tròn 1 chữ số thập phân.</li>
+        </ul>
+      </div>
+
+      <div className="elo-guide-section">
+        <h3>5. Xếp Level</h3>
+        <p><b>4 thành viên đang hoạt động có ELO cao nhất</b> là Level 1, các thành viên còn lại là Level 2. Level được cập nhật sau mỗi trận để buổi sau xếp lịch đúng trình độ.</p>
+      </div>
+
+      <div className="modal-actions"><button className="primary" onClick={onClose}>Đã hiểu</button></div>
+    </section>
+  </div>;
+}
+
 function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus | null }) {
+  const [guideOpen, setGuideOpen] = useState(false);
   const leader = rows[0];
   const sourceLabel = status?.source === "database" ? "Database" : status?.source === "calculated" ? "Replay" : "Tạm thời";
   return <section className="elo-page">
@@ -1715,6 +1769,7 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
         <p className="eyebrow">ELO RATING</p>
         <h2>Bảng ELO thành viên</h2>
         <p>Top 4 ELO hiện tại là Level 1, còn lại là Level 2. Sau mỗi trận đã lưu, ELO và level sẽ cập nhật để tuần sau xếp lịch đúng trình độ mới.</p>
+        <button type="button" className="soft-btn elo-guide-btn" onClick={() => setGuideOpen(true)}>Cách tính ELO</button>
       </div>
       <div className="elo-hero-stats" aria-label="Tổng quan ELO">
         <div><span>Level 1</span><b>Top 4</b></div>
@@ -1742,6 +1797,7 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
         }) : <div className="empty-ranking">Chưa có thành viên hoạt động để hiển thị ELO.</div>}
       </div>
     </section>
+    <Presence show={guideOpen}>{guideOpen && <EloGuideModal onClose={() => setGuideOpen(false)} />}</Presence>
   </section>;
 }
 function History({ sessions, currentMonth }: { sessions: HistorySession[]; currentMonth: string }) {
