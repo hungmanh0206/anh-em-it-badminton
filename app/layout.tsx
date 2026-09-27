@@ -31,6 +31,7 @@ import "./checkin-modal-clean.css";
 import "./ranking-medal-icons.css";
 import "./ranking-single-card.css";
 import "./ranking-table-header.css";
+import "./history-polish.css";
 import "./motion.css";
 
 export const metadata: Metadata = {
