@@ -1,6 +1,8 @@
 /* Motion system: page transitions, modal/popover enter + exit, list reveals and interaction feedback.
    Keyframes animate the individual `translate` / `scale` properties so they compose with the many
-   existing `transform: ... !important` rules instead of fighting them. */
+   existing `transform: ... !important` rules instead of fighting them.
+   Enter animations use `backwards` fill: a retained `translate`/`scale` would make every row a
+   stacking context and containing block, which traps dropdown menus and fixed modals. */
 :root {
   --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
@@ -57,11 +59,11 @@
 
 /* ---------- Page transitions ---------- */
 .screen-view {
-  animation: motionFadeIn var(--motion-base) var(--motion-ease-out) both;
+  animation: motionFadeIn var(--motion-base) var(--motion-ease-out) backwards;
 }
 
 .screen-view > * {
-  animation: motionFadeUp var(--motion-slow) var(--motion-ease-out) both;
+  animation: motionFadeUp var(--motion-slow) var(--motion-ease-out) backwards;
 }
 
 .screen-view > *:nth-child(2) { animation-delay: 50ms; }
@@ -80,7 +82,7 @@
 }
 
 .modal-backdrop {
-  animation: motionFadeIn var(--motion-base) var(--motion-ease-out) both;
+  animation: motionFadeIn var(--motion-base) var(--motion-ease-out) backwards;
 }
 
 .modal-backdrop > .checkin-modal,
@@ -88,7 +90,7 @@
 .modal-backdrop > .history-detail,
 .modal-backdrop > .member-editor,
 .modal-backdrop > section {
-  animation: motionDialogIn var(--motion-slow) var(--motion-ease-spring) both;
+  animation: motionDialogIn var(--motion-slow) var(--motion-ease-spring) backwards;
   animation-delay: 30ms;
 }
 
@@ -108,7 +110,7 @@
 /* ---------- Profile popover ---------- */
 .member-profile-popover {
   transform-origin: top right;
-  animation: motionPopIn var(--motion-base) var(--motion-ease-spring) both;
+  animation: motionPopIn var(--motion-base) var(--motion-ease-spring) backwards;
 }
 
 .presence-leaving > .member-profile-popover {
@@ -235,7 +237,7 @@ textarea {
 .result-list > *,
 .draw-list > *,
 .member-table > div {
-  animation: motionRowIn var(--motion-slow) var(--motion-ease-out) both;
+  animation: motionRowIn var(--motion-slow) var(--motion-ease-out) backwards;
 }
 
 :is(.rank-table > .rank-row, .elo-list > .elo-row, .member-grid > *, .schedule-grid > *, .history-list > *, .result-list > *, .draw-list > *, .member-table > div):nth-child(2) { animation-delay: 30ms; }
@@ -251,12 +253,12 @@ textarea {
 .warning,
 .month-close-feedback,
 .elo-status {
-  animation: motionNoticeIn var(--motion-base) var(--motion-ease-out) both;
+  animation: motionNoticeIn var(--motion-base) var(--motion-ease-out) backwards;
 }
 
 /* Login card */
 .login-card {
-  animation: motionDialogIn 520ms var(--motion-ease-out) both;
+  animation: motionDialogIn 520ms var(--motion-ease-out) backwards;
 }
 
 /* ---------- Reduced motion ---------- */
