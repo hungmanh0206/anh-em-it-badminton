@@ -1,4 +1,5 @@
 import { recalculateEloIfAvailable } from "@/lib/elo/server";
+import { buildDrawReassignmentPlan } from "@/lib/draw-reassign";
 import { ApiError, jsonError, requireUser } from "@/lib/supabase-admin";
 import { isCheckinWindowOpenForDate, normalizeSessionDateKey, rescheduledOriginalDateKey, targetSessionDateKey } from "@/lib/session-dates";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -25,7 +26,9 @@ type ProfileJoin = {
 };
 
 type AttendanceStatusRow = {
+  member_id: string;
   choice: "pending" | "attending" | "absent";
+  drawn_number: number | null;
   level_at_time?: "1" | "2" | number | string | null;
   profiles: ProfileJoin | ProfileJoin[] | null;
 };
@@ -202,40 +205,77 @@ async function reverseSessionResults(admin: SupabaseClient, session: PlaySession
 }
 
 async function resetWorkflowAfterAttendanceChange(admin: SupabaseClient, session: PlaySession) {
+  const scheduleWasOpen = session.status === "scheduled" || session.status === "completed";
+  const { data: attendanceSnapshot, error: attendanceSnapshotError } = await admin
+    .from("attendances")
+    .select("member_id, choice, drawn_number, level_at_time, profiles!attendances_member_id_fkey(level, is_active)")
+    .eq("session_id", session.id);
+  if (attendanceSnapshotError) throw attendanceSnapshotError;
+
+  const attendanceRows = (attendanceSnapshot || []) as AttendanceStatusRow[];
+  const activeRows = attendanceRows.filter((attendance) => toProfile(attendance.profiles)?.is_active !== false);
+  const allResponded = activeRows.length > 0 && activeRows.every((attendance) => attendance.choice !== "pending");
+  const reassignmentPlan = buildDrawReassignmentPlan(attendanceRows.map((attendance) => ({
+    memberId: attendance.member_id,
+    choice: attendance.choice,
+    level: attendance.level_at_time ?? toProfile(attendance.profiles)?.level,
+    drawnNumber: attendance.drawn_number,
+    isActive: toProfile(attendance.profiles)?.is_active !== false,
+  })), { assignAll: scheduleWasOpen });
+  const canOpenDraw = allResponded && reassignmentPlan.canOpenDraw;
+
   await reverseSessionResults(admin, session);
 
-  const [{ error: matchesDeleteError }, { error: drawResetError }, { error: requestCleanupError }] = await Promise.all([
+  const [{ error: matchesDeleteError }, { error: requestCleanupError }] = await Promise.all([
     admin.from("matches").delete().eq("session_id", session.id),
-    admin.from("attendances").update({ drawn_number: null }).eq("session_id", session.id),
     admin.from("attendance_change_requests").delete().eq("session_id", session.id),
   ]);
   if (matchesDeleteError) throw matchesDeleteError;
-  if (drawResetError) throw drawResetError;
   if (requestCleanupError) throw requestCleanupError;
   await recalculateEloIfAvailable(admin);
 
-  const { data: attendances, error: attendanceError } = await admin
-    .from("attendances")
-    .select("choice, level_at_time, profiles!attendances_member_id_fkey(level, is_active)")
-    .eq("session_id", session.id);
-  if (attendanceError) throw attendanceError;
+  const memberIdsToClear = canOpenDraw
+    ? reassignmentPlan.clearMemberIds
+    : attendanceRows.filter((attendance) => typeof attendance.drawn_number === "number").map((attendance) => attendance.member_id);
+  if (memberIdsToClear.length) {
+    const { error: clearError } = await admin
+      .from("attendances")
+      .update({ drawn_number: null })
+      .eq("session_id", session.id)
+      .in("member_id", memberIdsToClear);
+    if (clearError) throw clearError;
+  }
 
-  const activeRows = ((attendances || []) as AttendanceStatusRow[])
-    .filter((attendance) => toProfile(attendance.profiles)?.is_active !== false);
-  const attendingRows = activeRows.filter((attendance) => attendance.choice === "attending");
-  const level1Count = attendingRows.filter((attendance) => attendanceLevel(attendance) === 1).length;
-  const allResponded = activeRows.length > 0 && activeRows.every((attendance) => attendance.choice !== "pending");
-  const canOpenDraw = allResponded && hasScheduleScenario(attendingRows.length, level1Count);
-  const nextStatus = canOpenDraw ? "checked_in" : "draft";
+  if (canOpenDraw) {
+    for (const assignment of reassignmentPlan.assignments) {
+      const { error: assignError } = await admin
+        .from("attendances")
+        .update({ drawn_number: assignment.drawnNumber, level_at_time: String(assignment.level) })
+        .eq("session_id", session.id)
+        .eq("member_id", assignment.memberId)
+        .eq("choice", "attending");
+      if (assignError) throw assignError;
+    }
+  }
+
+  const nextStatus = !canOpenDraw ? "draft" : scheduleWasOpen && reassignmentPlan.allDrawn ? "scheduled" : reassignmentPlan.allDrawn ? "drawn" : "checked_in";
   const nowText = new Date().toISOString();
+  const sessionUpdate = nextStatus === "draft"
+    ? { status: nextStatus, attendance_confirmed_at: null, draw_open_at: null, schedule_mode: null }
+    : nextStatus === "scheduled"
+      ? { status: nextStatus, attendance_confirmed_at: nowText, draw_open_at: nowText, schedule_mode: "level_based" }
+      : { status: nextStatus, attendance_confirmed_at: nowText, draw_open_at: nowText, schedule_mode: null };
   const { error: sessionError } = await admin
     .from("play_sessions")
-    .update(canOpenDraw
-      ? { status: nextStatus, attendance_confirmed_at: nowText, draw_open_at: nowText, schedule_mode: null }
-      : { status: nextStatus, attendance_confirmed_at: null, draw_open_at: null, schedule_mode: null })
+    .update(sessionUpdate)
     .eq("id", session.id);
   if (sessionError) throw sessionError;
   session.status = nextStatus;
+  return {
+    drawsReassigned: canOpenDraw && reassignmentPlan.assignments.length > 0,
+    scheduleCleared: scheduleWasOpen,
+    needsReset: !canOpenDraw,
+  };
 }
 
 async function getOrCreateSession(admin: SupabaseClient, userId: string, sessionDate: string) {
@@ -336,7 +376,7 @@ async function loadSessionPayload(admin: SupabaseClient, session: PlaySession) {
 
 export async function POST(request: Request) {
   try {
-    const { admin, user } = await requireUser(request);
+    const { admin, user, profile } = await requireUser(request);
     const body = await request.json().catch(() => ({})) as Body;
     if (typeof body.attending !== "boolean") return Response.json({ error: "Thiếu lựa chọn điểm danh." }, { status: 400 });
 
@@ -372,21 +412,23 @@ export async function POST(request: Request) {
 
     const nextChoice = body.attending ? "attending" : "absent";
     const previousChoice = String(currentAttendance?.choice || "pending");
-    const needsReset = ["checked_in", "drawn", "scheduled", "completed"].includes(session.status) && previousChoice !== nextChoice;
+    const workflowNeedsResync = ["checked_in", "drawn", "scheduled", "completed"].includes(session.status) && previousChoice !== nextChoice;
 
-    if (needsReset) await assertSessionResultsAreReversible(admin, session);
+    if (workflowNeedsResync) await assertSessionResultsAreReversible(admin, session);
 
     const { error: updateError } = await admin
       .from("attendances")
-      .update({ choice: nextChoice, responded_at: new Date().toISOString() })
+      .update({ choice: nextChoice, responded_at: new Date().toISOString(), level_at_time: String(toLevel(profile.level)) })
       .eq("session_id", session.id)
       .eq("member_id", user.id);
     if (updateError) throw updateError;
 
-    if (needsReset) await resetWorkflowAfterAttendanceChange(admin, session);
+    const resync = workflowNeedsResync
+      ? await resetWorkflowAfterAttendanceChange(admin, session)
+      : { drawsReassigned: false, scheduleCleared: false, needsReset: false };
 
     const payload = await loadSessionPayload(admin, session);
-    return Response.json({ ...payload, needsReset });
+    return Response.json({ ...payload, ...resync });
   } catch (error) {
     return jsonError(error);
   }

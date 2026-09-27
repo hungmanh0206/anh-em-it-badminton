@@ -1,6 +1,6 @@
-/* Ranking spacing lock v2: one flat card list, no top-3 group spacing. */
+/* Ranking spacing lock v3: grid gap avoids uneven visual spacing around top medals. */
 :root {
-  --ranking-card-gap: 16px;
+  --ranking-card-gap: 18px;
 }
 
 .panel.live-ranking-panel,
@@ -14,11 +14,13 @@
 .ranking .rank-table,
 .live-ranking-panel .rank-table,
 .rank-table.live-rank-table {
-  display: block !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-content: start !important;
   height: auto !important;
   max-height: none !important;
-  gap: 0 !important;
-  row-gap: 0 !important;
+  gap: var(--ranking-card-gap) !important;
+  row-gap: var(--ranking-card-gap) !important;
   column-gap: 0 !important;
   overflow: visible !important;
 }
@@ -31,7 +33,7 @@
 .rank-table.live-rank-table > .rank-row.rank-columns.top-rank {
   margin-top: 0 !important;
   margin-right: 0 !important;
-  margin-bottom: var(--ranking-card-gap) !important;
+  margin-bottom: 0 !important;
   margin-left: 0 !important;
   transform: none !important;
 }
@@ -78,6 +80,35 @@
 
 @media (max-width: 800px) {
   :root {
-    --ranking-card-gap: 16px;
+    --ranking-card-gap: 18px;
+  }
+}
+/* Final visual correction: separate the medal group from the rest of the table. */
+.ranking .rank-table,
+.live-ranking-panel .rank-table,
+.rank-table.live-rank-table {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--ranking-card-gap) !important;
+  row-gap: var(--ranking-card-gap) !important;
+}
+
+.ranking .rank-table > .rank-row.rank-columns,
+.live-ranking-panel .rank-table > .rank-row.rank-columns,
+.rank-table.live-rank-table > .rank-row.rank-columns {
+  margin: 0 !important;
+}
+
+.ranking .rank-table > .rank-row.rank-columns.top-3,
+.live-ranking-panel .rank-table > .rank-row.rank-columns.top-3,
+.rank-table.live-rank-table > .rank-row.rank-columns.top-3 {
+  margin-bottom: 12px !important;
+}
+
+@media (max-width: 800px) {
+  .ranking .rank-table > .rank-row.rank-columns.top-3,
+  .live-ranking-panel .rank-table > .rank-row.rank-columns.top-3,
+  .rank-table.live-rank-table > .rank-row.rank-columns.top-3 {
+    margin-bottom: 8px !important;
   }
 }

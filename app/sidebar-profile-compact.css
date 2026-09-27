@@ -105,24 +105,38 @@
   }
 }
 
-/* Mobile sidebar scroll: keep full drawer content reachable on short screens. */
+/* Sidebar scroll: keep full sidebar content reachable on short screens (desktop and mobile). */
+.sidebar {
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  padding-bottom: max(18px, env(safe-area-inset-bottom)) !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 183, 0, 0.35) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 183, 0, 0.35);
+  border-radius: 6px;
+}
+
+.sidebar .brand,
+.sidebar nav,
+.sidebar .club-card,
+.sidebar .profile {
+  flex: 0 0 auto !important;
+}
+
 @media (max-width: 800px) {
   .sidebar {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    overscroll-behavior: contain;
-    padding-bottom: max(18px, env(safe-area-inset-bottom)) !important;
     scrollbar-gutter: stable;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .sidebar .brand,
-  .sidebar nav,
-  .sidebar .club-card,
-  .sidebar .profile {
-    flex: 0 0 auto !important;
   }
 }
 

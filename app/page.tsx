@@ -37,7 +37,7 @@ type AppDataCachePayload = RankingCachePayload & {
 type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "elo" | "history";
 type SessionStatus = "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 type AttendanceRow = { choice: "pending" | "attending" | "absent"; drawn_number: number | null; level_at_time?: "1" | "2" | number | string | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
-type HomeSessionPayload = { inactive?: boolean; sessionId?: string | null; sessionDate?: string; status?: SessionStatus; attendances?: AttendanceRow[]; needsReset?: boolean; error?: string };
+type HomeSessionPayload = { inactive?: boolean; sessionId?: string | null; sessionDate?: string; status?: SessionStatus; attendances?: AttendanceRow[]; needsReset?: boolean; drawsReassigned?: boolean; scheduleCleared?: boolean; error?: string };
 type AppIconName = "home" | "members" | "schedule" | "ranking" | "history" | "rules" | "trophy" | "crown" | "check" | "success" | "error" | "target" | "pencil" | "save" | "logout" | "clipboard" | "gift";
 function AppIcon({ name, className = "" }: { name: AppIconName; className?: string }) {
   return <span className={`app-icon app-icon-${name}${className ? ` ${className}` : ""}`} aria-hidden="true" />;
@@ -449,7 +449,16 @@ export default function Home() {
           setScores({});
           setConfirmedMatches({});
           setRankingRefreshTick((tick) => tick + 1);
-          setAttendanceChangeNotice("Điểm danh đã thay đổi nên số đã chọn, lịch và kết quả tuần này đã được reset. Mọi người cần chọn số lại.");
+          setAttendanceChangeNotice("Điểm danh đã thay đổi nên buổi này cần xác nhận lại trước khi chọn số.");
+        } else if (payload.scheduleCleared || payload.drawsReassigned) {
+          if (payload.scheduleCleared) {
+            setScores({});
+            setConfirmedMatches({});
+            setRankingRefreshTick((tick) => tick + 1);
+          }
+          setAttendanceChangeNotice(payload.scheduleCleared
+            ? "Điểm danh đã thay đổi nên lịch/kết quả cũ đã được làm mới, số đã bốc được random lại tự động."
+            : "Điểm danh đã thay đổi nên các số đã bốc được random lại tự động. Người chưa có số tiếp tục chọn số.");
         }
         setActiveUser({ ...activeUser, present: attending, responded: true });
         closeCheckinPopup();
