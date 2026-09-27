@@ -42,6 +42,9 @@ const readScheduleScenarios = () => {
 
 const bestKnownMaxStreak = new Map([
   ["5-open", 4],
+  // 6 x L2: with every player on 4 matches, no repeated partners and each opponent pair
+  // meeting at most 3 times, no match set can keep every streak at 2 (exhaustively checked).
+  ["6-0L1-6L2", 3],
   ["6-1L1-5L2", 3],
   ["6-3L1-3L2", 3],
 ]);
