@@ -1709,9 +1709,12 @@ function Ranking({ month, rows, onMonthChange, monthOptions, isAdmin, closeStatu
 function EloGuideModal({ onClose }: { onClose: () => void }) {
   return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="elo-guide-title">
     <section className="elo-guide-modal">
-      <button className="modal-close" onClick={onClose} aria-label="Đóng">×</button>
-      <p className="eyebrow">ELO RATING</p>
-      <h2 id="elo-guide-title">Cách tính điểm ELO</h2>
+      <header className="elo-guide-header">
+        <p className="eyebrow">ELO RATING</p>
+        <h2 id="elo-guide-title">Cách tính điểm ELO</h2>
+        <button className="modal-close" onClick={onClose} aria-label="Đóng">×</button>
+      </header>
+      <div className="elo-guide-body">
       <p className="elo-guide-lead">ELO đo trình độ của từng thành viên và được cập nhật sau mỗi trận đã lưu. ELO tách riêng với BXH điểm thưởng tháng.</p>
 
       <div className="elo-guide-section">
@@ -1772,6 +1775,7 @@ function EloGuideModal({ onClose }: { onClose: () => void }) {
         <p><b>4 thành viên đang hoạt động có ELO cao nhất</b> là Level 1, các thành viên còn lại là Level 2. Level được cập nhật sau mỗi trận để buổi sau xếp lịch đúng trình độ.</p>
       </div>
 
+      </div>
       <div className="modal-actions"><button className="primary" onClick={onClose}>Đã hiểu</button></div>
     </section>
   </div>;

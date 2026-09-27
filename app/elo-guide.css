@@ -24,13 +24,15 @@
   outline-offset: 2px !important;
 }
 
+/* Header and footer stay put; only the body scrolls. */
 .elo-guide-modal {
   position: relative;
+  display: flex;
+  flex-direction: column;
   width: min(100%, 640px);
   max-height: min(86vh, 820px);
-  overflow: auto;
-  overscroll-behavior: contain;
-  padding: 28px 28px 22px;
+  overflow: hidden;
+  padding: 0;
   border-radius: 20px;
   background: #fff;
   box-shadow: 0 24px 60px rgba(13, 9, 32, 0.28);
@@ -38,8 +40,37 @@
   text-align: left;
 }
 
+.elo-guide-header {
+  /* globals.css lays out every <header> as a flex row; this one stacks eyebrow above the title. */
+  position: relative;
+  display: block !important;
+  margin: 0 !important;
+  flex: 0 0 auto;
+  padding: 22px 64px 14px 28px;
+  border-bottom: 1px solid rgba(30, 25, 18, 0.08);
+  background: #fff;
+}
+
+.elo-guide-header .eyebrow {
+  margin: 0 !important;
+}
+
+.elo-guide-header .modal-close {
+  position: absolute !important;
+  top: 14px !important;
+  right: 16px !important;
+}
+
+.elo-guide-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 28px 20px;
+}
+
 .elo-guide-modal h2 {
-  margin: 4px 0 8px !important;
+  margin: 4px 0 0 !important;
   font-size: 22px !important;
 }
 
@@ -137,9 +168,13 @@
 }
 
 .elo-guide-modal .modal-actions {
+  flex: 0 0 auto;
   display: flex;
   justify-content: flex-end;
-  margin-top: 20px;
+  margin: 0 !important;
+  padding: 12px 28px 16px;
+  border-top: 1px solid rgba(30, 25, 18, 0.08);
+  background: #fff;
 }
 
 .elo-guide-modal .modal-actions .primary {
@@ -148,8 +183,19 @@
 
 @media (max-width: 560px) {
   .elo-guide-modal {
-    padding: 22px 18px 18px;
     border-radius: 18px;
+  }
+
+  .elo-guide-header {
+    padding: 18px 56px 12px 18px;
+  }
+
+  .elo-guide-body {
+    padding: 14px 18px 16px;
+  }
+
+  .elo-guide-modal .modal-actions {
+    padding: 10px 18px 14px;
   }
 
   .elo-guide-table > div {
