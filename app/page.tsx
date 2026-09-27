@@ -1436,7 +1436,6 @@ function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
       {visibleScenarios.map((scenario) => <article className="panel schedule-case" key={scenario.id}>
         <div className="schedule-case-head">
           <div>
-            <span className="schedule-case-badge">{scenario.badge}</span>
             <h2>{scenario.title}</h2>
             <p>{scenario.subtitle}</p>
           </div>
