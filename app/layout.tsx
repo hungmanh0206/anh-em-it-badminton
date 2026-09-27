@@ -33,16 +33,16 @@ import "./ranking-medal-icons.css";
 export const metadata: Metadata = {
   title: "Anh Em IT — Quản lý CLB Cầu lông",
   description: "Quản lý buổi chơi, lịch đấu và bảng xếp hạng CLB Anh Em IT.",
-  manifest: "/site.webmanifest?v=club-3d-logo",
+  manifest: "/site.webmanifest?v=club-glass-logo",
   icons: {
     icon: [
-      { url: "/favicon.ico?v=club-3d-logo", sizes: "any" },
-      { url: "/icon-32.png?v=club-3d-logo", sizes: "32x32", type: "image/png" },
-      { url: "/icon-192.png?v=club-3d-logo", sizes: "192x192", type: "image/png" },
+      { url: "/favicon.ico?v=club-glass-logo", sizes: "any" },
+      { url: "/icon-32.png?v=club-glass-logo", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png?v=club-glass-logo", sizes: "192x192", type: "image/png" },
     ],
-    shortcut: "/favicon.ico?v=club-3d-logo",
+    shortcut: "/favicon.ico?v=club-glass-logo",
     apple: [
-      { url: "/apple-touch-icon.png?v=club-3d-logo", sizes: "180x180", type: "image/png" },
+      { url: "/apple-touch-icon.png?v=club-glass-logo", sizes: "180x180", type: "image/png" },
     ],
   },
 };

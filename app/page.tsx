@@ -160,7 +160,7 @@ const scheduleScenarios: ScheduleScenario[] = [
   makeScheduleScenario(8, 4, schedule([[1, 2, 3, 4], [1, 3, 2, 4], [1, 5, 2, 6], [1, 6, 3, 8], [2, 5, 4, 7], [3, 7, 4, 8], [5, 6, 7, 8], [5, 7, 6, 8]])),
   makeScheduleScenario(9, 3, schedule([[1, 6, 2, 10], [1, 7, 3, 8], [2, 8, 3, 10], [5, 6, 7, 8], [1, 10, 3, 9], [1, 5, 2, 6], [5, 7, 9, 10], [2, 9, 3, 7], [5, 9, 6, 8]])),
   makeScheduleScenario(9, 4, schedule([[1, 2, 3, 4], [1, 3, 2, 4], [1, 6, 2, 9], [1, 5, 3, 6], [2, 7, 4, 8], [3, 8, 4, 9], [5, 6, 7, 8], [5, 7, 6, 9], [5, 8, 7, 9]])),
-  makeScheduleScenario(10, 4, schedule([[1, 10, 2, 5], [3, 6, 4, 7], [1, 8, 2, 9], [3, 10, 4, 5], [6, 7, 8, 9], [1, 2, 3, 4], [5, 10, 6, 8], [1, 7, 3, 9], [2, 10, 4, 6], [5, 8, 7, 9]])),
+  makeScheduleScenario(10, 4, schedule([[1, 3, 2, 4], [1, 4, 2, 3], [1, 5, 3, 8], [2, 8, 3, 9], [2, 6, 4, 7], [1, 7, 4, 10], [5, 8, 6, 9], [6, 7, 9, 10], [5, 10, 8, 9], [5, 6, 7, 10]])),
 ];
 const findScheduleScenario = (participantCount: number, level1Count: number) => {
   if (participantCount === 5) return scheduleScenarios.find((item) => item.participantCount === 5) ?? null;
@@ -1155,7 +1155,7 @@ export default function Home() {
       {screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : <>
         <section className="hero">
           <div className="hero-copy"><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div>
-          <img className="hero-logo" src="/club-logo.png?v=club-3d-logo" alt="" aria-hidden="true" />
+          <img className="hero-logo" src="/club-logo.png?v=club-glass-logo" alt="" aria-hidden="true" />
           <div className="hero-stats"><div><b>{present.length}</b><small>THAM GIA</small></div><div><b>{notAttending.length}</b><small>KHÔNG THAM GIA</small></div><div><b>{String(step + 1).padStart(2, "0")}<em>/{String(steps.length).padStart(2, "0")}</em></b><small>BƯỚC HIỆN TẠI</small></div></div>
         </section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : ""} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>

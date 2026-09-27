@@ -97,9 +97,12 @@
 }
 
 .confirm-modal .modal-icon.app-icon {
-  border-color: rgba(168, 155, 255, 0.35) !important;
-  background: #1f1c36 var(--confirm-modal-icon, var(--icon-confirm)) center / 74% auto no-repeat !important;
-  box-shadow: 0 14px 30px rgba(92, 67, 213, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  width: 72px !important;
+  height: 72px !important;
+  border: 0 !important;
+  background: transparent var(--confirm-modal-icon, var(--icon-confirm)) center / contain no-repeat !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 10px 18px rgba(92, 67, 213, 0.28));
 }
 
 .confirm-modal .modal-icon.app-icon-logout {
