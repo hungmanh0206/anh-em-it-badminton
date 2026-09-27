@@ -1100,8 +1100,11 @@ export default function Home() {
   useEffect(() => {
     const trigger = document.querySelector(".welcome-member");
     const toggleProfile = () => setShowProfileCard((open) => !open);
-    const closeOutside = (event: PointerEvent) => {
-      const target = event.target;
+    let pointerDownTarget: EventTarget | null = null;
+    const rememberPointerDown = (event: PointerEvent) => { pointerDownTarget = event.target; };
+    const closeOutside = (event: MouseEvent) => {
+      const target = pointerDownTarget ?? event.target;
+      pointerDownTarget = null;
       if (!(target instanceof Element)) return;
       if (!target.closest(".welcome-member, .member-profile-popover")) setShowProfileCard(false);
       if (!target.closest(".sidebar, .mobile-menu")) setSidebarOpen(false);
@@ -1110,8 +1113,13 @@ export default function Home() {
       }
     };
     trigger?.addEventListener("click", toggleProfile);
-    document.addEventListener("pointerdown", closeOutside);
-    return () => { trigger?.removeEventListener("click", toggleProfile); document.removeEventListener("pointerdown", closeOutside); };
+    document.addEventListener("pointerdown", rememberPointerDown);
+    document.addEventListener("click", closeOutside);
+    return () => {
+      trigger?.removeEventListener("click", toggleProfile);
+      document.removeEventListener("pointerdown", rememberPointerDown);
+      document.removeEventListener("click", closeOutside);
+    };
   }, [activeUser]);
   useEffect(() => {
     if (activeUser && activeUser.role !== "admin" && screen === "members") setScreen("home");
@@ -1170,6 +1178,19 @@ export default function Home() {
     <Presence show={Boolean(confirmation)}>{confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}</Presence>
     <Presence show={Boolean(showProfileCard)}>{showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} elo={profileElo} onClose={() => setShowProfileCard(false)} />}</Presence>
   </main>;
+}
+
+// Dismisses on click (not pointerdown) so the tap is consumed by the backdrop instead of reaching
+// whatever sits under it once the modal closes; the tap must also start on the backdrop itself.
+function backdropDismissProps(onDismiss: () => void) {
+  return {
+    onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => { event.currentTarget.dataset.pointerDownOnBackdrop = String(event.target === event.currentTarget); },
+    onClick: (event: React.MouseEvent<HTMLDivElement>) => {
+      const startedOnBackdrop = event.currentTarget.dataset.pointerDownOnBackdrop !== "false";
+      delete event.currentTarget.dataset.pointerDownOnBackdrop;
+      if (startedOnBackdrop && event.target === event.currentTarget) onDismiss();
+    },
+  };
 }
 
 // Keeps the last visible content mounted while it plays its exit animation (see motion.css).
@@ -1791,14 +1812,21 @@ function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated:
     ? members.filter((member) => normalizeSearch(`${member.name} ${member.username} ${member.initials} ${memberRoleLabel(member.role)} level ${member.level} l${member.level}`).includes(normalizedSearch))
     : members;
   useEffect(() => {
-    const closeOutside = (event: PointerEvent) => {
-      const target = event.target;
+    let pointerDownTarget: EventTarget | null = null;
+    const rememberPointerDown = (event: PointerEvent) => { pointerDownTarget = event.target; };
+    const closeOutside = (event: MouseEvent) => {
+      const target = pointerDownTarget ?? event.target;
+      pointerDownTarget = null;
       if (!(target instanceof Element)) return;
       if (!target.closest(".member-actions")) setOpenMenu(null);
       if (target.closest(".modal-backdrop") && !target.closest(".member-editor, .confirm-modal")) setEditing(null);
     };
-    document.addEventListener("pointerdown", closeOutside);
-    return () => document.removeEventListener("pointerdown", closeOutside);
+    document.addEventListener("pointerdown", rememberPointerDown);
+    document.addEventListener("click", closeOutside);
+    return () => {
+      document.removeEventListener("pointerdown", rememberPointerDown);
+      document.removeEventListener("click", closeOutside);
+    };
   }, []);
   const saveMemberRole = async (member: Member, nextRole: "member" | "sub-admin") => {
     setRoleSaving(member.username);
@@ -1888,8 +1916,8 @@ function Login({ onLogin, error }: { onLogin: (username: string, password: strin
 }
 
 function CheckinModal({ member, onAnswer, onSkip }: { member: Member; onAnswer: (attending: boolean) => void; onSkip: () => void }) {
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Điểm danh buổi chơi" onPointerDown={(event) => { if (event.target === event.currentTarget) onSkip(); }}><section className="checkin-modal"><button className="modal-close" onClick={onSkip} aria-label="Đóng">×</button><p className="eyebrow">BUỔI CHƠI THỨ BẢY</p><h2>Chào {member.name}, bạn có tham gia không?</h2><p>Hãy phản hồi để Admin chốt danh sách và mở chọn số vào thứ Tư. Bạn vẫn có thể thay đổi sau trong trang chính.</p><div className="modal-actions"><button className="primary" onClick={() => onAnswer(true)}>Tôi tham gia</button><button className="secondary" onClick={() => onAnswer(false)}>Tôi không tham gia</button></div><button className="skip" onClick={onSkip}>Để sau</button></section></div>;
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Điểm danh buổi chơi" {...backdropDismissProps(onSkip)}><section className="checkin-modal"><button className="modal-close" onClick={onSkip} aria-label="Đóng">×</button><p className="eyebrow">BUỔI CHƠI THỨ BẢY</p><h2>Chào {member.name}, bạn có tham gia không?</h2><p>Hãy phản hồi để Admin chốt danh sách và mở chọn số vào thứ Tư. Bạn vẫn có thể thay đổi sau trong trang chính.</p><div className="modal-actions"><button className="primary" onClick={() => onAnswer(true)}>Tôi tham gia</button><button className="secondary" onClick={() => onAnswer(false)}>Tôi không tham gia</button></div><button className="skip" onClick={onSkip}>Để sau</button></section></div>;
 }
 function ConfirmActionModal({ title, message, onCancel, onConfirm, icon = "confirm", confirmLabel = "Có, xác nhận", cancelLabel = "Không" }: { title: string; message: string; onCancel: () => void; onConfirm: () => void | Promise<void>; icon?: AppIconName; confirmLabel?: string; cancelLabel?: string }) {
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" onPointerDown={(event) => { if (event.target === event.currentTarget) onCancel(); }}><section className={`confirm-modal confirm-modal-${icon}`}><span className={`modal-icon app-icon app-icon-${icon}`} aria-hidden="true" /><h2>{title}</h2><p>{message}</p><div className="modal-actions confirm-actions"><button className="secondary" onClick={onCancel}>{cancelLabel}</button><button className="primary" onClick={() => void onConfirm()}>{confirmLabel}</button></div></section></div>;
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" {...backdropDismissProps(onCancel)}><section className={`confirm-modal confirm-modal-${icon}`}><span className={`modal-icon app-icon app-icon-${icon}`} aria-hidden="true" /><h2>{title}</h2><p>{message}</p><div className="modal-actions confirm-actions"><button className="secondary" onClick={onCancel}>{cancelLabel}</button><button className="primary" onClick={() => void onConfirm()}>{confirmLabel}</button></div></section></div>;
 }
