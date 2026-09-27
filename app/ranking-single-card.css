@@ -1,0 +1,89 @@
+/* Ranking lists (weekly, monthly, ELO): one card per board, rows separated by dividers instead of one card per member. */
+.ranking .rank-table,
+.live-ranking-panel .rank-table,
+.rank-table.live-rank-table,
+.elo-ranking-panel .elo-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  row-gap: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(30, 25, 18, 0.09) !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 10px 26px rgba(35, 28, 18, 0.06) !important;
+}
+
+.ranking .rank-table > .rank-row.rank-columns,
+.live-ranking-panel .rank-table > .rank-row.rank-columns,
+.rank-table.live-rank-table > .rank-row.rank-columns,
+.ranking .rank-table > .rank-row.rank-columns.top-rank,
+.live-ranking-panel .rank-table > .rank-row.rank-columns.top-rank,
+.rank-table.live-rank-table > .rank-row.rank-columns.top-rank,
+.elo-ranking-panel .elo-list > .elo-row,
+.elo-ranking-panel .elo-list > .elo-row.top-rank {
+  margin: 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(30, 25, 18, 0.07) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.ranking .rank-table > .rank-row.rank-columns:last-child,
+.live-ranking-panel .rank-table > .rank-row.rank-columns:last-child,
+.rank-table.live-rank-table > .rank-row.rank-columns:last-child,
+.elo-ranking-panel .elo-list > .elo-row:last-child {
+  border-bottom: 0 !important;
+}
+
+/* Top 3: keep the medal, mark the row with a soft tint and an accent bar instead of a separate card. */
+.ranking .rank-table > .rank-row.rank-columns.top-1,
+.live-ranking-panel .rank-table > .rank-row.rank-columns.top-1,
+.rank-table.live-rank-table > .rank-row.rank-columns.top-1,
+.elo-ranking-panel .elo-list > .elo-row.top-1 {
+  background: linear-gradient(90deg, rgba(255, 183, 0, 0.13), rgba(255, 183, 0, 0.02) 70%) !important;
+  box-shadow: inset 3px 0 0 #ffb700 !important;
+}
+
+.ranking .rank-table > .rank-row.rank-columns.top-2,
+.live-ranking-panel .rank-table > .rank-row.rank-columns.top-2,
+.rank-table.live-rank-table > .rank-row.rank-columns.top-2,
+.elo-ranking-panel .elo-list > .elo-row.top-2 {
+  background: linear-gradient(90deg, rgba(126, 138, 160, 0.13), rgba(126, 138, 160, 0.02) 70%) !important;
+  box-shadow: inset 3px 0 0 #a3adbd !important;
+}
+
+.ranking .rank-table > .rank-row.rank-columns.top-3,
+.live-ranking-panel .rank-table > .rank-row.rank-columns.top-3,
+.rank-table.live-rank-table > .rank-row.rank-columns.top-3,
+.elo-ranking-panel .elo-list > .elo-row.top-3 {
+  background: linear-gradient(90deg, rgba(196, 116, 58, 0.13), rgba(196, 116, 58, 0.02) 70%) !important;
+  box-shadow: inset 3px 0 0 #cd8a52 !important;
+}
+
+.ranking .rank-table > .rank-row.rank-columns:hover,
+.live-ranking-panel .rank-table > .rank-row.rank-columns:hover,
+.rank-table.live-rank-table > .rank-row.rank-columns:hover,
+.elo-ranking-panel .elo-list > .elo-row:hover {
+  background-color: #fffaf0 !important;
+}
+
+.ranking .rank-table > .empty-ranking,
+.live-ranking-panel .rank-table > .empty-ranking,
+.elo-ranking-panel .elo-list > .empty-ranking {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Weekly and ELO boards already sit inside a panel card: drop the inner frame so the panel is the single card. */
+.live-ranking-panel .rank-table,
+.rank-table.live-rank-table,
+.elo-ranking-panel .elo-list {
+  border: 0 !important;
+  border-radius: 14px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}

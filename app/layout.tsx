@@ -29,6 +29,7 @@ import "./elo-ranking.css";
 import "./welcome-chip-polish.css";
 import "./checkin-modal-clean.css";
 import "./ranking-medal-icons.css";
+import "./ranking-single-card.css";
 
 export const metadata: Metadata = {
   title: "Anh Em IT — Quản lý CLB Cầu lông",
