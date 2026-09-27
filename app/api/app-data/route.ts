@@ -246,20 +246,20 @@ const buildEloRows = (rankedRows: Array<{ memberId: string; name?: string; usern
     });
 };
 
-async function loadPersistedEloRows(admin: SupabaseClient, activeProfiles: SupabaseProfile[]) {
-  const memberIds = activeProfiles.flatMap((profile) => profile.id ? [profile.id] : []);
-  if (!memberIds.length) return null;
+type EloRatingsRead = { data: unknown[] | null; error: { code?: string; message: string } | null };
 
-  const { data, error } = await admin
-    .from("elo_ratings")
-    .select("member_id, elo_rating, updated_at")
-    .in("member_id", memberIds);
+// The ratings table is read alongside the other app-data queries; this only filters it to active members.
+async function loadPersistedEloRows(eloRatingsRead: EloRatingsRead, activeProfiles: SupabaseProfile[]) {
+  const memberIds = new Set(activeProfiles.flatMap((profile) => profile.id ? [profile.id] : []));
+  if (!memberIds.size) return null;
+
+  const { data, error } = eloRatingsRead;
   if (error) {
     if (isMissingEloFeature(error)) return null;
     throw error;
   }
 
-  const ratingRows = (data || []) as EloRatingRow[];
+  const ratingRows = ((data || []) as EloRatingRow[]).filter((row) => memberIds.has(row.member_id));
   if (!ratingRows.length) return null;
 
   const ratingByMember = new Map(ratingRows.map((row) => [row.member_id, Number(row.elo_rating ?? ELO_INITIAL_RATING)]));
@@ -323,9 +323,9 @@ async function buildCalculatedEloRows(admin: SupabaseClient, activeProfiles: Sup
  };
 }
 
-async function loadEloRanking(admin: SupabaseClient, activeProfiles: SupabaseProfile[]) {
+async function loadEloRanking(admin: SupabaseClient, eloRatingsRead: EloRatingsRead, activeProfiles: SupabaseProfile[]) {
  try {
-   const persisted = await loadPersistedEloRows(admin, activeProfiles);
+   const persisted = await loadPersistedEloRows(eloRatingsRead, activeProfiles);
    if (persisted) return persisted;
    return await buildCalculatedEloRows(admin, activeProfiles);
  } catch (error) {
@@ -380,6 +380,7 @@ export async function GET(request: Request) {
       { data: finalSession, error: finalSessionError },
       { count: nextMonthRows, error: nextMonthError },
       { data: historyData, error: historyError },
+      eloRatingsRead,
     ] = await Promise.all([
       admin.from("monthly_results").select(rankingSelect).in("month", requestedRankingMonths),
       admin.from("play_sessions").select("session_date, status").in("session_date", championFinalSessionKeys),
@@ -387,6 +388,7 @@ export async function GET(request: Request) {
       admin.from("play_sessions").select("status").eq("session_date", selectedFinalSaturdayKey).maybeSingle(),
       admin.from("monthly_results").select("id", { count: "exact", head: true }).eq("month", selectedNextMonthKey),
       admin.from("play_sessions").select("id, session_date, matches(match_no, team_a, team_b), attendances(choice)").eq("status", "completed").order("session_date", { ascending: false }),
+      admin.from("elo_ratings").select("member_id, elo_rating, updated_at"),
     ]);
 
     const queryError = rankingError || championSessionError || profileError || finalSessionError || nextMonthError || historyError;
@@ -401,7 +403,7 @@ export async function GET(request: Request) {
     });
 
     const activeProfileRows = (activeProfiles || []) as SupabaseProfile[];
-    const { rows: eloRows, status: eloStatus } = await loadEloRanking(admin, activeProfileRows);
+    const { rows: eloRows, status: eloStatus } = await loadEloRanking(admin, eloRatingsRead, activeProfileRows);
     const selectedRows = rankingRowsByMonth.get(month) ?? [];
     const currentRowsForCalendarMonth = rankingRowsByMonth.get(currentMonthKey) ?? [];
     const liveRowsForSessionMonth = rankingRowsByMonth.get(sessionMonthKey) ?? [];

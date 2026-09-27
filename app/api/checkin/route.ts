@@ -77,18 +77,19 @@ const hasScheduleScenario = (participantCount: number, level1Count: number) =>
   allowedLevel1CountsByParticipants.get(participantCount)?.includes(level1Count) ?? false;
 
 async function rerankMonthlyResults(admin: SupabaseClient, month: string) {
-  const { error: zeroRankError } = await admin
-    .from("monthly_results")
-    .update({ rank: 999 })
-    .eq("month", month)
-    .eq("matches_played", 0);
+  const [{ error: zeroRankError }, { data: rankRows, error: rankError }] = await Promise.all([
+    admin
+      .from("monthly_results")
+      .update({ rank: 999 })
+      .eq("month", month)
+      .eq("matches_played", 0),
+    admin
+      .from("monthly_results")
+      .select("id, rank, total_points, points_for, point_diff, matches_played, created_at")
+      .eq("month", month)
+      .gt("matches_played", 0),
+  ]);
   if (zeroRankError) throw zeroRankError;
-
-  const { data: rankRows, error: rankError } = await admin
-    .from("monthly_results")
-    .select("id, total_points, points_for, point_diff, matches_played, created_at")
-    .eq("month", month)
-    .gt("matches_played", 0);
   if (rankError) throw rankError;
 
   const sortedRows = [...(rankRows || [])].sort((a, b) =>
@@ -98,29 +99,29 @@ async function rerankMonthlyResults(admin: SupabaseClient, month: string) {
     a.matches_played - b.matches_played ||
     String(a.created_at).localeCompare(String(b.created_at))
   );
-  for (const [index, row] of sortedRows.entries()) {
-    const { error: updateRankError } = await admin
-      .from("monthly_results")
-      .update({ rank: index + 1 })
-      .eq("id", row.id);
-    if (updateRankError) throw updateRankError;
-  }
+  const rankUpdates = await Promise.all(sortedRows
+    .map((row, index) => ({ id: row.id, oldRank: row.rank, rank: index + 1 }))
+    .filter((row) => row.oldRank !== row.rank)
+    .map((row) => admin.from("monthly_results").update({ rank: row.rank }).eq("id", row.id)));
+  const failedRankUpdate = rankUpdates.find((result) => result.error);
+  if (failedRankUpdate?.error) throw failedRankUpdate.error;
 }
 
 async function assertSessionResultsAreReversible(admin: SupabaseClient, session: PlaySession) {
-  const { count: scoredMatchCount, error: scoredMatchError } = await admin
-    .from("matches")
-    .select("id", { count: "exact", head: true })
-    .eq("session_id", session.id)
-    .not("score_a", "is", null)
-    .not("score_b", "is", null);
+  const [{ count: scoredMatchCount, error: scoredMatchError }, { count: nextMonthCount, error: nextMonthError }] = await Promise.all([
+    admin
+      .from("matches")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", session.id)
+      .not("score_a", "is", null)
+      .not("score_b", "is", null),
+    admin
+      .from("monthly_results")
+      .select("id", { count: "exact", head: true })
+      .eq("month", nextMonthStart(session.session_date)),
+  ]);
   if (scoredMatchError) throw scoredMatchError;
   if (!scoredMatchCount) return;
-
-  const { count: nextMonthCount, error: nextMonthError } = await admin
-    .from("monthly_results")
-    .select("id", { count: "exact", head: true })
-    .eq("month", nextMonthStart(session.session_date));
   if (nextMonthError) throw nextMonthError;
   if ((nextMonthCount || 0) > 0) {
     throw new ApiError(400, "Tháng này đã chốt BXH nên không thể đổi điểm danh làm thay đổi kết quả đã lưu.");
@@ -140,66 +141,54 @@ async function reverseSessionResults(admin: SupabaseClient, session: PlaySession
   if (!storedMatches.length) return;
 
   const month = monthStart(session.session_date);
-  const participantIds = [...new Set(storedMatches.flatMap((match) => [...match.team_a, ...match.team_b]))];
-  const { data: profiles, error: profilesError } = await admin
-    .from("profiles")
-    .select("id, level")
-    .in("id", participantIds);
-  if (profilesError) throw profilesError;
-  const levels = new Map(((profiles || []) as { id: string; level: "1" | "2" }[]).map((profile) => [profile.id, profile.level]));
+  type Delta = { total: number; for: number; against: number; matches: number };
+  const deltas = new Map<string, Delta>();
+  const addDelta = (memberId: string, delta: Delta) => {
+    const sum = deltas.get(memberId) ?? { total: 0, for: 0, against: 0, matches: 0 };
+    deltas.set(memberId, { total: sum.total + delta.total, for: sum.for + delta.for, against: sum.against + delta.against, matches: sum.matches + delta.matches });
+  };
+  for (const match of storedMatches) {
+    const aWon = Number(match.score_a) > Number(match.score_b);
+    match.team_a.forEach((memberId) => addDelta(memberId, { total: aWon ? -1 : 0, for: -Number(match.score_a), against: -Number(match.score_b), matches: -1 }));
+    match.team_b.forEach((memberId) => addDelta(memberId, { total: aWon ? 0 : -1, for: -Number(match.score_b), against: -Number(match.score_a), matches: -1 }));
+  }
 
-  const adjustMonthlyResult = async (memberId: string, delta: { total: number; for: number; against: number; matches: number }) => {
-    const { data: existing, error: readError } = await admin
+  const participantIds = [...deltas.keys()];
+  const [{ data: profiles, error: profilesError }, { data: existingRows, error: existingError }] = await Promise.all([
+    admin.from("profiles").select("id, level").in("id", participantIds),
+    admin
       .from("monthly_results")
-      .select("id, rank, total_points, points_for, points_against, point_diff, matches_played, level_next_month")
+      .select("id, member_id, rank, total_points, points_for, points_against, point_diff, matches_played, level_next_month")
       .eq("month", month)
-      .eq("member_id", memberId)
-      .maybeSingle();
-    if (readError) throw readError;
-    const base = existing as MonthlyResult | null;
-    if (!base) {
-      const { error: insertError } = await admin.from("monthly_results").insert({
-        month,
-        member_id: memberId,
-        rank: 999,
-        total_points: 0,
-        points_for: 0,
-        points_against: 0,
-        point_diff: 0,
-        matches_played: 0,
-        level_next_month: levels.get(memberId) || "2",
-      });
-      if (insertError) throw insertError;
-    }
+      .in("member_id", participantIds),
+  ]);
+  if (profilesError) throw profilesError;
+  if (existingError) throw existingError;
+  const levels = new Map(((profiles || []) as { id: string; level: "1" | "2" }[]).map((profile) => [profile.id, profile.level]));
+  const existingByMember = new Map(((existingRows || []) as (MonthlyResult & { member_id: string })[]).map((row) => [row.member_id, row]));
+
+  const writes = await Promise.all(participantIds.map((memberId) => {
+    const delta = deltas.get(memberId)!;
+    const base = existingByMember.get(memberId) ?? null;
     const current = base || { rank: 999, total_points: 0, points_for: 0, points_against: 0, matches_played: 0, level_next_month: levels.get(memberId) || "2" };
     const pointsFor = Math.max(0, current.points_for + delta.for);
     const pointsAgainst = Math.max(0, current.points_against + delta.against);
     const matchesPlayed = Math.max(0, current.matches_played + delta.matches);
-    const { error: updateError } = await admin
-      .from("monthly_results")
-      .update({
-        rank: matchesPlayed > 0 ? current.rank : 999,
-        total_points: Math.max(0, current.total_points + delta.total),
-        points_for: pointsFor,
-        points_against: pointsAgainst,
-        point_diff: pointsFor - pointsAgainst,
-        matches_played: matchesPlayed,
-        level_next_month: current.level_next_month,
-      })
-      .eq("month", month)
-      .eq("member_id", memberId);
-    if (updateError) throw updateError;
-  };
-
-  for (const match of storedMatches) {
-    const aWon = Number(match.score_a) > Number(match.score_b);
-    for (const memberId of match.team_a) {
-      await adjustMonthlyResult(memberId, { total: aWon ? -1 : 0, for: -Number(match.score_a), against: -Number(match.score_b), matches: -1 });
-    }
-    for (const memberId of match.team_b) {
-      await adjustMonthlyResult(memberId, { total: aWon ? 0 : -1, for: -Number(match.score_b), against: -Number(match.score_a), matches: -1 });
-    }
-  }
+    const nextValues = {
+      rank: matchesPlayed > 0 ? current.rank : 999,
+      total_points: Math.max(0, current.total_points + delta.total),
+      points_for: pointsFor,
+      points_against: pointsAgainst,
+      point_diff: pointsFor - pointsAgainst,
+      matches_played: matchesPlayed,
+      level_next_month: current.level_next_month,
+    };
+    return base
+      ? admin.from("monthly_results").update(nextValues).eq("month", month).eq("member_id", memberId)
+      : admin.from("monthly_results").insert({ month, member_id: memberId, ...nextValues });
+  }));
+  const failedWrite = writes.find((result) => result.error);
+  if (failedWrite?.error) throw failedWrite.error;
 
   await rerankMonthlyResults(admin, month);
 }
@@ -232,7 +221,7 @@ async function resetWorkflowAfterAttendanceChange(admin: SupabaseClient, session
   ]);
   if (matchesDeleteError) throw matchesDeleteError;
   if (requestCleanupError) throw requestCleanupError;
-  await recalculateEloIfAvailable(admin);
+  const eloRecalculation = recalculateEloIfAvailable(admin);
 
   const memberIdsToClear = canOpenDraw
     ? reassignmentPlan.clearMemberIds
@@ -247,15 +236,15 @@ async function resetWorkflowAfterAttendanceChange(admin: SupabaseClient, session
   }
 
   if (canOpenDraw) {
-    for (const assignment of reassignmentPlan.assignments) {
-      const { error: assignError } = await admin
-        .from("attendances")
-        .update({ drawn_number: assignment.drawnNumber, level_at_time: String(assignment.level) })
-        .eq("session_id", session.id)
-        .eq("member_id", assignment.memberId)
-        .eq("choice", "attending");
-      if (assignError) throw assignError;
-    }
+    // Numbers were cleared above and each assignment targets a different member and number.
+    const assignResults = await Promise.all(reassignmentPlan.assignments.map((assignment: { memberId: string; drawnNumber: number; level: 1 | 2 }) => admin
+      .from("attendances")
+      .update({ drawn_number: assignment.drawnNumber, level_at_time: String(assignment.level) })
+      .eq("session_id", session.id)
+      .eq("member_id", assignment.memberId)
+      .eq("choice", "attending")));
+    const failedAssign = assignResults.find((result) => result.error);
+    if (failedAssign?.error) throw failedAssign.error;
   }
 
   const nextStatus = !canOpenDraw ? "draft" : scheduleWasOpen && reassignmentPlan.allDrawn ? "scheduled" : reassignmentPlan.allDrawn ? "drawn" : "checked_in";
@@ -270,6 +259,7 @@ async function resetWorkflowAfterAttendanceChange(admin: SupabaseClient, session
     .update(sessionUpdate)
     .eq("id", session.id);
   if (sessionError) throw sessionError;
+  await eloRecalculation;
   session.status = nextStatus;
   return {
     drawsReassigned: canOpenDraw && reassignmentPlan.assignments.length > 0,
@@ -337,25 +327,32 @@ async function moveSessionToDate(admin: SupabaseClient, session: PlaySession, se
   return raced as PlaySession;
 }
 
+// Creates missing pending rows for active members and returns the member ids that have a row in this session.
 async function ensureAttendanceRows(admin: SupabaseClient, sessionId: string) {
-  const { data: profiles, error: profilesError } = await admin
-    .from("profiles")
-    .select("id, level")
-    .eq("is_active", true);
+  const [{ data: profiles, error: profilesError }, { data: attendances, error: attendancesError }] = await Promise.all([
+    admin.from("profiles").select("id, level").eq("is_active", true),
+    admin.from("attendances").select("member_id, choice").eq("session_id", sessionId),
+  ]);
   if (profilesError) throw profilesError;
+  if (attendancesError) throw attendancesError;
 
-  const rows = ((profiles || []) as Profile[]).map((profile) => ({
-    session_id: sessionId,
-    member_id: profile.id,
-    choice: "pending",
-    level_at_time: profile.level,
-  }));
-  if (!rows.length) return;
-
-  const { error } = await admin
-    .from("attendances")
-    .upsert(rows, { onConflict: "session_id,member_id", ignoreDuplicates: true });
-  if (error) throw error;
+  const choiceByMember = new Map(((attendances || []) as { member_id: string; choice: string }[]).map((row) => [row.member_id, row.choice]));
+  const rows = ((profiles || []) as Profile[])
+    .filter((profile) => !choiceByMember.has(profile.id))
+    .map((profile) => ({
+      session_id: sessionId,
+      member_id: profile.id,
+      choice: "pending",
+      level_at_time: profile.level,
+    }));
+  if (rows.length) {
+    const { error } = await admin
+      .from("attendances")
+      .upsert(rows, { onConflict: "session_id,member_id", ignoreDuplicates: true });
+    if (error) throw error;
+    rows.forEach((row) => choiceByMember.set(row.member_id, row.choice));
+  }
+  return choiceByMember;
 }
 
 async function loadSessionPayload(admin: SupabaseClient, session: PlaySession) {
@@ -400,18 +397,12 @@ export async function POST(request: Request) {
     }
     if (!session) throw new ApiError(404, "Không tìm thấy phiên điểm danh.");
 
-    await ensureAttendanceRows(admin, session.id);
-
-    const { data: currentAttendance, error: currentError } = await admin
-      .from("attendances")
-      .select("choice")
-      .eq("session_id", session.id)
-      .eq("member_id", user.id)
-      .single();
-    if (currentError) throw currentError;
+    const choiceByMember = await ensureAttendanceRows(admin, session.id);
+    const currentChoice = choiceByMember.get(user.id);
+    if (currentChoice === undefined) throw new ApiError(404, "Không tìm thấy điểm danh của bạn trong buổi này.");
 
     const nextChoice = body.attending ? "attending" : "absent";
-    const previousChoice = String(currentAttendance?.choice || "pending");
+    const previousChoice = String(currentChoice || "pending");
     const workflowNeedsResync = ["checked_in", "drawn", "scheduled", "completed"].includes(session.status) && previousChoice !== nextChoice;
 
     if (workflowNeedsResync) await assertSessionResultsAreReversible(admin, session);

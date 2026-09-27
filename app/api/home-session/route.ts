@@ -71,25 +71,36 @@ async function getOrCreateSession(admin: SupabaseClient, userId: string, session
   return created as PlaySession;
 }
 
-async function ensureAttendanceRows(admin: SupabaseClient, sessionId: string) {
-  const { data: profiles, error: profilesError } = await admin
-    .from("profiles")
-    .select("id, level")
-    .eq("is_active", true);
-  if (profilesError) throw profilesError;
+const attendancePayloadSelect = "member_id, choice, drawn_number, level_at_time, profiles!attendances_member_id_fkey(username, full_name, level, role, description)";
 
-  const rows = ((profiles || []) as Profile[]).map((profile) => ({
-    session_id: sessionId,
-    member_id: profile.id,
-    choice: "pending",
-    level_at_time: profile.level,
-  }));
-  if (!rows.length) return;
+// Reads active members and the session's attendance together; only inserts (and re-reads) when rows are missing.
+async function loadAttendancesEnsuringRows(admin: SupabaseClient, sessionId: string) {
+  const readAttendances = () => admin.from("attendances").select(attendancePayloadSelect).eq("session_id", sessionId);
+  const [{ data: profiles, error: profilesError }, { data: attendances, error: attendanceError }] = await Promise.all([
+    admin.from("profiles").select("id, level").eq("is_active", true),
+    readAttendances(),
+  ]);
+  if (profilesError) throw profilesError;
+  if (attendanceError) throw attendanceError;
+
+  const existingIds = new Set(((attendances || []) as { member_id: string }[]).map((row) => row.member_id));
+  const rows = ((profiles || []) as Profile[])
+    .filter((profile) => !existingIds.has(profile.id))
+    .map((profile) => ({
+      session_id: sessionId,
+      member_id: profile.id,
+      choice: "pending",
+      level_at_time: profile.level,
+    }));
+  if (!rows.length) return attendances || [];
 
   const { error } = await admin
     .from("attendances")
     .upsert(rows, { onConflict: "session_id,member_id", ignoreDuplicates: true });
   if (error) throw error;
+  const { data: refreshed, error: refreshError } = await readAttendances();
+  if (refreshError) throw refreshError;
+  return refreshed || [];
 }
 
 async function loadSessionPayload(request: Request, reset: boolean) {
@@ -121,20 +132,18 @@ async function loadSessionPayload(request: Request, reset: boolean) {
     session.status = "draft";
   }
 
-  await ensureAttendanceRows(admin, session.id);
-
-  const [{ data: refreshedSession, error: sessionError }, { data: attendances, error: attendanceError }] = await Promise.all([
-    admin.from("play_sessions").select("status").eq("id", session.id).single(),
-    admin.from("attendances").select("choice, drawn_number, level_at_time, profiles!attendances_member_id_fkey(username, full_name, level, role, description)").eq("session_id", session.id),
-  ]);
-  if (sessionError) throw sessionError;
-  if (attendanceError) throw attendanceError;
+  // The session row was just read (or reset) in this request, so its status is current.
+  const attendances = await loadAttendancesEnsuringRows(admin, session.id);
 
   return Response.json({
     sessionId: session.id,
     sessionDate: session.session_date,
-    status: refreshedSession?.status || session.status,
-    attendances: attendances || [],
+    status: session.status,
+    attendances: attendances.map((attendance) => {
+      const row: Record<string, unknown> = { ...attendance };
+      delete row.member_id;
+      return row;
+    }),
     reset,
   });
 }

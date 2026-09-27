@@ -36,15 +36,34 @@ export const effectiveMemberRole = (role?: string | null, description?: string |
   return "member";
 };
 
+// Reads the (unverified) user id from a JWT so the profile lookup can start while Supabase verifies the token.
+const claimedUserId = (token: string) => {
+  try {
+    const payload = JSON.parse(Buffer.from(token.split(".")[1] || "", "base64url").toString("utf8")) as { sub?: unknown };
+    return typeof payload.sub === "string" ? payload.sub : null;
+  } catch {
+    return null;
+  }
+};
+
+const profileColumns = "id, role, full_name, username, level, description";
+
 export async function requireUser(request: Request) {
   const admin = createSupabaseAdmin();
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) throw new ApiError(401, "Bạn cần đăng nhập lại.");
 
-  const { data: authData, error: authError } = await admin.auth.getUser(token);
+  const claimedId = claimedUserId(token);
+  const [{ data: authData, error: authError }, claimedProfile] = await Promise.all([
+    admin.auth.getUser(token),
+    claimedId ? admin.from("profiles").select(profileColumns).eq("id", claimedId).single() : Promise.resolve(null),
+  ]);
   if (authError || !authData.user) throw new ApiError(401, "Phiên đăng nhập không hợp lệ.");
 
-  const { data: profile, error: profileError } = await admin.from("profiles").select("id, role, full_name, username, level, description").eq("id", authData.user.id).single();
+  // Only trust the early lookup when it belongs to the verified user; otherwise read the profile again.
+  const { data: profile, error: profileError } = claimedProfile && claimedId === authData.user.id
+    ? claimedProfile
+    : await admin.from("profiles").select(profileColumns).eq("id", authData.user.id).single();
   if (profileError || !profile) throw new ApiError(403, "Không tìm thấy hồ sơ người dùng.");
 
   const normalizedProfile = {

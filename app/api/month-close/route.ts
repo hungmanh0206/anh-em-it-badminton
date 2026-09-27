@@ -91,29 +91,26 @@ export async function POST(request: Request) {
     const month = body.month;
     const nextMonth = nextMonthKey(month);
 
-    const { count: existingNextMonthCount, error: existingNextMonthError } = await admin
-      .from("monthly_results")
-      .select("id", { count: "exact", head: true })
-      .eq("month", nextMonth);
+    // All reads are independent, so they run together; the guards below are checked in the original order.
+    const [
+      { count: existingNextMonthCount, error: existingNextMonthError },
+      { data: finalSession, error: finalSessionError },
+      { data: profiles, error: profilesError },
+      { data: currentRows, error: currentRowsError },
+    ] = await Promise.all([
+      admin.from("monthly_results").select("id", { count: "exact", head: true }).eq("month", nextMonth),
+      admin.from("play_sessions").select("id, status").eq("session_date", finalSaturdayKey(month)).maybeSingle(),
+      admin.from("profiles").select("id, full_name, level").eq("is_active", true),
+      admin.from("monthly_results").select("id, member_id, rank, total_points, points_for, points_against, point_diff, matches_played, level_next_month, created_at").eq("month", month),
+    ]);
     if (existingNextMonthError) throw existingNextMonthError;
     if ((existingNextMonthCount || 0) > 0) {
       return Response.json({ ok: true, alreadyClosed: true, nextMonth });
     }
-
-    const { data: finalSession, error: finalSessionError } = await admin
-      .from("play_sessions")
-      .select("id, status")
-      .eq("session_date", finalSaturdayKey(month))
-      .maybeSingle();
     if (finalSessionError) throw finalSessionError;
     if (finalSession?.status !== "completed") {
       return Response.json({ error: "Buổi cuối tháng chưa hoàn tất nhập điểm nên chưa thể chốt BXH." }, { status: 400 });
     }
-
-    const [{ data: profiles, error: profilesError }, { data: currentRows, error: currentRowsError }] = await Promise.all([
-      admin.from("profiles").select("id, full_name, level").eq("is_active", true),
-      admin.from("monthly_results").select("id, member_id, rank, total_points, points_for, points_against, point_diff, matches_played, level_next_month, created_at").eq("month", month),
-    ]);
     if (profilesError) throw profilesError;
     if (currentRowsError) throw currentRowsError;
 
@@ -160,20 +157,19 @@ export async function POST(request: Request) {
       nextLevel: eloLevelByMember.get(profile.id) ?? profile.level,
     }));
 
-    for (const assignment of assignments) {
-      const { error: updateMonthlyError } = await admin
+    const assignmentUpdates = await Promise.all(assignments.flatMap((assignment) => [
+      admin
         .from("monthly_results")
         .update({ rank: assignment.rank, level_next_month: assignment.nextLevel })
         .eq("month", month)
-        .eq("member_id", assignment.memberId);
-      if (updateMonthlyError) throw updateMonthlyError;
-
-      const { error: updateProfileError } = await admin
+        .eq("member_id", assignment.memberId),
+      admin
         .from("profiles")
         .update({ level: assignment.nextLevel })
-        .eq("id", assignment.memberId);
-      if (updateProfileError) throw updateProfileError;
-    }
+        .eq("id", assignment.memberId),
+    ]));
+    const failedAssignment = assignmentUpdates.find((result) => result.error);
+    if (failedAssignment?.error) throw failedAssignment.error;
 
     await snapshotEloMonthIfAvailable(admin, month);
 

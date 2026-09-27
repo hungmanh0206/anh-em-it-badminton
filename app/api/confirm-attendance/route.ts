@@ -20,11 +20,18 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({})) as Body;
     if (!body.sessionId) throw new ApiError(400, "Thiếu phiên điểm danh.");
 
-    const { data: playSession, error: sessionError } = await admin
-      .from("play_sessions")
-      .select("id, status")
-      .eq("id", body.sessionId)
-      .maybeSingle();
+    const [{ data: playSession, error: sessionError }, { data: pendingRows, error: pendingError }] = await Promise.all([
+      admin
+        .from("play_sessions")
+        .select("id, status")
+        .eq("id", body.sessionId)
+        .maybeSingle(),
+      admin
+        .from("attendances")
+        .select("profiles!attendances_member_id_fkey(is_active)")
+        .eq("session_id", body.sessionId)
+        .eq("choice", "pending"),
+    ]);
 
     if (sessionError) throw sessionError;
     if (!playSession) throw new ApiError(404, "Không tìm thấy phiên điểm danh.");
@@ -32,12 +39,6 @@ export async function POST(request: Request) {
     if (playSession.status !== "draft") {
       return Response.json({ ok: true, status: playSession.status });
     }
-
-    const { data: pendingRows, error: pendingError } = await admin
-      .from("attendances")
-      .select("profiles!attendances_member_id_fkey(is_active)")
-      .eq("session_id", body.sessionId)
-      .eq("choice", "pending");
 
     if (pendingError) throw pendingError;
 

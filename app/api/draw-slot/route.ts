@@ -52,11 +52,16 @@ export async function POST(request: Request) {
     const body = await request.json() as Body;
     if (!body.sessionId) return Response.json({ error: "Thiếu phiên thi đấu để chọn số." }, { status: 400 });
 
-    const { data: sessionRow, error: sessionError } = await admin
-      .from("play_sessions")
-      .select("status")
-      .eq("id", body.sessionId)
-      .single();
+    const sessionId = body.sessionId;
+    const readAttendances = () => admin
+      .from("attendances")
+      .select("member_id, choice, drawn_number, level_at_time, profiles!attendances_member_id_fkey(id, username, full_name, level)")
+      .eq("session_id", sessionId);
+    // The first attendance read starts together with the session check; retries read again.
+    const [{ data: sessionRow, error: sessionError }, firstAttendanceRead] = await Promise.all([
+      admin.from("play_sessions").select("status").eq("id", sessionId).single(),
+      readAttendances(),
+    ]);
     if (sessionError) throw sessionError;
     const sessionStatus = String(sessionRow?.status || "");
     if (!openDrawStatuses.has(sessionStatus)) {
@@ -64,10 +69,7 @@ export async function POST(request: Request) {
     }
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      const { data, error } = await admin
-        .from("attendances")
-        .select("member_id, choice, drawn_number, level_at_time, profiles!attendances_member_id_fkey(id, username, full_name, level)")
-        .eq("session_id", body.sessionId);
+      const { data, error } = attempt === 0 ? firstAttendanceRead : await readAttendances();
       if (error) throw error;
 
       const attendances = (data || []) as AttendanceWithProfile[];
