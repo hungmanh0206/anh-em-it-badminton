@@ -1,5 +1,6 @@
 :root {
   --club-logo-image: url("/club-logo.png?v=club-glass-logo");
+  --club-mark-image: url("/club-mark.png?v=club-glass-logo");
 }
 
 .brand-mark,
@@ -11,7 +12,7 @@
   color: transparent !important;
   font-size: 0 !important;
   background:
-    var(--club-logo-image) center / 88% auto no-repeat,
+    var(--club-mark-image) center / 96% auto no-repeat,
     radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0) 34%),
     linear-gradient(145deg, #fff8df 0%, #ffd66d 52%, #ffb700 100%) !important;
   border: 1px solid rgba(255, 183, 0, 0.34) !important;
@@ -31,18 +32,47 @@
   height: 48px !important;
   flex: 0 0 48px !important;
   background:
-    var(--club-logo-image) center / 91% auto no-repeat,
+    var(--club-mark-image) center / 96% auto no-repeat,
     radial-gradient(circle at 34% 24%, rgba(255, 214, 109, 0.48), transparent 39%),
     linear-gradient(145deg, #17140f 0%, #372900 58%, #8a6500 100%) !important;
   border-color: rgba(255, 214, 109, 0.32) !important;
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.36), 0 0 0 1px rgba(255, 214, 109, 0.08) !important;
 }
 
+.login-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+}
+
 .login-brand > span {
-  width: 54px !important;
-  height: 54px !important;
-  flex-basis: 54px !important;
-  background-size: 89% auto, auto, auto !important;
+  width: 62px !important;
+  height: 62px !important;
+  flex: 0 0 62px !important;
+  background:
+    var(--club-mark-image) center / 96% auto no-repeat,
+    radial-gradient(circle at 30% 18%, rgba(255, 214, 109, 0.42), transparent 42%),
+    linear-gradient(145deg, #1a1712 0%, #33270a 60%, #7a5a00 100%) !important;
+  border: 1px solid rgba(255, 214, 109, 0.45) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 12px 26px rgba(122, 90, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+}
+
+.login-brand b {
+  display: block;
+  font-size: 20px !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0.01em !important;
+  color: var(--club-ink-900, #1a1916) !important;
+}
+
+.login-brand small {
+  display: block;
+  margin-top: 6px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.24em !important;
+  color: #a67800 !important;
 }
 
 .hero {
