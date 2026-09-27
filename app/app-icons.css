@@ -13,8 +13,9 @@
   --icon-target: url("/app-icons/target.png?v=sidebar-icons-v2-nobg-20260904");
   --icon-pencil: url("/app-icons/pencil.png?v=sidebar-icons-v2-nobg-20260904");
   --icon-save: url("/app-icons/save.png?v=sidebar-icons-v2-nobg-20260904");
-  --icon-logout: url("/app-icons/logout.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-logout: url("/app-icons/logout.png?v=logout-glass-20260927");
   --icon-clipboard: url("/app-icons/clipboard.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-confirm: url("/app-icons/confirm.png?v=confirm-glass-20260927");
   --icon-gift: url("/app-icons/gift.png?v=sidebar-icons-v2-nobg-20260904");
   --icon-star: url("/app-icons/star.png?v=sidebar-icons-v2-nobg-20260904");
 }
@@ -47,6 +48,7 @@
 .app-icon-logout { background-image: var(--icon-logout); }
 .app-icon-clipboard { background-image: var(--icon-clipboard); }
 .app-icon-gift { background-image: var(--icon-gift); }
+.app-icon-confirm { background-image: var(--icon-confirm); }
 .app-icon-star { background-image: var(--icon-star); }
 
 .sidebar nav button {

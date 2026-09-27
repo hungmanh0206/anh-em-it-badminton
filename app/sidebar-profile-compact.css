@@ -76,27 +76,38 @@
 
 .sidebar .logout::before {
   content: "" !important;
-  width: 15px !important;
-  height: 2px !important;
+  width: 24px !important;
+  height: 24px !important;
   margin: 0 !important;
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
-  border-radius: 999px !important;
-  background: currentColor !important;
-  transform: translate(-54%, -50%) !important;
+  background: var(--icon-logout) center / contain no-repeat !important;
+  transform: translate(-50%, -50%) !important;
+  transition: transform 0.18s ease !important;
+}
+
+.sidebar .logout:hover::before,
+.sidebar .logout:focus-visible::before {
+  transform: translate(-42%, -50%) !important;
 }
 
 .sidebar .logout::after {
-  content: "" !important;
-  width: 8px !important;
-  height: 8px !important;
-  position: absolute !important;
-  left: 50% !important;
-  top: 50% !important;
-  border-top: 2px solid currentColor !important;
-  border-right: 2px solid currentColor !important;
-  transform: translate(10%, -50%) rotate(45deg) !important;
+  content: none !important;
+}
+
+.confirm-modal .modal-icon.app-icon {
+  border-color: rgba(168, 155, 255, 0.35) !important;
+  background: #1f1c36 var(--confirm-modal-icon, var(--icon-confirm)) center / 74% auto no-repeat !important;
+  box-shadow: 0 14px 30px rgba(92, 67, 213, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+
+.confirm-modal .modal-icon.app-icon-logout {
+  --confirm-modal-icon: var(--icon-logout);
+}
+
+.confirm-modal .modal-icon.app-icon::before {
+  content: none !important;
 }
 @media (max-width: 800px) {
   .sidebar .profile {
