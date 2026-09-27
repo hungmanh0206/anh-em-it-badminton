@@ -102,7 +102,8 @@
   border: 0 !important;
   background: transparent var(--confirm-modal-icon, var(--icon-confirm)) center / contain no-repeat !important;
   box-shadow: none !important;
-  filter: drop-shadow(0 10px 18px rgba(92, 67, 213, 0.28));
+  border-radius: 0 !important;
+  filter: none !important;
 }
 
 .confirm-modal .modal-icon.app-icon-logout {
