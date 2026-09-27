@@ -42,3 +42,64 @@
 .history-list article:hover {
   border-color: rgba(255, 183, 0, 0.45) !important;
 }
+
+/* Match detail modal: fixed header (eyebrow, title, close); only the match list scrolls. */
+.history-detail {
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: min(86vh, 820px) !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+.history-detail-header {
+  /* globals.css lays out every <header> as a flex row; this one stacks eyebrow above the title. */
+  position: relative;
+  display: block !important;
+  flex: 0 0 auto;
+  margin: 0 !important;
+  padding: 24px 68px 16px 32px;
+  border-bottom: 1px solid rgba(30, 25, 18, 0.08);
+  background: #fff;
+}
+
+.history-detail-header .eyebrow {
+  margin: 0 !important;
+}
+
+.history-detail-header h2 {
+  margin: 4px 0 0 !important;
+}
+
+.history-detail-header .modal-close {
+  position: absolute !important;
+  top: 16px !important;
+  right: 18px !important;
+}
+
+.history-detail-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 32px 26px;
+}
+
+.history-detail-body .history-match-list {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 560px) {
+  .history-detail-header {
+    padding: 18px 58px 12px 16px;
+  }
+
+  .history-detail-header .modal-close {
+    top: 12px !important;
+    right: 12px !important;
+  }
+
+  .history-detail-body {
+    padding: 14px 16px 18px;
+  }
+}
