@@ -1731,13 +1731,14 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
       </div>
       {status && <div className={`elo-status elo-${status.source}`}>{status.message}</div>}
       <div className="elo-list">
+        {rows.length > 0 && <div className="elo-head" aria-hidden="true"><span>Hạng</span><span>Thành viên</span><span>ELO</span><span>Số trận</span><span>Level</span></div>}
         {rows.length ? rows.map((row, index) => {
           const isTopRank = index < 3;
           return <article className={`elo-row ${isTopRank ? `top-rank top-${index + 1}` : ""}`} key={row.memberId}>
             <div className={isTopRank ? `elo-rank medal m${index}` : "elo-rank"} aria-label={`Hạng ${row.rank}`}>{isTopRank ? "" : row.rank}</div>
             <div className="person elo-person"><div className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</div><div><b>{row.name}</b><small>@{row.username}</small></div></div>
             <div className="elo-rating-value"><span>ELO</span><b>{row.eloRating.toLocaleString("vi-VN", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</b></div>
-            <div className="elo-row-meta"><span>{row.matches} trận</span><b>{row.level === 1 ? "Level 1" : "Level 2"}</b></div>
+            <div className="elo-row-meta"><span className="elo-matches">{row.matches}<small>{"\u00a0"}trận</small></span><b>{row.level === 1 ? "Level 1" : "Level 2"}</b></div>
           </article>;
         }) : <div className="empty-ranking">Chưa có thành viên hoạt động để hiển thị ELO.</div>}
       </div>

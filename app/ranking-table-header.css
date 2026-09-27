@@ -1,0 +1,231 @@
+/* Desktop / iPad rankings: one header row of column labels, plain values in each member row
+   (no per-cell labels or value chips). Phones keep the stacked card layout from mobile-ranking.css. */
+.elo-head {
+  display: none;
+}
+
+@media (min-width: 740px) {
+  :root {
+    --rank-table-columns: 56px minmax(0, 1fr) 76px 92px 92px 84px 76px;
+    --elo-table-columns: 56px minmax(0, 1fr) 120px 96px 104px;
+    --rank-table-padding: 12px 20px;
+  }
+
+  /* ---------- Header rows ---------- */
+  .rank-table > .rank-head.rank-columns,
+  .elo-list > .elo-head {
+    display: grid !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 11px 20px !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(30, 25, 18, 0.08) !important;
+    border-radius: 0 !important;
+    background: #faf7f0 !important;
+    box-shadow: none !important;
+    color: rgba(74, 62, 44, 0.62) !important;
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.07em !important;
+    line-height: 1.25 !important;
+    text-transform: uppercase !important;
+    animation: none !important;
+  }
+
+  .rank-table > .rank-head.rank-columns {
+    grid-template-columns: var(--rank-table-columns) !important;
+  }
+
+  .elo-list > .elo-head {
+    grid-template-columns: var(--elo-table-columns) !important;
+  }
+
+  .rank-table > .rank-head.rank-columns > span,
+  .elo-list > .elo-head > span {
+    padding: 0 !important;
+    text-align: center !important;
+    white-space: normal !important;
+  }
+
+  .rank-table > .rank-head.rank-columns > span:nth-child(2),
+  .elo-list > .elo-head > span:nth-child(2) {
+    text-align: left !important;
+  }
+
+  /* ---------- Weekly / monthly rows ---------- */
+  .rank-table > .rank-row.rank-columns {
+    display: grid !important;
+    grid-template-columns: var(--rank-table-columns) !important;
+    grid-template-areas: none !important;
+    grid-template-rows: auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-height: 60px !important;
+    padding: var(--rank-table-padding) !important;
+  }
+
+  .rank-table > .rank-row.rank-columns > * {
+    grid-row: 1 !important;
+    grid-area: auto !important;
+    align-self: center !important;
+    margin: 0 !important;
+  }
+
+  .rank-table > .rank-row.rank-columns > b:first-child { grid-column: 1 !important; justify-self: center !important; }
+  .rank-table > .rank-row.rank-columns > .person { grid-column: 2 !important; min-width: 0 !important; }
+  .rank-table > .rank-row.rank-columns > .point-value { grid-column: 3 !important; }
+  .rank-table > .rank-row.rank-columns > span:nth-of-type(1) { grid-column: 4 !important; }
+  .rank-table > .rank-row.rank-columns > span:nth-of-type(2) { grid-column: 5 !important; }
+  .rank-table > .rank-row.rank-columns > span:nth-of-type(3) { grid-column: 6 !important; }
+  .rank-table > .rank-row.rank-columns > span:nth-of-type(4) { grid-column: 7 !important; }
+
+  .rank-table > .rank-row.rank-columns > .rank-mobile-stats {
+    display: none !important;
+  }
+
+  /* Plain values: drop the chip boxes and their inline labels. */
+  .rank-table > .rank-row.rank-columns > span,
+  .rank-table > .rank-row.rank-columns > .point-value {
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-align: center !important;
+    justify-self: stretch !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rank-table > .rank-row.rank-columns > span {
+    color: #3d3528 !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+  }
+
+  .rank-table > .rank-row.rank-columns > span.positive { color: #1f8a5b !important; }
+  .rank-table > .rank-row.rank-columns > span.negative { color: #c2413b !important; }
+
+  .rank-table > .rank-row.rank-columns > .point-value {
+    color: #17140f !important;
+    font-size: 19px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+  }
+
+  .rank-table > .rank-row.rank-columns.top-1 > .point-value { color: #b87900 !important; }
+  .rank-table > .rank-row.rank-columns.top-2 > .point-value { color: #5d6878 !important; }
+  .rank-table > .rank-row.rank-columns.top-3 > .point-value { color: #a85a24 !important; }
+
+  .rank-table > .rank-row.rank-columns > span::before,
+  .rank-table > .rank-row.rank-columns > span::after,
+  .rank-table > .rank-row.rank-columns > .point-value::before,
+  .rank-table > .rank-row.rank-columns > .point-value::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  /* ---------- ELO rows ---------- */
+  .elo-list > .elo-row {
+    grid-template-columns: var(--elo-table-columns) !important;
+    grid-template-areas: none !important;
+    grid-template-rows: auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-height: 64px !important;
+    padding: var(--rank-table-padding) !important;
+  }
+
+  .elo-list > .elo-row > * {
+    grid-row: 1 !important;
+    grid-area: auto !important;
+    margin: 0 !important;
+  }
+
+  .elo-list > .elo-row > .elo-rank { grid-column: 1 !important; justify-self: center !important; }
+  .elo-list > .elo-row > .elo-person { grid-column: 2 !important; }
+  .elo-list > .elo-row > .elo-rating-value { grid-column: 3 !important; }
+
+  .elo-list > .elo-row > .elo-row-meta {
+    display: contents !important;
+  }
+
+  .elo-list > .elo-row > .elo-row-meta > .elo-matches { grid-column: 4 !important; grid-row: 1 !important; }
+  .elo-list > .elo-row > .elo-row-meta > b { grid-column: 5 !important; grid-row: 1 !important; }
+
+  .elo-list > .elo-row > .elo-rating-value,
+  .elo-list > .elo-row > .elo-row-meta > * {
+    display: block !important;
+    justify-self: stretch !important;
+    width: auto !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-align: center !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .elo-list > .elo-row > .elo-rating-value > span,
+  .elo-list > .elo-row > .elo-row-meta > .elo-matches > small {
+    display: none !important;
+  }
+
+  .elo-list > .elo-row > .elo-rating-value > b {
+    display: block !important;
+    margin: 0 !important;
+    color: #17140f !important;
+    font-size: 19px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+  }
+
+  .elo-list > .elo-row.top-1 > .elo-rating-value > b { color: #b87900 !important; }
+  .elo-list > .elo-row.top-2 > .elo-rating-value > b { color: #5d6878 !important; }
+  .elo-list > .elo-row.top-3 > .elo-rating-value > b { color: #a85a24 !important; }
+
+  .elo-list > .elo-row > .elo-row-meta > .elo-matches {
+    color: #3d3528 !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+  }
+
+  .elo-list > .elo-row > .elo-row-meta > b {
+    color: #3d3528 !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+  }
+}
+
+/* iPad portrait / small laptops: tighter numeric columns so member names keep their room. */
+@media (min-width: 740px) and (max-width: 1023px) {
+  :root {
+    --rank-table-columns: 44px minmax(0, 1fr) 54px 70px 64px 62px 54px;
+    --elo-table-columns: 44px minmax(0, 1fr) 96px 72px 82px;
+    --rank-table-padding: 10px 14px;
+  }
+
+  .rank-table > .rank-head.rank-columns,
+  .elo-list > .elo-head {
+    gap: 8px !important;
+    padding: 10px 14px !important;
+    font-size: 9.5px !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  .rank-table > .rank-row.rank-columns,
+  .elo-list > .elo-row {
+    gap: 8px !important;
+  }
+}
