@@ -1744,7 +1744,6 @@ function EloGuideModal({ onClose }: { onClose: () => void }) {
         <ul className="elo-guide-list">
           <li>Chỉ tính <b>thắng / thua</b>, không tính cách biệt điểm số của trận. Trận không có kết quả hòa.</li>
           <li>Điểm được làm tròn đến <b>0,1</b> sao cho tổng thay đổi của 4 người trong trận <b>luôn bằng 0</b>.</li>
-          <li>Cách chia theo chênh lệch áp dụng cho các trận <b>từ ngày 27/09/2026</b>. Các trận trước đó giữ nguyên cách tính cũ (2 đồng đội nhận như nhau) nên ELO đã có không thay đổi.</li>
           <li>Mỗi khi lưu hoặc sửa kết quả, ELO được <b>tính lại</b> theo thứ tự các trận (ngày thi đấu, số trận), nên sửa một trận cũ sẽ cập nhật lại các trận sau.</li>
         </ul>
       </div>
