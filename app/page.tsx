@@ -40,7 +40,7 @@ type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "elo" | "
 type SessionStatus = "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 type AttendanceRow = { choice: "pending" | "attending" | "absent"; drawn_number: number | null; level_at_time?: "1" | "2" | number | string | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
 type HomeSessionPayload = { inactive?: boolean; sessionId?: string | null; sessionDate?: string; status?: SessionStatus; attendances?: AttendanceRow[]; needsReset?: boolean; drawsReassigned?: boolean; scheduleCleared?: boolean; error?: string };
-type AppIconName = "home" | "members" | "schedule" | "ranking" | "history" | "rules" | "trophy" | "crown" | "check" | "success" | "error" | "target" | "pencil" | "save" | "logout" | "clipboard" | "gift" | "confirm";
+type AppIconName = "home" | "members" | "schedule" | "ranking" | "history" | "rules" | "trophy" | "crown" | "check" | "success" | "error" | "target" | "pencil" | "save" | "logout" | "clipboard" | "gift" | "confirm" | "photos";
 function AppIcon({ name, className = "" }: { name: AppIconName; className?: string }) {
   return <span className={`app-icon app-icon-${name}${className ? ` ${className}` : ""}`} aria-hidden="true" />;
 }
@@ -1166,7 +1166,7 @@ export default function Home() {
         <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); }}><AppIcon name="ranking" className="nav-app-icon" /> Bảng xếp hạng</button>
         <button className={screen === "elo" ? "active" : ""} onClick={() => setScreen("elo")}><AppIcon name="target" className="nav-app-icon" /> ELO</button>
         <button className={screen === "history" ? "active" : ""} onClick={() => setScreen("history")}><AppIcon name="history" className="nav-app-icon" /> Lịch sử thi đấu</button>
-        <button className={screen === "photos" ? "active" : ""} onClick={() => setScreen("photos")}><span className="nav-app-icon nav-emoji-icon" aria-hidden="true">📷</span> Kho ảnh</button>
+        <button className={screen === "photos" ? "active" : ""} onClick={() => setScreen("photos")}><AppIcon name="photos" className="nav-app-icon" /> Kho ảnh</button>
         <button className={screen === "rules" ? "active" : ""} onClick={() => setScreen("rules")}><AppIcon name="rules" className="nav-app-icon" /> Thể lệ</button>
       </nav>
       <div className="club-card"><AppIcon name="trophy" className="club-card-icon" /><b>{currentMonthLabel}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div><div className={`club-top1 ${champion ? "" : "empty"}`}><small>NHÀ VÔ ĐỊCH {championRankingLabel.toUpperCase()}</small><b>{champion ? <><AppIcon name="crown" className="inline-app-icon" /> {champion.name}</> : "Chưa ghi danh"}</b><span>{champion ? `${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số` : `Chưa có dữ liệu BXH ${championRankingLabel}.`}</span></div></div>

@@ -16,6 +16,7 @@
   --icon-logout: url("/app-icons/logout.png?v=logout-glass-20260927b");
   --icon-clipboard: url("/app-icons/clipboard.png?v=sidebar-icons-v2-nobg-20260904");
   --icon-confirm: url("/app-icons/confirm.png?v=confirm-glass-20260927b");
+  --icon-photos: url("/app-icons/photos.png?v=photos-glass-20261004");
   --icon-gift: url("/app-icons/gift.png?v=sidebar-icons-v2-nobg-20260904");
   --icon-star: url("/app-icons/star.png?v=sidebar-icons-v2-nobg-20260904");
 }
@@ -48,6 +49,7 @@
 .app-icon-logout { background-image: var(--icon-logout); }
 .app-icon-clipboard { background-image: var(--icon-clipboard); }
 .app-icon-gift { background-image: var(--icon-gift); }
+.app-icon-photos { background-image: var(--icon-photos); }
 .app-icon-confirm { background-image: var(--icon-confirm); }
 .app-icon-star { background-image: var(--icon-star); }
 

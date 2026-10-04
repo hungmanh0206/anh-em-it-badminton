@@ -1,13 +1,4 @@
 /* Kho ảnh (photo gallery): grid, category chips, lightbox, upload/sync sheets. */
-.nav-emoji-icon {
-  display: inline-grid !important;
-  place-items: center;
-  width: 1.45em;
-  height: 1.45em;
-  font-size: 15px;
-  line-height: 1;
-}
-
 .photo-panel {
   padding-bottom: 22px;
 }
