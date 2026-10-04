@@ -1417,7 +1417,10 @@ function Rules({ members }: { members: Member[] }) {
 
 function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
   const [participantFilter, setParticipantFilter] = useState<ParticipantCount>(5);
+  const [scenarioId, setScenarioId] = useState<string | null>(null);
   const visibleScenarios = scenarios.filter((scenario) => scenario.participantCount === participantFilter);
+  // One Level mix at a time keeps the page short; switching the head count shows its first mix.
+  const activeScenario = visibleScenarios.find((scenario) => scenario.id === scenarioId) ?? visibleScenarios[0];
   return <section className="schedule-library">
     <section className="panel schedule-overview">
       <div>
@@ -1430,23 +1433,35 @@ function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
         <div><b>{visibleScenarios.length}</b><span>trường hợp</span></div>
       </div>
     </section>
-    <div className="schedule-filter" role="group" aria-label="Lọc lịch theo số lượng thành viên">
-      {scheduleParticipants.map((count) => <button key={count} type="button" className={participantFilter === count ? "active" : ""} onClick={() => setParticipantFilter(count)}>{count} người</button>)}
+    <div className="schedule-counts" role="group" aria-label="Lọc lịch theo số lượng thành viên">
+      {scheduleParticipants.map((count) => <button key={count} type="button" className={participantFilter === count ? "active" : ""} aria-pressed={participantFilter === count} onClick={() => { setParticipantFilter(count); setScenarioId(null); }}>{count} người</button>)}
     </div>
-    <div className="schedule-case-list">
-      {visibleScenarios.map((scenario) => <article className="panel schedule-case" key={scenario.id}>
-        <div className="schedule-case-head">
-          <div>
-            <h2>{scenario.title}</h2>
-            <p>{scenario.subtitle}</p>
-          </div>
-        </div>
-        <div className="schedule-grid schedule-library-grid">
-          {scenario.matches.map((match, i) => <Match match={match} i={i} key={`${scenario.id}-${i}`} />)}
-        </div>
-      </article>)}
-    </div>
+    {activeScenario && <article className="panel schedule-case">
+      <div className="schedule-case-head">
+        <h2>{activeScenario.title}</h2>
+        <span>{activeScenario.subtitle}</span>
+      </div>
+      {visibleScenarios.length > 1 && <div className="schedule-mixes" role="group" aria-label="Chọn cơ cấu Level">
+        {visibleScenarios.map((scenario) => <button key={scenario.id} type="button" className={scenario.id === activeScenario.id ? "active" : ""} aria-pressed={scenario.id === activeScenario.id} onClick={() => setScenarioId(scenario.id)} title={scenario.title}>
+          <b className="mix-l1">{scenario.level1Count} L1</b><i>+</i><b className="mix-l2">{scenario.level2Count} L2</b>
+        </button>)}
+      </div>}
+      <ol className="library-match-grid">
+        {activeScenario.matches.map((match, i) => <LibraryMatch match={match} i={i} key={`${activeScenario.id}-${i}`} />)}
+      </ol>
+    </article>}
   </section>;
+}
+
+// Compact one-line match for the schedule library (the home page keeps the larger Match card).
+function LibraryMatch({ match, i }: { match: ScheduleMatch; i: number }) {
+  const open = match.type === "MỞ";
+  return <li className="library-match">
+    <span className="library-match-no">{String(i + 1).padStart(2, "0")}</span>
+    <TeamPair team={match.teamA} open={open} />
+    <strong>VS</strong>
+    <TeamPair team={match.teamB} open={open} />
+  </li>;
 }
 function SlotToken({ no, name, open }: { no: number; name?: string; open?: boolean }) { return <span className={`slot-token ${open ? "level-open" : `level-${slotLevel(no)}`}`}><b>{no}</b>{name && <small>{name}</small>}</span>; }
 function TeamPair({ team, namesBySlot, open }: { team: readonly [number, number]; namesBySlot?: Record<number, string>; open?: boolean }) { return <span className="team-pair"><SlotToken no={team[0]} name={namesBySlot?.[team[0]]} open={open} /><i>+</i><SlotToken no={team[1]} name={namesBySlot?.[team[1]]} open={open} /></span>; }
@@ -1967,13 +1982,13 @@ function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated:
         <input className="search" placeholder="⌕  Tìm tên, username, quyền..." value={searchTerm} onChange={(event) => { setSearchTerm(event.target.value); setOpenMenu(null); }} />
       </div>
       {roleNotice && <div className="member-role-notice">{roleNotice}</div>}
-      <div className="member-table">{visibleMembers.length ? visibleMembers.map((member) => {
+      <div className="member-table">{visibleMembers.length ? visibleMembers.map((member, index) => {
         const role = effectiveRole(member.role);
         const canDelete = role === "member";
         return <div key={member.username}>
           <div className="person"><div className={avatarClassName("avatar", member)} style={avatarStyle(member)}>{member.initials}</div><div><b>{member.name}</b><small>@{member.username}</small></div></div>
           <span className="status">● Hoạt động</span>
-          <div className="member-actions"><button className="more" aria-label={`Thao tác ${member.name}`} onClick={() => setOpenMenu(openMenu === member.username ? null : member.username)}>•••</button>{openMenu === member.username && <div className="member-menu"><button onClick={() => { setEditing(member); setFullName(member.name); setEditRole(role === "sub-admin" ? "sub-admin" : "member"); setOpenMenu(null); }}>Sửa thành viên</button>{canDelete && <button className="danger-text" onClick={() => { remove(member); setOpenMenu(null); }}>Xóa thành viên</button>}</div>}</div>
+          <div className="member-actions"><button className="more" aria-label={`Thao tác ${member.name}`} onClick={() => setOpenMenu(openMenu === member.username ? null : member.username)}>•••</button>{/* The panel clips overflow, so menus on the bottom rows open upwards. */}{openMenu === member.username && <div className={`member-menu${index >= visibleMembers.length - 2 ? " member-menu-up" : ""}`}><button onClick={() => { setEditing(member); setFullName(member.name); setEditRole(role === "sub-admin" ? "sub-admin" : "member"); setOpenMenu(null); }}>Sửa thành viên</button>{canDelete && <button className="danger-text" onClick={() => { remove(member); setOpenMenu(null); }}>Xóa thành viên</button>}</div>}</div>
         </div>;
       }) : <div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div>}</div>
     </section>

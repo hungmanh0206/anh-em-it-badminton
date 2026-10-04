@@ -225,20 +225,6 @@
     font-size: 21px !important;
   }
 
-  .schedule-filter {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 7px !important;
-    overflow: visible !important;
-    padding-bottom: 0 !important;
-  }
-
-  .schedule-filter button {
-    min-width: 76px !important;
-    padding: 8px 11px !important;
-    font-size: 11px !important;
-  }
-
   .draw-panel .draw-body {
     grid-template-columns: 148px minmax(0, 1fr) !important;
     gap: 16px !important;

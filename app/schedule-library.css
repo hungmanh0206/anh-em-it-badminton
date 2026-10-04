@@ -1,6 +1,7 @@
 .schedule-library {
   display: grid;
-  gap: 18px;
+  gap: 16px;
+  container: schedule-library / inline-size;
 }
 
 .schedule-library,
@@ -85,170 +86,6 @@
   font-weight: 900;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.schedule-filter {
-  display: flex;
-  gap: 9px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-
-.schedule-filter button {
-  flex: 0 0 auto;
-  min-width: 92px;
-  border: 1px solid rgba(31, 27, 18, 0.1);
-  border-radius: 999px;
-  background: #fff;
-  color: #534b3f;
-  padding: 11px 15px;
-  box-shadow: 0 4px 12px rgba(30, 24, 12, 0.06);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.schedule-filter button.active {
-  border-color: rgba(255, 183, 0, 0.7);
-  background: linear-gradient(180deg, #ffcf55, #ffb700);
-  color: #17120a;
-  box-shadow: 0 12px 26px rgba(255, 183, 0, 0.26);
-}
-
-.schedule-case-list {
-  display: grid;
-  gap: 16px;
-}
-
-.schedule-case {
-  overflow: hidden;
-}
-
-.schedule-case.relaxed {
-  border-color: rgba(37, 99, 235, 0.2) !important;
-}
-
-.schedule-case.relaxed .schedule-case-head {
-  background:
-    radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.12), transparent 32%),
-    linear-gradient(180deg, rgba(239, 246, 255, 0.92), rgba(255, 255, 255, 0.82));
-}
-
-.schedule-case.relaxed .schedule-case-badge {
-  border-color: rgba(37, 99, 235, 0.28);
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-
-.schedule-case-head {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
-  align-items: start;
-  padding: 22px 25px 14px;
-  border-bottom: 1px solid rgba(31, 27, 18, 0.08);
-  background:
-    linear-gradient(180deg, rgba(255, 249, 236, 0.78), rgba(255, 255, 255, 0.82));
-}
-
-.schedule-case-head > p {
-  max-width: 420px;
-  justify-self: end;
-}
-
-.schedule-case-head h2 {
-  margin: 0 0 5px !important;
-  font-size: 20px !important;
-}
-
-.schedule-case-head p {
-  color: #625b51;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.55;
-}
-
-.schedule-case-badge {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  padding: 6px 10px;
-  border: 1px solid rgba(255, 183, 0, 0.38);
-  border-radius: 999px;
-  background: #fff6d9;
-  color: #9b6a00;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.schedule-library-grid {
-  padding-top: 20px !important;
-}
-
-.schedule-library-grid .match {
-  background:
-    radial-gradient(circle at 100% 0%, rgba(255, 183, 0, 0.16), transparent 32%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 238, 0.72)) !important;
-  padding: 15px !important;
-}
-
-.schedule-library-grid .match-top b {
-  color: #8a6506;
-}
-
-.schedule-library-grid .match-top span {
-  display: none !important;
-}
-
-.schedule-readonly-note {
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 25px 18px;
-  border-top: 1px solid rgba(31, 27, 18, 0.07);
-  color: #6f675c;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.schedule-readonly-note b {
-  flex: 0 0 auto;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #1a1916;
-  color: #ffdc74;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.schedule-relaxed-note {
-  display: none;
-  gap: 8px;
-  margin: 20px 25px;
-  padding: 18px 20px;
-  border: 1px dashed rgba(37, 99, 235, 0.26);
-  border-radius: 16px;
-  background:
-    radial-gradient(circle at 0 0, rgba(37, 99, 235, 0.11), transparent 34%),
-    #f8fbff;
-}
-
-.schedule-relaxed-note b {
-  color: #1d4ed8;
-  font-size: 15px;
-  font-weight: 950;
-}
-
-.schedule-relaxed-note p {
-  max-width: 760px;
-  color: #44546b;
-  font-size: 12px;
-  font-weight: 750;
-  line-height: 1.55;
 }
 
 .schedule-match-card .teams,
@@ -428,49 +265,6 @@
     width: 100%;
   }
 
-  .schedule-filter {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 6px;
-    overflow-x: visible;
-    padding-bottom: 0;
-  }
-
-  .schedule-filter button {
-    width: 100%;
-    min-width: 0;
-    padding: 9px 4px;
-    font-size: 10px;
-    letter-spacing: -0.02em;
-    box-shadow: 0 3px 8px rgba(30, 24, 12, 0.05);
-    white-space: nowrap;
-  }
-
-  .schedule-case-head {
-    grid-template-columns: 1fr;
-    padding: 20px 17px 15px;
-  }
-
-  .schedule-case-head > p {
-    justify-self: start;
-  }
-
-  .schedule-library-grid {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-  }
-
-  .schedule-readonly-note {
-    align-items: flex-start;
-    flex-direction: column;
-    padding: 14px 17px 17px;
-  }
-
-  .schedule-relaxed-note {
-    margin: 17px 16px;
-    padding: 16px;
-  }
-
   .schedule-match-card .teams {
     grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr) !important;
     gap: 7px;
@@ -534,5 +328,208 @@
   .match-result-row .result-actions .primary,
   .match-result-row .result-actions .soft-btn {
     width: 100%;
+  }
+}
+
+/* ---- Library: head-count picker, Level-mix tabs, one compact match grid ---- */
+.schedule-counts {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(31, 27, 18, 0.1);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.schedule-counts button {
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #534b3f;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.schedule-counts button:hover:not(.active) {
+  background: #faf6ee;
+  color: #17120a;
+}
+
+.schedule-counts button.active {
+  background: linear-gradient(180deg, #ffd24d 0%, #ffb700 100%);
+  color: #17120a;
+}
+
+.schedule-case {
+  overflow: hidden;
+}
+
+.schedule-case-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px 12px;
+}
+
+.schedule-case-head h2 {
+  margin: 0 !important;
+  font-size: 18px !important;
+  line-height: 1.3;
+}
+
+.schedule-case-head span {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff6d9;
+  color: #8a6400;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.schedule-mixes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 20px 4px;
+}
+
+.schedule-mixes button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(31, 27, 18, 0.12);
+  border-radius: 999px;
+  background: #fff;
+  color: #534b3f;
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.schedule-mixes button:hover:not(.active) {
+  border-color: #e9a800;
+  background: #fffaf0;
+}
+
+.schedule-mixes button.active {
+  border-color: #1a1916;
+  background: #1a1916;
+  color: #fff;
+}
+
+.schedule-mixes b {
+  font-weight: 850;
+}
+
+.schedule-mixes i {
+  color: #9a8f7f;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.schedule-mixes .mix-l1 { color: var(--slot-level-1); }
+.schedule-mixes .mix-l2 { color: var(--slot-level-2); }
+.schedule-mixes .active .mix-l1 { color: #93c5fd; }
+.schedule-mixes .active .mix-l2 { color: #86efac; }
+
+.library-match-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 12px 20px 20px;
+  list-style: none;
+}
+
+.library-match {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 120px) 30px minmax(0, 120px);
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid rgba(31, 27, 18, 0.08);
+  border-radius: 12px;
+  background: #fffdf8;
+}
+
+.library-match-no {
+  color: #a07a1c;
+  font-size: 12px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.library-match strong {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #1a1916;
+  color: #ffdc74;
+  font-size: 9px;
+  font-weight: 950;
+}
+
+.library-match .team-pair {
+  gap: 5px;
+}
+
+.library-match .team-pair > i {
+  font-size: 13px;
+}
+
+.library-match .slot-token {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 3px 6px;
+  border-width: 1.5px;
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+.library-match .slot-token b {
+  font-size: 18px;
+}
+
+@container schedule-library (max-width: 940px) {
+  .library-match-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container schedule-library (max-width: 620px) {
+  .schedule-counts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .schedule-case-head {
+    padding: 14px 16px 10px;
+  }
+
+  .schedule-case-head h2 {
+    font-size: 16px !important;
+  }
+
+  .schedule-mixes {
+    padding: 0 16px 4px;
+  }
+
+  .library-match-grid {
+    grid-template-columns: 1fr;
+    padding: 10px 16px 16px;
   }
 }
