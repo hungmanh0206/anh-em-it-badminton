@@ -633,3 +633,9 @@
   color: #a3302a !important;
   font-weight: 800;
 }
+
+/* Hero above the gallery panel (reuses the ELO hero styles). */
+.photo-page {
+  display: grid;
+  gap: 16px;
+}

@@ -19,7 +19,7 @@ type Photo = {
   mediumUrl: string;
   fullUrl: string;
 };
-type PhotoFolder = { folder: string; label: string; count: number };
+type PhotoFolder = { folder: string; label: string; count: number; latestAt?: string };
 type PhotoDiagnostics = { rootFolder: string; hint?: string; accountImages?: number; matching?: number; folders?: { name: string; count: number }[]; error?: string };
 type PhotoPage = { photos: Photo[]; page: number; pageCount: number; pageSize: number; total: number; folders: PhotoFolder[]; canManage: boolean; diagnostics?: PhotoDiagnostics; error?: string };
 type LoadState = "loading" | "ready" | "error";
@@ -137,9 +137,24 @@ export function PhotoGallery() {
   };
 
   const allCount = folders.reduce((sum, folder) => sum + folder.count, 0);
+  const latestAt = folders.reduce<string | null>((latest, folder) => (folder.latestAt && (!latest || folder.latestAt > latest) ? folder.latestAt : latest), null);
   const firstOnPage = (page - 1) * pageSize;
 
-  return <section className="panel photo-panel" ref={panel}>
+  return <div className="photo-page">
+    <section className="panel elo-hero-panel photo-hero-panel">
+      <div className="elo-hero-copy">
+        <p className="eyebrow">KHO ẢNH CLB</p>
+        <h2>Kho ảnh Anh Em IT</h2>
+        <p>Ảnh các buổi chơi, giải đấu và sự kiện của CLB. Mở một ảnh để xem lớn, chuyển ảnh bằng phím mũi tên hoặc vuốt trên điện thoại.</p>
+      </div>
+      <div className="elo-hero-stats" aria-label="Tổng quan kho ảnh">
+        <div><span>Tổng ảnh</span><b>{allCount}</b></div>
+        <div><span>Danh mục</span><b>{folders.length}</b></div>
+        <div><span>Mới nhất</span><b>{latestAt ? `${String(new Date(latestAt).getDate()).padStart(2, "0")}/${String(new Date(latestAt).getMonth() + 1).padStart(2, "0")}` : "—"}</b></div>
+      </div>
+    </section>
+
+    <section className="panel photo-panel" ref={panel}>
     <div className="panel-head photo-panel-head">
       <div><h2>Những khoảnh khắc cùng anh em</h2></div>
       {canManage && <div className="photo-head-actions">
@@ -204,7 +219,8 @@ export function PhotoGallery() {
     />}</Presence>
 
     <Presence show={uploadOpen}>{uploadOpen && <PhotoUploadModal folders={folders} defaultFolder={activeFolder ?? folders[0]?.folder ?? ""} onClose={() => setUploadOpen(false)} onUploaded={(folder) => { setActiveFolder(folder); setSearch(""); setQuery(""); void loadPage(folder, 1); }} />}</Presence>
-  </section>;
+    </section>
+  </div>;
 }
 
 // Page numbers with ellipses: always the first and last page, plus neighbours of the current one.

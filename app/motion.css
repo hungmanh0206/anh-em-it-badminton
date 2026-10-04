@@ -223,12 +223,6 @@ textarea {
   transition: background-color var(--motion-fast) ease, border-color var(--motion-fast) ease, box-shadow var(--motion-base) ease, translate var(--motion-fast) var(--motion-ease-out);
 }
 
-.member-card:not(:disabled):hover,
-.history-list article:hover,
-.schedule-match-card:hover {
-  translate: 0 -2px;
-}
-
 .rank-table > .rank-row,
 .elo-list > .elo-row,
 .member-grid > *,

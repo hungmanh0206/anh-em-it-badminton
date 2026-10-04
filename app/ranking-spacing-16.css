@@ -69,15 +69,6 @@
   box-shadow: 0 6px 14px rgba(172, 93, 38, 0.08) !important;
 }
 
-.ranking .rank-table > .rank-row.rank-columns:hover,
-.live-ranking-panel .rank-table > .rank-row.rank-columns:hover,
-.rank-table.live-rank-table > .rank-row.rank-columns:hover,
-.ranking .rank-table > .rank-row.rank-columns.top-rank:hover,
-.live-ranking-panel .rank-table > .rank-row.rank-columns.top-rank:hover,
-.rank-table.live-rank-table > .rank-row.rank-columns.top-rank:hover {
-  transform: none !important;
-}
-
 @media (max-width: 800px) {
   :root {
     --ranking-card-gap: 18px;

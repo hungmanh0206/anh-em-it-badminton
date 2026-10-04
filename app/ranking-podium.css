@@ -36,10 +36,6 @@
       0 8px 18px rgba(172, 93, 38, 0.07) !important;
   }
 
-  .rank-table .rank-row.rank-columns.top-rank:hover {
-    transform: translateX(2px);
-  }
-
   .rank-table .rank-row.rank-columns.top-rank .medal {
     width: 31px !important;
     height: 31px !important;

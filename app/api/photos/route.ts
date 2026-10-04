@@ -66,7 +66,7 @@ export async function GET(request: Request) {
       pageCount,
       pageSize: PHOTO_PAGE_SIZE,
       total,
-      folders: ((folders.data || []) as { folder: string; photo_count: number }[]).map((row) => ({ folder: row.folder, label: folderLabel(row.folder), count: row.photo_count })),
+      folders: ((folders.data || []) as { folder: string; photo_count: number; latest_taken_at: string }[]).map((row) => ({ folder: row.folder, label: folderLabel(row.folder), count: row.photo_count, latestAt: row.latest_taken_at })),
       canManage: profile.role === "admin",
       ...(diagnostics ? { diagnostics } : {}),
     }, { headers: { "Cache-Control": "private, no-store" } });

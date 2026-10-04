@@ -64,10 +64,6 @@
     transform: none !important;
   }
 
-  .rank-row.rank-columns:hover {
-    transform: none !important;
-  }
-
   .rank-row.top-rank {
     box-shadow: 0 14px 34px rgba(42, 31, 13, 0.12) !important;
   }

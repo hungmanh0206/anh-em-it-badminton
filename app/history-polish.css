@@ -16,8 +16,7 @@
   cursor: pointer;
 }
 
-.history-list .history-detail-btn:hover,
-.history-list article:hover .history-detail-btn {
+.history-list .history-detail-btn:hover {
   background: linear-gradient(180deg, #ffdc6b 0%, #ffc21a 100%) !important;
   box-shadow: 0 7px 16px rgba(255, 170, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
 }
@@ -37,10 +36,6 @@
     width: auto !important;
     align-self: flex-start !important;
   }
-}
-
-.history-list article:hover {
-  border-color: rgba(255, 183, 0, 0.45) !important;
 }
 
 /* Match detail modal: fixed header (eyebrow, title, close); only the match list scrolls. */

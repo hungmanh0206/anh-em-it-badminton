@@ -68,13 +68,6 @@
   box-shadow: inset 3px 0 0 #cd8a52 !important;
 }
 
-.ranking .rank-table > .rank-row.rank-columns:hover,
-.live-ranking-panel .rank-table > .rank-row.rank-columns:hover,
-.rank-table.live-rank-table > .rank-row.rank-columns:hover,
-.elo-ranking-panel .elo-list > .elo-row:hover {
-  background-color: #fffaf0 !important;
-}
-
 .ranking .rank-table > .empty-ranking,
 .live-ranking-panel .rank-table > .empty-ranking,
 .elo-ranking-panel .elo-list > .empty-ranking {
