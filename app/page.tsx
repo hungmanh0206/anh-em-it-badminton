@@ -1,6 +1,8 @@
 "use client";
 
-import { type CSSProperties, type ReactNode, useCallback, useEffect, useState } from "react";
+import { type CSSProperties, useCallback, useEffect, useState } from "react";
+import { backdropDismissProps, Presence } from "@/app/ui/modal";
+import { PhotoGallery } from "@/app/photo-gallery";
 import { supabase } from "@/lib/supabase";
 import { isCheckinWindowOpenForDate, sessionDatesOfMonth, sessionStateForDate, sessionWeekdayLabel, sessionWeekInMonth, targetSessionDateKey } from "@/lib/session-dates";
 import { reorderMatchesForRest } from "@/lib/schedule-reorder";
@@ -34,7 +36,7 @@ type AppDataCachePayload = RankingCachePayload & {
   historySessions: HistorySession[];
   monthCloseStatus: MonthCloseStatus | null;
 };
-type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "elo" | "history";
+type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "elo" | "history" | "photos";
 type SessionStatus = "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 type AttendanceRow = { choice: "pending" | "attending" | "absent"; drawn_number: number | null; level_at_time?: "1" | "2" | number | string | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
 type HomeSessionPayload = { inactive?: boolean; sessionId?: string | null; sessionDate?: string; status?: SessionStatus; attendances?: AttendanceRow[]; needsReset?: boolean; drawsReassigned?: boolean; scheduleCleared?: boolean; error?: string };
@@ -83,6 +85,7 @@ const screenTitles: Record<Screen, string> = {
   ranking: "Bảng xếp hạng",
   elo: "ELO",
   history: "Lịch sử thi đấu",
+  photos: "Kho ảnh",
 };
 const screenKeys = Object.keys(screenTitles) as Screen[];
 const hiddenRankingMonths = new Set(["Tháng 5, 2026", "Tháng 6, 2026"]);
@@ -1119,7 +1122,7 @@ export default function Home() {
       if (!(target instanceof Element)) return;
       if (!target.closest(".welcome-member, .member-profile-popover")) setShowProfileCard(false);
       if (!target.closest(".sidebar, .mobile-menu")) setSidebarOpen(false);
-      if (target.closest(".modal-backdrop") && !target.closest(".checkin-modal, .confirm-modal, .history-detail, .member-editor, .elo-guide-modal")) {
+      if (target.closest(".modal-backdrop") && !target.closest(".checkin-modal, .confirm-modal, .history-detail, .member-editor, .elo-guide-modal, .photo-sheet")) {
         (document.querySelector(".presence:not(.presence-leaving) .modal-backdrop .modal-close") as HTMLButtonElement | null)?.click();
       }
     };
@@ -1163,6 +1166,7 @@ export default function Home() {
         <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); }}><AppIcon name="ranking" className="nav-app-icon" /> Bảng xếp hạng</button>
         <button className={screen === "elo" ? "active" : ""} onClick={() => setScreen("elo")}><AppIcon name="target" className="nav-app-icon" /> ELO</button>
         <button className={screen === "history" ? "active" : ""} onClick={() => setScreen("history")}><AppIcon name="history" className="nav-app-icon" /> Lịch sử thi đấu</button>
+        <button className={screen === "photos" ? "active" : ""} onClick={() => setScreen("photos")}><span className="nav-app-icon nav-emoji-icon" aria-hidden="true">📷</span> Kho ảnh</button>
         <button className={screen === "rules" ? "active" : ""} onClick={() => setScreen("rules")}><AppIcon name="rules" className="nav-app-icon" /> Thể lệ</button>
       </nav>
       <div className="club-card"><AppIcon name="trophy" className="club-card-icon" /><b>{currentMonthLabel}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div><div className={`club-top1 ${champion ? "" : "empty"}`}><small>NHÀ VÔ ĐỊCH {championRankingLabel.toUpperCase()}</small><b>{champion ? <><AppIcon name="crown" className="inline-app-icon" /> {champion.name}</> : "Chưa ghi danh"}</b><span>{champion ? `${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số` : `Chưa có dữ liệu BXH ${championRankingLabel}.`}</span></div></div>
@@ -1171,7 +1175,7 @@ export default function Home() {
     <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setActiveUser(null); }} />}</Presence>
     <section className="content">
       <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className={avatarClassName("welcome-avatar", currentUser)} style={avatarStyle(currentUser)} aria-hidden="true">{welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
-      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : <>
+      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
         <section className="hero">
           <div className="hero-copy"><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div>
           <img className="hero-logo" src="/club-logo.png?v=club-glass-logo" alt="" aria-hidden="true" />
@@ -1189,42 +1193,6 @@ export default function Home() {
     <Presence show={Boolean(confirmation)}>{confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}</Presence>
     <Presence show={Boolean(showProfileCard)}>{showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} elo={profileElo} onClose={() => setShowProfileCard(false)} />}</Presence>
   </main>;
-}
-
-// Dismisses on click (not pointerdown) so the tap is consumed by the backdrop instead of reaching
-// whatever sits under it once the modal closes; the tap must also start on the backdrop itself.
-function backdropDismissProps(onDismiss: () => void) {
-  return {
-    onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => { event.currentTarget.dataset.pointerDownOnBackdrop = String(event.target === event.currentTarget); },
-    onClick: (event: React.MouseEvent<HTMLDivElement>) => {
-      const startedOnBackdrop = event.currentTarget.dataset.pointerDownOnBackdrop !== "false";
-      delete event.currentTarget.dataset.pointerDownOnBackdrop;
-      if (startedOnBackdrop && event.target === event.currentTarget) onDismiss();
-    },
-  };
-}
-
-// Keeps the last visible content mounted while it plays its exit animation (see motion.css).
-function Presence({ show, children }: { show: boolean; children: ReactNode }) {
-  const [lastChildren, setLastChildren] = useState(children);
-  const [wasShown, setWasShown] = useState(show);
-  const [leaving, setLeaving] = useState(false);
-  if (show && lastChildren !== children) setLastChildren(children);
-  if (show !== wasShown) {
-    setWasShown(show);
-    setLeaving(!show);
-  }
-  // Fallback in case the exit animation is disabled or never reports animationend.
-  useEffect(() => {
-    if (!leaving) return;
-    const timer = window.setTimeout(() => setLeaving(false), 400);
-    return () => window.clearTimeout(timer);
-  }, [leaving]);
-  if (!show && !leaving) return null;
-  return <div
-    className={leaving ? "presence presence-leaving" : "presence"}
-    onAnimationEnd={(event) => { if (leaving && event.target === event.currentTarget.firstElementChild) setLeaving(false); }}
-  >{show ? children : lastChildren}</div>;
 }
 
 function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass, hasRankingData, elo, onClose }: { member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; hasRankingData: boolean; elo: EloRankingRow | null; onClose: () => void }) {

@@ -34,6 +34,7 @@ import "./ranking-table-header.css";
 import "./history-polish.css";
 import "./elo-guide.css";
 import "./modal-close.css";
+import "./photos.css";
 import "./motion.css";
 
 export const metadata: Metadata = {

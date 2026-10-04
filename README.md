@@ -1,4 +1,86 @@
-# vinext-starter
+# Anh Em IT Badminton
+
+## Kho ảnh (Cloudinary)
+
+Ảnh được lưu trên **Cloudinary** (nguồn gốc). Supabase chỉ lưu metadata trong bảng `photos`
+để app lọc, sắp xếp và phân trang. Trình duyệt tải ảnh thẳng từ CDN Cloudinary
+(thumbnail và ảnh lightbox đã được Cloudinary thu nhỏ); Vercel không làm proxy ảnh.
+
+```text
+Upload trong app : trình duyệt → Cloudinary (chữ ký do server cấp) → /api/photos → Supabase
+Upload trên Cloudinary : Cloudinary → webhook /api/cloudinary/webhook → Supabase
+Khôi phục khi lỡ webhook : Admin bấm "Đồng bộ" → /api/photos/sync → Supabase
+```
+
+Phân quyền: mọi thành viên đăng nhập được xem; chỉ **Admin** được tải ảnh, xóa ảnh và đồng bộ.
+
+### 1. Chạy migration Supabase
+
+Mở Supabase Dashboard → **SQL Editor**, dán và chạy nội dung
+`supabase/migrations/010_photos.sql` (tạo bảng `photos`, index và view `photo_folders`).
+Migration không được chạy tự động; hãy review trước khi chạy.
+
+### 2. Lấy thông tin Cloudinary
+
+Trong Cloudinary Console → **Settings → API Keys**:
+
+| Biến | Lấy ở đâu |
+|---|---|
+| `CLOUDINARY_CLOUD_NAME` | "Cloud name" ở đầu trang API Keys (hoặc Dashboard) |
+| `CLOUDINARY_API_KEY` | Cột "API Key" |
+| `CLOUDINARY_API_SECRET` | Cột "API Secret" (bấm hiện). **Chỉ đặt ở biến môi trường server, không commit, không đưa vào frontend.** |
+| `CLOUDINARY_ROOT_FOLDER` | Thư mục chứa kho ảnh, mặc định `badminton` |
+
+Upload preset **không cần**: app dùng signed upload, server ký từng lượt upload bằng API Secret.
+
+### 3. Sắp xếp thư mục trên Cloudinary
+
+Đặt ảnh trong thư mục gốc (mặc định `badminton/`). Mỗi thư mục con thành một danh mục lọc,
+tên hiển thị được suy ra tự động, ví dụ:
+
+```text
+badminton/2026/week-01        → "Tuần 1 · 2026"
+badminton/2026/tournament-01  → "Giải đấu 1 · 2026"
+badminton/members             → "Thành viên"
+```
+
+Ảnh nằm ngoài thư mục gốc không xuất hiện trong app.
+
+### 4. Cấu hình webhook
+
+Cloudinary Console → **Settings → Webhook Notifications** → **Add Notification URL**:
+
+- URL: `https://<domain-production>/api/cloudinary/webhook`
+- Notification types: **Upload**, **Delete**, **Rename**, **Move / asset folder changed**
+  (có thể chọn tất cả; loại khác sẽ được bỏ qua an toàn).
+
+Webhook được xác thực bằng chữ ký `X-Cld-Signature` (ký bằng API Secret, hỗ trợ SHA-1 và SHA-256).
+Mỗi thông báo chỉ dùng mã ảnh: server đọc lại ảnh từ Cloudinary rồi mới ghi Supabase, nên
+thông báo trùng hoặc gửi lại không tạo bản ghi trùng.
+
+### 5. Biến môi trường trên Vercel
+
+Vercel → Project → **Settings → Environment Variables**, thêm 4 biến ở bảng trên cho
+Production (và Preview nếu cần), rồi **Redeploy**. Hoặc dùng CLI:
+
+```bash
+npx vercel env add CLOUDINARY_CLOUD_NAME production
+npx vercel env add CLOUDINARY_API_KEY production
+npx vercel env add CLOUDINARY_API_SECRET production
+npx vercel env add CLOUDINARY_ROOT_FOLDER production
+```
+
+Chạy local: sao chép các biến vào `.env.local` (file này đã nằm trong `.gitignore`).
+
+### 6. Đồng bộ lần đầu
+
+Nếu Cloudinary đã có sẵn ảnh, đăng nhập bằng Admin → **Kho ảnh → Đồng bộ → Đồng bộ ngay**.
+Đồng bộ thêm ảnh còn thiếu, cập nhật ảnh thay đổi và ẩn ảnh đã bị xóa trên Cloudinary;
+chạy nhiều lần không tạo trùng.
+
+---
+
+## vinext starter (original notes)
 
 A clean full-stack starter running on
 [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
