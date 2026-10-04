@@ -29,7 +29,7 @@ Trong Cloudinary Console → **Settings → API Keys**:
 | `CLOUDINARY_CLOUD_NAME` | "Cloud name" ở đầu trang API Keys (hoặc Dashboard) |
 | `CLOUDINARY_API_KEY` | Cột "API Key" |
 | `CLOUDINARY_API_SECRET` | Cột "API Secret" (bấm hiện). **Chỉ đặt ở biến môi trường server, không commit, không đưa vào frontend.** |
-| `CLOUDINARY_ROOT_FOLDER` | Thư mục chứa kho ảnh, mặc định `badminton` |
+| `CLOUDINARY_ROOT_FOLDER` | Thư mục chứa kho ảnh, mặc định `badminton` (cũng nhận tên `CLOUDINARY_FAMILY_MOMENTS_FOLDER`) |
 
 Upload preset **không cần**: app dùng signed upload, server ký từng lượt upload bằng API Secret.
 
