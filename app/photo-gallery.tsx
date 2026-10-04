@@ -20,7 +20,7 @@ type Photo = {
   fullUrl: string;
 };
 type PhotoFolder = { folder: string; label: string; count: number };
-type PhotoDiagnostics = { rootFolder: string; accountImages?: number; matching?: number; folders?: { name: string; count: number }[]; error?: string };
+type PhotoDiagnostics = { rootFolder: string; hint?: string; accountImages?: number; matching?: number; folders?: { name: string; count: number }[]; error?: string };
 type PhotoPage = { photos: Photo[]; nextCursor: string | null; total?: number; folders?: PhotoFolder[]; canManage?: boolean; diagnostics?: PhotoDiagnostics; error?: string };
 type LoadState = "loading" | "ready" | "error";
 
@@ -160,6 +160,7 @@ export function PhotoGallery() {
       <p>{canManage ? "Bấm “+ Tải ảnh” hoặc tải trực tiếp lên Cloudinary để bắt đầu." : "Ảnh sẽ xuất hiện ở đây khi Admin tải lên."}</p>
       {diagnostics && <div className="photo-diagnostics">
         <b>Kiểm tra Cloudinary (chỉ Admin thấy)</b>
+        {diagnostics.hint && <p className="photo-diagnostics-hint">{diagnostics.hint}</p>}
         {diagnostics.error
           ? <p>Không đọc được Cloudinary: {diagnostics.error}</p>
           : <>

@@ -532,3 +532,8 @@
   color: #3d2d00;
   font-size: 12px;
 }
+
+.photo-diagnostics .photo-diagnostics-hint {
+  color: #a3302a !important;
+  font-weight: 800;
+}

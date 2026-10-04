@@ -37,6 +37,8 @@ test("relativeFolder keeps only assets inside the root folder", () => {
   assert.equal(relativeFolder("badminton-old/x", "badminton"), null);
   assert.equal(relativeFolder("other", "badminton"), null);
   assert.equal(relativeFolder("Family-Moments/2026/Week-01", "family-moments"), "2026/Week-01");
+  assert.equal(relativeFolder("Kho ảnh anh em IT/2026", "Kho ảnh anh em IT "), "2026");
+  assert.equal(relativeFolder("Kho ảnh anh em IT", "kho ảnh anh em it"), "");
 });
 
 test("sanitizeFolderInput accepts safe paths only", () => {

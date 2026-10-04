@@ -103,6 +103,7 @@ export async function diagnoseRoot(config: CloudinaryConfig) {
     });
     return {
       rootFolder: config.rootFolder || "(toàn bộ tài khoản)",
+      hint: /^https?:\/\//i.test(config.rootFolder) ? "Biến thư mục gốc đang là một đường link. Hãy đặt đúng TÊN thư mục (ví dụ: Kho ảnh anh em IT), không phải link." : undefined,
       accountImages: resources.length,
       matching: resources.filter((resource) => resourceToPhotoRow(resource, config.rootFolder)).length,
       folders: [...byFolder.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15).map(([name, count]) => ({ name, count })),
