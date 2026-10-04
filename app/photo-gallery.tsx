@@ -58,6 +58,10 @@ export function PhotoGallery() {
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<PhotoSort>("newest");
+  const [view, setView] = useState<PhotoView>(readStoredView);
+  const [deleteTarget, setDeleteTarget] = useState<Photo | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [listError, setListError] = useState("");
   const requestId = useRef(0);
   const panel = useRef<HTMLElement | null>(null);
 
@@ -126,6 +130,29 @@ export function PhotoGallery() {
     void loadPage(folder, 1, undefined, query, sort);
   };
 
+  const selectView = (value: PhotoView) => {
+    setView(value);
+    try { localStorage.setItem(VIEW_STORAGE_KEY, value); } catch { /* storage unavailable: keep in memory */ }
+  };
+
+  const confirmListDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setListError("");
+    try {
+      await api(`/api/photos/${deleteTarget.id}`, { method: "DELETE" });
+      setDeleteTarget(null);
+      void loadPage(activeFolder, page, undefined, query, sort);
+    } catch (deleteError) {
+      setDeleteTarget(null);
+      setListError(deleteError instanceof Error ? deleteError.message : "Không xóa được ảnh.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const replacePhoto = (renamed: Photo) => setPhotos((current) => current.map((item) => (item.id === renamed.id ? renamed : item)));
+
   const selectSort = (value: PhotoSort) => {
     setSort(value);
     setPreviewIndex(null);
@@ -179,6 +206,14 @@ export function PhotoGallery() {
       <select className="photo-sort-select" value={sort} onChange={(event) => selectSort(event.target.value as PhotoSort)} aria-label="Sắp xếp ảnh">
         {SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
+      <div className="photo-view-toggle" role="group" aria-label="Chế độ xem">
+        <button type="button" className={view === "grid" ? "active" : ""} aria-pressed={view === "grid"} onClick={() => selectView("grid")} title="Dạng lưới" aria-label="Dạng lưới">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2" /><rect x="13" y="3" width="8" height="8" rx="2" /><rect x="3" y="13" width="8" height="8" rx="2" /><rect x="13" y="13" width="8" height="8" rx="2" /></svg>
+        </button>
+        <button type="button" className={view === "list" ? "active" : ""} aria-pressed={view === "list"} onClick={() => selectView("list")} title="Dạng danh sách" aria-label="Dạng danh sách">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="4" width="5" height="5" rx="1.5" /><rect x="10" y="5.5" width="11" height="2" rx="1" /><rect x="3" y="15" width="5" height="5" rx="1.5" /><rect x="10" y="16.5" width="11" height="2" rx="1" /></svg>
+        </button>
+      </div>
       {canManage && <button type="button" className="primary photo-upload-btn" onClick={() => setUploadOpen(true)}>+ Tải ảnh</button>}
     </div>}
 
@@ -207,9 +242,14 @@ export function PhotoGallery() {
     </div>}
 
     {state === "ready" && photos.length > 0 && <>
-      <div className={`photo-grid${pageLoading ? " is-loading" : ""}`} aria-busy={pageLoading}>
-        {photos.map((photo, index) => <PhotoTile key={photo.id} photo={photo} onOpen={() => setPreviewIndex(index)} />)}
-      </div>
+      {listError && <p className="photo-list-error" role="alert">{listError}</p>}
+      {view === "grid"
+        ? <div className={`photo-grid${pageLoading ? " is-loading" : ""}`} aria-busy={pageLoading}>
+          {photos.map((photo, index) => <PhotoTile key={photo.id} photo={photo} onOpen={() => setPreviewIndex(index)} />)}
+        </div>
+        : <ul className={`photo-list${pageLoading ? " is-loading" : ""}`} aria-busy={pageLoading}>
+          {photos.map((photo, index) => <PhotoListRow key={photo.id} photo={photo} canManage={canManage} onOpen={() => setPreviewIndex(index)} onRenamed={replacePhoto} onDelete={() => setDeleteTarget(photo)} />)}
+        </ul>}
       <PhotoPagination page={page} pageCount={pageCount} from={firstOnPage + 1} to={firstOnPage + photos.length} total={total} disabled={pageLoading} onPage={goToPage} />
     </>}
 
@@ -224,8 +264,10 @@ export function PhotoGallery() {
       onNavigate={navigatePreview}
       onClose={() => setPreviewIndex(null)}
       onDeleted={removePhoto}
-      onRenamed={(renamed) => setPhotos((current) => current.map((item) => (item.id === renamed.id ? renamed : item)))}
+      onRenamed={replacePhoto}
     />}</Presence>
+
+    <Presence show={deleteTarget !== null}>{deleteTarget && <PhotoDeleteConfirm busy={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={() => void confirmListDelete()} />}</Presence>
 
     <Presence show={uploadOpen}>{uploadOpen && <PhotoUploadModal folders={folders} defaultFolder={activeFolder ?? folders[0]?.folder ?? ""} onClose={() => setUploadOpen(false)} onUploaded={(folder) => { setActiveFolder(folder); setSearch(""); setQuery(""); void loadPage(folder, 1, undefined, "", sort); }} />}</Presence>
     </section>
@@ -257,6 +299,72 @@ function PhotoPagination({ page, pageCount, from, to, total, disabled, onPage }:
   </div>;
 }
 
+function PhotoDeleteConfirm({ busy, onCancel, onConfirm }: { busy: boolean; onCancel: () => void; onConfirm: () => void }) {
+  return <div className="modal-backdrop photo-confirm-backdrop" role="dialog" aria-modal="true" {...backdropDismissProps(() => { if (!busy) onCancel(); })}>
+    <section className="confirm-modal">
+      <h2>Xóa ảnh này?</h2>
+      <p>Ảnh sẽ bị xóa vĩnh viễn trên Cloudinary và biến mất khỏi Kho ảnh.</p>
+      <div className="modal-actions confirm-actions">
+        <button type="button" className="secondary" onClick={onCancel} disabled={busy}>Hủy</button>
+        <button type="button" className="primary photo-danger" onClick={onConfirm} disabled={busy}>{busy ? "Đang xóa…" : "Xóa ảnh"}</button>
+      </div>
+    </section>
+  </div>;
+}
+
+// List view row: small thumbnail, name with folder/date, and (admins) inline rename + delete.
+function PhotoListRow({ photo, canManage, onOpen, onRenamed, onDelete }: { photo: Photo; canManage: boolean; onOpen: () => void; onRenamed: (photo: Photo) => void; onDelete: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(photo.name);
+  const [busy, setBusy] = useState(false);
+  const [rowError, setRowError] = useState("");
+  const [broken, setBroken] = useState(false);
+
+  const save = async () => {
+    const name = draft.trim();
+    if (!name || name === photo.name) {
+      setEditing(false);
+      return;
+    }
+    setBusy(true);
+    setRowError("");
+    try {
+      const result = await api<{ photo: Photo }>(`/api/photos/${photo.id}`, { method: "PATCH", body: JSON.stringify({ name }) });
+      onRenamed(result.photo);
+      setEditing(false);
+    } catch (renameError) {
+      setRowError(renameError instanceof Error ? renameError.message : "Không đổi được tên ảnh.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return <li className="photo-list-row">
+    <button type="button" className="photo-list-thumb" onClick={onOpen} aria-label={`Xem ảnh ${photo.name}`}>
+      {broken
+        ? <span aria-hidden="true">?</span>
+        // eslint-disable-next-line @next/next/no-img-element -- served straight from the Cloudinary CDN
+        : <img src={photo.thumbUrl} alt="" loading="lazy" decoding="async" width={56} height={56} onError={() => setBroken(true)} />}
+    </button>
+    <div className="photo-list-main">
+      {editing
+        ? <form className="photo-rename photo-list-rename" onSubmit={(event) => { event.preventDefault(); void save(); }}>
+          <input value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={100} autoFocus disabled={busy} aria-label="Tên ảnh mới"
+            onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); setEditing(false); setDraft(photo.name); } }} />
+          <button type="submit" className="photo-action-btn photo-action-primary" disabled={busy || !draft.trim()}>{busy ? "Đang lưu…" : "Lưu"}</button>
+          <button type="button" className="photo-action-btn" onClick={() => { setEditing(false); setDraft(photo.name); }} disabled={busy}>Hủy</button>
+        </form>
+        : <button type="button" className="photo-list-name" onClick={onOpen} title={photo.name}>{photo.name}</button>}
+      <small>{photo.folderLabel} · {new Date(photo.takenAt).toLocaleDateString("vi-VN")}</small>
+      {rowError && <p className="photo-preview-error" role="alert">{rowError}</p>}
+    </div>
+    {canManage && !editing && <div className="photo-list-actions">
+      <button type="button" className="photo-action-btn" onClick={() => { setDraft(photo.name); setRowError(""); setEditing(true); }}>Đổi tên</button>
+      <button type="button" className="photo-action-btn photo-action-danger" onClick={onDelete}>Xóa</button>
+    </div>}
+  </li>;
+}
+
 function PhotoTile({ photo, onOpen }: { photo: Photo; onOpen: () => void }) {
   const [broken, setBroken] = useState(false);
   return <button type="button" className={`photo-tile${broken ? " photo-tile-broken" : ""}`} onClick={onOpen} aria-label={`Xem ảnh ${photo.name}`}>
@@ -265,6 +373,7 @@ function PhotoTile({ photo, onOpen }: { photo: Photo; onOpen: () => void }) {
       // Plain <img>: Cloudinary already serves resized thumbnails; next/image would proxy them through Vercel.
       // eslint-disable-next-line @next/next/no-img-element
       : <img src={photo.thumbUrl} alt={photo.name} loading="lazy" decoding="async" width={480} height={480} onError={() => setBroken(true)} />}
+    <span className="photo-tile-caption" aria-hidden="true">{photo.name}</span>
   </button>;
 }
 
@@ -449,16 +558,7 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
       </footer>
     </section>
 
-    <Presence show={confirmDelete}>{confirmDelete && <div className="modal-backdrop photo-confirm-backdrop" role="dialog" aria-modal="true" {...backdropDismissProps(() => setConfirmDelete(false))}>
-      <section className="confirm-modal">
-        <h2>Xóa ảnh này?</h2>
-        <p>Ảnh sẽ bị xóa vĩnh viễn trên Cloudinary và biến mất khỏi Kho ảnh.</p>
-        <div className="modal-actions confirm-actions">
-          <button type="button" className="secondary" onClick={() => setConfirmDelete(false)} disabled={busy}>Hủy</button>
-          <button type="button" className="primary photo-danger" onClick={() => void deletePhoto()} disabled={busy}>{busy ? "Đang xóa…" : "Xóa ảnh"}</button>
-        </div>
-      </section>
-    </div>}</Presence>
+    <Presence show={confirmDelete}>{confirmDelete && <PhotoDeleteConfirm busy={busy} onCancel={() => setConfirmDelete(false)} onConfirm={() => void deletePhoto()} />}</Presence>
   </div>;
 }
 
@@ -466,6 +566,16 @@ type UploadItem = { key: string; file: File; status: "pending" | "uploading" | "
 type SignedUpload = { uploadUrl: string; apiKey: string; signature: string; folder: string; timestamp: number; allowed_formats: string };
 
 const NEW_FOLDER = "__new__";
+type PhotoView = "grid" | "list";
+const VIEW_STORAGE_KEY = "kho-anh:view";
+// Remembered per browser; falls back to grid when storage is unavailable.
+const readStoredView = (): PhotoView => {
+  try {
+    return typeof window !== "undefined" && localStorage.getItem(VIEW_STORAGE_KEY) === "list" ? "list" : "grid";
+  } catch {
+    return "grid";
+  }
+};
 type PhotoSort = "newest" | "oldest" | "name_asc" | "name_desc";
 const SORT_OPTIONS: { value: PhotoSort; label: string }[] = [
   { value: "newest", label: "Mới nhất" },
