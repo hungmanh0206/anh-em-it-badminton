@@ -8,6 +8,13 @@
   gap: 14px;
 }
 
+/* Long titles wrap instead of pushing the upload button to its own line. */
+.photo-panel-head h2 {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+
 /* Toolbar: name search + category dropdown */
 .photo-toolbar {
   display: flex;
@@ -716,7 +723,7 @@
   .photo-pagination { justify-content: center; padding: 14px 16px 0; }
   .photo-pagination-meta { width: 100%; justify-content: space-between; }
   .photo-pagination-pages button { min-width: 34px; height: 34px; }
-  .photo-panel-head { flex-wrap: wrap; }
+  .photo-panel-head { flex-wrap: nowrap; }
 }
 
 @media (max-width: 560px) {
@@ -910,7 +917,10 @@
 }
 
 .photo-list-main small {
+  overflow: hidden;
   color: rgba(61, 53, 40, 0.6);
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 12px;
   font-weight: 600;
 }
@@ -918,6 +928,17 @@
 .photo-list-actions {
   display: flex;
   gap: 6px;
+}
+
+.photo-list-actions .photo-action-btn {
+  display: inline-grid;
+  place-items: center;
+}
+
+.photo-list-actions .photo-action-btn svg {
+  display: none;
+  width: 16px;
+  height: 16px;
 }
 
 .photo-list-error {
@@ -929,9 +950,11 @@
 
 @media (max-width: 800px) {
   .photo-list { margin: 0 16px; }
-  .photo-list-row { grid-template-columns: 48px minmax(0, 1fr); gap: 10px; padding: 10px; }
+  .photo-list-row { grid-template-columns: 48px minmax(0, 1fr) auto; gap: 10px; padding: 10px; }
   .photo-list-thumb { width: 48px; height: 48px; }
-  .photo-list-actions { grid-column: 2; }
+  .photo-list-actions .photo-action-btn { width: 34px; padding: 0; }
+  .photo-list-actions .photo-action-btn svg { display: block; }
+  .photo-list-actions .photo-action-btn span { display: none; }
   .photo-list-error { margin: 0 16px 10px; }
 }
 

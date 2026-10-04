@@ -203,7 +203,8 @@ export function PhotoGallery() {
 
     <section className="panel photo-panel" ref={panel}>
     <div className="panel-head photo-panel-head">
-      <div><h2>Những khoảnh khắc cùng anh em</h2></div>
+      <h2>Những khoảnh khắc cùng anh em</h2>
+      {canManage && <button type="button" className="primary photo-upload-btn" onClick={() => setUploadOpen(true)}>+ Tải ảnh</button>}
     </div>
 
     {(allCount > 0 || query || canManage) && <div className="photo-toolbar">
@@ -226,7 +227,6 @@ export function PhotoGallery() {
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="4" width="5" height="5" rx="1.5" /><rect x="10" y="5.5" width="11" height="2" rx="1" /><rect x="3" y="15" width="5" height="5" rx="1.5" /><rect x="10" y="16.5" width="11" height="2" rx="1" /></svg>
         </button>
       </div>
-      {canManage && <button type="button" className="primary photo-upload-btn" onClick={() => setUploadOpen(true)}>+ Tải ảnh</button>}
     </div>}
 
     {state === "loading" && <div className="photo-grid" aria-busy="true" aria-label="Đang tải ảnh">
@@ -402,8 +402,15 @@ function PhotoListRow({ photo, canManage, onOpen, onRename, onDelete }: { photo:
       <small>{photo.folderLabel} · {new Date(photo.takenAt).toLocaleDateString("vi-VN")}</small>
     </div>
     {canManage && <div className="photo-list-actions">
-      <button type="button" className="photo-action-btn" onClick={onRename}>Đổi tên</button>
-      <button type="button" className="photo-action-btn photo-action-danger" onClick={onDelete}>Xóa</button>
+      {/* Text on wide screens, icon only on phones (see photos.css). */}
+      <button type="button" className="photo-action-btn" onClick={onRename} title="Đổi tên" aria-label={`Đổi tên ảnh ${photo.name}`}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+        <span>Đổi tên</span>
+      </button>
+      <button type="button" className="photo-action-btn photo-action-danger" onClick={onDelete} title="Xóa" aria-label={`Xóa ảnh ${photo.name}`}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>
+        <span>Xóa</span>
+      </button>
     </div>}
   </li>;
 }
