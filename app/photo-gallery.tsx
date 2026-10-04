@@ -20,7 +20,7 @@ type Photo = {
   previewUrl: string;
   fullUrl: string;
 };
-type PhotoFolder = { folder: string; label: string; count: number; latestAt?: string };
+type PhotoFolder = { folder: string; label: string; count: number };
 type PhotoDiagnostics = { rootFolder: string; hint?: string; accountImages?: number; matching?: number; folders?: { name: string; count: number }[]; error?: string };
 type PhotoPage = { photos: Photo[]; page: number; pageCount: number; pageSize: number; total: number; folders: PhotoFolder[]; canManage: boolean; diagnostics?: PhotoDiagnostics; error?: string };
 type LoadState = "loading" | "ready" | "error";
@@ -57,12 +57,13 @@ export function PhotoGallery() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<PhotoSort>("newest");
   const requestId = useRef(0);
   const panel = useRef<HTMLElement | null>(null);
 
   // Loads one numbered page. `select` picks the photo to show in the preview afterwards
   // (used when the preview steps across a page boundary).
-  const loadPage = useCallback(async (folder: string | null, pageNumber: number, select?: "first" | "last" | number, q = "") => {
+  const loadPage = useCallback(async (folder: string | null, pageNumber: number, select?: "first" | "last" | number, q = "", sortBy: PhotoSort = "newest") => {
     const id = ++requestId.current;
     setError("");
     setPageLoading(true);
@@ -70,6 +71,7 @@ export function PhotoGallery() {
       const params = new URLSearchParams({ page: String(pageNumber) });
       if (folder !== null) params.set("folder", folder);
       if (q) params.set("q", q);
+      if (sortBy !== "newest") params.set("sort", sortBy);
       const result = await api<PhotoPage>(`/api/photos?${params.toString()}`);
       if (id !== requestId.current) return;
       setPhotos(result.photos);
@@ -106,14 +108,14 @@ export function PhotoGallery() {
     const timer = window.setTimeout(() => {
       setQuery(value);
       setPreviewIndex(null);
-      void loadPage(activeFolder, 1, undefined, value);
+      void loadPage(activeFolder, 1, undefined, value, sort);
     }, 350);
     return () => window.clearTimeout(timer);
-  }, [activeFolder, loadPage, query, search]);
+  }, [activeFolder, loadPage, query, search, sort]);
 
   const goToPage = (pageNumber: number) => {
     if (pageNumber < 1 || pageNumber > pageCount || pageNumber === page) return;
-    void loadPage(activeFolder, pageNumber, undefined, query);
+    void loadPage(activeFolder, pageNumber, undefined, query, sort);
     panel.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -121,7 +123,13 @@ export function PhotoGallery() {
     setActiveFolder(folder);
     setPreviewIndex(null);
     setState("loading");
-    void loadPage(folder, 1, undefined, query);
+    void loadPage(folder, 1, undefined, query, sort);
+  };
+
+  const selectSort = (value: PhotoSort) => {
+    setSort(value);
+    setPreviewIndex(null);
+    void loadPage(activeFolder, 1, undefined, query, value);
   };
 
   // Preview navigation that crosses into the previous/next page when needed.
@@ -129,17 +137,16 @@ export function PhotoGallery() {
     if (previewIndex === null) return;
     const next = previewIndex + delta;
     if (next >= 0 && next < photos.length) return setPreviewIndex(next);
-    if (next < 0 && page > 1) void loadPage(activeFolder, page - 1, "last", query);
-    if (next >= photos.length && page < pageCount) void loadPage(activeFolder, page + 1, "first", query);
+    if (next < 0 && page > 1) void loadPage(activeFolder, page - 1, "last", query, sort);
+    if (next >= photos.length && page < pageCount) void loadPage(activeFolder, page + 1, "first", query, sort);
   };
 
   // After a delete the current page is reloaded so it refills from the next page.
   const removePhoto = () => {
-    void loadPage(activeFolder, page, previewIndex ?? undefined, query);
+    void loadPage(activeFolder, page, previewIndex ?? undefined, query, sort);
   };
 
   const allCount = folders.reduce((sum, folder) => sum + folder.count, 0);
-  const latestAt = folders.reduce<string | null>((latest, folder) => (folder.latestAt && (!latest || folder.latestAt > latest) ? folder.latestAt : latest), null);
   const firstOnPage = (page - 1) * pageSize;
 
   return <div className="photo-page">
@@ -152,7 +159,6 @@ export function PhotoGallery() {
       <div className="elo-hero-stats" aria-label="Tổng quan kho ảnh">
         <div><span>Tổng ảnh</span><b>{allCount}</b></div>
         <div><span>Danh mục</span><b>{folders.length}</b></div>
-        <div><span>Mới nhất</span><b>{latestAt ? `${String(new Date(latestAt).getDate()).padStart(2, "0")}/${String(new Date(latestAt).getMonth() + 1).padStart(2, "0")}` : "—"}</b></div>
       </div>
     </section>
 
@@ -170,6 +176,9 @@ export function PhotoGallery() {
         <option value={ALL_FOLDERS}>Tất cả danh mục ({allCount})</option>
         {folders.map((folder) => <option key={folder.folder} value={folder.folder}>{folder.label} ({folder.count})</option>)}
       </select>
+      <select className="photo-sort-select" value={sort} onChange={(event) => selectSort(event.target.value as PhotoSort)} aria-label="Sắp xếp ảnh">
+        {SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select>
       {canManage && <button type="button" className="primary photo-upload-btn" onClick={() => setUploadOpen(true)}>+ Tải ảnh</button>}
     </div>}
 
@@ -179,7 +188,7 @@ export function PhotoGallery() {
 
     {state === "error" && <div className="photo-state photo-state-error" role="alert">
       <p>{error}</p>
-      <button type="button" className="soft-btn" onClick={() => void loadPage(activeFolder, page, undefined, query)}>Thử lại</button>
+      <button type="button" className="soft-btn" onClick={() => void loadPage(activeFolder, page, undefined, query, sort)}>Thử lại</button>
     </div>}
 
     {state === "ready" && photos.length === 0 && <div className="photo-state">
@@ -218,7 +227,7 @@ export function PhotoGallery() {
       onRenamed={(renamed) => setPhotos((current) => current.map((item) => (item.id === renamed.id ? renamed : item)))}
     />}</Presence>
 
-    <Presence show={uploadOpen}>{uploadOpen && <PhotoUploadModal folders={folders} defaultFolder={activeFolder ?? folders[0]?.folder ?? ""} onClose={() => setUploadOpen(false)} onUploaded={(folder) => { setActiveFolder(folder); setSearch(""); setQuery(""); void loadPage(folder, 1); }} />}</Presence>
+    <Presence show={uploadOpen}>{uploadOpen && <PhotoUploadModal folders={folders} defaultFolder={activeFolder ?? folders[0]?.folder ?? ""} onClose={() => setUploadOpen(false)} onUploaded={(folder) => { setActiveFolder(folder); setSearch(""); setQuery(""); void loadPage(folder, 1, undefined, "", sort); }} />}</Presence>
     </section>
   </div>;
 }
@@ -457,6 +466,13 @@ type UploadItem = { key: string; file: File; status: "pending" | "uploading" | "
 type SignedUpload = { uploadUrl: string; apiKey: string; signature: string; folder: string; timestamp: number; allowed_formats: string };
 
 const NEW_FOLDER = "__new__";
+type PhotoSort = "newest" | "oldest" | "name_asc" | "name_desc";
+const SORT_OPTIONS: { value: PhotoSort; label: string }[] = [
+  { value: "newest", label: "Mới nhất" },
+  { value: "oldest", label: "Cũ nhất" },
+  { value: "name_asc", label: "Tên A → Z" },
+  { value: "name_desc", label: "Tên Z → A" },
+];
 // The preview stage is at most ~1000px wide.
 const PREVIEW_SIZES = "(max-width: 1000px) 100vw, 1000px";
 const ALL_FOLDERS = "__all__";

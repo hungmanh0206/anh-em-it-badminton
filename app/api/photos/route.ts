@@ -10,7 +10,16 @@ export const maxDuration = 60;
 
 const PHOTO_PAGE_SIZE = 18;
 
-// GET /api/photos?folder=<relative folder>&page=<1-based>&q=<name search>
+// Sort options; `id` breaks ties so the order (and pagination) stays stable.
+const SORTS = {
+  newest: [["taken_at", false], ["id", false]],
+  oldest: [["taken_at", true], ["id", true]],
+  name_asc: [["display_name", true], ["id", true]],
+  name_desc: [["display_name", false], ["id", false]],
+} as const;
+type PhotoSort = keyof typeof SORTS;
+
+// GET /api/photos?folder=<relative folder>&page=<1-based>&q=<name search>&sort=newest|oldest|name_asc|name_desc
 // Numbered pages of PHOTO_PAGE_SIZE photos, newest first (taken_at, id keeps the order stable).
 // Every response carries the total, the page count and the categories for the filter chips.
 export async function GET(request: Request) {
@@ -22,6 +31,8 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const folder = url.searchParams.get("folder");
     const requestedPage = Math.max(1, Math.floor(Number(url.searchParams.get("page")) || 1));
+    const sortParam = url.searchParams.get("sort") ?? "newest";
+    const sort: PhotoSort = sortParam in SORTS ? sortParam as PhotoSort : "newest";
     // Case-insensitive "contains" match on the display name; LIKE wildcards in the input are literal.
     const search = (url.searchParams.get("q") ?? "").normalize("NFC").trim().slice(0, 100);
     const namePattern = search ? `%${search.replace(/[\\%_]/g, (char) => `\\${char}`)}%` : null;
@@ -54,7 +65,7 @@ export async function GET(request: Request) {
     if (namePattern) pageQuery = pageQuery.ilike("display_name", namePattern);
     const { data, error } = total === 0
       ? { data: [], error: null }
-      : await pageQuery.order("taken_at", { ascending: false }).order("id", { ascending: false }).range(from, from + PHOTO_PAGE_SIZE - 1);
+      : await SORTS[sort].reduce((query, [column, ascending]) => query.order(column, { ascending }), pageQuery).range(from, from + PHOTO_PAGE_SIZE - 1);
     if (error) throw photosDbError(error);
 
     // Empty gallery: tell admins what Cloudinary holds so a wrong root folder or API key is obvious.
@@ -66,7 +77,7 @@ export async function GET(request: Request) {
       pageCount,
       pageSize: PHOTO_PAGE_SIZE,
       total,
-      folders: ((folders.data || []) as { folder: string; photo_count: number; latest_taken_at: string }[]).map((row) => ({ folder: row.folder, label: folderLabel(row.folder), count: row.photo_count, latestAt: row.latest_taken_at })),
+      folders: ((folders.data || []) as { folder: string; photo_count: number }[]).map((row) => ({ folder: row.folder, label: folderLabel(row.folder), count: row.photo_count })),
       canManage: profile.role === "admin",
       ...(diagnostics ? { diagnostics } : {}),
     }, { headers: { "Cache-Control": "private, no-store" } });

@@ -34,7 +34,8 @@
 }
 
 .photo-search input,
-.photo-folder-select {
+.photo-folder-select,
+.photo-sort-select {
   height: 38px;
   border: 1px solid rgba(30, 25, 18, 0.14);
   border-radius: 10px;
@@ -48,6 +49,12 @@
 .photo-search input {
   width: 100%;
   padding: 0 14px 0 36px;
+}
+
+.photo-sort-select {
+  flex: 0 0 auto;
+  padding: 0 10px;
+  cursor: pointer;
 }
 
 .photo-folder-select {
@@ -67,7 +74,8 @@
 }
 
 .photo-search input:focus,
-.photo-folder-select:focus {
+.photo-folder-select:focus,
+.photo-sort-select:focus {
   border-color: #e9a800;
   outline: none;
   box-shadow: 0 0 0 3px rgba(255, 183, 0, 0.2);
@@ -696,7 +704,8 @@
 @media (max-width: 800px) {
   .photo-toolbar { padding: 0 16px 14px; }
   .photo-search { flex: 1 1 100%; }
-  .photo-folder-select { flex: 1 1 0; }
+  .photo-folder-select { flex: 1 1 100%; }
+  .photo-sort-select { flex: 1 1 0; }
   .photo-grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; padding: 0 16px; }
   .photo-tile { border-radius: 8px; }
   .photo-state { margin: 0 16px; }
@@ -748,4 +757,9 @@
 .photo-page {
   display: grid;
   gap: 16px;
+}
+
+/* The gallery hero has two stats (total, categories) instead of the ELO hero's three. */
+.photo-hero-panel .elo-hero-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 }
