@@ -73,27 +73,22 @@ export async function getResourceByPublicId(config: CloudinaryConfig, publicId: 
   return await response.json() as CloudinaryResource;
 }
 
-// Search expression for every image inside the root folder (works for fixed and dynamic folder modes).
-const rootExpression = (rootFolder: string) => rootFolder
-  ? `resource_type:image AND type:upload AND (folder="${rootFolder}" OR folder="${rootFolder}/*")`
-  : "resource_type:image AND type:upload";
+// Folder search fields differ between fixed and dynamic folder accounts, so every uploaded image
+// is listed and filtered by folder in code (relativeFolder); fine for a club-sized account.
+const IMAGE_EXPRESSION = "resource_type:image AND type:upload";
 
 async function searchPage(config: CloudinaryConfig, maxResults: number, nextCursor?: string) {
   const response = await cloudinaryFetch(config, "/resources/search", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ expression: rootExpression(config.rootFolder), max_results: maxResults, sort_by: [{ created_at: "desc" }], ...(nextCursor ? { next_cursor: nextCursor } : {}) }),
+    body: JSON.stringify({ expression: IMAGE_EXPRESSION, max_results: maxResults, sort_by: [{ created_at: "desc" }], ...(nextCursor ? { next_cursor: nextCursor } : {}) }),
   });
   if (!response.ok) throw await cloudinaryError(response, "Không tìm được danh sách ảnh trên Cloudinary.");
   return await response.json() as { total_count: number; resources: CloudinaryResource[]; next_cursor?: string };
 }
 
-export async function countRootImages(config: CloudinaryConfig) {
-  return (await searchPage(config, 1)).total_count;
-}
-
-// Every image in the root folder, 500 per request.
-export async function listRootImages(config: CloudinaryConfig) {
+// Every uploaded image in the account, 500 per request (callers filter by root folder).
+export async function listAllImages(config: CloudinaryConfig) {
   const all: CloudinaryResource[] = [];
   let cursor: string | undefined;
   do {

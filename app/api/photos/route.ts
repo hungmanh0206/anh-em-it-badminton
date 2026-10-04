@@ -1,9 +1,13 @@
+import { after } from "next/server";
 import { getCloudinaryConfig, requireCloudinaryConfig } from "@/lib/cloudinary";
 import { decodeCursor, encodeCursor } from "@/lib/photos/assets";
 import { folderLabel } from "@/lib/photos/folders";
 import { PHOTO_COLUMNS, photosDbError, toApiPhoto, type PhotoRow } from "@/lib/photos/repository";
-import { refreshAssets } from "@/lib/photos/sync";
+import { autoSyncMode, lastSyncedAt, refreshAssets, runFullSync } from "@/lib/photos/sync";
 import { ApiError, jsonError, requireAdmin, requireUser } from "@/lib/supabase-admin";
+
+// The first gallery load may run a full Cloudinary sync inline (empty index).
+export const maxDuration = 60;
 
 const PAGE_SIZE = 24;
 const MAX_PAGE_SIZE = 60;
@@ -30,6 +34,12 @@ export async function GET(request: Request) {
     const pageQuery = query.order("taken_at", { ascending: false }).order("id", { ascending: false }).limit(limit + 1);
 
     const firstPage = !cursor;
+    if (firstPage) {
+      const mode = autoSyncMode(await lastSyncedAt(admin));
+      const sync = () => runFullSync(admin, config).catch((syncError) => console.error("Photo auto-sync failed", syncError instanceof Error ? syncError.message : syncError));
+      if (mode === "now") await sync();
+      else if (mode === "background") after(sync);
+    }
     const [page, folders, total] = await Promise.all([
       pageQuery,
       firstPage ? admin.from("photo_folders").select("folder, photo_count, latest_taken_at").order("latest_taken_at", { ascending: false }) : Promise.resolve(null),

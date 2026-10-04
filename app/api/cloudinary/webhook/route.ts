@@ -24,7 +24,10 @@ export async function POST(request: Request) {
       signature: request.headers.get("x-cld-signature"),
       apiSecret: config.apiSecret,
     });
-    if (!verification.ok) return Response.json({ error: "Invalid signature" }, { status: 401 });
+    if (!verification.ok) {
+      console.warn("Cloudinary webhook rejected", { reason: verification.reason, hasSignature: Boolean(request.headers.get("x-cld-signature")), timestamp: request.headers.get("x-cld-timestamp"), serverTime: Math.floor(Date.now() / 1000) });
+      return Response.json({ error: "Invalid signature" }, { status: 401 });
+    }
 
     let payload: unknown;
     try {

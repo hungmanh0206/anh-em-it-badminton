@@ -50,7 +50,6 @@ export function PhotoGallery() {
   const [canManage, setCanManage] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [syncOpen, setSyncOpen] = useState(false);
   const requestId = useRef(0);
   const sentinel = useRef<HTMLDivElement | null>(null);
 
@@ -135,7 +134,6 @@ export function PhotoGallery() {
     <div className="panel-head photo-panel-head">
       <div><h2>Kho ảnh</h2><p>Ảnh các buổi chơi và sự kiện của CLB.</p></div>
       {canManage && <div className="photo-head-actions">
-        <button type="button" className="soft-btn" onClick={() => setSyncOpen(true)}>Đồng bộ</button>
         <button type="button" className="primary" onClick={() => setUploadOpen(true)}>+ Tải ảnh</button>
       </div>}
     </div>
@@ -184,7 +182,6 @@ export function PhotoGallery() {
     />}</Presence>
 
     <Presence show={uploadOpen}>{uploadOpen && <PhotoUploadModal folders={folders} defaultFolder={activeFolder ?? folders[0]?.folder ?? ""} onClose={() => setUploadOpen(false)} onUploaded={(folder) => refreshAfterChange(folder)} />}</Presence>
-    <Presence show={syncOpen}>{syncOpen && <PhotoSyncModal onClose={() => setSyncOpen(false)} onSynced={() => refreshAfterChange()} />}</Presence>
   </section>;
 }
 
@@ -443,62 +440,6 @@ function PhotoUploadModal({ folders, defaultFolder, onClose, onUploaded }: { fol
       <div className="modal-actions photo-sheet-footer">
         <button type="button" className="secondary" onClick={onClose} disabled={busy}>{doneCount ? "Đóng" : "Hủy"}</button>
         <button type="button" className="primary" onClick={() => void start()} disabled={busy || !pendingCount}>{busy ? "Đang tải…" : `Tải lên${pendingCount ? ` ${pendingCount} ảnh` : ""}`}</button>
-      </div>
-    </section>
-  </div>;
-}
-
-type SyncStatus = { cloudinaryCount: number; supabaseCount: number; rootFolder?: string };
-type SyncResult = SyncStatus & { created: number; updated: number; deactivated: number; skippedDeactivation: boolean };
-
-function PhotoSyncModal({ onClose, onSynced }: { onClose: () => void; onSynced: () => void }) {
-  const [status, setStatus] = useState<SyncStatus | null>(null);
-  const [result, setResult] = useState<SyncResult | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [syncError, setSyncError] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    api<SyncStatus>("/api/photos/sync")
-      .then((value) => { if (!cancelled) setStatus(value); })
-      .catch((statusError) => { if (!cancelled) setSyncError(statusError instanceof Error ? statusError.message : "Không đọc được trạng thái."); });
-    return () => { cancelled = true; };
-  }, []);
-
-  const run = async () => {
-    setBusy(true);
-    setSyncError("");
-    try {
-      const value = await api<SyncResult>("/api/photos/sync", { method: "POST" });
-      setResult(value);
-      setStatus({ cloudinaryCount: value.cloudinaryCount, supabaseCount: value.supabaseCount, rootFolder: status?.rootFolder });
-      onSynced();
-    } catch (runError) {
-      setSyncError(runError instanceof Error ? runError.message : "Đồng bộ thất bại.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="photo-sync-title" {...backdropDismissProps(() => { if (!busy) onClose(); })}>
-    <section className="photo-sheet photo-sync-sheet">
-      <header className="photo-sheet-header">
-        <p className="eyebrow">KHO ẢNH</p>
-        <h2 id="photo-sync-title">Đồng bộ kho ảnh</h2>
-        <button type="button" className="modal-close" onClick={onClose} disabled={busy} aria-label="Đóng">×</button>
-      </header>
-      <div className="photo-sheet-body">
-        <p className="photo-sync-lead">Cloudinary là nguồn gốc. Đồng bộ sẽ thêm ảnh còn thiếu, cập nhật ảnh thay đổi và ẩn ảnh đã bị xóa trên Cloudinary. Chạy nhiều lần không tạo trùng.</p>
-        <div className="photo-sync-counts">
-          <div><span>Cloudinary{status?.rootFolder ? ` (${status.rootFolder})` : ""}</span><b>{status ? status.cloudinaryCount : "…"}</b></div>
-          <div><span>Kho ảnh (Supabase)</span><b>{status ? status.supabaseCount : "…"}</b></div>
-        </div>
-        {result && <p className="photo-sync-result">Đã đồng bộ: thêm {result.created}, cập nhật {result.updated}, ẩn {result.deactivated} ảnh.{result.skippedDeactivation ? " Cloudinary không trả về ảnh nào nên không ẩn ảnh nào để tránh mất dữ liệu — kiểm tra lại cấu hình thư mục." : ""}</p>}
-        {syncError && <p className="photo-form-error" role="alert">{syncError}</p>}
-      </div>
-      <div className="modal-actions photo-sheet-footer">
-        <button type="button" className="secondary" onClick={onClose} disabled={busy}>Đóng</button>
-        <button type="button" className="primary" onClick={() => void run()} disabled={busy}>{busy ? "Đang đồng bộ…" : "Đồng bộ ngay"}</button>
       </div>
     </section>
   </div>;

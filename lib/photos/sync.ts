@@ -2,7 +2,7 @@
 // re-reads assets from Cloudinary and only writes to Supabase, so nothing here can trigger
 // another Cloudinary change (no webhook loops). All operations are idempotent.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getResourceByAssetId, listRootImages, type CloudinaryConfig } from "@/lib/cloudinary";
+import { getResourceByAssetId, listAllImages, type CloudinaryConfig } from "@/lib/cloudinary";
 import { resourceToPhotoRow } from "@/lib/photos/assets";
 import { markPhotosDeleted, photosDbError, upsertPhotoRows } from "@/lib/photos/repository";
 
@@ -46,7 +46,7 @@ async function activeAssetIds(admin: SupabaseClient) {
 
 // Full reconciliation: create missing rows, refresh changed ones, deactivate assets deleted on Cloudinary.
 export async function runFullSync(admin: SupabaseClient, config: CloudinaryConfig) {
-  const resources = await listRootImages(config);
+  const resources = await listAllImages(config);
   const rows = resources.map((resource) => resourceToPhotoRow(resource, config.rootFolder)).filter((row): row is NonNullable<typeof row> => Boolean(row));
   const before = await activeAssetIds(admin);
   const known = new Set(before.map((row) => row.cloudinary_asset_id));
@@ -70,6 +70,25 @@ export async function runFullSync(admin: SupabaseClient, config: CloudinaryConfi
     deactivated: skippedDeactivation ? 0 : missing.length,
     skippedDeactivation,
   };
+}
+
+// Automatic reconciliation (no admin button): the gallery triggers a sync when the last one is
+// older than AUTO_SYNC_INTERVAL_MS. Webhooks stay the primary path; this catches missed events.
+const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000;
+let lastAutoSyncAttempt = 0;
+
+export async function lastSyncedAt(admin: SupabaseClient) {
+  const { data, error } = await admin.from("photos").select("synced_at").order("synced_at", { ascending: false }).limit(1);
+  if (error) throw photosDbError(error);
+  return data?.[0]?.synced_at ? Date.parse(data[0].synced_at) : null;
+}
+
+// "now" = sync before answering (empty index), "background" = sync after the response, null = fresh.
+export function autoSyncMode(lastSynced: number | null, now = Date.now()): "now" | "background" | null {
+  if (now - lastAutoSyncAttempt < AUTO_SYNC_INTERVAL_MS) return null;
+  if (lastSynced !== null && now - lastSynced < AUTO_SYNC_INTERVAL_MS) return null;
+  lastAutoSyncAttempt = now;
+  return lastSynced === null ? "now" : "background";
 }
 
 export async function countActivePhotos(admin: SupabaseClient) {

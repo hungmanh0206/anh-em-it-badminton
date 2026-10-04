@@ -497,38 +497,6 @@
   transition: width 200ms ease;
 }
 
-.photo-sync-lead {
-  margin: 0;
-  color: #5d5446;
-  font-size: 13.5px;
-  line-height: 1.6;
-}
-
-.photo-sync-counts {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.photo-sync-counts div {
-  display: grid;
-  gap: 4px;
-  padding: 14px;
-  border: 1px solid rgba(30, 25, 18, 0.1);
-  border-radius: 12px;
-  background: #fffdf8;
-}
-
-.photo-sync-counts span { color: #6b6252; font-size: 12px; font-weight: 700; }
-.photo-sync-counts b { font-size: 24px; font-variant-numeric: tabular-nums; }
-
-.photo-sync-result {
-  margin: 0;
-  color: #1f6b47;
-  font-size: 13px;
-  font-weight: 700;
-}
-
 @media (max-width: 800px) {
   .photo-filters { padding: 0 16px 14px; }
   .photo-grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; padding: 0 16px; }
