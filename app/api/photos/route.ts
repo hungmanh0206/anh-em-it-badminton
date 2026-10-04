@@ -8,7 +8,10 @@ import { ApiError, jsonError, requireAdmin, requireUser } from "@/lib/supabase-a
 // The gallery load may run a full Cloudinary sync inline (empty index).
 export const maxDuration = 60;
 
-const PHOTO_PAGE_SIZE = 18;
+// Page sizes offered by the gallery (grid 18/36/100, list 10/20/50); "all" is capped for safety.
+const PHOTO_PAGE_SIZES = [10, 18, 20, 36, 50, 100];
+const DEFAULT_PAGE_SIZE = 18;
+const ALL_PAGE_SIZE = 1000;
 
 // Sort options; `id` breaks ties so the order (and pagination) stays stable.
 const SORTS = {
@@ -19,8 +22,8 @@ const SORTS = {
 } as const;
 type PhotoSort = keyof typeof SORTS;
 
-// GET /api/photos?folder=<relative folder>&page=<1-based>&q=<name search>&sort=newest|oldest|name_asc|name_desc
-// Numbered pages of PHOTO_PAGE_SIZE photos, newest first (taken_at, id keeps the order stable).
+// GET /api/photos?folder=<relative folder>&page=<1-based>&q=<name search>&sort=newest|oldest|name_asc|name_desc&size=<n>|all
+// Numbered pages of `size` photos (default 18), newest first (taken_at, id keeps the order stable).
 // Every response carries the total, the page count and the categories for the filter chips.
 export async function GET(request: Request) {
   try {
@@ -33,6 +36,8 @@ export async function GET(request: Request) {
     const requestedPage = Math.max(1, Math.floor(Number(url.searchParams.get("page")) || 1));
     const sortParam = url.searchParams.get("sort") ?? "newest";
     const sort: PhotoSort = sortParam in SORTS ? sortParam as PhotoSort : "newest";
+    const sizeParam = url.searchParams.get("size");
+    const pageSize = sizeParam === "all" ? ALL_PAGE_SIZE : PHOTO_PAGE_SIZES.includes(Number(sizeParam)) ? Number(sizeParam) : DEFAULT_PAGE_SIZE;
     // Case-insensitive "contains" match on the display name; LIKE wildcards in the input are literal.
     const search = (url.searchParams.get("q") ?? "").normalize("NFC").trim().slice(0, 100);
     const namePattern = search ? `%${search.replace(/[\\%_]/g, (char) => `\\${char}`)}%` : null;
@@ -55,17 +60,17 @@ export async function GET(request: Request) {
     if (folders.error) throw photosDbError(folders.error);
 
     const total = totalResult.count ?? 0;
-    const pageCount = Math.max(1, Math.ceil(total / PHOTO_PAGE_SIZE));
+    const pageCount = Math.max(1, Math.ceil(total / pageSize));
     // Asking past the end (e.g. after deleting the last photo of a page) returns the last page.
     const page = Math.min(requestedPage, pageCount);
-    const from = (page - 1) * PHOTO_PAGE_SIZE;
+    const from = (page - 1) * pageSize;
 
     let pageQuery = admin.from("photos").select(PHOTO_COLUMNS).eq("is_deleted", false);
     if (folder !== null) pageQuery = pageQuery.eq("folder", folder);
     if (namePattern) pageQuery = pageQuery.ilike("display_name", namePattern);
     const { data, error } = total === 0
       ? { data: [], error: null }
-      : await SORTS[sort].reduce((query, [column, ascending]) => query.order(column, { ascending }), pageQuery).range(from, from + PHOTO_PAGE_SIZE - 1);
+      : await SORTS[sort].reduce((query, [column, ascending]) => query.order(column, { ascending }), pageQuery).range(from, from + pageSize - 1);
     if (error) throw photosDbError(error);
 
     // Empty gallery: tell admins what Cloudinary holds so a wrong root folder or API key is obvious.
@@ -75,7 +80,7 @@ export async function GET(request: Request) {
       photos: ((data || []) as PhotoRow[]).map((row) => toApiPhoto(config.cloudName, row)),
       page,
       pageCount,
-      pageSize: PHOTO_PAGE_SIZE,
+      pageSize,
       total,
       folders: ((folders.data || []) as { folder: string; photo_count: number }[]).map((row) => ({ folder: row.folder, label: folderLabel(row.folder), count: row.photo_count })),
       canManage: profile.role === "admin",

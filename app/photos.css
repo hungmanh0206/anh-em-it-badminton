@@ -160,6 +160,32 @@
   padding: 18px 25px 0;
 }
 
+.photo-pagination-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.photo-size-select {
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid rgba(30, 25, 18, 0.14);
+  border-radius: 10px;
+  background: #fff;
+  color: #3d3528;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.photo-size-select:focus {
+  border-color: #e9a800;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 183, 0, 0.18);
+}
+
 .photo-pagination-info {
   color: rgba(61, 53, 40, 0.65);
   font-size: 13px;
@@ -291,29 +317,6 @@
   position: absolute !important;
   top: 14px !important;
   right: 16px !important;
-}
-
-.photo-rename {
-  display: flex;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-.photo-rename input {
-  flex: 1;
-  min-width: 0;
-  padding: 9px 12px;
-  border: 1px solid #e9a800;
-  border-radius: 10px;
-  font: inherit;
-  font-weight: 700;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 183, 0, 0.18);
-}
-
-.photo-rename button {
-  flex: 0 0 auto;
-  padding: 9px 14px !important;
 }
 
 /* Fixed-height stage; the image fills it with object-fit: contain, so any aspect ratio
@@ -711,7 +714,7 @@
   .photo-tile { border-radius: 8px; }
   .photo-state { margin: 0 16px; }
   .photo-pagination { justify-content: center; padding: 14px 16px 0; }
-  .photo-pagination-info { width: 100%; text-align: center; }
+  .photo-pagination-meta { width: 100%; justify-content: space-between; }
   .photo-pagination-pages button { min-width: 34px; height: 34px; }
   .photo-panel-head { flex-wrap: wrap; }
 }
@@ -912,22 +915,6 @@
   font-weight: 600;
 }
 
-.photo-list-rename {
-  margin: 0;
-}
-
-.photo-list-rename input {
-  height: 34px;
-  padding: 0 10px;
-  font-size: 13.5px;
-}
-
-.photo-action-primary {
-  border-color: #e9a800;
-  background: linear-gradient(180deg, #ffd24d 0%, #ffb700 100%);
-  color: #1a1408;
-}
-
 .photo-list-actions {
   display: flex;
   gap: 6px;
@@ -946,4 +933,99 @@
   .photo-list-thumb { width: 48px; height: 48px; }
   .photo-list-actions { grid-column: 2; }
   .photo-list-error { margin: 0 16px 10px; }
+}
+
+/* Rename dialog: small thumbnail + one field */
+.photo-rename-modal {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 420px);
+  padding: 22px;
+  border: 1px solid rgba(30, 25, 18, 0.1);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(13, 9, 32, 0.28);
+  text-align: left;
+}
+
+.photo-rename-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.photo-rename-thumb {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: #f3eee3;
+  color: rgba(61, 53, 40, 0.5);
+}
+
+.photo-rename-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-rename-head h2 {
+  margin: 0;
+  color: #17140f;
+  font-size: 17px;
+  font-weight: 850;
+}
+
+.photo-rename-head p {
+  margin: 3px 0 0;
+  color: rgba(61, 53, 40, 0.6);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.photo-rename-field {
+  display: grid;
+  gap: 6px;
+}
+
+.photo-rename-field span {
+  color: rgba(61, 53, 40, 0.7);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.photo-rename-field input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(30, 25, 18, 0.18);
+  border-radius: 10px;
+  color: #17140f;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  outline: none;
+}
+
+.photo-rename-field input:focus {
+  border-color: #e9a800;
+  box-shadow: 0 0 0 3px rgba(255, 183, 0, 0.18);
+}
+
+.photo-rename-modal .photo-preview-error {
+  margin: -6px 0 0;
+}
+
+.photo-rename-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.photo-rename-actions button {
+  min-width: 88px;
 }

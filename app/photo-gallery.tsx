@@ -43,7 +43,6 @@ export function PhotoGallery() {
   preconnect("https://res.cloudinary.com");
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [folders, setFolders] = useState<PhotoFolder[]>([]);
-  const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(1);
@@ -56,9 +55,12 @@ export function PhotoGallery() {
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<PhotoSort>("newest");
   const [view, setView] = useState<PhotoView>(readStoredView);
+  const [pageSizes, setPageSizes] = useState<PageSizes>(readStoredPageSizes);
+  // What the current page was loaded with; every reload passes it (or a changed copy) back to loadPage.
+  const [filters, setFilters] = useState<PhotoFilters>(initialFilters);
+  const { folder: activeFolder, q: query, sort } = filters;
+  const [renameTarget, setRenameTarget] = useState<Photo | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Photo | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [listError, setListError] = useState("");
@@ -67,15 +69,16 @@ export function PhotoGallery() {
 
   // Loads one numbered page. `select` picks the photo to show in the preview afterwards
   // (used when the preview steps across a page boundary).
-  const loadPage = useCallback(async (folder: string | null, pageNumber: number, select?: "first" | "last" | number, q = "", sortBy: PhotoSort = "newest") => {
+  const loadPage = useCallback(async (next: PhotoFilters, pageNumber: number, select?: "first" | "last" | number) => {
     const id = ++requestId.current;
+    setFilters(next);
     setError("");
     setPageLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(pageNumber) });
-      if (folder !== null) params.set("folder", folder);
-      if (q) params.set("q", q);
-      if (sortBy !== "newest") params.set("sort", sortBy);
+      const params = new URLSearchParams({ page: String(pageNumber), size: String(next.size) });
+      if (next.folder !== null) params.set("folder", next.folder);
+      if (next.q) params.set("q", next.q);
+      if (next.sort !== "newest") params.set("sort", next.sort);
       const result = await api<PhotoPage>(`/api/photos?${params.toString()}`);
       if (id !== requestId.current) return;
       setPhotos(result.photos);
@@ -102,37 +105,47 @@ export function PhotoGallery() {
   useEffect(() => {
     // Initial fetch; state updates happen after the request resolves.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadPage(null, 1);
+    void loadPage(initialFilters(), 1);
   }, [loadPage]);
 
   // Search as you type, after a short pause; results always start from page 1.
   useEffect(() => {
     const value = search.trim();
-    if (value === query) return;
+    if (value === filters.q) return;
     const timer = window.setTimeout(() => {
-      setQuery(value);
       setPreviewIndex(null);
-      void loadPage(activeFolder, 1, undefined, value, sort);
+      void loadPage({ ...filters, q: value }, 1);
     }, 350);
     return () => window.clearTimeout(timer);
-  }, [activeFolder, loadPage, query, search, sort]);
+  }, [filters, loadPage, search]);
 
   const goToPage = (pageNumber: number) => {
     if (pageNumber < 1 || pageNumber > pageCount || pageNumber === page) return;
-    void loadPage(activeFolder, pageNumber, undefined, query, sort);
+    void loadPage(filters, pageNumber);
     panel.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const selectFolder = (folder: string | null) => {
-    setActiveFolder(folder);
     setPreviewIndex(null);
     setState("loading");
-    void loadPage(folder, 1, undefined, query, sort);
+    void loadPage({ ...filters, folder }, 1);
   };
 
+  // Each view keeps its own page size (list 10/20/50, grid 18/36/100, or all).
   const selectView = (value: PhotoView) => {
+    if (value === view) return;
     setView(value);
+    setPreviewIndex(null);
     try { localStorage.setItem(VIEW_STORAGE_KEY, value); } catch { /* storage unavailable: keep in memory */ }
+    void loadPage({ ...filters, size: pageSizes[value] }, 1);
+  };
+
+  const selectPageSize = (size: PhotoPageSize) => {
+    const next = { ...pageSizes, [view]: size };
+    setPageSizes(next);
+    setPreviewIndex(null);
+    try { localStorage.setItem(PAGE_SIZE_STORAGE_KEY, JSON.stringify(next)); } catch { /* storage unavailable: keep in memory */ }
+    void loadPage({ ...filters, size }, 1);
   };
 
   const confirmListDelete = async () => {
@@ -142,7 +155,7 @@ export function PhotoGallery() {
     try {
       await api(`/api/photos/${deleteTarget.id}`, { method: "DELETE" });
       setDeleteTarget(null);
-      void loadPage(activeFolder, page, undefined, query, sort);
+      void loadPage(filters, page);
     } catch (deleteError) {
       setDeleteTarget(null);
       setListError(deleteError instanceof Error ? deleteError.message : "Không xóa được ảnh.");
@@ -154,9 +167,8 @@ export function PhotoGallery() {
   const replacePhoto = (renamed: Photo) => setPhotos((current) => current.map((item) => (item.id === renamed.id ? renamed : item)));
 
   const selectSort = (value: PhotoSort) => {
-    setSort(value);
     setPreviewIndex(null);
-    void loadPage(activeFolder, 1, undefined, query, value);
+    void loadPage({ ...filters, sort: value }, 1);
   };
 
   // Preview navigation that crosses into the previous/next page when needed.
@@ -164,13 +176,13 @@ export function PhotoGallery() {
     if (previewIndex === null) return;
     const next = previewIndex + delta;
     if (next >= 0 && next < photos.length) return setPreviewIndex(next);
-    if (next < 0 && page > 1) void loadPage(activeFolder, page - 1, "last", query, sort);
-    if (next >= photos.length && page < pageCount) void loadPage(activeFolder, page + 1, "first", query, sort);
+    if (next < 0 && page > 1) void loadPage(filters, page - 1, "last");
+    if (next >= photos.length && page < pageCount) void loadPage(filters, page + 1, "first");
   };
 
   // After a delete the current page is reloaded so it refills from the next page.
   const removePhoto = () => {
-    void loadPage(activeFolder, page, previewIndex ?? undefined, query, sort);
+    void loadPage(filters, page, previewIndex ?? undefined);
   };
 
   const allCount = folders.reduce((sum, folder) => sum + folder.count, 0);
@@ -223,7 +235,7 @@ export function PhotoGallery() {
 
     {state === "error" && <div className="photo-state photo-state-error" role="alert">
       <p>{error}</p>
-      <button type="button" className="soft-btn" onClick={() => void loadPage(activeFolder, page, undefined, query, sort)}>Thử lại</button>
+      <button type="button" className="soft-btn" onClick={() => void loadPage(filters, page)}>Thử lại</button>
     </div>}
 
     {state === "ready" && photos.length === 0 && <div className="photo-state">
@@ -248,9 +260,10 @@ export function PhotoGallery() {
           {photos.map((photo, index) => <PhotoTile key={photo.id} photo={photo} onOpen={() => setPreviewIndex(index)} />)}
         </div>
         : <ul className={`photo-list${pageLoading ? " is-loading" : ""}`} aria-busy={pageLoading}>
-          {photos.map((photo, index) => <PhotoListRow key={photo.id} photo={photo} canManage={canManage} onOpen={() => setPreviewIndex(index)} onRenamed={replacePhoto} onDelete={() => setDeleteTarget(photo)} />)}
+          {photos.map((photo, index) => <PhotoListRow key={photo.id} photo={photo} canManage={canManage} onOpen={() => setPreviewIndex(index)} onRename={() => setRenameTarget(photo)} onDelete={() => setDeleteTarget(photo)} />)}
         </ul>}
-      <PhotoPagination page={page} pageCount={pageCount} from={firstOnPage + 1} to={firstOnPage + photos.length} total={total} disabled={pageLoading} onPage={goToPage} />
+      <PhotoPagination page={page} pageCount={pageCount} from={firstOnPage + 1} to={firstOnPage + photos.length} total={total} disabled={pageLoading} onPage={goToPage}
+        size={pageSizes[view]} sizeOptions={PAGE_SIZE_OPTIONS[view]} onSize={selectPageSize} />
     </>}
 
     <Presence show={previewIndex !== null && photos[previewIndex] !== undefined}>{previewIndex !== null && photos[previewIndex] && <PhotoPreview
@@ -267,9 +280,11 @@ export function PhotoGallery() {
       onRenamed={replacePhoto}
     />}</Presence>
 
+    <Presence show={renameTarget !== null}>{renameTarget && <PhotoRenameModal photo={renameTarget} onClose={() => setRenameTarget(null)} onRenamed={replacePhoto} />}</Presence>
+
     <Presence show={deleteTarget !== null}>{deleteTarget && <PhotoDeleteConfirm busy={deleting} onCancel={() => setDeleteTarget(null)} onConfirm={() => void confirmListDelete()} />}</Presence>
 
-    <Presence show={uploadOpen}>{uploadOpen && <PhotoUploadModal folders={folders} defaultFolder={activeFolder ?? folders[0]?.folder ?? ""} onClose={() => setUploadOpen(false)} onUploaded={(folder) => { setActiveFolder(folder); setSearch(""); setQuery(""); void loadPage(folder, 1, undefined, "", sort); }} />}</Presence>
+    <Presence show={uploadOpen}>{uploadOpen && <PhotoUploadModal folders={folders} defaultFolder={activeFolder ?? folders[0]?.folder ?? ""} onClose={() => setUploadOpen(false)} onUploaded={(folder) => { setSearch(""); void loadPage({ ...filters, folder, q: "" }, 1); }} />}</Presence>
     </section>
   </div>;
 }
@@ -286,9 +301,17 @@ function pageItems(page: number, pageCount: number): (number | "gap")[] {
   return items;
 }
 
-function PhotoPagination({ page, pageCount, from, to, total, disabled, onPage }: { page: number; pageCount: number; from: number; to: number; total: number; disabled: boolean; onPage: (page: number) => void }) {
+function PhotoPagination({ page, pageCount, from, to, total, disabled, onPage, size, sizeOptions, onSize }: {
+  page: number; pageCount: number; from: number; to: number; total: number; disabled: boolean; onPage: (page: number) => void;
+  size: PhotoPageSize; sizeOptions: PhotoPageSize[]; onSize: (size: PhotoPageSize) => void;
+}) {
   return <div className="photo-pagination" role="navigation" aria-label="Phân trang kho ảnh">
-    <span className="photo-pagination-info">{from}–{to} / {total} ảnh</span>
+    <div className="photo-pagination-meta">
+      <span className="photo-pagination-info">{from}–{to} / {total} ảnh</span>
+      <select className="photo-size-select" value={String(size)} onChange={(event) => onSize(event.target.value === "all" ? "all" : Number(event.target.value))} disabled={disabled} aria-label="Số ảnh mỗi trang">
+        {sizeOptions.map((option) => <option key={option} value={String(option)}>{option === "all" ? "Tất cả" : `${option} / trang`}</option>)}
+      </select>
+    </div>
     {pageCount > 1 && <div className="photo-pagination-pages">
       <button type="button" onClick={() => onPage(page - 1)} disabled={disabled || page <= 1} aria-label="Trang trước">‹</button>
       {pageItems(page, pageCount).map((item, index) => item === "gap"
@@ -312,32 +335,60 @@ function PhotoDeleteConfirm({ busy, onCancel, onConfirm }: { busy: boolean; onCa
   </div>;
 }
 
-// List view row: small thumbnail, name with folder/date, and (admins) inline rename + delete.
-function PhotoListRow({ photo, canManage, onOpen, onRenamed, onDelete }: { photo: Photo; canManage: boolean; onOpen: () => void; onRenamed: (photo: Photo) => void; onDelete: () => void }) {
-  const [editing, setEditing] = useState(false);
+// Small rename dialog (thumbnail + name field), shared by the list view and the preview.
+function PhotoRenameModal({ photo, onClose, onRenamed }: { photo: Photo; onClose: () => void; onRenamed: (photo: Photo) => void }) {
   const [draft, setDraft] = useState(photo.name);
   const [busy, setBusy] = useState(false);
-  const [rowError, setRowError] = useState("");
+  const [renameError, setRenameError] = useState("");
   const [broken, setBroken] = useState(false);
+  const name = draft.trim();
 
   const save = async () => {
-    const name = draft.trim();
-    if (!name || name === photo.name) {
-      setEditing(false);
-      return;
-    }
+    if (!name || name === photo.name) return onClose();
     setBusy(true);
-    setRowError("");
+    setRenameError("");
     try {
       const result = await api<{ photo: Photo }>(`/api/photos/${photo.id}`, { method: "PATCH", body: JSON.stringify({ name }) });
       onRenamed(result.photo);
-      setEditing(false);
-    } catch (renameError) {
-      setRowError(renameError instanceof Error ? renameError.message : "Không đổi được tên ảnh.");
+      onClose();
+    } catch (saveError) {
+      setRenameError(saveError instanceof Error ? saveError.message : "Không đổi được tên ảnh.");
     } finally {
       setBusy(false);
     }
   };
+
+  return <div className="modal-backdrop photo-confirm-backdrop" role="dialog" aria-modal="true" aria-label="Đổi tên ảnh" {...backdropDismissProps(() => { if (!busy) onClose(); })}>
+    <form className="photo-rename-modal" onSubmit={(event) => { event.preventDefault(); void save(); }}
+      onKeyDown={(event) => { if (event.key === "Escape" && !busy) { event.preventDefault(); event.stopPropagation(); onClose(); } }}>
+      <div className="photo-rename-head">
+        <span className="photo-rename-thumb">
+          {broken
+            ? <span aria-hidden="true">?</span>
+            // eslint-disable-next-line @next/next/no-img-element -- served straight from the Cloudinary CDN
+            : <img src={photo.thumbUrl} alt="" width={64} height={64} onError={() => setBroken(true)} />}
+        </span>
+        <div>
+          <h2>Đổi tên ảnh</h2>
+          <p>{photo.folderLabel} · {new Date(photo.takenAt).toLocaleDateString("vi-VN")}</p>
+        </div>
+      </div>
+      <label className="photo-rename-field">
+        <span>Tên ảnh</span>
+        <input value={draft} onChange={(event) => setDraft(event.target.value)} onFocus={(event) => event.currentTarget.select()} maxLength={100} autoFocus disabled={busy} />
+      </label>
+      {renameError && <p className="photo-preview-error" role="alert">{renameError}</p>}
+      <div className="photo-rename-actions">
+        <button type="button" className="secondary" onClick={onClose} disabled={busy}>Hủy</button>
+        <button type="submit" className="primary" disabled={busy || !name}>{busy ? "Đang lưu…" : "Lưu"}</button>
+      </div>
+    </form>
+  </div>;
+}
+
+// List view row: small thumbnail, name with folder/date, and (admins) rename + delete.
+function PhotoListRow({ photo, canManage, onOpen, onRename, onDelete }: { photo: Photo; canManage: boolean; onOpen: () => void; onRename: () => void; onDelete: () => void }) {
+  const [broken, setBroken] = useState(false);
 
   return <li className="photo-list-row">
     <button type="button" className="photo-list-thumb" onClick={onOpen} aria-label={`Xem ảnh ${photo.name}`}>
@@ -347,19 +398,11 @@ function PhotoListRow({ photo, canManage, onOpen, onRenamed, onDelete }: { photo
         : <img src={photo.thumbUrl} alt="" loading="lazy" decoding="async" width={56} height={56} onError={() => setBroken(true)} />}
     </button>
     <div className="photo-list-main">
-      {editing
-        ? <form className="photo-rename photo-list-rename" onSubmit={(event) => { event.preventDefault(); void save(); }}>
-          <input value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={100} autoFocus disabled={busy} aria-label="Tên ảnh mới"
-            onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); setEditing(false); setDraft(photo.name); } }} />
-          <button type="submit" className="photo-action-btn photo-action-primary" disabled={busy || !draft.trim()}>{busy ? "Đang lưu…" : "Lưu"}</button>
-          <button type="button" className="photo-action-btn" onClick={() => { setEditing(false); setDraft(photo.name); }} disabled={busy}>Hủy</button>
-        </form>
-        : <button type="button" className="photo-list-name" onClick={onOpen} title={photo.name}>{photo.name}</button>}
+      <button type="button" className="photo-list-name" onClick={onOpen} title={photo.name}>{photo.name}</button>
       <small>{photo.folderLabel} · {new Date(photo.takenAt).toLocaleDateString("vi-VN")}</small>
-      {rowError && <p className="photo-preview-error" role="alert">{rowError}</p>}
     </div>
-    {canManage && !editing && <div className="photo-list-actions">
-      <button type="button" className="photo-action-btn" onClick={() => { setDraft(photo.name); setRowError(""); setEditing(true); }}>Đổi tên</button>
+    {canManage && <div className="photo-list-actions">
+      <button type="button" className="photo-action-btn" onClick={onRename}>Đổi tên</button>
       <button type="button" className="photo-action-btn photo-action-danger" onClick={onDelete}>Xóa</button>
     </div>}
   </li>;
@@ -396,8 +439,7 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
-  const [editing, setEditing] = useState(false);
-  const [draftName, setDraftName] = useState("");
+  const [renaming, setRenaming] = useState(false);
   const [loadedId, setLoadedId] = useState<string | null>(null);
   const stage = useRef<HTMLDivElement | null>(null);
   // "native" = Fullscreen API, "overlay" = fixed CSS fallback (iPhone Safari has no element fullscreen).
@@ -406,7 +448,6 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
   const go = useCallback((delta: number) => {
     if ((delta < 0 && !canPrev) || (delta > 0 && !canNext)) return;
     setActionError("");
-    setEditing(false);
     onNavigate(delta);
   }, [canNext, canPrev, onNavigate]);
 
@@ -455,7 +496,7 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (confirmDelete || editing) return;
+      if (confirmDelete || renaming) return;
       if (event.key === "ArrowRight") go(1);
       else if (event.key === "ArrowLeft") go(-1);
       else if (event.key === "Escape") {
@@ -466,32 +507,7 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [confirmDelete, editing, fullscreenMode, go, onClose]);
-
-  const startRename = () => {
-    setDraftName(photo.name);
-    setActionError("");
-    setEditing(true);
-  };
-
-  const saveRename = async () => {
-    const name = draftName.trim();
-    if (!name || name === photo.name) {
-      setEditing(false);
-      return;
-    }
-    setBusy(true);
-    setActionError("");
-    try {
-      const result = await api<{ photo: Photo }>(`/api/photos/${photo.id}`, { method: "PATCH", body: JSON.stringify({ name }) });
-      onRenamed(result.photo);
-      setEditing(false);
-    } catch (renameError) {
-      setActionError(renameError instanceof Error ? renameError.message : "Không đổi được tên ảnh.");
-    } finally {
-      setBusy(false);
-    }
-  };
+  }, [confirmDelete, renaming, fullscreenMode, go, onClose]);
 
   const deletePhoto = async () => {
     setBusy(true);
@@ -508,18 +524,11 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
     }
   };
 
-  return <div className="modal-backdrop photo-preview-backdrop" role="dialog" aria-modal="true" aria-label={`Ảnh ${position} trên ${total}`} {...backdropDismissProps(() => { if (!busy && !editing) onClose(); })}>
+  return <div className="modal-backdrop photo-preview-backdrop" role="dialog" aria-modal="true" aria-label={`Ảnh ${position} trên ${total}`} {...backdropDismissProps(() => { if (!busy && !renaming) onClose(); })}>
     <section className="photo-preview">
       <header className="photo-preview-header">
         <p className="eyebrow">{photo.folderLabel} · {new Date(photo.takenAt).toLocaleDateString("vi-VN")}</p>
-        {editing
-          ? <form className="photo-rename" onSubmit={(event) => { event.preventDefault(); void saveRename(); }}>
-            <input value={draftName} onChange={(event) => setDraftName(event.target.value)} maxLength={100} autoFocus disabled={busy} aria-label="Tên ảnh mới"
-              onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); setEditing(false); } }} />
-            <button type="submit" className="primary" disabled={busy || !draftName.trim()}>{busy ? "Đang lưu…" : "Lưu"}</button>
-            <button type="button" className="secondary" onClick={() => setEditing(false)} disabled={busy}>Hủy</button>
-          </form>
-          : <h2 title={photo.name}>{photo.name}</h2>}
+        <h2 title={photo.name}>{photo.name}</h2>
         <button type="button" className="modal-close" onClick={onClose} aria-label="Đóng">×</button>
       </header>
 
@@ -551,14 +560,15 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
       <footer className="photo-preview-footer">
         <span className="photo-counter">{position} / {total}</span>
         {actionError && <p className="photo-preview-error" role="alert">{actionError}</p>}
-        {canManage && !editing && <div className="photo-preview-actions">
-          <button type="button" className="photo-action-btn" onClick={startRename} disabled={busy}>Đổi tên</button>
+        {canManage && <div className="photo-preview-actions">
+          <button type="button" className="photo-action-btn" onClick={() => { setActionError(""); setRenaming(true); }} disabled={busy}>Đổi tên</button>
           <button type="button" className="photo-action-btn photo-action-danger" onClick={() => setConfirmDelete(true)} disabled={busy}>Xóa ảnh</button>
         </div>}
       </footer>
     </section>
 
     <Presence show={confirmDelete}>{confirmDelete && <PhotoDeleteConfirm busy={busy} onCancel={() => setConfirmDelete(false)} onConfirm={() => void deletePhoto()} />}</Presence>
+    <Presence show={renaming}>{renaming && <PhotoRenameModal photo={photo} onClose={() => setRenaming(false)} onRenamed={onRenamed} />}</Presence>
   </div>;
 }
 
@@ -577,6 +587,22 @@ const readStoredView = (): PhotoView => {
   }
 };
 type PhotoSort = "newest" | "oldest" | "name_asc" | "name_desc";
+type PhotoPageSize = number | "all";
+type PageSizes = Record<PhotoView, PhotoPageSize>;
+type PhotoFilters = { folder: string | null; q: string; sort: PhotoSort; size: PhotoPageSize };
+const PAGE_SIZE_OPTIONS: Record<PhotoView, PhotoPageSize[]> = { grid: [18, 36, 100, "all"], list: [10, 20, 50, "all"] };
+const PAGE_SIZE_STORAGE_KEY = "kho-anh:page-size";
+const readStoredPageSizes = (): PageSizes => {
+  const sizes: PageSizes = { grid: 18, list: 10 };
+  try {
+    const stored = typeof window !== "undefined" ? JSON.parse(localStorage.getItem(PAGE_SIZE_STORAGE_KEY) ?? "{}") as Partial<PageSizes> : {};
+    (["grid", "list"] as const).forEach((view) => {
+      if (stored[view] !== undefined && PAGE_SIZE_OPTIONS[view].includes(stored[view])) sizes[view] = stored[view];
+    });
+  } catch { /* storage unavailable or malformed: defaults */ }
+  return sizes;
+};
+const initialFilters = (): PhotoFilters => ({ folder: null, q: "", sort: "newest", size: readStoredPageSizes()[readStoredView()] });
 const SORT_OPTIONS: { value: PhotoSort; label: string }[] = [
   { value: "newest", label: "Mới nhất" },
   { value: "oldest", label: "Cũ nhất" },
