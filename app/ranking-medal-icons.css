@@ -58,34 +58,7 @@
 }
 
 
-.rules-prizes div {
-  grid-template-columns: 58px minmax(0, 1fr) !important;
-  column-gap: 14px !important;
-  min-height: 118px !important;
-}
-
-.rules-prizes .prize-medal-icon {
-  display: block !important;
-  grid-row: 1 / span 2 !important;
-  width: 58px !important;
-  height: 58px !important;
-  margin: -3px 0 0 -2px !important;
-  border-radius: 0 !important;
-  background-color: transparent !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-size: contain !important;
-  box-shadow: none !important;
-  filter: drop-shadow(0 9px 13px rgba(26, 20, 8, 0.14));
-}
-
-.rules-prizes .prize-medal-1 { background-image: var(--rank-medal-1) !important; }
-.rules-prizes .prize-medal-2 { background-image: var(--rank-medal-2) !important; }
-.rules-prizes .prize-medal-3 { background-image: var(--rank-medal-3) !important; }
-.rules-prizes .prize-medal-4 { background-image: var(--rank-medal-4) !important; }
-
 .rules-prizes .fourth {
-  background: var(--club-white);
   border-color: rgba(127, 105, 191, 0.28);
 }
 @media (max-width: 800px) {

@@ -1175,7 +1175,7 @@ export default function Home() {
     <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setActiveUser(null); }} />}</Presence>
     <section className="content">
       <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className={avatarClassName("welcome-avatar", currentUser)} style={avatarStyle(currentUser)} aria-hidden="true">{welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
-      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
+      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
         <section className="hero">
           <div className="hero-copy"><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div>
           <img className="hero-logo" src="/club-logo.png?v=club-glass-logo" alt="" aria-hidden="true" />
@@ -1302,8 +1302,14 @@ function Schedule({ scenario, drawn, scores, setScores, confirmedMatches, setCon
     <LiveRankingSnapshot rows={rankingRows} month={rankingMonth} />
   </>;
 }
-function Rules() {
-  const memberNames = ["Hùng", "Sơn", "Nam", "Phú", "Mạnh", "Thành", "Đạt", "Đức Anh", "Quý", "Hải"];
+function Rules({ members }: { members: Member[] }) {
+  // Grouped by the live level (top 4 ELO = Level 1), so the list never goes stale.
+  const levelGroups = ([1, 2] as const).map((level) => ({
+    level,
+    title: level === 1 ? "Top 4 ELO" : "Còn lại",
+    note: level === 1 ? "Nhóm có ELO cao nhất tại thời điểm hiện hành." : "Nhóm còn lại theo BXH ELO; tự cập nhật khi ELO thay đổi.",
+    names: members.filter((member) => member.level === level).map((member) => member.name),
+  }));
 
   return <section className="rules-page">
     <section className="rules-hero">
@@ -1319,77 +1325,93 @@ function Rules() {
       </div>
     </section>
 
-    <section className="rules-flow" aria-label="Quy trình buổi chơi">
-      <article><span>01</span><b>Điểm danh</b><p>Thành viên xác nhận tham gia hoặc không tham gia trước khi lập lịch.</p></article>
-      <article><span>02</span><b>Chọn số</b><p>Buổi 5 người chọn số 1–5 không phân Level; từ 6 người trở lên, Level 1 nhận số 1–4 và Level 2 nhận số 5–10 theo số người thực tế.</p></article>
-      <article><span>03</span><b>Thi đấu & nhập điểm</b><p>Admin xác nhận từng trận, BXH tháng cập nhật ngay sau mỗi kết quả được lưu.</p></article>
+    <section className="rules-section" aria-labelledby="rules-process-title">
+      <h2 className="rules-section-title" id="rules-process-title">Quy trình tham gia</h2>
+      <ol className="rules-steps">
+        <li><span className="rules-step-no">01</span><div><h3>Điểm danh</h3><p>Thành viên xác nhận tham gia hoặc không tham gia trước khi lập lịch.</p></div></li>
+        <li><span className="rules-step-no">02</span><div><h3>Chọn số</h3><p>Buổi 5 người chọn số 1–5 không phân Level; từ 6 người trở lên, Level 1 nhận số 1–4 và Level 2 nhận số 5–10 theo số người thực tế.</p></div></li>
+        <li><span className="rules-step-no">03</span><div><h3>Thi đấu & nhập điểm</h3><p>Admin xác nhận từng trận, BXH tháng cập nhật ngay sau mỗi kết quả được lưu.</p></div></li>
+      </ol>
     </section>
 
-    <div className="rules-grid">
-      <article className="rules-card">
-        <div className="rules-card-title"><span className="rules-index">1</span><h2>Thể thức & mục tiêu</h2></div>
-        <ul>
-          <li>Thi đấu theo thể thức đánh đôi, mỗi trận gồm 2 người đấu với 2 người.</li>
-          <li>Lịch đấu ưu tiên công bằng về số trận, đồng đội và đối thủ.</li>
-          <li>Hạn chế tối đa việc trùng lặp cặp đấu trong cùng một buổi.</li>
-          <li>Phân nhóm Level dựa trên BXH ELO hiện hành để trận đấu vừa sức và hấp dẫn hơn.</li>
-        </ul>
-      </article>
-
-      <article className="rules-card">
-        <div className="rules-card-title"><span className="rules-index">2</span><h2>Thành viên & phân level</h2></div>
-        <div className="rules-member-list" aria-label="Danh sách thành viên">
-          {memberNames.map((name) => <span key={name}><b>{name}</b></span>)}
+    <section className="rules-section" aria-labelledby="rules-format-title">
+      <h2 className="rules-section-title" id="rules-format-title">Thể thức & thành viên</h2>
+      <div className="rules-split">
+        <div className="rules-pane">
+          <h3 className="rules-sub">Thể thức & mục tiêu</h3>
+          <ul className="rules-list">
+            <li>Thi đấu theo thể thức đánh đôi, mỗi trận gồm 2 người đấu với 2 người.</li>
+            <li>Lịch đấu ưu tiên công bằng về số trận, đồng đội và đối thủ.</li>
+            <li>Hạn chế tối đa việc trùng lặp cặp đấu trong cùng một buổi.</li>
+            <li>Phân nhóm Level dựa trên BXH ELO hiện hành để trận đấu vừa sức và hấp dẫn hơn.</li>
+          </ul>
         </div>
-        <div className="rules-level-grid">
-          <div><span className="level-chip level-one">Level 1</span><b>Top 4 ELO</b><p>Nhóm có ELO cao nhất tại thời điểm hiện hành.</p></div>
-          <div><span className="level-chip level-two">Level 2</span><b>Còn lại</b><p>Nhóm còn lại theo BXH ELO; tự cập nhật khi ELO thay đổi.</p></div>
+        <div className="rules-pane">
+          <h3 className="rules-sub">Thành viên & phân level</h3>
+          <div className="rules-level-groups">
+            {levelGroups.map((group) => <div className={`rules-level-group rules-level-${group.level}`} key={group.level}>
+              <div className="rules-level-head">
+                <span className={`level-chip ${group.level === 1 ? "level-one" : "level-two"}`}>Level {group.level}</span>
+                <b>{group.title}</b>
+                <small>{group.note}</small>
+              </div>
+              <div className="rules-member-list" aria-label={`Thành viên Level ${group.level}`}>
+                {group.names.length ? group.names.map((name) => <span key={name}>{name}</span>) : <em>Chưa có thành viên</em>}
+              </div>
+            </div>)}
+          </div>
         </div>
-      </article>
+      </div>
+    </section>
 
-      <article className="rules-card rules-card-wide">
-        <div className="rules-card-title"><span className="rules-index">3</span><h2>Cấu trúc lịch đấu hằng tuần</h2></div>
-        <p>Lịch chỉ được tạo khi có từ 5 thành viên tham gia. Với buổi 5 người, hệ thống dùng lịch riêng không phân Level; từ 6 người trở lên sẽ chọn thư viện lịch phù hợp theo tổng số người và số lượng Level 1 / Level 2 của buổi đó.</p>
+    <section className="rules-section" aria-labelledby="rules-schedule-title">
+      <h2 className="rules-section-title" id="rules-schedule-title">Cấu trúc lịch đấu hằng tuần</h2>
+      <div className="rules-pane rules-schedule">
+        <p className="rules-lead">Lịch chỉ được tạo khi có từ 5 thành viên tham gia. Với buổi 5 người, hệ thống dùng lịch riêng không phân Level; từ 6 người trở lên sẽ chọn thư viện lịch phù hợp theo tổng số người và số lượng Level 1 / Level 2 của buổi đó.</p>
         <div className="rules-match-types">
-          <div><b><span className="level-one">Level 1</span> + <span className="level-one">Level 1</span></b><span>vs</span><b><span className="level-one">Level 1</span> + <span className="level-one">Level 1</span></b></div>
-          <div><b><span className="level-one">Level 1</span> + <span className="level-two">Level 2</span></b><span>vs</span><b><span className="level-one">Level 1</span> + <span className="level-two">Level 2</span></b></div>
-          <div><b><span className="level-two">Level 2</span> + <span className="level-two">Level 2</span></b><span>vs</span><b><span className="level-two">Level 2</span> + <span className="level-two">Level 2</span></b></div>
+          <div><b><span className="level-one">Level 1</span> + <span className="level-one">Level 1</span></b><span className="rules-vs">VS</span><b><span className="level-one">Level 1</span> + <span className="level-one">Level 1</span></b></div>
+          <div><b><span className="level-one">Level 1</span> + <span className="level-two">Level 2</span></b><span className="rules-vs">VS</span><b><span className="level-one">Level 1</span> + <span className="level-two">Level 2</span></b></div>
+          <div><b><span className="level-two">Level 2</span> + <span className="level-two">Level 2</span></b><span className="rules-vs">VS</span><b><span className="level-two">Level 2</span> + <span className="level-two">Level 2</span></b></div>
         </div>
         <p className="rules-note">Nếu một trường hợp không thể áp dụng đủ mọi quy tắc, lịch sẽ ưu tiên các điều kiện khả thi theo thứ tự: đủ 4 trận mỗi người, hạn chế lặp đồng đội, rồi mới đến cân bằng tuyệt đối theo level.</p>
-      </article>
+      </div>
+    </section>
 
-      <article className="rules-card">
-        <div className="rules-card-title"><span className="rules-index">4</span><h2>Nguyên tắc chi tiết</h2></div>
-        <ol>
-          <li>Mỗi thành viên tham gia sẽ thi đấu đúng 4 trận trong buổi.</li>
-          <li>Không để hai người làm đồng đội quá 1 lần/tuần nếu lịch cho phép.</li>
-          <li>Phân bổ đối thủ dựa trên Level hiện hành; Level được xác định từ ELO, không phải điểm thưởng tháng.</li>
-          <li>Ưu tiên đa dạng đội hình, tránh cảm giác “gặp mãi một cặp”.</li>
-          <li>Khuyến khích giao lưu giữa các cấp độ để mọi trận đều mới mẻ.</li>
-        </ol>
-      </article>
-
-      <article className="rules-card">
-        <div className="rules-card-title"><span className="rules-index">5</span><h2>Quyền lợi & tính điểm</h2></div>
-        <ul>
-          <li>Thành viên đã điểm danh tham gia được đảm bảo lịch đấu 4 trận khi số người đủ điều kiện.</li>
-          <li>Thắng được <strong>+1 điểm</strong>, thua <strong>0 điểm</strong>.</li>
-          <li>Điểm thắng, điểm thua, hiệu số và số trận đều được lưu vào BXH tháng.</li>
-          <li>Nếu vắng mặt trong buổi đã diễn ra, thành viên không được bù 4 trận của buổi đó.</li>
-        </ul>
-      </article>
-
-      <article className="rules-card rules-card-wide rules-prize-card">
-        <div className="rules-card-title"><span className="rules-index">6</span><h2>Cơ cấu giải thưởng</h2></div>
-        <div className="rules-prizes">
-          <div className="gold"><span className="prize-medal-icon prize-medal-1" aria-hidden="true" /><b>Vô địch</b><p>1 áo cầu lông, tối đa 200k. Nếu chọn áo đắt hơn, người nhận tự bù phần chênh lệch.</p></div>
-          <div className="silver"><span className="prize-medal-icon prize-medal-2" aria-hidden="true" /><b>Á quân</b><p>2 cuốn cán Yonex xịn hoặc 1 đôi tất cầu lông cao cấp, khoảng 80–100k.</p></div>
-          <div className="bronze"><span className="prize-medal-icon prize-medal-3" aria-hidden="true" /><b>Giải ba</b><p>1 đôi tất thủ công hoặc 1 cuốn cán Yonex xịn, khoảng 40–50k.</p></div>
-          <div className="fourth"><span className="prize-medal-icon prize-medal-4" aria-hidden="true" /><b>Giải tư</b><p>2 cuốn cán rẻ, khoảng 20k.</p></div>
+    <section className="rules-section" aria-labelledby="rules-scoring-title">
+      <h2 className="rules-section-title" id="rules-scoring-title">Luật & tính điểm</h2>
+      <div className="rules-split">
+        <div className="rules-pane">
+          <h3 className="rules-sub">Nguyên tắc chi tiết</h3>
+          <ol className="rules-list rules-list-numbered">
+            <li>Mỗi thành viên tham gia sẽ thi đấu đúng 4 trận trong buổi.</li>
+            <li>Không để hai người làm đồng đội quá 1 lần/tuần nếu lịch cho phép.</li>
+            <li>Phân bổ đối thủ dựa trên Level hiện hành; Level được xác định từ ELO, không phải điểm thưởng tháng.</li>
+            <li>Ưu tiên đa dạng đội hình, tránh cảm giác “gặp mãi một cặp”.</li>
+            <li>Khuyến khích giao lưu giữa các cấp độ để mọi trận đều mới mẻ.</li>
+          </ol>
         </div>
-        <p className="rules-total">Tổng giá trị giải thưởng dự kiến: <strong>350k</strong>.</p>
-      </article>
-    </div>
+        <div className="rules-pane">
+          <h3 className="rules-sub">Quyền lợi & tính điểm</h3>
+          <ul className="rules-list">
+            <li>Thành viên đã điểm danh tham gia được đảm bảo lịch đấu 4 trận khi số người đủ điều kiện.</li>
+            <li>Thắng được <strong>+1 điểm</strong>, thua <strong>0 điểm</strong>.</li>
+            <li>Điểm thắng, điểm thua, hiệu số và số trận đều được lưu vào BXH tháng.</li>
+            <li>Nếu vắng mặt trong buổi đã diễn ra, thành viên không được bù 4 trận của buổi đó.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section className="rules-section" aria-labelledby="rules-prize-title">
+      <h2 className="rules-section-title" id="rules-prize-title">Cơ cấu giải thưởng</h2>
+      <div className="rules-prizes">
+        <div className="gold"><span className="prize-medal-icon prize-medal-1" aria-hidden="true" /><b>Vô địch</b><p>1 áo cầu lông, tối đa 200k. Nếu chọn áo đắt hơn, người nhận tự bù phần chênh lệch.</p></div>
+        <div className="silver"><span className="prize-medal-icon prize-medal-2" aria-hidden="true" /><b>Á quân</b><p>2 cuốn cán Yonex xịn hoặc 1 đôi tất cầu lông cao cấp, khoảng 80–100k.</p></div>
+        <div className="bronze"><span className="prize-medal-icon prize-medal-3" aria-hidden="true" /><b>Giải ba</b><p>1 đôi tất thủ công hoặc 1 cuốn cán Yonex xịn, khoảng 40–50k.</p></div>
+        <div className="fourth"><span className="prize-medal-icon prize-medal-4" aria-hidden="true" /><b>Giải tư</b><p>2 cuốn cán rẻ, khoảng 20k.</p></div>
+      </div>
+      <p className="rules-total">Tổng giá trị giải thưởng dự kiến: <strong>350k</strong>.</p>
+    </section>
   </section>;
 }
 
