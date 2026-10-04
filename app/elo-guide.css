@@ -1,4 +1,4 @@
-/* "Cách tính ELO" button (ELO hero) and the explanation modal. */
+/* "Cách tính ELO" button (ELO ranking header) and the explanation modal. */
 .elo-guide-btn {
   display: inline-flex !important;
   align-items: center !important;
@@ -17,6 +17,27 @@
   border-color: #e9a800 !important;
   background: #fff3d1 !important;
   color: #5c4100 !important;
+}
+
+/* Sits next to the source pill in the "Thứ hạng ELO" header. */
+.elo-head-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.elo-head-actions .elo-guide-btn {
+  margin-top: 0 !important;
+  white-space: nowrap;
+}
+
+/* Phones: the header is a grid there; put the actions on their own row. */
+@media (max-width: 640px) {
+  .elo-head-actions {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+  }
 }
 
 .elo-guide-btn:focus-visible {

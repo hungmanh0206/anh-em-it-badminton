@@ -1761,7 +1761,6 @@ function EloGuideModal({ onClose }: { onClose: () => void }) {
 
 function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus | null }) {
   const [guideOpen, setGuideOpen] = useState(false);
-  const leader = rows[0];
   const sourceLabel = status?.source === "database" ? "Database" : status?.source === "calculated" ? "Replay" : "Tạm thời";
   return <section className="elo-page">
     <section className="panel elo-hero-panel">
@@ -1769,19 +1768,16 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
         <p className="eyebrow">ELO RATING</p>
         <h2>Bảng ELO thành viên</h2>
         <p>Top 4 ELO hiện tại là Level 1, còn lại là Level 2. Sau mỗi trận đã lưu, ELO và level sẽ cập nhật để tuần sau xếp lịch đúng trình độ mới.</p>
-        <button type="button" className="soft-btn elo-guide-btn" onClick={() => setGuideOpen(true)}>Cách tính ELO</button>
-      </div>
-      <div className="elo-hero-stats" aria-label="Tổng quan ELO">
-        <div><span>Level 1</span><b>Top 4</b></div>
-        <div><span>Đã tính</span><b>{status?.processedMatches ?? 0}</b></div>
-        <div><span>Dẫn đầu</span><b>{leader ? Math.round(leader.eloRating) : "—"}</b></div>
       </div>
     </section>
 
     <section className="panel elo-ranking-panel">
       <div className="panel-head elo-panel-head">
         <div><h2>Thứ hạng ELO</h2><p>Level lấy theo thứ hạng ELO hiện tại, tách riêng với BXH điểm thưởng tháng.</p></div>
-        <span className="count-pill elo-source-pill"><b>{sourceLabel}</b><small>{rows.length} thành viên</small></span>
+        <div className="elo-head-actions">
+          <button type="button" className="soft-btn elo-guide-btn" onClick={() => setGuideOpen(true)}>Cách tính ELO</button>
+          <span className="count-pill elo-source-pill"><b>{sourceLabel}</b><small>{rows.length} thành viên</small></span>
+        </div>
       </div>
       {status && <div className={`elo-status elo-${status.source}`}>{status.message}</div>}
       <div className="elo-list">
