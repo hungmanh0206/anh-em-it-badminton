@@ -3,7 +3,7 @@
 // another Cloudinary change (no webhook loops). All operations are idempotent.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getResourceByAssetId, listAllImages, type CloudinaryConfig } from "@/lib/cloudinary";
-import { resourceToPhotoRow } from "@/lib/photos/assets";
+import { assetFolderOf, resourceToPhotoRow } from "@/lib/photos/assets";
 import { markPhotosDeleted, photosDbError, upsertPhotoRows } from "@/lib/photos/repository";
 
 // Rows refreshed this recently are never deactivated by a full sync: Cloudinary's search index
@@ -47,6 +47,7 @@ async function activeAssetIds(admin: SupabaseClient) {
 // Full reconciliation: create missing rows, refresh changed ones, deactivate assets deleted on Cloudinary.
 export async function runFullSync(admin: SupabaseClient, config: CloudinaryConfig) {
   const resources = await listAllImages(config);
+  console.info("Photo sync", { rootFolder: config.rootFolder, accountImages: resources.length });
   const rows = resources.map((resource) => resourceToPhotoRow(resource, config.rootFolder)).filter((row): row is NonNullable<typeof row> => Boolean(row));
   const before = await activeAssetIds(admin);
   const known = new Set(before.map((row) => row.cloudinary_asset_id));
@@ -89,6 +90,26 @@ export function autoSyncMode(lastSynced: number | null, now = Date.now()): "now"
   if (lastSynced !== null && now - lastSynced < AUTO_SYNC_INTERVAL_MS) return null;
   lastAutoSyncAttempt = now;
   return lastSynced === null ? "now" : "background";
+}
+
+// Admin-only troubleshooting when the gallery is empty: what Cloudinary actually holds vs the configured root.
+export async function diagnoseRoot(config: CloudinaryConfig) {
+  try {
+    const resources = await listAllImages(config);
+    const byFolder = new Map<string, number>();
+    resources.forEach((resource) => {
+      const folder = String(assetFolderOf(resource) || "").replace(/^\/+|\/+$/g, "") || "(thư mục gốc của tài khoản)";
+      byFolder.set(folder, (byFolder.get(folder) ?? 0) + 1);
+    });
+    return {
+      rootFolder: config.rootFolder || "(toàn bộ tài khoản)",
+      accountImages: resources.length,
+      matching: resources.filter((resource) => resourceToPhotoRow(resource, config.rootFolder)).length,
+      folders: [...byFolder.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15).map(([name, count]) => ({ name, count })),
+    };
+  } catch (error) {
+    return { rootFolder: config.rootFolder, error: error instanceof Error ? error.message : "Không đọc được Cloudinary." };
+  }
 }
 
 export async function countActivePhotos(admin: SupabaseClient) {

@@ -20,7 +20,8 @@ type Photo = {
   fullUrl: string;
 };
 type PhotoFolder = { folder: string; label: string; count: number };
-type PhotoPage = { photos: Photo[]; nextCursor: string | null; total?: number; folders?: PhotoFolder[]; canManage?: boolean; error?: string };
+type PhotoDiagnostics = { rootFolder: string; accountImages?: number; matching?: number; folders?: { name: string; count: number }[]; error?: string };
+type PhotoPage = { photos: Photo[]; nextCursor: string | null; total?: number; folders?: PhotoFolder[]; canManage?: boolean; diagnostics?: PhotoDiagnostics; error?: string };
 type LoadState = "loading" | "ready" | "error";
 
 const authHeaders = async (): Promise<Record<string, string>> => {
@@ -48,6 +49,7 @@ export function PhotoGallery() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreError, setMoreError] = useState("");
   const [canManage, setCanManage] = useState(false);
+  const [diagnostics, setDiagnostics] = useState<PhotoDiagnostics | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const requestId = useRef(0);
@@ -66,6 +68,7 @@ export function PhotoGallery() {
       setTotal(page.total ?? page.photos.length);
       setFolders(page.folders ?? []);
       setCanManage(Boolean(page.canManage));
+      setDiagnostics(page.diagnostics ?? null);
       setState("ready");
     } catch (loadError) {
       if (id !== requestId.current) return;
@@ -155,6 +158,15 @@ export function PhotoGallery() {
     {state === "ready" && photos.length === 0 && <div className="photo-state">
       <p className="photo-state-title">Chưa có ảnh nào{activeFolder !== null ? " trong danh mục này" : ""}.</p>
       <p>{canManage ? "Bấm “+ Tải ảnh” hoặc tải trực tiếp lên Cloudinary để bắt đầu." : "Ảnh sẽ xuất hiện ở đây khi Admin tải lên."}</p>
+      {diagnostics && <div className="photo-diagnostics">
+        <b>Kiểm tra Cloudinary (chỉ Admin thấy)</b>
+        {diagnostics.error
+          ? <p>Không đọc được Cloudinary: {diagnostics.error}</p>
+          : <>
+            <p>Thư mục gốc đang cấu hình: <code>{diagnostics.rootFolder}</code> · Cloudinary có <b>{diagnostics.accountImages}</b> ảnh, khớp thư mục gốc: <b>{diagnostics.matching}</b>.</p>
+            {Boolean(diagnostics.folders?.length) && <p>Các thư mục đang có ảnh: {diagnostics.folders!.map((item) => <code key={item.name}>{item.name} ({item.count})</code>)}</p>}
+          </>}
+      </div>}
     </div>}
 
     {state === "ready" && photos.length > 0 && <>

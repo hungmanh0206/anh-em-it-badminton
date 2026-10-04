@@ -515,3 +515,29 @@
   .photo-sheet-footer { padding: 10px 18px 14px; }
   .photo-sheet-footer button { flex: 1; }
 }
+
+/* Admin-only troubleshooting box in the empty state. */
+.photo-diagnostics {
+  display: grid;
+  gap: 6px;
+  max-width: 640px;
+  margin-top: 6px;
+  padding: 12px 14px;
+  border: 1px solid rgba(233, 168, 0, 0.45);
+  border-radius: 12px;
+  background: #fffaf0;
+  text-align: left;
+}
+
+.photo-diagnostics b { color: #5c4100; font-size: 13px; }
+.photo-diagnostics p { font-size: 12.5px !important; line-height: 1.7; }
+
+.photo-diagnostics code {
+  display: inline-block;
+  margin: 2px 4px 2px 0;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: #f3ead2;
+  color: #3d2d00;
+  font-size: 12px;
+}

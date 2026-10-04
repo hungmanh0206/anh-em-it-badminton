@@ -3,7 +3,7 @@ import { getCloudinaryConfig, requireCloudinaryConfig } from "@/lib/cloudinary";
 import { decodeCursor, encodeCursor } from "@/lib/photos/assets";
 import { folderLabel } from "@/lib/photos/folders";
 import { PHOTO_COLUMNS, photosDbError, toApiPhoto, type PhotoRow } from "@/lib/photos/repository";
-import { autoSyncMode, lastSyncedAt, refreshAssets, runFullSync } from "@/lib/photos/sync";
+import { autoSyncMode, diagnoseRoot, lastSyncedAt, refreshAssets, runFullSync } from "@/lib/photos/sync";
 import { ApiError, jsonError, requireAdmin, requireUser } from "@/lib/supabase-admin";
 
 // The first gallery load may run a full Cloudinary sync inline (empty index).
@@ -56,6 +56,8 @@ export async function GET(request: Request) {
     if (total?.error) throw photosDbError(total.error);
 
     const rows = (page.data || []) as PhotoRow[];
+    // Empty gallery: tell admins what Cloudinary holds so a wrong root folder or API key is obvious.
+    const diagnostics = firstPage && profile.role === "admin" && (total?.count ?? 0) === 0 && folder === null ? await diagnoseRoot(config) : undefined;
     const hasMore = rows.length > limit;
     const visible = rows.slice(0, limit);
     const last = visible.at(-1);
@@ -67,6 +69,7 @@ export async function GET(request: Request) {
         total: total?.count ?? 0,
         folders: ((folders?.data || []) as { folder: string; photo_count: number }[]).map((row) => ({ folder: row.folder, label: folderLabel(row.folder), count: row.photo_count })),
         canManage: profile.role === "admin",
+        ...(diagnostics ? { diagnostics } : {}),
       } : {}),
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
