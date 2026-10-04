@@ -21,7 +21,7 @@ type Photo = {
 };
 type PhotoFolder = { folder: string; label: string; count: number };
 type PhotoDiagnostics = { rootFolder: string; hint?: string; accountImages?: number; matching?: number; folders?: { name: string; count: number }[]; error?: string };
-type PhotoPage = { photos: Photo[]; nextCursor: string | null; total?: number; folders?: PhotoFolder[]; canManage?: boolean; diagnostics?: PhotoDiagnostics; error?: string };
+type PhotoPage = { photos: Photo[]; page: number; pageCount: number; pageSize: number; total: number; folders: PhotoFolder[]; canManage: boolean; diagnostics?: PhotoDiagnostics; error?: string };
 type LoadState = "loading" | "ready" | "error";
 
 const authHeaders = async (): Promise<Record<string, string>> => {
@@ -43,107 +43,119 @@ export function PhotoGallery() {
   const [folders, setFolders] = useState<PhotoFolder[]>([]);
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageCount, setPageCount] = useState(1);
+  const [pageSize, setPageSize] = useState(18);
   const [state, setState] = useState<LoadState>("loading");
+  const [pageLoading, setPageLoading] = useState(false);
   const [error, setError] = useState("");
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [moreError, setMoreError] = useState("");
   const [canManage, setCanManage] = useState(false);
   const [diagnostics, setDiagnostics] = useState<PhotoDiagnostics | null>(null);
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [query, setQuery] = useState("");
   const requestId = useRef(0);
-  const sentinel = useRef<HTMLDivElement | null>(null);
+  const panel = useRef<HTMLElement | null>(null);
 
-  const loadFirstPage = useCallback(async (folder: string | null) => {
+  // Loads one numbered page. `select` picks the photo to show in the preview afterwards
+  // (used when the preview steps across a page boundary).
+  const loadPage = useCallback(async (folder: string | null, pageNumber: number, select?: "first" | "last" | number, q = "") => {
     const id = ++requestId.current;
-    setState("loading");
     setError("");
-    setMoreError("");
+    setPageLoading(true);
     try {
-      const page = await api<PhotoPage>(`/api/photos${folder === null ? "" : `?folder=${encodeURIComponent(folder)}`}`);
+      const params = new URLSearchParams({ page: String(pageNumber) });
+      if (folder !== null) params.set("folder", folder);
+      if (q) params.set("q", q);
+      const result = await api<PhotoPage>(`/api/photos?${params.toString()}`);
       if (id !== requestId.current) return;
-      setPhotos(page.photos);
-      setNextCursor(page.nextCursor);
-      setTotal(page.total ?? page.photos.length);
-      setFolders(page.folders ?? []);
-      setCanManage(Boolean(page.canManage));
-      setDiagnostics(page.diagnostics ?? null);
+      setPhotos(result.photos);
+      setPage(result.page);
+      setPageCount(result.pageCount);
+      setPageSize(result.pageSize);
+      setTotal(result.total);
+      setFolders(result.folders);
+      setCanManage(result.canManage);
+      setDiagnostics(result.diagnostics ?? null);
       setState("ready");
+      if (select === undefined) return;
+      if (!result.photos.length) return setPreviewIndex(null);
+      setPreviewIndex(select === "first" ? 0 : select === "last" ? result.photos.length - 1 : Math.min(select, result.photos.length - 1));
     } catch (loadError) {
       if (id !== requestId.current) return;
       setError(loadError instanceof Error ? loadError.message : "Không tải được kho ảnh.");
       setState("error");
+    } finally {
+      if (id === requestId.current) setPageLoading(false);
     }
   }, []);
-
-  const loadMore = useCallback(async () => {
-    if (!nextCursor || loadingMore) return;
-    const id = requestId.current;
-    setLoadingMore(true);
-    setMoreError("");
-    try {
-      const params = new URLSearchParams({ cursor: nextCursor });
-      if (activeFolder !== null) params.set("folder", activeFolder);
-      const page = await api<PhotoPage>(`/api/photos?${params.toString()}`);
-      if (id !== requestId.current) return;
-      setPhotos((current) => [...current, ...page.photos.filter((photo) => !current.some((existing) => existing.id === photo.id))]);
-      setNextCursor(page.nextCursor);
-    } catch (loadError) {
-      if (id === requestId.current) setMoreError(loadError instanceof Error ? loadError.message : "Không tải thêm được ảnh.");
-    } finally {
-      if (id === requestId.current) setLoadingMore(false);
-    }
-  }, [activeFolder, loadingMore, nextCursor]);
 
   useEffect(() => {
     // Initial fetch; state updates happen after the request resolves.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadFirstPage(null);
-  }, [loadFirstPage]);
+    void loadPage(null, 1);
+  }, [loadPage]);
 
-  // Infinite scroll: fetch the next page when the sentinel below the grid comes into view.
+  // Search as you type, after a short pause; results always start from page 1.
   useEffect(() => {
-    const node = sentinel.current;
-    if (!node || !nextCursor || moreError) return;
-    const observer = new IntersectionObserver((entries) => { if (entries.some((entry) => entry.isIntersecting)) void loadMore(); }, { rootMargin: "600px 0px" });
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [loadMore, moreError, nextCursor]);
+    const value = search.trim();
+    if (value === query) return;
+    const timer = window.setTimeout(() => {
+      setQuery(value);
+      setPreviewIndex(null);
+      void loadPage(activeFolder, 1, undefined, value);
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [activeFolder, loadPage, query, search]);
+
+  const goToPage = (pageNumber: number) => {
+    if (pageNumber < 1 || pageNumber > pageCount || pageNumber === page) return;
+    void loadPage(activeFolder, pageNumber, undefined, query);
+    panel.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const selectFolder = (folder: string | null) => {
     setActiveFolder(folder);
-    setLightboxIndex(null);
-    void loadFirstPage(folder);
+    setPreviewIndex(null);
+    setState("loading");
+    void loadPage(folder, 1, undefined, query);
   };
 
-  const removePhoto = (photoId: string) => {
-    setPhotos((current) => current.filter((photo) => photo.id !== photoId));
-    setTotal((current) => Math.max(0, current - 1));
-    setLightboxIndex((index) => {
-      if (index === null) return null;
-      const remaining = photos.length - 1;
-      return remaining <= 0 ? null : Math.min(index, remaining - 1);
-    });
+  // Preview navigation that crosses into the previous/next page when needed.
+  const navigatePreview = (delta: number) => {
+    if (previewIndex === null) return;
+    const next = previewIndex + delta;
+    if (next >= 0 && next < photos.length) return setPreviewIndex(next);
+    if (next < 0 && page > 1) void loadPage(activeFolder, page - 1, "last", query);
+    if (next >= photos.length && page < pageCount) void loadPage(activeFolder, page + 1, "first", query);
+  };
+
+  // After a delete the current page is reloaded so it refills from the next page.
+  const removePhoto = () => {
+    void loadPage(activeFolder, page, previewIndex ?? undefined, query);
   };
 
   const allCount = folders.reduce((sum, folder) => sum + folder.count, 0);
-  const refreshAfterChange = (folder: string | null = activeFolder) => {
-    setActiveFolder(folder);
-    void loadFirstPage(folder);
-  };
+  const firstOnPage = (page - 1) * pageSize;
 
-  return <section className="panel photo-panel">
+  return <section className="panel photo-panel" ref={panel}>
     <div className="panel-head photo-panel-head">
-      <div><h2>Kho ảnh</h2><p>Ảnh các buổi chơi và sự kiện của CLB.</p></div>
+      <div><h2>Những khoảnh khắc cùng anh em</h2></div>
       {canManage && <div className="photo-head-actions">
         <button type="button" className="primary" onClick={() => setUploadOpen(true)}>+ Tải ảnh</button>
       </div>}
     </div>
 
-    {folders.length > 0 && <div className="photo-filters" role="tablist" aria-label="Lọc theo danh mục">
-      <button type="button" role="tab" aria-selected={activeFolder === null} className={activeFolder === null ? "active" : ""} onClick={() => selectFolder(null)}>Tất cả <small>{allCount}</small></button>
-      {folders.map((folder) => <button type="button" role="tab" key={folder.folder} aria-selected={activeFolder === folder.folder} className={activeFolder === folder.folder ? "active" : ""} onClick={() => selectFolder(folder.folder)}>{folder.label} <small>{folder.count}</small></button>)}
+    {(allCount > 0 || query) && <div className="photo-toolbar">
+      <label className="photo-search">
+        <span aria-hidden="true">⌕</span>
+        <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm theo tên ảnh…" aria-label="Tìm theo tên ảnh" maxLength={100} />
+      </label>
+      <select className="photo-folder-select" value={activeFolder ?? ALL_FOLDERS} onChange={(event) => selectFolder(event.target.value === ALL_FOLDERS ? null : event.target.value)} aria-label="Lọc theo danh mục">
+        <option value={ALL_FOLDERS}>Tất cả danh mục ({allCount})</option>
+        {folders.map((folder) => <option key={folder.folder} value={folder.folder}>{folder.label} ({folder.count})</option>)}
+      </select>
     </div>}
 
     {state === "loading" && <div className="photo-grid" aria-busy="true" aria-label="Đang tải ảnh">
@@ -152,12 +164,12 @@ export function PhotoGallery() {
 
     {state === "error" && <div className="photo-state photo-state-error" role="alert">
       <p>{error}</p>
-      <button type="button" className="soft-btn" onClick={() => void loadFirstPage(activeFolder)}>Thử lại</button>
+      <button type="button" className="soft-btn" onClick={() => void loadPage(activeFolder, page, undefined, query)}>Thử lại</button>
     </div>}
 
     {state === "ready" && photos.length === 0 && <div className="photo-state">
-      <p className="photo-state-title">Chưa có ảnh nào{activeFolder !== null ? " trong danh mục này" : ""}.</p>
-      <p>{canManage ? "Bấm “+ Tải ảnh” hoặc tải trực tiếp lên Cloudinary để bắt đầu." : "Ảnh sẽ xuất hiện ở đây khi Admin tải lên."}</p>
+      <p className="photo-state-title">{query ? `Không tìm thấy ảnh nào có tên chứa “${query}”.` : `Chưa có ảnh nào${activeFolder !== null ? " trong danh mục này" : ""}.`}</p>
+      {!query && <p>{canManage ? "Bấm “+ Tải ảnh” hoặc tải trực tiếp lên Cloudinary để bắt đầu." : "Ảnh sẽ xuất hiện ở đây khi Admin tải lên."}</p>}
       {diagnostics && <div className="photo-diagnostics">
         <b>Kiểm tra Cloudinary (chỉ Admin thấy)</b>
         {diagnostics.hint && <p className="photo-diagnostics-hint">{diagnostics.hint}</p>}
@@ -171,31 +183,53 @@ export function PhotoGallery() {
     </div>}
 
     {state === "ready" && photos.length > 0 && <>
-      <div className="photo-grid">
-        {photos.map((photo, index) => <PhotoTile key={photo.id} photo={photo} onOpen={() => setLightboxIndex(index)} />)}
+      <div className={`photo-grid${pageLoading ? " is-loading" : ""}`} aria-busy={pageLoading}>
+        {photos.map((photo, index) => <PhotoTile key={photo.id} photo={photo} onOpen={() => setPreviewIndex(index)} />)}
       </div>
-      <div ref={sentinel} className="photo-more">
-        {loadingMore && <span className="photo-more-text">Đang tải thêm…</span>}
-        {moreError && <><span className="photo-more-text">{moreError}</span><button type="button" className="soft-btn" onClick={() => void loadMore()}>Thử lại</button></>}
-        {!loadingMore && !moreError && nextCursor && <button type="button" className="soft-btn" onClick={() => void loadMore()}>Tải thêm ảnh</button>}
-        {!nextCursor && <span className="photo-more-text">Đã hiển thị {photos.length} / {total} ảnh</span>}
-      </div>
+      <PhotoPagination page={page} pageCount={pageCount} from={firstOnPage + 1} to={firstOnPage + photos.length} total={total} disabled={pageLoading} onPage={goToPage} />
     </>}
 
-    <Presence show={lightboxIndex !== null && photos[lightboxIndex] !== undefined}>{lightboxIndex !== null && photos[lightboxIndex] && <PhotoLightbox
+    <Presence show={previewIndex !== null && photos[previewIndex] !== undefined}>{previewIndex !== null && photos[previewIndex] && <PhotoPreview
       photos={photos}
-      index={lightboxIndex}
+      index={previewIndex}
+      position={firstOnPage + previewIndex + 1}
       total={total}
-      hasMore={Boolean(nextCursor)}
+      canPrev={previewIndex > 0 || page > 1}
+      canNext={previewIndex < photos.length - 1 || page < pageCount}
       canManage={canManage}
-      onIndexChange={setLightboxIndex}
-      onNeedMore={() => void loadMore()}
-      onClose={() => setLightboxIndex(null)}
+      onNavigate={navigatePreview}
+      onClose={() => setPreviewIndex(null)}
       onDeleted={removePhoto}
+      onRenamed={(renamed) => setPhotos((current) => current.map((item) => (item.id === renamed.id ? renamed : item)))}
     />}</Presence>
 
-    <Presence show={uploadOpen}>{uploadOpen && <PhotoUploadModal folders={folders} defaultFolder={activeFolder ?? folders[0]?.folder ?? ""} onClose={() => setUploadOpen(false)} onUploaded={(folder) => refreshAfterChange(folder)} />}</Presence>
+    <Presence show={uploadOpen}>{uploadOpen && <PhotoUploadModal folders={folders} defaultFolder={activeFolder ?? folders[0]?.folder ?? ""} onClose={() => setUploadOpen(false)} onUploaded={(folder) => { setActiveFolder(folder); setSearch(""); setQuery(""); void loadPage(folder, 1); }} />}</Presence>
   </section>;
+}
+
+// Page numbers with ellipses: always the first and last page, plus neighbours of the current one.
+function pageItems(page: number, pageCount: number): (number | "gap")[] {
+  const wanted = new Set([1, pageCount, page - 1, page, page + 1].filter((value) => value >= 1 && value <= pageCount));
+  const sorted = [...wanted].sort((a, b) => a - b);
+  const items: (number | "gap")[] = [];
+  sorted.forEach((value, index) => {
+    if (index > 0 && value - sorted[index - 1] > 1) items.push("gap");
+    items.push(value);
+  });
+  return items;
+}
+
+function PhotoPagination({ page, pageCount, from, to, total, disabled, onPage }: { page: number; pageCount: number; from: number; to: number; total: number; disabled: boolean; onPage: (page: number) => void }) {
+  return <div className="photo-pagination" role="navigation" aria-label="Phân trang kho ảnh">
+    <span className="photo-pagination-info">{from}–{to} / {total} ảnh</span>
+    {pageCount > 1 && <div className="photo-pagination-pages">
+      <button type="button" onClick={() => onPage(page - 1)} disabled={disabled || page <= 1} aria-label="Trang trước">‹</button>
+      {pageItems(page, pageCount).map((item, index) => item === "gap"
+        ? <span className="photo-pagination-gap" key={`gap-${index}`}>…</span>
+        : <button type="button" key={item} className={item === page ? "active" : ""} aria-current={item === page ? "page" : undefined} onClick={() => onPage(item)} disabled={disabled}>{item}</button>)}
+      <button type="button" onClick={() => onPage(page + 1)} disabled={disabled || page >= pageCount} aria-label="Trang sau">›</button>
+    </div>}
+  </div>;
 }
 
 function PhotoTile({ photo, onOpen }: { photo: Photo; onOpen: () => void }) {
@@ -209,113 +243,147 @@ function PhotoTile({ photo, onOpen }: { photo: Photo; onOpen: () => void }) {
   </button>;
 }
 
-function PhotoLightbox({ photos, index, total, hasMore, canManage, onIndexChange, onNeedMore, onClose, onDeleted }: {
+function PhotoPreview({ photos, index, position, total, canPrev, canNext, canManage, onNavigate, onClose, onDeleted, onRenamed }: {
   photos: Photo[];
   index: number;
+  position: number;
   total: number;
-  hasMore: boolean;
+  canPrev: boolean;
+  canNext: boolean;
   canManage: boolean;
-  onIndexChange: (index: number) => void;
-  onNeedMore: () => void;
+  onNavigate: (delta: number) => void;
   onClose: () => void;
   onDeleted: (photoId: string) => void;
+  onRenamed: (photo: Photo) => void;
 }) {
   const photo = photos[index];
   const touchStart = useRef<number | null>(null);
   const [broken, setBroken] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
-  const canPrev = index > 0;
-  const canNext = index < photos.length - 1 || hasMore;
-
+  const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [draftName, setDraftName] = useState("");
   const go = useCallback((delta: number) => {
-    const next = index + delta;
-    if (next < 0) return;
-    if (next >= photos.length) {
-      if (hasMore) onNeedMore();
-      return;
-    }
-    setDeleteError("");
-    onIndexChange(next);
-  }, [hasMore, index, onIndexChange, onNeedMore, photos.length]);
+    if ((delta < 0 && !canPrev) || (delta > 0 && !canNext)) return;
+    setActionError("");
+    setEditing(false);
+    onNavigate(delta);
+  }, [canNext, canPrev, onNavigate]);
 
-  // Lock page scrolling behind the viewer.
+  // Lock page scrolling behind the preview.
   useEffect(() => {
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = previous; };
   }, []);
 
-  // Keep a few photos loaded ahead of the viewer and warm the next image.
+  // Warm the next image on this page.
   useEffect(() => {
-    if (hasMore && index >= photos.length - 3) onNeedMore();
     const next = photos[index + 1];
     if (next) { const image = new Image(); image.src = next.mediumUrl; }
-  }, [hasMore, index, onNeedMore, photos]);
+  }, [index, photos]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (confirmDelete) return;
+      if (confirmDelete || editing) return;
       if (event.key === "ArrowRight") go(1);
       else if (event.key === "ArrowLeft") go(-1);
       else if (event.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [confirmDelete, go, onClose]);
+  }, [confirmDelete, editing, go, onClose]);
+
+  const startRename = () => {
+    setDraftName(photo.name);
+    setActionError("");
+    setEditing(true);
+  };
+
+  const saveRename = async () => {
+    const name = draftName.trim();
+    if (!name || name === photo.name) {
+      setEditing(false);
+      return;
+    }
+    setBusy(true);
+    setActionError("");
+    try {
+      const result = await api<{ photo: Photo }>(`/api/photos/${photo.id}`, { method: "PATCH", body: JSON.stringify({ name }) });
+      onRenamed(result.photo);
+      setEditing(false);
+    } catch (renameError) {
+      setActionError(renameError instanceof Error ? renameError.message : "Không đổi được tên ảnh.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const deletePhoto = async () => {
-    setDeleting(true);
-    setDeleteError("");
+    setBusy(true);
+    setActionError("");
     try {
       await api(`/api/photos/${photo.id}`, { method: "DELETE" });
       setConfirmDelete(false);
       onDeleted(photo.id);
     } catch (deleteFailure) {
       setConfirmDelete(false);
-      setDeleteError(deleteFailure instanceof Error ? deleteFailure.message : "Không xóa được ảnh.");
+      setActionError(deleteFailure instanceof Error ? deleteFailure.message : "Không xóa được ảnh.");
     } finally {
-      setDeleting(false);
+      setBusy(false);
     }
   };
 
-  return <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label={`Ảnh ${index + 1} trên ${total}`}
-    onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
-    onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX ?? null; }}
-    onTouchEnd={(event) => {
-      const start = touchStart.current;
-      touchStart.current = null;
-      const end = event.changedTouches[0]?.clientX;
-      if (start === null || end === undefined || Math.abs(end - start) < 50) return;
-      go(end < start ? 1 : -1);
-    }}>
-    <div className="photo-lightbox-top">
-      <div className="photo-lightbox-meta"><b>{photo.name}</b><small>{photo.folderLabel} · {new Date(photo.takenAt).toLocaleDateString("vi-VN")}</small></div>
-      <div className="photo-lightbox-actions">
-        {canManage && <button type="button" className="photo-lightbox-delete" onClick={() => setConfirmDelete(true)} disabled={deleting}>Xóa ảnh</button>}
-        <button type="button" className="modal-close photo-lightbox-close" onClick={onClose} aria-label="Đóng">×</button>
+  return <div className="modal-backdrop photo-preview-backdrop" role="dialog" aria-modal="true" aria-label={`Ảnh ${position} trên ${total}`} {...backdropDismissProps(() => { if (!busy && !editing) onClose(); })}>
+    <section className="photo-preview">
+      <header className="photo-preview-header">
+        <p className="eyebrow">{photo.folderLabel} · {new Date(photo.takenAt).toLocaleDateString("vi-VN")}</p>
+        {editing
+          ? <form className="photo-rename" onSubmit={(event) => { event.preventDefault(); void saveRename(); }}>
+            <input value={draftName} onChange={(event) => setDraftName(event.target.value)} maxLength={100} autoFocus disabled={busy} aria-label="Tên ảnh mới"
+              onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); setEditing(false); } }} />
+            <button type="submit" className="primary" disabled={busy || !draftName.trim()}>{busy ? "Đang lưu…" : "Lưu"}</button>
+            <button type="button" className="secondary" onClick={() => setEditing(false)} disabled={busy}>Hủy</button>
+          </form>
+          : <h2 title={photo.name}>{photo.name}</h2>}
+        <button type="button" className="modal-close" onClick={onClose} aria-label="Đóng">×</button>
+      </header>
+
+      <div className="photo-preview-stage"
+        onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX ?? null; }}
+        onTouchEnd={(event) => {
+          const start = touchStart.current;
+          touchStart.current = null;
+          const end = event.changedTouches[0]?.clientX;
+          if (start === null || end === undefined || Math.abs(end - start) < 50) return;
+          go(end < start ? 1 : -1);
+        }}>
+        {broken === photo.id
+          ? <p className="photo-preview-broken">Không tải được ảnh này.</p>
+          // eslint-disable-next-line @next/next/no-img-element -- served straight from the Cloudinary CDN
+          : <img key={photo.id} src={photo.fullUrl} srcSet={`${photo.mediumUrl} 1080w, ${photo.fullUrl} 1920w`} sizes="(max-width: 1000px) 100vw, 960px" alt={photo.name} onError={() => setBroken(photo.id)} />}
+        <button type="button" className="photo-nav photo-nav-prev" onClick={() => go(-1)} disabled={!canPrev} aria-label="Ảnh trước">‹</button>
+        <button type="button" className="photo-nav photo-nav-next" onClick={() => go(1)} disabled={!canNext} aria-label="Ảnh sau">›</button>
       </div>
-    </div>
-    <div className="photo-lightbox-stage" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      {broken === photo.id
-        ? <p className="photo-lightbox-broken">Không tải được ảnh này.</p>
-        // eslint-disable-next-line @next/next/no-img-element -- served straight from the Cloudinary CDN
-        : <img key={photo.id} src={photo.fullUrl} srcSet={`${photo.mediumUrl} 1080w, ${photo.fullUrl} 1920w`} sizes="100vw" alt={photo.name} onError={() => setBroken(photo.id)} />}
-    </div>
-    <button type="button" className="photo-nav photo-nav-prev" onClick={() => go(-1)} disabled={!canPrev} aria-label="Ảnh trước">‹</button>
-    <button type="button" className="photo-nav photo-nav-next" onClick={() => go(1)} disabled={!canNext} aria-label="Ảnh sau">›</button>
-    <div className="photo-lightbox-bottom">
-      {deleteError && <p className="photo-lightbox-error" role="alert">{deleteError}</p>}
-      <span className="photo-counter">{index + 1} / {total}</span>
-    </div>
+
+      <footer className="photo-preview-footer">
+        <span className="photo-counter">{position} / {total}</span>
+        {actionError && <p className="photo-preview-error" role="alert">{actionError}</p>}
+        {canManage && !editing && <div className="photo-preview-actions">
+          <button type="button" className="soft-btn" onClick={startRename} disabled={busy}>Đổi tên</button>
+          <button type="button" className="photo-delete-btn" onClick={() => setConfirmDelete(true)} disabled={busy}>Xóa ảnh</button>
+        </div>}
+      </footer>
+    </section>
+
     <Presence show={confirmDelete}>{confirmDelete && <div className="modal-backdrop photo-confirm-backdrop" role="dialog" aria-modal="true" {...backdropDismissProps(() => setConfirmDelete(false))}>
       <section className="confirm-modal">
         <h2>Xóa ảnh này?</h2>
         <p>Ảnh sẽ bị xóa vĩnh viễn trên Cloudinary và biến mất khỏi Kho ảnh.</p>
         <div className="modal-actions confirm-actions">
-          <button type="button" className="secondary" onClick={() => setConfirmDelete(false)} disabled={deleting}>Hủy</button>
-          <button type="button" className="primary photo-danger" onClick={() => void deletePhoto()} disabled={deleting}>{deleting ? "Đang xóa…" : "Xóa ảnh"}</button>
+          <button type="button" className="secondary" onClick={() => setConfirmDelete(false)} disabled={busy}>Hủy</button>
+          <button type="button" className="primary photo-danger" onClick={() => void deletePhoto()} disabled={busy}>{busy ? "Đang xóa…" : "Xóa ảnh"}</button>
         </div>
       </section>
     </div>}</Presence>
@@ -326,6 +394,7 @@ type UploadItem = { key: string; file: File; status: "pending" | "uploading" | "
 type SignedUpload = { uploadUrl: string; apiKey: string; signature: string; folder: string; timestamp: number; allowed_formats: string };
 
 const NEW_FOLDER = "__new__";
+const ALL_FOLDERS = "__all__";
 
 function uploadToCloudinary(signed: SignedUpload, file: File, onProgress: (percent: number) => void) {
   return new Promise<{ asset_id: string }>((resolve, reject) => {

@@ -1,19 +1,18 @@
 import { after } from "next/server";
 import { getCloudinaryConfig, requireCloudinaryConfig } from "@/lib/cloudinary";
-import { decodeCursor, encodeCursor } from "@/lib/photos/assets";
 import { folderLabel } from "@/lib/photos/folders";
 import { PHOTO_COLUMNS, photosDbError, toApiPhoto, type PhotoRow } from "@/lib/photos/repository";
 import { autoSyncMode, diagnoseRoot, lastSyncedAt, refreshAssets, runFullSync } from "@/lib/photos/sync";
 import { ApiError, jsonError, requireAdmin, requireUser } from "@/lib/supabase-admin";
 
-// The first gallery load may run a full Cloudinary sync inline (empty index).
+// The gallery load may run a full Cloudinary sync inline (empty index).
 export const maxDuration = 60;
 
-const PAGE_SIZE = 24;
-const MAX_PAGE_SIZE = 60;
+const PHOTO_PAGE_SIZE = 18;
 
-// GET /api/photos?folder=<relative folder>&cursor=<opaque>&limit=<n>
-// Newest first with keyset pagination; the first page also returns categories and the total.
+// GET /api/photos?folder=<relative folder>&page=<1-based>&q=<name search>
+// Numbered pages of PHOTO_PAGE_SIZE photos, newest first (taken_at, id keeps the order stable).
+// Every response carries the total, the page count and the categories for the filter chips.
 export async function GET(request: Request) {
   try {
     const { admin, profile } = await requireUser(request);
@@ -22,55 +21,54 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const folder = url.searchParams.get("folder");
-    const cursorParam = url.searchParams.get("cursor");
-    const cursor = decodeCursor(cursorParam);
-    if (cursorParam && !cursor) throw new ApiError(400, "Trang ảnh không hợp lệ, vui lòng tải lại.");
-    const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, Number(url.searchParams.get("limit")) || PAGE_SIZE));
+    const requestedPage = Math.max(1, Math.floor(Number(url.searchParams.get("page")) || 1));
+    // Case-insensitive "contains" match on the display name; LIKE wildcards in the input are literal.
+    const search = (url.searchParams.get("q") ?? "").normalize("NFC").trim().slice(0, 100);
+    const namePattern = search ? `%${search.replace(/[\\%_]/g, (char) => `\\${char}`)}%` : null;
 
-    let query = admin.from("photos").select(PHOTO_COLUMNS).eq("is_deleted", false);
-    if (folder !== null) query = query.eq("folder", folder);
-    // Values are quoted so the timestamp's ":" "." "+" are not parsed as filter syntax.
-    if (cursor) query = query.or(`taken_at.lt."${cursor.takenAt}",and(taken_at.eq."${cursor.takenAt}",id.lt."${cursor.id}")`);
-    const pageQuery = query.order("taken_at", { ascending: false }).order("id", { ascending: false }).limit(limit + 1);
-
-    const firstPage = !cursor;
-    if (firstPage) {
+    if (requestedPage === 1) {
       const mode = autoSyncMode(await lastSyncedAt(admin));
       const sync = () => runFullSync(admin, config).catch((syncError) => console.error("Photo auto-sync failed", syncError instanceof Error ? syncError.message : syncError));
       if (mode === "now") await sync();
       else if (mode === "background") after(sync);
     }
-    const [page, folders, total] = await Promise.all([
-      pageQuery,
-      firstPage ? admin.from("photo_folders").select("folder, photo_count, latest_taken_at").order("latest_taken_at", { ascending: false }) : Promise.resolve(null),
-      firstPage
-        ? (() => {
-          let countQuery = admin.from("photos").select("id", { count: "exact", head: true }).eq("is_deleted", false);
-          if (folder !== null) countQuery = countQuery.eq("folder", folder);
-          return countQuery;
-        })()
-        : Promise.resolve(null),
-    ]);
-    if (page.error) throw photosDbError(page.error);
-    if (folders?.error) throw photosDbError(folders.error);
-    if (total?.error) throw photosDbError(total.error);
 
-    const rows = (page.data || []) as PhotoRow[];
+    let countQuery = admin.from("photos").select("id", { count: "exact", head: true }).eq("is_deleted", false);
+    if (folder !== null) countQuery = countQuery.eq("folder", folder);
+    if (namePattern) countQuery = countQuery.ilike("display_name", namePattern);
+    const [totalResult, folders] = await Promise.all([
+      countQuery,
+      admin.from("photo_folders").select("folder, photo_count, latest_taken_at").order("latest_taken_at", { ascending: false }),
+    ]);
+    if (totalResult.error) throw photosDbError(totalResult.error);
+    if (folders.error) throw photosDbError(folders.error);
+
+    const total = totalResult.count ?? 0;
+    const pageCount = Math.max(1, Math.ceil(total / PHOTO_PAGE_SIZE));
+    // Asking past the end (e.g. after deleting the last photo of a page) returns the last page.
+    const page = Math.min(requestedPage, pageCount);
+    const from = (page - 1) * PHOTO_PAGE_SIZE;
+
+    let pageQuery = admin.from("photos").select(PHOTO_COLUMNS).eq("is_deleted", false);
+    if (folder !== null) pageQuery = pageQuery.eq("folder", folder);
+    if (namePattern) pageQuery = pageQuery.ilike("display_name", namePattern);
+    const { data, error } = total === 0
+      ? { data: [], error: null }
+      : await pageQuery.order("taken_at", { ascending: false }).order("id", { ascending: false }).range(from, from + PHOTO_PAGE_SIZE - 1);
+    if (error) throw photosDbError(error);
+
     // Empty gallery: tell admins what Cloudinary holds so a wrong root folder or API key is obvious.
-    const diagnostics = firstPage && profile.role === "admin" && (total?.count ?? 0) === 0 && folder === null ? await diagnoseRoot(config) : undefined;
-    const hasMore = rows.length > limit;
-    const visible = rows.slice(0, limit);
-    const last = visible.at(-1);
+    const diagnostics = profile.role === "admin" && total === 0 && folder === null && !search ? await diagnoseRoot(config) : undefined;
 
     return Response.json({
-      photos: visible.map((row) => toApiPhoto(config.cloudName, row)),
-      nextCursor: hasMore && last ? encodeCursor(last.taken_at, last.id) : null,
-      ...(firstPage ? {
-        total: total?.count ?? 0,
-        folders: ((folders?.data || []) as { folder: string; photo_count: number }[]).map((row) => ({ folder: row.folder, label: folderLabel(row.folder), count: row.photo_count })),
-        canManage: profile.role === "admin",
-        ...(diagnostics ? { diagnostics } : {}),
-      } : {}),
+      photos: ((data || []) as PhotoRow[]).map((row) => toApiPhoto(config.cloudName, row)),
+      page,
+      pageCount,
+      pageSize: PHOTO_PAGE_SIZE,
+      total,
+      folders: ((folders.data || []) as { folder: string; photo_count: number }[]).map((row) => ({ folder: row.folder, label: folderLabel(row.folder), count: row.photo_count })),
+      canManage: profile.role === "admin",
+      ...(diagnostics ? { diagnostics } : {}),
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     return jsonError(error);

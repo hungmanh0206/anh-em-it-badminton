@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
-import { decodeCursor, deliveryUrls, encodeCursor, resourceToPhotoRow } from "../lib/photos/assets.js";
+import { deliveryUrls, resourceToPhotoRow } from "../lib/photos/assets.js";
 import { signParams, verifyNotificationSignature } from "../lib/photos/cloudinary-sign.js";
 import { folderLabel, fullFolderPath, relativeFolder, sanitizeFolderInput } from "../lib/photos/folders.js";
 import { extractNotificationTargets } from "../lib/photos/notifications.js";
@@ -79,13 +79,6 @@ test("deliveryUrls point straight at the Cloudinary CDN with resized transformat
   const urls = deliveryUrls("demo", { public_id: "badminton/2026/week 1/ảnh", version: 5 });
   assert.equal(urls.thumbUrl, "https://res.cloudinary.com/demo/image/upload/c_fill,g_auto,w_480,h_480,q_auto,f_auto/v5/badminton/2026/week%201/%E1%BA%A3nh");
   assert.match(urls.fullUrl, /\/c_limit,w_1920,h_1920,q_auto,f_auto\/v5\//);
-});
-
-test("cursor round-trips and rejects garbage", () => {
-  const id = "0b0b8d2e-1111-4a4a-9c9c-123456789abc";
-  assert.deepEqual(decodeCursor(encodeCursor("2026-10-04T01:02:03.000Z", id)), { takenAt: "2026-10-04T01:02:03.000Z", id });
-  assert.equal(decodeCursor("not-a-cursor"), null);
-  assert.equal(decodeCursor(null), null);
 });
 
 test("extractNotificationTargets covers upload, delete, rename and non-image events", () => {

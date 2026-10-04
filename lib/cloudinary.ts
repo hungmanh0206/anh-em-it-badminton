@@ -99,6 +99,18 @@ export async function listAllImages(config: CloudinaryConfig) {
   return all;
 }
 
+// Renames the asset's display name (dynamic-folder accounts). public_id, and so every delivery
+// URL, stays the same. Cloudinary is updated first; callers re-read it to refresh the index.
+export async function updateDisplayName(config: CloudinaryConfig, assetId: string, displayName: string) {
+  const response = await cloudinaryFetch(config, `/resources/${encodeURIComponent(assetId)}`, {
+    method: "PUT",
+    body: new URLSearchParams({ display_name: displayName }),
+  });
+  if (response.status === 404) throw new ApiError(404, "Ảnh không còn trên Cloudinary.");
+  if (!response.ok) throw await cloudinaryError(response, "Cloudinary không đổi được tên ảnh.");
+  return await response.json() as CloudinaryResource;
+}
+
 // Deletes an asset (signed Upload API destroy). "not found" counts as already deleted.
 export async function destroyImage(config: CloudinaryConfig, publicId: string) {
   const timestamp = Math.floor(Date.now() / 1000);
