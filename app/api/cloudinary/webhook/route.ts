@@ -2,8 +2,13 @@ import { getResourceByPublicId, requireCloudinaryConfig } from "@/lib/cloudinary
 import { verifyNotificationSignature } from "@/lib/photos/cloudinary-sign";
 import { extractNotificationTargets } from "@/lib/photos/notifications";
 import { photosDbError } from "@/lib/photos/repository";
-import { refreshAssets } from "@/lib/photos/sync";
+import { refreshAssets, runFullSync } from "@/lib/photos/sync";
 import { createSupabaseAdmin, jsonError } from "@/lib/supabase-admin";
+
+// Folder-level events (e.g. "move_or_rename_asset_folder") carry folder paths instead of asset ids;
+// they may move many assets at once, so they trigger a full reconciliation.
+export const maxDuration = 60;
+const isFolderEvent = (type: string | null) => Boolean(type && /folder/i.test(type));
 
 // POST /api/cloudinary/webhook — Cloudinary notification URL.
 // Flow: verify signature -> collect asset ids -> re-read each asset from Cloudinary -> upsert or
@@ -45,6 +50,7 @@ export async function POST(request: Request) {
       }
     }
 
+    if (!targets.size && isFolderEvent(type)) return Response.json({ ok: true, type, fullSync: await runFullSync(admin, config) });
     if (!targets.size) return Response.json({ ok: true, type, ignored: true });
     const result = await refreshAssets(admin, config, [...targets]);
     return Response.json({ ok: true, type, ...result });
