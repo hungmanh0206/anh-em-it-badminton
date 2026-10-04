@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { preconnect } from "react-dom";
 import { supabase } from "@/lib/supabase";
 import { PHOTO_FORMATS, PHOTO_MAX_BYTES } from "@/lib/photos/assets";
 import { folderLabel, sanitizeFolderInput } from "@/lib/photos/folders";
@@ -16,7 +17,7 @@ type Photo = {
   height: number | null;
   takenAt: string;
   thumbUrl: string;
-  mediumUrl: string;
+  previewUrl: string;
   fullUrl: string;
 };
 type PhotoFolder = { folder: string; label: string; count: number; latestAt?: string };
@@ -39,6 +40,7 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 const formatSize = (bytes: number) => (bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
 
 export function PhotoGallery() {
+  preconnect("https://res.cloudinary.com");
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [folders, setFolders] = useState<PhotoFolder[]>([]);
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
@@ -157,12 +159,9 @@ export function PhotoGallery() {
     <section className="panel photo-panel" ref={panel}>
     <div className="panel-head photo-panel-head">
       <div><h2>Những khoảnh khắc cùng anh em</h2></div>
-      {canManage && <div className="photo-head-actions">
-        <button type="button" className="primary" onClick={() => setUploadOpen(true)}>+ Tải ảnh</button>
-      </div>}
     </div>
 
-    {(allCount > 0 || query) && <div className="photo-toolbar">
+    {(allCount > 0 || query || canManage) && <div className="photo-toolbar">
       <label className="photo-search">
         <span aria-hidden="true">⌕</span>
         <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm theo tên ảnh…" aria-label="Tìm theo tên ảnh" maxLength={100} />
@@ -171,6 +170,7 @@ export function PhotoGallery() {
         <option value={ALL_FOLDERS}>Tất cả danh mục ({allCount})</option>
         {folders.map((folder) => <option key={folder.folder} value={folder.folder}>{folder.label} ({folder.count})</option>)}
       </select>
+      {canManage && <button type="button" className="primary photo-upload-btn" onClick={() => setUploadOpen(true)}>+ Tải ảnh</button>}
     </div>}
 
     {state === "loading" && <div className="photo-grid" aria-busy="true" aria-label="Đang tải ảnh">
@@ -280,6 +280,11 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
   const [actionError, setActionError] = useState("");
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState("");
+  const [loadedId, setLoadedId] = useState<string | null>(null);
+  const stage = useRef<HTMLDivElement | null>(null);
+  // "native" = Fullscreen API, "overlay" = fixed CSS fallback (iPhone Safari has no element fullscreen).
+  const [fullscreenMode, setFullscreenMode] = useState<"none" | "native" | "overlay">("none");
+  const fullscreen = fullscreenMode !== "none";
   const go = useCallback((delta: number) => {
     if ((delta < 0 && !canPrev) || (delta > 0 && !canNext)) return;
     setActionError("");
@@ -294,22 +299,56 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
     return () => { document.body.style.overflow = previous; };
   }, []);
 
-  // Warm the next image on this page.
+  // Preload both neighbours with the same srcset/sizes the stage uses, so stepping is instant.
   useEffect(() => {
-    const next = photos[index + 1];
-    if (next) { const image = new Image(); image.src = next.mediumUrl; }
+    [photos[index + 1], photos[index - 1]].forEach((neighbour) => {
+      if (!neighbour) return;
+      const image = new Image();
+      image.sizes = PREVIEW_SIZES;
+      image.srcset = `${neighbour.previewUrl} 1280w, ${neighbour.fullUrl} 1920w`;
+      image.src = neighbour.previewUrl;
+    });
   }, [index, photos]);
+
+  // Native fullscreen when available; otherwise a fixed overlay (e.g. iPhone Safari).
+  const toggleFullscreen = () => {
+    const node = stage.current;
+    if (!node) return;
+    if (fullscreenMode === "native") {
+      void document.exitFullscreen();
+      return;
+    }
+    if (fullscreenMode === "overlay") {
+      setFullscreenMode("none");
+      return;
+    }
+    if (node.requestFullscreen) node.requestFullscreen().catch(() => setFullscreenMode("overlay"));
+    else setFullscreenMode("overlay");
+  };
+
+  useEffect(() => {
+    const sync = () => setFullscreenMode((mode) => (document.fullscreenElement ? "native" : mode === "native" ? "none" : mode));
+    document.addEventListener("fullscreenchange", sync);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      if (document.fullscreenElement) void document.exitFullscreen();
+    };
+  }, []);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (confirmDelete || editing) return;
       if (event.key === "ArrowRight") go(1);
       else if (event.key === "ArrowLeft") go(-1);
-      else if (event.key === "Escape") onClose();
+      else if (event.key === "Escape") {
+        // Esc leaves the overlay fallback first; native fullscreen exits on its own.
+        if (fullscreenMode === "overlay") setFullscreenMode("none");
+        else if (fullscreenMode === "none") onClose();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [confirmDelete, editing, go, onClose]);
+  }, [confirmDelete, editing, fullscreenMode, go, onClose]);
 
   const startRename = () => {
     setDraftName(photo.name);
@@ -366,7 +405,7 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
         <button type="button" className="modal-close" onClick={onClose} aria-label="Đóng">×</button>
       </header>
 
-      <div className="photo-preview-stage"
+      <div ref={stage} className={`photo-preview-stage${fullscreenMode === "overlay" ? " is-fullscreen" : ""}`}
         onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX ?? null; }}
         onTouchEnd={(event) => {
           const start = touchStart.current;
@@ -375,10 +414,18 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
           if (start === null || end === undefined || Math.abs(end - start) < 50) return;
           go(end < start ? 1 : -1);
         }}>
+        {/* The grid thumbnail is already cached: show it blurred at once while the sharp image loads. */}
+        <div className="photo-preview-ambient" style={{ backgroundImage: `url("${photo.thumbUrl}")` }} aria-hidden="true" />
+        {broken !== photo.id && loadedId !== photo.id && <span className="photo-preview-spinner" aria-label="Đang tải ảnh" />}
         {broken === photo.id
           ? <p className="photo-preview-broken">Không tải được ảnh này.</p>
           // eslint-disable-next-line @next/next/no-img-element -- served straight from the Cloudinary CDN
-          : <img key={photo.id} src={photo.fullUrl} srcSet={`${photo.mediumUrl} 1080w, ${photo.fullUrl} 1920w`} sizes="(max-width: 1000px) 100vw, 960px" alt={photo.name} onError={() => setBroken(photo.id)} />}
+          : <img key={photo.id} className={loadedId === photo.id ? "is-loaded" : ""} src={photo.previewUrl} srcSet={`${photo.previewUrl} 1280w, ${photo.fullUrl} 1920w`} sizes={PREVIEW_SIZES} alt={photo.name} fetchPriority="high" decoding="async" onLoad={() => setLoadedId(photo.id)} onError={() => setBroken(photo.id)} />}
+        <button type="button" className="photo-fullscreen-btn" onClick={toggleFullscreen} aria-label={fullscreen ? "Thoát toàn màn hình" : "Xem toàn màn hình"} title={fullscreen ? "Thoát toàn màn hình" : "Xem toàn màn hình"}>
+          {fullscreen
+            ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" /></svg>
+            : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>}
+        </button>
         <button type="button" className="photo-nav photo-nav-prev" onClick={() => go(-1)} disabled={!canPrev} aria-label="Ảnh trước">‹</button>
         <button type="button" className="photo-nav photo-nav-next" onClick={() => go(1)} disabled={!canNext} aria-label="Ảnh sau">›</button>
       </div>
@@ -387,8 +434,8 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
         <span className="photo-counter">{position} / {total}</span>
         {actionError && <p className="photo-preview-error" role="alert">{actionError}</p>}
         {canManage && !editing && <div className="photo-preview-actions">
-          <button type="button" className="soft-btn" onClick={startRename} disabled={busy}>Đổi tên</button>
-          <button type="button" className="photo-delete-btn" onClick={() => setConfirmDelete(true)} disabled={busy}>Xóa ảnh</button>
+          <button type="button" className="photo-action-btn" onClick={startRename} disabled={busy}>Đổi tên</button>
+          <button type="button" className="photo-action-btn photo-action-danger" onClick={() => setConfirmDelete(true)} disabled={busy}>Xóa ảnh</button>
         </div>}
       </footer>
     </section>
@@ -410,6 +457,8 @@ type UploadItem = { key: string; file: File; status: "pending" | "uploading" | "
 type SignedUpload = { uploadUrl: string; apiKey: string; signature: string; folder: string; timestamp: number; allowed_formats: string };
 
 const NEW_FOLDER = "__new__";
+// The preview stage is at most ~1000px wide.
+const PREVIEW_SIZES = "(max-width: 1000px) 100vw, 1000px";
 const ALL_FOLDERS = "__all__";
 
 function uploadToCloudinary(signed: SignedUpload, file: File, onProgress: (percent: number) => void) {
