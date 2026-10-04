@@ -19,7 +19,7 @@
   color: #5c4100 !important;
 }
 
-/* Sits next to the source pill in the "Thứ hạng ELO" header. */
+/* Sits at the right end of the "Thứ hạng ELO" header. */
 .elo-head-actions {
   display: flex;
   flex: 0 0 auto;
@@ -30,14 +30,6 @@
 .elo-head-actions .elo-guide-btn {
   margin-top: 0 !important;
   white-space: nowrap;
-}
-
-/* Phones: the header is a grid there; put the actions on their own row. */
-@media (max-width: 640px) {
-  .elo-head-actions {
-    grid-column: 1 / -1;
-    justify-content: space-between;
-  }
 }
 
 .elo-guide-btn:focus-visible {

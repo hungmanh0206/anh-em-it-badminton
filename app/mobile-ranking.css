@@ -888,3 +888,35 @@
     font-size: 28px !important;
   }
 }
+
+/* Month select and "Lưu ảnh BXH": one row, same height and radius. */
+@media (min-width: 801px) {
+  .ranking-toolbar {
+    align-items: center !important;
+  }
+}
+
+.ranking-toolbar .ranking-filter-row {
+  align-items: center !important;
+}
+
+.ranking-toolbar .ranking-filter-row select,
+.ranking-toolbar .ranking-export-btn {
+  box-sizing: border-box;
+  height: 40px !important;
+  min-height: 40px !important;
+  border-radius: 12px !important;
+  font-size: 13px !important;
+}
+
+.ranking-toolbar .ranking-filter-row select {
+  padding: 0 10px !important;
+  font-weight: 700;
+}
+
+.ranking-toolbar .ranking-export-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px !important;
+}

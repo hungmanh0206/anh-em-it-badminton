@@ -1691,7 +1691,7 @@ async function downloadRankingImage(month: string, rows: RankingRow[]) {
 function Ranking({ month, rows, onMonthChange, monthOptions, isAdmin, closeStatus, closeNotice, closingMonth, onCloseMonth }: { month: string; rows: RankingRow[]; onMonthChange: (month: string) => void; monthOptions: string[]; isAdmin: boolean; closeStatus: MonthCloseStatus | null; closeNotice: string; closingMonth: boolean; onCloseMonth: () => void }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
   return <section className="ranking">
-    <div className="ranking-toolbar"><div className="ranking-filter-row"><label>Tháng<select value={month} onChange={(e) => onMonthChange(e.target.value)}>{monthOptions.map((option) => <option key={option}>{option}</option>)}</select></label><button type="button" className="soft-btn ranking-export-btn" onClick={() => void downloadRankingImage(month, rows)}><span className="ranking-export-full">Lưu ảnh BXH</span><span className="ranking-export-short">Lưu ảnh</span></button></div><p className="ranking-note">{closeStatus?.closed ? "BXH tháng này đã chốt, dữ liệu chỉ còn xem." : "Admin chốt BXH sau khi buổi cuối tháng hoàn tất để tạo tháng mới."}</p></div>
+    <div className="ranking-toolbar"><div className="ranking-filter-row"><select value={month} onChange={(e) => onMonthChange(e.target.value)} aria-label="Tháng">{monthOptions.map((option) => <option key={option}>{option}</option>)}</select><button type="button" className="soft-btn ranking-export-btn" onClick={() => void downloadRankingImage(month, rows)}><span className="ranking-export-full">Lưu ảnh BXH</span><span className="ranking-export-short">Lưu ảnh</span></button></div><p className="ranking-note">{closeStatus?.closed ? "BXH tháng này đã chốt, dữ liệu chỉ còn xem." : "Admin chốt BXH sau khi buổi cuối tháng hoàn tất để tạo tháng mới."}</p></div>
     {isAdmin && closeStatus && <div className={"month-close-card " + (closeStatus.closed ? "closed" : closeStatus.eligible ? "ready" : "waiting")}>
       <div>
         <span>{closeStatus.closed ? "ĐÃ CHỐT THÁNG" : closeStatus.eligible ? "SẴN SÀNG CHỐT" : "CHỜ ĐỦ ĐIỀU KIỆN"}</span>
@@ -1783,7 +1783,6 @@ function EloGuideModal({ onClose }: { onClose: () => void }) {
 
 function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus | null }) {
   const [guideOpen, setGuideOpen] = useState(false);
-  const sourceLabel = status?.source === "database" ? "Database" : status?.source === "calculated" ? "Replay" : "Tạm thời";
   return <section className="elo-page">
     <section className="panel elo-hero-panel">
       <div className="elo-hero-copy">
@@ -1798,7 +1797,6 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
         <div><h2>Thứ hạng ELO</h2><p>Level lấy theo thứ hạng ELO hiện tại, tách riêng với BXH điểm thưởng tháng.</p></div>
         <div className="elo-head-actions">
           <button type="button" className="soft-btn elo-guide-btn" onClick={() => setGuideOpen(true)}>Cách tính ELO</button>
-          <span className="count-pill elo-source-pill"><b>{sourceLabel}</b><small>{rows.length} thành viên</small></span>
         </div>
       </div>
       {status && <div className={`elo-status elo-${status.source}`}>{status.message}</div>}
