@@ -48,7 +48,12 @@
   outline-offset: 2px !important;
 }
 
-/* The profile popover sits on a tinted hero card; keep the button solid white there. */
+/* The profile popover sits on a warm tinted card: use the cream tile surface there. */
 .profile-close {
-  background: #fff !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-color: rgba(184, 118, 14, 0.18) !important;
+  background: rgba(255, 253, 248, 0.92) !important;
+  box-shadow: none !important;
+  color: #3d3528 !important;
 }

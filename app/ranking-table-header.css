@@ -340,22 +340,25 @@
 }
 
 /* Profile modal */
+/* Same surface as the stat tiles below it. */
 .profile-form {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin: 0 16px 12px;
-  padding: 10px 14px;
-  border: 1px solid rgba(30, 25, 18, 0.08);
-  border-radius: 12px;
-  background: #fff;
+  margin: 0 16px 8px;
+  padding: 11px 12px;
+  border: 1px solid rgba(184, 118, 14, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 253, 248, 0.92);
 }
 
 .profile-form > span {
-  color: rgba(61, 53, 40, 0.7);
-  font-size: 11.5px;
-  font-weight: 800;
+  color: #7b7368;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .profile-form .form-badge {
