@@ -292,22 +292,51 @@
   .rank-table.rank-table-form .form-badge { width: 18px; height: 18px; font-size: 8.5px; }
 }
 
-/* Phones: the form sits on the name line, right-aligned, so rows keep their height. */
+/* Phones: small badges at the right end of the stats line, so rows keep their height. */
 @media (max-width: 739px) {
-  .rank-table.rank-table-form > .rank-row.rank-columns > .person {
-    padding-right: 84px !important;
+  .rank-table.rank-table-form > .rank-row.rank-columns > .rank-mobile-stats {
+    padding-right: 66px !important;
   }
 
   .rank-table.rank-table-form > .rank-row.rank-columns > .rank-form {
     grid-column: 2 !important;
-    grid-row: 1 !important;
+    grid-row: 2 !important;
     justify-self: end !important;
     align-self: center !important;
     margin: 0 !important;
   }
 
-  .rank-table .form-badges { gap: 3px; }
-  .rank-table .form-badge { width: 18px; height: 18px; font-size: 8.5px; }
+  .rank-table .form-badges { gap: 2px; }
+  .rank-table .form-badge { width: 14px; height: 14px; font-size: 7px; }
+}
+
+/* Narrow phones (iPhone SE / mini): tighter stats so the badges still fit on the line. */
+@media (max-width: 380px) {
+  .rank-table.rank-table-form > .rank-row.rank-columns > .rank-mobile-stats {
+    gap: 4px !important;
+    padding-right: 54px !important;
+  }
+
+  .rank-table.rank-table-form > .rank-row.rank-columns > .rank-mobile-stats span {
+    gap: 2px !important;
+  }
+
+  .rank-table .form-badge { width: 12px; height: 12px; }
+}
+
+/* Very narrow screens (320px): the stats line is full, so the badges move to the name line. */
+@media (max-width: 340px) {
+  .rank-table.rank-table-form > .rank-row.rank-columns > .rank-mobile-stats {
+    padding-right: 0 !important;
+  }
+
+  .rank-table.rank-table-form > .rank-row.rank-columns > .person {
+    padding-right: 58px !important;
+  }
+
+  .rank-table.rank-table-form > .rank-row.rank-columns > .rank-form {
+    grid-row: 1 !important;
+  }
 }
 
 /* Profile modal */
