@@ -229,3 +229,121 @@
     gap: 8px !important;
   }
 }
+
+/* ---------- Form (last 4 results): W green / L red circles ---------- */
+.form-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.form-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: default;
+}
+
+.form-win { background: #1f9d55; }
+.form-loss { background: #d64545; }
+
+.form-empty {
+  border: 1.5px dashed rgba(61, 53, 40, 0.22);
+  background: transparent;
+}
+
+/* BXH tháng: an 8th column on desktop / iPad (the home snapshot table keeps 7). */
+@media (min-width: 740px) {
+  .rank-table.rank-table-form {
+    --rank-table-columns: 56px minmax(0, 1fr) 70px 86px 82px 76px 70px 112px;
+  }
+
+  .rank-table > .rank-row.rank-columns > .rank-form {
+    grid-column: 8 !important;
+    justify-self: center !important;
+  }
+}
+
+/* iPad portrait: no room for an 8th column, so the form goes under the member name. */
+@media (min-width: 740px) and (max-width: 1023px) {
+  .rank-table.rank-table-form {
+    --rank-table-columns: 44px minmax(0, 1fr) 54px 70px 64px 62px 54px;
+  }
+
+  .rank-table.rank-table-form > .rank-head.rank-columns > span:nth-child(8) {
+    display: none !important;
+  }
+
+  .rank-table.rank-table-form > .rank-row.rank-columns {
+    row-gap: 4px !important;
+  }
+
+  .rank-table.rank-table-form > .rank-row.rank-columns > * {
+    grid-row: 1 / span 2 !important;
+  }
+
+  .rank-table.rank-table-form > .rank-row.rank-columns > .person {
+    grid-row: 1 !important;
+    align-self: end !important;
+  }
+
+  .rank-table.rank-table-form > .rank-row.rank-columns > .rank-form {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    align-self: start !important;
+    justify-self: start !important;
+    padding-left: 2px;
+  }
+
+  .rank-table.rank-table-form .form-badges { gap: 3px; }
+  .rank-table.rank-table-form .form-badge { width: 17px; height: 17px; font-size: 9px; }
+}
+
+/* Phones: the form sits on its own line under the small stats. */
+@media (max-width: 739px) {
+  .rank-table > .rank-row.rank-columns > .rank-form {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    margin-top: 5px;
+  }
+
+  .rank-table .form-badges { gap: 3px; }
+  .rank-table .form-badge { width: 17px; height: 17px; font-size: 9px; }
+}
+
+/* Profile modal */
+.profile-form {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 16px 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(30, 25, 18, 0.08);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.profile-form > span {
+  color: rgba(61, 53, 40, 0.7);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.profile-form .form-badge {
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+}
+
+@media (max-width: 560px) {
+  .profile-form {
+    margin-inline: 13px;
+  }
+}

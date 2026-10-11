@@ -30,9 +30,13 @@ type RankingCachePayload = {
   championRankingLabel: string;
   storedAt: number;
 };
+// One of a member's most recent matches, as computed by /api/app-data (newest first).
+type FormResult = { result: "W" | "L"; date: string; score: string };
+type FormByUsername = Record<string, FormResult[]>;
 type AppDataCachePayload = RankingCachePayload & {
   eloRows: EloRankingRow[];
   eloStatus: EloStatus | null;
+  formByUsername?: FormByUsername;
   historySessions: HistorySession[];
   monthCloseStatus: MonthCloseStatus | null;
 };
@@ -299,6 +303,7 @@ export default function Home() {
   const [championRankingRows, setChampionRankingRows] = useState<RankingRow[]>([]);
   const [eloRows, setEloRows] = useState<EloRankingRow[]>([]);
   const [eloStatus, setEloStatus] = useState<EloStatus | null>(null);
+  const [formByUsername, setFormByUsername] = useState<FormByUsername>({});
   const [championRankingLabel, setChampionRankingLabel] = useState(() => {
     const initialDate = new Date();
     return monthLabel(new Date(initialDate.getFullYear(), initialDate.getMonth() - 1, 1));
@@ -690,6 +695,7 @@ export default function Home() {
         setChampionRankingLabel(payload.championRankingLabel);
         setEloRows(payload.eloRows || []);
         setEloStatus(payload.eloStatus || null);
+        setFormByUsername(payload.formByUsername || {});
         setHistorySessions(payload.historySessions);
         setMonthCloseStatus(payload.monthCloseStatus);
       };
@@ -1175,7 +1181,7 @@ export default function Home() {
     <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setActiveUser(null); }} />}</Presence>
     <section className="content">
       <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className={avatarClassName("welcome-avatar", currentUser)} style={avatarStyle(currentUser)} aria-hidden="true">{welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
-      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
+      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={formByUsername} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
         <section className="hero">
           <div className="hero-copy"><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div>
           <img className="hero-logo" src="/club-logo.png?v=club-glass-logo" alt="" aria-hidden="true" />
@@ -1191,11 +1197,22 @@ export default function Home() {
     </section>
     <Presence show={Boolean(showCheckin)}>{showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}</Presence>
     <Presence show={Boolean(confirmation)}>{confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}</Presence>
-    <Presence show={Boolean(showProfileCard)}>{showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} elo={profileElo} onClose={() => setShowProfileCard(false)} />}</Presence>
+    <Presence show={Boolean(showProfileCard)}>{showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} elo={profileElo} form={formByUsername[currentUser.username]} onClose={() => setShowProfileCard(false)} />}</Presence>
   </main>;
 }
 
-function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass, hasRankingData, elo, onClose }: { member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; hasRankingData: boolean; elo: EloRankingRow | null; onClose: () => void }) {
+// Last four results, oldest → newest (latest on the right); empty slots when fewer matches exist.
+function FormBadges({ form, className = "" }: { form?: FormResult[]; className?: string }) {
+  const recent = [...(form ?? [])].slice(0, 4).reverse();
+  const label = recent.length ? `Phong độ ${recent.length} trận gần nhất: ${recent.map((entry) => (entry.result === "W" ? "thắng" : "thua")).join(", ")}` : "Chưa có trận nào";
+  const formatDay = (date: string) => date.split("-").reverse().slice(0, 2).join("/");
+  return <div className={`form-badges ${className}`.trim()} role="img" aria-label={label}>
+    {recent.map((entry, index) => <span key={index} className={`form-badge ${entry.result === "W" ? "form-win" : "form-loss"}`} title={`${entry.result === "W" ? "Thắng" : "Thua"} ${entry.score} · ${formatDay(entry.date)}`}>{entry.result}</span>)}
+    {Array.from({ length: 4 - recent.length }, (_, index) => <span key={`empty-${index}`} className="form-badge form-empty" />)}
+  </div>;
+}
+
+function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass, hasRankingData, elo, form, onClose }: { member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; hasRankingData: boolean; elo: EloRankingRow | null; form?: FormResult[]; onClose: () => void }) {
   const isTopRank = hasRankingData && rank > 0 && rank <= 3;
   const pointDiff = achievement?.pointDiff;
   const pointDiffLabel = typeof pointDiff === "number" ? `${pointDiff > 0 ? "+" : ""}${pointDiff}` : "0";
@@ -1225,6 +1242,10 @@ function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass
         <b>{points} điểm</b>
       </div>
       <small>{hasRankingData ? `${matches} trận · hiệu số ${pointDiffLabel}` : "Chưa có trận trong tháng này."}</small>
+    </div>
+    <div className="profile-form">
+      <span>Phong độ 4 trận gần nhất</span>
+      <FormBadges form={form} />
     </div>
     <div className="profile-stat-grid">
       <div className="profile-stat profile-rank-stat"><span>Vị trí</span><b>{positionDisplay}</b></div>
@@ -1688,7 +1709,7 @@ async function downloadRankingImage(month: string, rows: RankingRow[]) {
     }, 1500);
   }, "image/png", 0.96);
 }
-function Ranking({ month, rows, onMonthChange, monthOptions, isAdmin, closeStatus, closeNotice, closingMonth, onCloseMonth }: { month: string; rows: RankingRow[]; onMonthChange: (month: string) => void; monthOptions: string[]; isAdmin: boolean; closeStatus: MonthCloseStatus | null; closeNotice: string; closingMonth: boolean; onCloseMonth: () => void }) {
+function Ranking({ month, rows, form, onMonthChange, monthOptions, isAdmin, closeStatus, closeNotice, closingMonth, onCloseMonth }: { month: string; rows: RankingRow[]; form: FormByUsername; onMonthChange: (month: string) => void; monthOptions: string[]; isAdmin: boolean; closeStatus: MonthCloseStatus | null; closeNotice: string; closingMonth: boolean; onCloseMonth: () => void }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
   return <section className="ranking">
     <div className="ranking-toolbar"><div className="ranking-filter-row"><select value={month} onChange={(e) => onMonthChange(e.target.value)} aria-label="Tháng">{monthOptions.map((option) => <option key={option}>{option}</option>)}</select><button type="button" className="soft-btn ranking-export-btn" onClick={() => void downloadRankingImage(month, rows)}><span className="ranking-export-full">Lưu ảnh BXH</span><span className="ranking-export-short">Lưu ảnh</span></button></div><p className="ranking-note">{closeStatus?.closed ? "BXH tháng này đã chốt, dữ liệu chỉ còn xem." : "Admin chốt BXH sau khi buổi cuối tháng hoàn tất để tạo tháng mới."}</p></div>
@@ -1701,9 +1722,9 @@ function Ranking({ month, rows, onMonthChange, monthOptions, isAdmin, closeStatu
       </div>
       {!closeStatus.closed && <button className="primary" disabled={!closeStatus.eligible || closingMonth} onClick={onCloseMonth}>{closingMonth ? "Đang chốt..." : `Chốt BXH ${closeStatus.monthLabel}`}</button>}
     </div>}
-    <div className="rank-table"><div className="rank-head rank-columns"><span>Vị trí</span><span>Thành viên</span><span>Điểm</span><span>Điểm thắng</span><span>Điểm thua</span><span>Hiệu số</span><span>Số trận</span></div>{rows.length ? rows.map((row, i) => {
+    <div className="rank-table rank-table-form"><div className="rank-head rank-columns"><span>Vị trí</span><span>Thành viên</span><span>Điểm</span><span>Điểm thắng</span><span>Điểm thua</span><span>Hiệu số</span><span>Số trận</span><span>Phong độ</span></div>{rows.length ? rows.map((row, i) => {
       const isTopRank = hasRankingData && i < 3;
-      return <div className={"rank-row rank-columns " + (isTopRank ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={isTopRank ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</div><b>{row.name}</b><span className="level">L{row.level}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span><div className="rank-mobile-stats" aria-hidden="true"><span><em>Thắng</em><b>{row.pointsWon}</b></span><span><em>Thua</em><b>{row.pointsLost}</b></span><span><em>Hiệu</em><b className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</b></span><span><em>Trận</em><b>{row.matches}</b></span></div></div>;
+      return <div className={"rank-row rank-columns " + (isTopRank ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={isTopRank ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</div><b>{row.name}</b><span className="level">L{row.level}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span><FormBadges form={row.username ? form[row.username] : undefined} className="rank-form" /><div className="rank-mobile-stats" aria-hidden="true"><span><em>Thắng</em><b>{row.pointsWon}</b></span><span><em>Thua</em><b>{row.pointsLost}</b></span><span><em>Hiệu</em><b className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</b></span><span><em>Trận</em><b>{row.matches}</b></span></div></div>;
     }) : <div className="empty-ranking">Chưa có thành viên hoạt động để hiển thị BXH {month}.</div>}</div>
   </section>;
 }

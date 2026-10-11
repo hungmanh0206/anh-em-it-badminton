@@ -62,6 +62,7 @@ type EloStatus = {
 type EloRatingRow = { member_id: string; elo_rating: number | string | null; updated_at?: string | null };
 type EloStoredMatch = { id: string; match_no: number; team_a: string[] | null; team_b: string[] | null; score_a: number | null; score_b: number | null };
 type EloSessionRow = { session_date: string; matches?: EloStoredMatch[] | null };
+type FormResult = { result: "W" | "L"; date: string; score: string };
 
 
 type HistoryMatchSummary = {
@@ -347,6 +348,36 @@ async function loadEloRanking(admin: SupabaseClient, eloRatingsRead: EloRatingsR
    };
  }
 }
+const FORM_LENGTH = 4;
+
+// Each member's last FORM_LENGTH scored matches (newest first), keyed by username.
+// Sessions still in progress count too, so the form updates as soon as a score is saved.
+function buildFormByUsername(sessions: EloSessionRow[], activeProfiles: SupabaseProfile[]) {
+  const usernameById = new Map(activeProfiles.flatMap((profile) => profile.id && profile.username ? [[profile.id, profile.username] as const] : []));
+  const form: Record<string, FormResult[]> = {};
+  const newestFirst = [...sessions].sort((a, b) => b.session_date.localeCompare(a.session_date));
+  for (const session of newestFirst) {
+    const matches = (session.matches || []).filter(isScoredEloMatch).sort((a, b) => b.match_no - a.match_no);
+    for (const match of matches) {
+      const scoreA = match.score_a as number;
+      const scoreB = match.score_b as number;
+      const sides = [
+        { team: match.team_a as string[], won: scoreA > scoreB, score: `${scoreA}-${scoreB}` },
+        { team: match.team_b as string[], won: scoreB > scoreA, score: `${scoreB}-${scoreA}` },
+      ];
+      for (const side of sides) {
+        for (const memberId of side.team) {
+          const username = usernameById.get(memberId);
+          if (!username) continue;
+          const entries = (form[username] ??= []);
+          if (entries.length < FORM_LENGTH) entries.push({ result: side.won ? "W" : "L", date: session.session_date, score: side.score });
+        }
+      }
+    }
+  }
+  return form;
+}
+
 function requireDateKey(value: string | null, fallback: string, name: string) {
   const key = value || fallback;
   if (!dateKeyPattern.test(key)) throw new ApiError(400, `${name} không hợp lệ.`);
@@ -381,6 +412,7 @@ export async function GET(request: Request) {
       { count: nextMonthRows, error: nextMonthError },
       { data: historyData, error: historyError },
       eloRatingsRead,
+      { data: formSessions, error: formError },
     ] = await Promise.all([
       admin.from("monthly_results").select(rankingSelect).in("month", requestedRankingMonths),
       admin.from("play_sessions").select("session_date, status").in("session_date", championFinalSessionKeys),
@@ -389,9 +421,10 @@ export async function GET(request: Request) {
       admin.from("monthly_results").select("id", { count: "exact", head: true }).eq("month", selectedNextMonthKey),
       admin.from("play_sessions").select("id, session_date, matches(match_no, team_a, team_b), attendances(choice)").eq("status", "completed").order("session_date", { ascending: false }),
       admin.from("elo_ratings").select("member_id, elo_rating, updated_at"),
+      admin.from("play_sessions").select("session_date, matches(id, match_no, team_a, team_b, score_a, score_b)").order("session_date", { ascending: false }),
     ]);
 
-    const queryError = rankingError || championSessionError || profileError || finalSessionError || nextMonthError || historyError;
+    const queryError = rankingError || championSessionError || profileError || finalSessionError || nextMonthError || historyError || formError;
     if (queryError) throw queryError;
 
     const rankingRowsByMonth = new Map<string, MonthlyResultRow[]>();
@@ -404,6 +437,7 @@ export async function GET(request: Request) {
 
     const activeProfileRows = (activeProfiles || []) as SupabaseProfile[];
     const { rows: eloRows, status: eloStatus } = await loadEloRanking(admin, eloRatingsRead, activeProfileRows);
+    const formByUsername = buildFormByUsername((formSessions || []) as EloSessionRow[], activeProfileRows);
     const selectedRows = rankingRowsByMonth.get(month) ?? [];
     const currentRowsForCalendarMonth = rankingRowsByMonth.get(currentMonthKey) ?? [];
     const liveRowsForSessionMonth = rankingRowsByMonth.get(sessionMonthKey) ?? [];
@@ -454,6 +488,7 @@ export async function GET(request: Request) {
       championRankingLabel,
       eloRows,
       eloStatus,
+      formByUsername,
       historySessions,
       monthCloseStatus: {
         monthKey: month,
