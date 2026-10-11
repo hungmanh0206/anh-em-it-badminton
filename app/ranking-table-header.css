@@ -240,8 +240,8 @@
 .form-badge {
   display: inline-grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   color: #fff;
   font-size: 10.5px;
@@ -250,8 +250,15 @@
   cursor: default;
 }
 
-.form-win { background: #1f9d55; }
-.form-loss { background: #d64545; }
+/* Glossy W / L icons; the letter stays in the markup (for copy/paste) but is drawn by the image. */
+.form-win,
+.form-loss {
+  background: center / contain no-repeat;
+  color: transparent;
+}
+
+.form-win { background-image: url("/app-icons/form-win.png?v=form-icons-20261011"); }
+.form-loss { background-image: url("/app-icons/form-loss.png?v=form-icons-20261011"); }
 
 .form-empty {
   border: 1.5px dashed rgba(61, 53, 40, 0.22);
@@ -261,7 +268,7 @@
 /* BXH tháng: an 8th column on desktop / iPad (the home snapshot table keeps 7). */
 @media (min-width: 740px) {
   .rank-table.rank-table-form {
-    --rank-table-columns: 56px minmax(0, 1fr) 70px 86px 82px 76px 70px 112px;
+    --rank-table-columns: 56px minmax(0, 1fr) 70px 86px 82px 76px 70px 116px;
   }
 
   .rank-table > .rank-row.rank-columns > .rank-form {
@@ -273,7 +280,7 @@
 /* iPad mini / portrait: keep one line per member — tighter numbers, smaller badges. */
 @media (min-width: 740px) and (max-width: 1023px) {
   .rank-table.rank-table-form {
-    --rank-table-columns: 36px minmax(0, 1fr) 44px 54px 50px 48px 42px 78px;
+    --rank-table-columns: 36px minmax(0, 1fr) 44px 54px 50px 48px 42px 84px;
   }
 
   .rank-table.rank-table-form > .rank-head.rank-columns,
@@ -282,13 +289,13 @@
   }
 
   .rank-table.rank-table-form .form-badges { gap: 3px; }
-  .rank-table.rank-table-form .form-badge { width: 16px; height: 16px; font-size: 8.5px; }
+  .rank-table.rank-table-form .form-badge { width: 18px; height: 18px; font-size: 8.5px; }
 }
 
 /* Phones: the form sits on the name line, right-aligned, so rows keep their height. */
 @media (max-width: 739px) {
   .rank-table.rank-table-form > .rank-row.rank-columns > .person {
-    padding-right: 76px !important;
+    padding-right: 84px !important;
   }
 
   .rank-table.rank-table-form > .rank-row.rank-columns > .rank-form {
@@ -300,7 +307,7 @@
   }
 
   .rank-table .form-badges { gap: 3px; }
-  .rank-table .form-badge { width: 16px; height: 16px; font-size: 8.5px; }
+  .rank-table .form-badge { width: 18px; height: 18px; font-size: 8.5px; }
 }
 
 /* Profile modal */
@@ -323,8 +330,8 @@
 }
 
 .profile-form .form-badge {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   font-size: 11px;
 }
 
