@@ -200,14 +200,51 @@
   margin-top: 16px;
 }
 
+.member-head-actions .search {
+  width: 240px;
+}
+
+.member-add-short {
+  display: none;
+}
+
+/* Phones: title + short add button on one line, search full width underneath. */
 @media (max-width: 800px) {
+  .member-panel-head {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center !important;
+    gap: 12px 10px !important;
+  }
+
   .member-head-actions {
-    width: 100%;
-    justify-content: stretch;
+    display: contents;
+  }
+
+  .member-panel-head > div:first-child {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .member-add-btn {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
   }
 
   .member-head-actions .search {
-    flex: 1 1 180px;
-    width: auto;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  .member-add-full {
+    display: none;
+  }
+
+  .member-add-short {
+    display: inline;
   }
 }
