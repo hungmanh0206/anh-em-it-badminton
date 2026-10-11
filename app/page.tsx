@@ -1570,129 +1570,261 @@ const rankingMonthForFile = (label: string) => {
   const monthText = String(date.getMonth() + 1).padStart(2, "0");
   return { display: `Tháng ${monthText}/${date.getFullYear()}`, file: `${monthText}-${date.getFullYear()}` };
 };
-async function downloadRankingImage(month: string, rows: RankingRow[]) {
+const loadCanvasImage = (src: string) => new Promise<HTMLImageElement | null>((resolve) => {
+  const image = new Image();
+  image.onload = () => resolve(image);
+  image.onerror = () => resolve(null);
+  image.src = src;
+});
+
+// Draws the monthly ranking exactly like the desktop BXH table in the app (same columns, colours,
+// medals, avatars, Level pills and form icons), at a fixed 1200px width whatever device saves it.
+async function downloadRankingImage(month: string, rows: RankingRow[], form: FormByUsername) {
   if (typeof document === "undefined") return;
+  const bodyFont = `"Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif`;
+  const numberFont = `"JetBrains Mono", ui-monospace, monospace`;
+  const headingFont = `"Bricolage Grotesque", "Be Vietnam Pro", sans-serif`;
+  await Promise.all([
+    document.fonts?.load(`800 15px "Be Vietnam Pro"`),
+    document.fonts?.load(`700 26px "JetBrains Mono"`),
+    document.fonts?.load(`750 30px "Bricolage Grotesque"`),
+  ]).catch(() => undefined);
   await document.fonts?.ready.catch(() => undefined);
-  const ratio = Math.max(1, Math.min(2.4, window.devicePixelRatio || 1));
-  const visibleRows = rows.length ? rows : [{ name: "Chưa có dữ liệu", initials: "—", level: 2, points: 0, pointsWon: 0, pointsLost: 0, pointDiff: 0, matches: 0, color: "#b8760e", placeholder: true }];
-  const width = 1080;
-  const rowHeight = 82;
-  const height = 226 + visibleRows.length * rowHeight + 62;
-  const headingFont = `"Bricolage Grotesque", "Be Vietnam Pro", Arial, sans-serif`;
-  const bodyFont = `"DM Sans", "Be Vietnam Pro", Arial, sans-serif`;
-  const { display, file } = rankingMonthForFile(month);
+
+  const visibleRows: RankingRow[] = rows.length ? rows : [{ name: "Chưa có dữ liệu", initials: "—", level: 2, points: 0, pointsWon: 0, pointsLost: 0, pointDiff: 0, matches: 0, color: "#b8760e", placeholder: true }];
+  const hasRankingData = visibleRows.some((row) => !row.placeholder && row.matches > 0);
+  const [medals, winIcon, lossIcon, avatars] = await Promise.all([
+    Promise.all([1, 2, 3].map((rank) => loadCanvasImage(`/app-icons/rank-${rank}.png?v=ranking-medals-nobg-20260904`))),
+    loadCanvasImage("/app-icons/form-win.png?v=form-icons-20261011"),
+    loadCanvasImage("/app-icons/form-loss.png?v=form-icons-20261011"),
+    Promise.all(visibleRows.map((row) => (hasAvatarArt(row.username) ? loadCanvasImage(`/app-avatars/${avatarUsername(row.username)}.png?v=${avatarAssetVersion}`) : Promise.resolve(null)))),
+  ]);
+
+  // Layout (CSS px, mirrors ranking-table-header.css at desktop width).
+  const width = 1200;
+  const cardX = 24;
+  const cardW = width - cardX * 2;
+  const cardY = 112;
+  const headH = 36;
+  const rowHeights = visibleRows.map((_, index) => (hasRankingData && index < 3 ? 69 : 60));
+  const cardH = headH + rowHeights.reduce((sum, h) => sum + h, 0);
+  const height = cardY + cardH + 58;
+  const fixed = [56, 70, 86, 82, 76, 70, 116];
+  const gap = 10;
+  const innerX = cardX + 1 + 20;
+  const innerW = cardW - 2 - 40;
+  const nameW = innerW - fixed.reduce((sum, w) => sum + w, 0) - gap * 7;
+  const widths = [fixed[0], nameW, ...fixed.slice(1)];
+  const columns = widths.map((w, index) => ({ x: innerX + widths.slice(0, index).reduce((sum, value) => sum + value + gap, 0), w }));
+  const center = (index: number) => columns[index].x + columns[index].w / 2;
+
+  const ratio = 2;
   const canvas = document.createElement("canvas");
   canvas.width = width * ratio;
   canvas.height = height * ratio;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   ctx.scale(ratio, ratio);
-  const bg = ctx.createLinearGradient(0, 0, width, height);
-  bg.addColorStop(0, "#fffaf0");
-  bg.addColorStop(0.62, "#fffdf8");
-  bg.addColorStop(1, "#ffefbd");
-  ctx.fillStyle = bg;
+  ctx.textBaseline = "middle";
+
+  // Page background (same as the app body).
+  const page = ctx.createLinearGradient(0, 0, 0, height);
+  page.addColorStop(0, "#fffdf8");
+  page.addColorStop(0.44, "#faf8f3");
+  page.addColorStop(1, "#f7f3ea");
+  ctx.fillStyle = page;
   ctx.fillRect(0, 0, width, height);
-  ctx.fillStyle = "rgba(255, 183, 0, 0.18)";
-  ctx.beginPath();
-  ctx.arc(width - 82, 88, 190, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#fff7df";
-  fillRoundRect(ctx, 34, 30, width - 68, 150, 30);
-  const hero = ctx.createLinearGradient(34, 30, width - 34, 180);
-  hero.addColorStop(0, "#17140f");
-  hero.addColorStop(0.58, "#2a210d");
-  hero.addColorStop(1, "#946b00");
-  ctx.fillStyle = hero;
-  fillRoundRect(ctx, 34, 30, width - 68, 150, 30);
-  ctx.fillStyle = "rgba(255, 214, 109, 0.14)";
-  ctx.beginPath();
-  ctx.arc(width - 112, 126, 118, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#ffcf4a";
-  ctx.font = `900 16px ${bodyFont}`;
-  ctx.letterSpacing = "0.08em";
-  ctx.fillText("ANH EM IT BADMINTON CLUB", 72, 68);
-  ctx.letterSpacing = "0";
-  ctx.fillStyle = "#fffaf0";
-  ctx.font = `900 48px ${headingFont}`;
-  ctx.fillText("Bảng xếp hạng", 72, 122);
-  ctx.fillStyle = "#ffd66b";
-  ctx.font = `900 24px ${bodyFont}`;
-  ctx.fillText(display, 72, 154);
-  ctx.textAlign = "right";
-  ctx.fillStyle = "#fff3c9";
-  ctx.font = `900 54px ${headingFont}`;
-  ctx.fillText(String(visibleRows[0]?.points ?? 0), width - 86, 112);
-  ctx.fillStyle = "rgba(255, 250, 240, 0.72)";
-  ctx.font = `800 15px ${bodyFont}`;
-  ctx.fillText("điểm dẫn đầu", width - 86, 139);
+  const glow = ctx.createRadialGradient(width * 0.18, height * 0.06, 0, width * 0.18, height * 0.06, Math.max(width, height) * 0.28);
+  glow.addColorStop(0, "rgba(255, 183, 0, 0.14)");
+  glow.addColorStop(1, "rgba(255, 183, 0, 0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, width, height);
+
+  // Title.
+  const { display, file } = rankingMonthForFile(month);
   ctx.textAlign = "left";
-  const headerY = 198;
+  ctx.fillStyle = "#b67500";
+  ctx.font = `800 12px ${bodyFont}`;
+  ctx.letterSpacing = "1.5px";
+  ctx.fillText("ANH EM IT BADMINTON", cardX + 4, 40);
+  ctx.letterSpacing = "0px";
   ctx.fillStyle = "#17140f";
-  fillRoundRect(ctx, 42, headerY, width - 84, 44, 18);
-  ctx.fillStyle = "#fff7df";
-  ctx.font = `900 13px ${bodyFont}`;
-  ctx.fillText("HẠNG", 72, headerY + 28);
-  ctx.fillText("THÀNH VIÊN", 158, headerY + 28);
-  ctx.textAlign = "right";
-  ctx.fillText("ĐIỂM", 612, headerY + 28);
-  ctx.fillText("THẮNG", 735, headerY + 28);
-  ctx.fillText("THUA", 850, headerY + 28);
-  ctx.fillText("HIỆU", 952, headerY + 28);
-  ctx.fillText("TRẬN", 1020, headerY + 28);
-  ctx.textAlign = "left";
-  visibleRows.forEach((row, index) => {
-    const y = 258 + index * rowHeight;
-    const isTop = index < 3 && !row.placeholder;
-    const rowGradient = ctx.createLinearGradient(42, y, width - 42, y + 66);
-    rowGradient.addColorStop(0, index === 0 ? "#fff6cf" : index === 1 ? "#eef2f7" : index === 2 ? "#fff0e6" : "#ffffff");
-    rowGradient.addColorStop(1, "#fffdf8");
-    ctx.fillStyle = rowGradient;
-    fillRoundRect(ctx, 42, y, width - 84, 66, 20);
-    ctx.strokeStyle = isTop ? ["#e8b229", "#aeb6c5", "#cd8752"][index] : "rgba(32, 27, 20, 0.08)";
-    ctx.lineWidth = isTop ? 2 : 1;
-    strokeRoundRect(ctx, 42.5, y + 0.5, width - 85, 65, 20);
-    ctx.fillStyle = index === 0 ? "#ffb700" : index === 1 ? "#c6cedb" : index === 2 ? "#d88639" : "#fffaf0";
-    ctx.beginPath();
-    ctx.arc(84, y + 33, 21, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#17140f";
-    ctx.font = `900 18px ${bodyFont}`;
-    ctx.textAlign = "center";
-    ctx.fillText(String(index + 1), 84, y + 40);
-    ctx.fillStyle = row.color;
-    ctx.beginPath();
-    ctx.arc(142, y + 33, 19, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.font = `900 12px ${bodyFont}`;
-    ctx.textAlign = "center";
-    ctx.fillText(row.initials, 142, y + 38);
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#15120e";
-    ctx.font = `900 24px ${headingFont}`;
-    ctx.fillText(row.name, 176, y + 30);
-    ctx.fillStyle = "#b8760e";
-    ctx.font = `900 13px ${bodyFont}`;
-    ctx.fillText(`Level ${row.level}`, 176, y + 52);
-    ctx.textAlign = "right";
-    ctx.fillStyle = index === 0 ? "#d28a00" : index === 1 ? "#657080" : index === 2 ? "#b96125" : "#15120e";
-    ctx.font = `900 34px ${headingFont}`;
-    ctx.fillText(String(row.points), 612, y + 44);
-    ctx.fillStyle = "#15120e";
-    ctx.font = `900 18px ${bodyFont}`;
-    ctx.fillText(String(row.pointsWon), 735, y + 41);
-    ctx.fillText(String(row.pointsLost), 850, y + 41);
-    ctx.fillStyle = row.pointDiff >= 0 ? "#047843" : "#c63f51";
-    ctx.fillText(`${row.pointDiff > 0 ? "+" : ""}${row.pointDiff}`, 952, y + 41);
-    ctx.fillStyle = "#15120e";
-    ctx.fillText(String(row.matches), 1020, y + 41);
-    ctx.textAlign = "left";
+  ctx.font = `750 32px ${headingFont}`;
+  ctx.fillText(`Bảng xếp hạng ${display.replace(/^Tháng/, "tháng")}`, cardX + 2, 76);
+
+  // Card.
+  ctx.save();
+  ctx.shadowColor = "rgba(35, 28, 18, 0.06)";
+  ctx.shadowBlur = 26;
+  ctx.shadowOffsetY = 10;
+  ctx.fillStyle = "#ffffff";
+  fillRoundRect(ctx, cardX, cardY, cardW, cardH, 18);
+  ctx.restore();
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(cardX, cardY, cardW, cardH, 18);
+  ctx.clip();
+
+  // Header row.
+  ctx.fillStyle = "#faf7f0";
+  ctx.fillRect(cardX, cardY, cardW, headH);
+  ctx.fillStyle = "rgba(30, 25, 18, 0.08)";
+  ctx.fillRect(cardX, cardY + headH - 1, cardW, 1);
+  ctx.fillStyle = "rgba(74, 62, 44, 0.62)";
+  ctx.font = `800 10.5px ${bodyFont}`;
+  ctx.letterSpacing = "0.735px";
+  ["Vị trí", "Thành viên", "Điểm", "Điểm thắng", "Điểm thua", "Hiệu số", "Số trận", "Phong độ"].forEach((label, index) => {
+    ctx.textAlign = index === 1 ? "left" : "center";
+    ctx.fillText(label.toUpperCase(), index === 1 ? columns[1].x : center(index), cardY + headH / 2 + 0.5);
   });
-  ctx.fillStyle = "rgba(21, 18, 14, 0.56)";
-  ctx.font = `800 14px ${bodyFont}`;
-  ctx.fillText(`Xuất lúc ${new Date().toLocaleString("vi-VN")}`, 56, height - 28);
+  ctx.letterSpacing = "0px";
+
+  // Member rows.
+  const podium = [
+    { tint: "255, 183, 0", edge: "#ffb700", points: "#b87900" },
+    { tint: "126, 138, 160", edge: "#a3adbd", points: "#5d6878" },
+    { tint: "196, 116, 58", edge: "#cd8a52", points: "#a85a24" },
+  ];
+  let y = cardY + headH;
+  visibleRows.forEach((row, index) => {
+    const h = rowHeights[index];
+    const mid = y + h / 2;
+    const top = hasRankingData && index < 3 ? podium[index] : null;
+    if (top) {
+      const tint = ctx.createLinearGradient(cardX, 0, cardX + cardW, 0);
+      tint.addColorStop(0, `rgba(${top.tint}, 0.13)`);
+      tint.addColorStop(0.7, `rgba(${top.tint}, 0.02)`);
+      tint.addColorStop(1, `rgba(${top.tint}, 0.02)`);
+      ctx.fillStyle = tint;
+      ctx.fillRect(cardX, y, cardW, h);
+      ctx.fillStyle = top.edge;
+      ctx.fillRect(cardX + 1, y, 3, h);
+    }
+    if (index < visibleRows.length - 1) {
+      ctx.fillStyle = "rgba(30, 25, 18, 0.07)";
+      ctx.fillRect(cardX, y + h - 1, cardW, 1);
+    }
+
+    // Rank: medal for the podium, numbered circle otherwise.
+    const medal = top ? medals[index] : null;
+    if (medal) {
+      ctx.drawImage(medal, center(0) - 22, mid - 22, 44, 44);
+    } else {
+      ctx.fillStyle = "#fffaf0";
+      ctx.beginPath();
+      ctx.arc(center(0), mid, 17, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(43, 34, 22, 0.1)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = "#14110d";
+      ctx.font = `800 14px ${bodyFont}`;
+      ctx.textAlign = "center";
+      ctx.fillText(String(index + 1), center(0), mid + 0.5);
+    }
+
+    // Avatar, name and Level pill.
+    const avatarX = columns[1].x;
+    const avatar = avatars[index];
+    ctx.save();
+    ctx.shadowColor = "rgba(35, 28, 18, 0.12)";
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 4;
+    if (avatar) {
+      ctx.drawImage(avatar, avatarX, mid - 15, 30, 30);
+    } else {
+      ctx.fillStyle = row.color || "#6846e8";
+      ctx.beginPath();
+      ctx.arc(avatarX + 15, mid, 15, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+    if (!avatar) {
+      ctx.fillStyle = "#ffffff";
+      ctx.font = `800 10px ${bodyFont}`;
+      ctx.textAlign = "center";
+      ctx.fillText(row.initials, avatarX + 15, mid + 0.5);
+    }
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#17120d";
+    ctx.font = `800 15px ${bodyFont}`;
+    ctx.letterSpacing = "-0.14px";
+    const nameX = avatarX + 40;
+    ctx.fillText(row.name, nameX, mid + 0.5);
+    const nameWidth = ctx.measureText(row.name).width;
+    ctx.letterSpacing = "0px";
+    const pillLabel = `L${row.level}`;
+    ctx.font = `800 8px ${bodyFont}`;
+    const pillW = ctx.measureText(pillLabel).width + 12;
+    const pillX = nameX + nameWidth + 10;
+    ctx.fillStyle = "rgba(255, 250, 236, 0.94)";
+    fillRoundRect(ctx, pillX, mid - 9, pillW, 18, 9);
+    ctx.strokeStyle = "rgba(255, 183, 0, 0.42)";
+    strokeRoundRect(ctx, pillX + 0.5, mid - 8.5, pillW - 1, 17, 8.5);
+    ctx.fillStyle = "#b67500";
+    ctx.textAlign = "center";
+    ctx.fillText(pillLabel, pillX + pillW / 2, mid + 0.5);
+
+    // Numbers.
+    ctx.fillStyle = top ? top.points : "#17140f";
+    ctx.font = top ? `700 26px ${numberFont}` : `700 19px ${numberFont}`;
+    ctx.fillText(String(row.points), center(2), mid + 1);
+    ctx.font = `700 14px ${bodyFont}`;
+    ctx.fillStyle = "#3d3528";
+    ctx.fillText(String(row.pointsWon), center(3), mid + 0.5);
+    ctx.fillText(String(row.pointsLost), center(4), mid + 0.5);
+    ctx.fillStyle = row.pointDiff >= 0 ? "#1f8a5b" : "#c2413b";
+    ctx.fillText(`${row.pointDiff > 0 ? "+" : ""}${row.pointDiff}`, center(5), mid + 0.5);
+    ctx.fillStyle = "#3d3528";
+    ctx.fillText(String(row.matches), center(6), mid + 0.5);
+
+    // Form: last four results, oldest → newest, empty dashed slots when fewer.
+    const recent = [...((row.username && form[row.username]) || [])].slice(0, 4).reverse();
+    const badge = 22;
+    const badgeGap = 4;
+    const startX = center(7) - (badge * 4 + badgeGap * 3) / 2;
+    for (let slot = 0; slot < 4; slot += 1) {
+      const bx = startX + slot * (badge + badgeGap);
+      const entry = recent[slot];
+      const icon = entry ? (entry.result === "W" ? winIcon : lossIcon) : null;
+      if (icon) {
+        ctx.drawImage(icon, bx, mid - badge / 2, badge, badge);
+      } else if (entry) {
+        ctx.fillStyle = entry.result === "W" ? "#1f9d55" : "#d64545";
+        ctx.beginPath();
+        ctx.arc(bx + badge / 2, mid, badge / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `800 10.5px ${bodyFont}`;
+        ctx.fillText(entry.result, bx + badge / 2, mid + 0.5);
+      } else {
+        ctx.save();
+        ctx.setLineDash([2.5, 2.5]);
+        ctx.strokeStyle = "rgba(61, 53, 40, 0.22)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(bx + badge / 2, mid, badge / 2 - 0.75, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+    ctx.textAlign = "left";
+    y += h;
+  });
+  ctx.restore();
+
+  // Card border on top of the rows.
+  ctx.strokeStyle = "rgba(30, 25, 18, 0.09)";
+  ctx.lineWidth = 1;
+  strokeRoundRect(ctx, cardX + 0.5, cardY + 0.5, cardW - 1, cardH - 1, 18);
+
+  ctx.fillStyle = "rgba(61, 53, 40, 0.55)";
+  ctx.font = `600 12px ${bodyFont}`;
+  ctx.textAlign = "left";
+  ctx.fillText(`Xuất lúc ${new Date().toLocaleString("vi-VN")}`, cardX + 4, height - 26);
+  ctx.textAlign = "right";
+  ctx.fillText("anh-em-it-badminton.vercel.app", width - cardX - 4, height - 26);
+
   canvas.toBlob((blob) => {
     if (!blob) return;
     const url = URL.createObjectURL(blob);
@@ -1712,7 +1844,7 @@ async function downloadRankingImage(month: string, rows: RankingRow[]) {
 function Ranking({ month, rows, form, onMonthChange, monthOptions, isAdmin, closeStatus, closeNotice, closingMonth, onCloseMonth }: { month: string; rows: RankingRow[]; form: FormByUsername; onMonthChange: (month: string) => void; monthOptions: string[]; isAdmin: boolean; closeStatus: MonthCloseStatus | null; closeNotice: string; closingMonth: boolean; onCloseMonth: () => void }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
   return <section className="ranking">
-    <div className="ranking-toolbar"><div className="ranking-filter-row"><select value={month} onChange={(e) => onMonthChange(e.target.value)} aria-label="Tháng">{monthOptions.map((option) => <option key={option}>{option}</option>)}</select><button type="button" className="soft-btn ranking-export-btn" onClick={() => void downloadRankingImage(month, rows)}><span className="ranking-export-full">Lưu ảnh BXH</span><span className="ranking-export-short">Lưu ảnh</span></button></div><p className="ranking-note">{closeStatus?.closed ? "BXH tháng này đã chốt, dữ liệu chỉ còn xem." : "Admin chốt BXH sau khi buổi cuối tháng hoàn tất để tạo tháng mới."}</p></div>
+    <div className="ranking-toolbar"><div className="ranking-filter-row"><select value={month} onChange={(e) => onMonthChange(e.target.value)} aria-label="Tháng">{monthOptions.map((option) => <option key={option}>{option}</option>)}</select><button type="button" className="soft-btn ranking-export-btn" onClick={() => void downloadRankingImage(month, rows, form)}><span className="ranking-export-full">Lưu ảnh BXH</span><span className="ranking-export-short">Lưu ảnh</span></button></div><p className="ranking-note">{closeStatus?.closed ? "BXH tháng này đã chốt, dữ liệu chỉ còn xem." : "Admin chốt BXH sau khi buổi cuối tháng hoàn tất để tạo tháng mới."}</p></div>
     {isAdmin && closeStatus && <div className={"month-close-card " + (closeStatus.closed ? "closed" : closeStatus.eligible ? "ready" : "waiting")}>
       <div>
         <span>{closeStatus.closed ? "ĐÃ CHỐT THÁNG" : closeStatus.eligible ? "SẴN SÀNG CHỐT" : "CHỜ ĐỦ ĐIỀU KIỆN"}</span>
