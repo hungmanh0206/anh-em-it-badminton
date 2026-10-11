@@ -47,6 +47,9 @@ const bestKnownMaxStreak = new Map([
   ["6-0L1-6L2", 3],
   ["6-1L1-5L2", 3],
   ["6-3L1-3L2", 3],
+  // 3 Level 1 need six L1 + L2 matches, each using two of the three Level 1 players, so any two of
+  // them share a player and cannot be adjacent; the four L2 matches cannot separate six of them.
+  ["10-3L1-7L2", 2],
 ]);
 
 test("schedule library reorder keeps every match unchanged", () => {

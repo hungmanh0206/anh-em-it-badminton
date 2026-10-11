@@ -36,6 +36,30 @@ export const effectiveMemberRole = (role?: string | null, description?: string |
   return "member";
 };
 
+// Databases without the 'sub-admin' enum value store the role as a marker in the description.
+export const setSubAdminMarker = (description?: string | null) => {
+  const text = String(description || "").trim();
+  return text.includes(SUB_ADMIN_ROLE_MARKER) ? text : [text, SUB_ADMIN_ROLE_MARKER].filter(Boolean).join("\n");
+};
+
+export const clearSubAdminMarker = (description?: string | null) => {
+  const text = String(description || "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && line !== SUB_ADMIN_ROLE_MARKER)
+    .join("\n");
+  return text || null;
+};
+
+export const isMissingEnumValueError = (error: unknown) => {
+  const message = error instanceof Error
+    ? error.message
+    : typeof error === "object" && error
+      ? Object.values(error).map(String).join(" ")
+      : String(error || "");
+  return /invalid input value for enum|22P02|sub-admin/i.test(message);
+};
+
 // Reads the (unverified) user id from a JWT so the profile lookup can start while Supabase verifies the token.
 const claimedUserId = (token: string) => {
   try {

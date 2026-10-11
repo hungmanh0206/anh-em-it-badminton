@@ -348,7 +348,7 @@
 
   .schedule-filter {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
     overflow-x: visible;
     padding-bottom: 0;
@@ -540,4 +540,11 @@
     width: 30px;
     height: 30px;
   }
+}
+
+/* 11 / 12 people (and mixes the club cannot field yet) stay visible but disabled. */
+.schedule-filter button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  box-shadow: none;
 }

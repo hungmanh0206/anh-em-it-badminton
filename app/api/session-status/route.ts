@@ -1,4 +1,5 @@
 import { jsonError, requireSessionManager } from "@/lib/supabase-admin";
+import { drawSlotsForLevel, hasScheduleScenario } from "@/lib/draw-reassign";
 
 type Body = {
   sessionId?: string;
@@ -15,26 +16,10 @@ type AttendanceWithProfile = {
   profiles: ProfileJoin | ProfileJoin[] | null;
 };
 
-const allowedLevel1CountsByParticipants = new Map<number, number[]>([
-  [5, [0, 1, 2, 3, 4, 5]],
-  [6, [0, 1, 2, 3, 4]],
-  [7, [1, 2, 3, 4]],
-  [8, [2, 3, 4]],
-  [9, [3, 4]],
-  [10, [4]],
-]);
 const toProfile = (profiles: ProfileJoin | ProfileJoin[] | null) => Array.isArray(profiles) ? profiles[0] : profiles;
 const toLevel = (level: ProfileJoin["level"]): 1 | 2 => Number(level) === 1 ? 1 : 2;
 const attendanceLevel = (attendance: AttendanceWithProfile): 1 | 2 =>
   toLevel(attendance.level_at_time ?? toProfile(attendance.profiles)?.level);
-const drawSlotsForLevel = (level: 1 | 2, level1Count: number, level2Count: number, participantCount = level1Count + level2Count) => {
-  if (participantCount === 5) return [1, 2, 3, 4, 5];
-  const count = Math.max(0, level === 1 ? level1Count : level2Count);
-  const start = level === 1 ? 1 : 5;
-  return Array.from({ length: count }, (_, index) => start + index);
-};
-const hasScheduleScenario = (participantCount: number, level1Count: number) =>
-  allowedLevel1CountsByParticipants.get(participantCount)?.includes(level1Count) ?? false;
 
 export async function POST(request: Request) {
   try {

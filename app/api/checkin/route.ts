@@ -61,20 +61,10 @@ const nextMonthStart = (dateText: string) => {
   const date = new Date(`${dateText}T00:00:00`);
   return `${date.getFullYear()}-${String(date.getMonth() + 2).padStart(2, "0")}-01`;
 };
-const allowedLevel1CountsByParticipants = new Map<number, number[]>([
-  [5, [0, 1, 2, 3, 4, 5]],
-  [6, [0, 1, 2, 3, 4]],
-  [7, [1, 2, 3, 4]],
-  [8, [2, 3, 4]],
-  [9, [3, 4]],
-  [10, [4]],
-]);
 const toProfile = (profiles: ProfileJoin | ProfileJoin[] | null) => Array.isArray(profiles) ? profiles[0] : profiles;
 const toLevel = (level: ProfileJoin["level"]): 1 | 2 => Number(level) === 1 ? 1 : 2;
 const attendanceLevel = (attendance: AttendanceStatusRow): 1 | 2 =>
   toLevel(attendance.level_at_time ?? toProfile(attendance.profiles)?.level);
-const hasScheduleScenario = (participantCount: number, level1Count: number) =>
-  allowedLevel1CountsByParticipants.get(participantCount)?.includes(level1Count) ?? false;
 
 async function rerankMonthlyResults(admin: SupabaseClient, month: string) {
   const [{ error: zeroRankError }, { data: rankRows, error: rankError }] = await Promise.all([

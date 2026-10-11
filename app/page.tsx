@@ -7,6 +7,7 @@ import { PageHero } from "@/app/ui/page-hero";
 import { supabase } from "@/lib/supabase";
 import { isCheckinWindowOpenForDate, sessionDatesOfMonth, sessionStateForDate, sessionWeekdayLabel, sessionWeekInMonth, targetSessionDateKey } from "@/lib/session-dates";
 import { reorderMatchesForRest } from "@/lib/schedule-reorder";
+import { MEMBER_PASSWORD_MIN, usernameFromName } from "@/lib/member-username";
 
 type MemberRole = "admin" | "sub-admin" | "member";
 type Member = { name: string; initials: string; level: 1 | 2; color: string; present: boolean; username: string; password: string; role?: MemberRole; responded?: boolean };
@@ -57,7 +58,7 @@ const effectiveRole = (role?: string | null, description?: string | null): Membe
 };
 const memberRoleLabel = (role?: MemberRole | string | null) => role === "admin" ? "Quản trị viên" : role === "sub-admin" ? "Sub-admin" : "Thành viên";
 const isScoreManagerRole = (role?: MemberRole | string | null) => role === "admin" || role === "sub-admin";
-const scheduleParticipants = [5, 6, 7, 8, 9, 10] as const;
+const scheduleParticipants = [5, 6, 7, 8, 9, 10, 11, 12] as const;
 type ParticipantCount = typeof scheduleParticipants[number];
 type MatchPattern = readonly [number, number, number, number, string?];
 type ScheduleMatch = { teamA: readonly [number, number]; teamB: readonly [number, number]; type: string };
@@ -169,6 +170,18 @@ const scheduleScenarios: ScheduleScenario[] = [
   makeScheduleScenario(9, 3, schedule([[1, 6, 2, 10], [1, 7, 3, 8], [2, 8, 3, 10], [5, 6, 7, 8], [1, 10, 3, 9], [1, 5, 2, 6], [5, 7, 9, 10], [2, 9, 3, 7], [5, 9, 6, 8]])),
   makeScheduleScenario(9, 4, schedule([[1, 2, 3, 4], [1, 3, 2, 4], [1, 6, 2, 9], [1, 5, 3, 6], [2, 7, 4, 8], [3, 8, 4, 9], [5, 6, 7, 8], [5, 7, 6, 9], [5, 8, 7, 9]])),
   makeScheduleScenario(10, 4, schedule([[1, 3, 2, 4], [1, 4, 2, 3], [1, 5, 3, 8], [2, 8, 3, 9], [2, 6, 4, 7], [1, 7, 4, 10], [5, 8, 6, 9], [6, 7, 9, 10], [5, 10, 8, 9], [5, 6, 7, 10]])),
+  // Only reachable once the club has 11 members (4 Level 1 + 7 Level 2).
+  makeScheduleScenario(7, 0, schedule([[5, 6, 9, 10], [7, 8, 5, 11], [9, 11, 8, 10], [6, 7, 5, 9], [10, 11, 6, 9], [7, 10, 8, 11], [6, 8, 5, 7]])),
+  makeScheduleScenario(8, 1, schedule([[1, 11, 6, 8], [1, 7, 5, 10], [1, 9, 8, 11], [1, 6, 5, 9], [7, 10, 9, 11], [5, 8, 6, 10], [5, 7, 10, 11], [8, 9, 6, 7]]), relaxedOneLevel1),
+  makeScheduleScenario(9, 2, schedule([[1, 5, 2, 9], [1, 11, 2, 8], [1, 10, 2, 7], [1, 6, 2, 11], [7, 9, 6, 10], [5, 8, 6, 9], [5, 7, 8, 11], [10, 11, 5, 9], [7, 10, 6, 8]])),
+  makeScheduleScenario(10, 3, schedule([[1, 10, 2, 8], [1, 9, 3, 11], [2, 7, 3, 6], [1, 5, 2, 11], [1, 8, 3, 9], [2, 6, 3, 5], [7, 10, 9, 11], [5, 7, 6, 10], [6, 8, 9, 10], [5, 8, 7, 11]])),
+  makeScheduleScenario(11, 4, schedule([[1, 3, 2, 4], [1, 4, 2, 3], [1, 6, 3, 5], [1, 11, 4, 9], [2, 10, 3, 8], [2, 7, 4, 8], [5, 9, 7, 11], [6, 10, 8, 9], [5, 6, 10, 11], [6, 7, 5, 8], [7, 10, 9, 11]])),
+  // Only reachable once the club has 12 members (4 Level 1 + 8 Level 2).
+  makeScheduleScenario(8, 0, schedule([[7, 9, 8, 11], [5, 6, 10, 12], [8, 10, 5, 9], [7, 12, 6, 11], [9, 10, 6, 7], [8, 12, 5, 11], [7, 11, 5, 10], [8, 9, 6, 12]])),
+  makeScheduleScenario(9, 1, schedule([[1, 5, 6, 8], [1, 12, 9, 10], [1, 11, 5, 7], [1, 8, 6, 7], [9, 11, 10, 12], [5, 11, 9, 12], [6, 10, 7, 8], [10, 11, 8, 9], [7, 12, 5, 6]]), relaxedOneLevel1),
+  makeScheduleScenario(10, 2, schedule([[1, 5, 2, 12], [1, 11, 2, 6], [1, 8, 2, 9], [1, 7, 2, 10], [5, 9, 8, 10], [11, 12, 6, 7], [5, 11, 8, 12], [7, 10, 6, 9], [8, 9, 6, 12], [5, 10, 7, 11]])),
+  makeScheduleScenario(11, 3, schedule([[1, 11, 2, 10], [1, 9, 3, 7], [2, 12, 3, 6], [1, 8, 2, 5], [1, 10, 3, 12], [2, 11, 3, 8], [6, 9, 5, 7], [6, 10, 5, 8], [7, 12, 5, 11], [9, 10, 6, 12], [8, 11, 7, 9]])),
+  makeScheduleScenario(12, 4, schedule([[1, 3, 2, 4], [1, 4, 2, 3], [1, 5, 3, 12], [1, 7, 4, 9], [2, 11, 3, 8], [2, 6, 4, 10], [5, 12, 8, 11], [6, 9, 7, 10], [6, 8, 9, 12], [7, 11, 5, 10], [6, 12, 9, 11], [8, 10, 5, 7]])),
 ];
 const findScheduleScenario = (participantCount: number, level1Count: number) => {
   if (participantCount === 5) return scheduleScenarios.find((item) => item.participantCount === 5) ?? null;
@@ -264,6 +277,32 @@ const initialMembers: Member[] = [
 
 const avatarAssetVersion = "member-avatars-nobg-20260904";
 const avatarAssetUsernames = new Set(initialMembers.map((member) => member.username));
+const memberPalette = ["#6846e8", "#e56a4d", "#2ba98b", "#e3a63c", "#e05591", "#4175e8", "#2f9c9f", "#9c69e9", "#ef8b3d", "#3f9c59"];
+const memberInitials = (name: string) => name.trim().split(/\s+/).map((part) => part[0] ?? "").join("").slice(0, 2).toUpperCase() || "?";
+const memberColorFor = (username: string) => memberPalette[[...username].reduce((sum, char) => sum + char.charCodeAt(0), 0) % memberPalette.length];
+// The member list is built from active profiles: the founding ten keep their colours and avatar art,
+// members added later get initials and a palette colour.
+const memberFromProfile = (profile: SupabaseProfile, base?: Member): Member => {
+  const username = String(profile.username || base?.username || "");
+  const known = base ?? initialMembers.find((member) => member.username === username);
+  const name = profile.full_name || known?.name || username;
+  return {
+    name,
+    initials: known?.initials ?? memberInitials(name),
+    level: Number(profile.level ?? known?.level ?? 2) === 1 ? 1 : 2,
+    color: known?.color ?? memberColorFor(username),
+    present: known?.present ?? false,
+    username,
+    password: known?.password ?? "",
+    role: effectiveRole(profile.role, profile.description),
+    responded: known?.responded ?? false,
+  };
+};
+const memberOrderIndex = (username: string) => {
+  const index = initialMembers.findIndex((member) => member.username === username);
+  return index === -1 ? initialMembers.length : index;
+};
+const sortMembers = (members: Member[]) => [...members].sort((a, b) => memberOrderIndex(a.username) - memberOrderIndex(b.username) || a.name.localeCompare(b.name, "vi"));
 const avatarUsername = (username?: string | null) => String(username || "").trim().toLowerCase();
 const hasAvatarArt = (username?: string | null) => avatarAssetUsernames.has(avatarUsername(username));
 const avatarStyle = (person: { color?: string | null; username?: string | null }) => {
@@ -414,17 +453,20 @@ export default function Home() {
     if (payload.status) setSessionStatus(payload.status);
     const attendanceRows = payload.attendances || [];
     const nextDrawn: Record<string, number> = {};
-    setMembers((previous) => previous.map((member) => {
-      const attendance = attendanceRows.find((item) => {
-        const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
-        return profile?.username === member.username;
+    // Every active member has an attendance row for the session, so the rows define the member list.
+    setMembers((previous) => {
+      const rows = attendanceRows.flatMap((attendance) => {
+        const profile = Array.isArray(attendance.profiles) ? attendance.profiles[0] : attendance.profiles;
+        return profile?.username ? [{ attendance, profile }] : [];
       });
-      const profile = attendance ? (Array.isArray(attendance.profiles) ? attendance.profiles[0] : attendance.profiles) : null;
-      const nextName = profile?.full_name || member.name;
-      const sessionLevel = attendance?.level_at_time ?? profile?.level ?? member.level;
-      if (attendance?.choice === "attending" && typeof attendance.drawn_number === "number") nextDrawn[nextName] = attendance.drawn_number;
-      return attendance ? { ...member, name: nextName, level: Number(sessionLevel || member.level) as 1 | 2, role: effectiveRole(profile?.role, profile?.description), present: attendance.choice === "attending", responded: attendance.choice !== "pending" } : { ...member, present: false, responded: false };
-    }));
+      if (!rows.length) return previous.map((member) => ({ ...member, present: false, responded: false }));
+      return sortMembers(rows.map(({ attendance, profile }) => {
+        const base = previous.find((member) => member.username === profile.username);
+        const member = memberFromProfile({ ...profile, level: attendance.level_at_time ?? profile.level }, base);
+        if (attendance.choice === "attending" && typeof attendance.drawn_number === "number") nextDrawn[member.name] = attendance.drawn_number;
+        return { ...member, present: attendance.choice === "attending", responded: attendance.choice !== "pending" };
+      }));
+    });
     setDrawn(nextDrawn);
   }, []);
 
@@ -440,9 +482,8 @@ export default function Home() {
         closeCheckinPopup();
       }
       const { data: profile } = await supabase.from("profiles").select("full_name, username, level, role, description").eq("username", normalized).single();
-      if (profile && localUser) {
-        const user = { ...localUser, name: profile.full_name, level: Number(profile.level) as 1 | 2, role: effectiveRole(profile.role, profile.description) };
-        setActiveUser(user); setLoginError(""); closeCheckinPopup(); return;
+      if (profile) {
+        setActiveUser(memberFromProfile(profile, localUser)); setLoginError(""); closeCheckinPopup(); return;
       }
       if (localUser) return;
     }
@@ -525,7 +566,7 @@ export default function Home() {
           setAuthRestoring(false);
         }
         const { data: profile } = await client.from("profiles").select("full_name, username, level, role, description").eq("username", username).single();
-        if (profile && localUser) setActiveUser({ ...localUser, name: profile.full_name, level: Number(profile.level) as 1 | 2, role: effectiveRole(profile.role, profile.description) });
+        if (profile) setActiveUser(memberFromProfile(profile, localUser));
       }
       setAuthRestoring(false);
     };
@@ -579,10 +620,11 @@ export default function Home() {
     let cancelled = false;
     const cacheKey = homeSessionCacheKey(sessionDateKey);
     const applyPendingProfiles = (profiles: SupabaseProfile[]) => {
-      setMembers((previous) => previous.map((member) => {
-        const profile = profiles.find((item) => item.username === member.username);
-        return profile ? { ...member, name: profile.full_name || member.name, level: Number(profile.level || member.level) as 1 | 2, role: effectiveRole(profile.role, profile.description), present: false, responded: false } : { ...member, present: false, responded: false };
-      }));
+      setMembers((previous) => {
+        const active = profiles.filter((profile) => profile.username);
+        if (!active.length) return previous.map((member) => ({ ...member, present: false, responded: false }));
+        return sortMembers(active.map((profile) => ({ ...memberFromProfile(profile, previous.find((member) => member.username === profile.username)), present: false, responded: false })));
+      });
     };
     const resetHomeWorkflow = async () => {
       const { data: profiles } = await client.from("profiles").select("id, username, full_name, level, role, description").eq("is_active", true).order("full_name");
@@ -1182,7 +1224,7 @@ export default function Home() {
     <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setActiveUser(null); }} />}</Presence>
     <section className="content">
       <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className={avatarClassName("welcome-avatar", currentUser)} style={avatarStyle(currentUser)} aria-hidden="true">{welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
-      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={formByUsername} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
+      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={formByUsername} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
         <section className="hero">
           <div className="hero-copy"><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div>
           <img className="hero-logo" src="/club-logo.png?v=club-glass-logo" alt="" aria-hidden="true" />
@@ -1339,14 +1381,14 @@ function Rules({ members }: { members: Member[] }) {
       title="Giải cầu lông Anh Em IT"
       description="Lịch đấu được tạo để mọi thành viên có số trận cân bằng, gặp nhiều đối thủ khác nhau và vẫn giữ tinh thần vui vẻ, cạnh tranh lành mạnh."
       statsLabel="Tóm tắt thể lệ"
-      stats={[{ label: "Thể thức đánh đôi", value: "2 vs 2" }, { label: "Trận mỗi người / tuần", value: 4 }, { label: "Thành viên tối đa", value: 10 }]}
+      stats={[{ label: "Thể thức đánh đôi", value: "2 vs 2" }, { label: "Trận mỗi người / tuần", value: 4 }, { label: "Người tối đa / buổi", value: 12 }]}
     />
 
     <section className="rules-section" aria-labelledby="rules-process-title">
       <h2 className="rules-section-title" id="rules-process-title">Quy trình tham gia</h2>
       <ol className="rules-steps">
         <li><span className="rules-step-no">01</span><div><h3>Điểm danh</h3><p>Thành viên xác nhận tham gia hoặc không tham gia trước khi lập lịch.</p></div></li>
-        <li><span className="rules-step-no">02</span><div><h3>Chọn số</h3><p>Buổi 5 người chọn số 1–5 không phân Level; từ 6 người trở lên, Level 1 nhận số 1–4 và Level 2 nhận số 5–10 theo số người thực tế.</p></div></li>
+        <li><span className="rules-step-no">02</span><div><h3>Chọn số</h3><p>Buổi 5 người chọn số 1–5 không phân Level; từ 6 người trở lên, Level 1 nhận số 1–4 và Level 2 nhận số từ 5 trở đi theo số người thực tế.</p></div></li>
         <li><span className="rules-step-no">03</span><div><h3>Thi đấu & nhập điểm</h3><p>Admin xác nhận từng trận, BXH tháng cập nhật ngay sau mỗi kết quả được lưu.</p></div></li>
       </ol>
     </section>
@@ -1432,9 +1474,18 @@ function Rules({ members }: { members: Member[] }) {
   </section>;
 }
 
-function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
+function ScheduleLibrary({ scenarios, members }: { scenarios: ScheduleScenario[]; members: Member[] }) {
   const [participantFilter, setParticipantFilter] = useState<ParticipantCount>(5);
-  const visibleScenarios = scenarios.filter((scenario) => scenario.participantCount === participantFilter);
+  // A mix is possible only with enough members of each Level (Level 1 = top 4 ELO, the rest Level 2).
+  const clubLevel1 = members.filter((member) => member.level === 1).length;
+  const clubLevel2 = members.length - clubLevel1;
+  const isAvailable = (scenario: ScheduleScenario) => scenario.participantCount === 5
+    ? members.length >= 5
+    : scenario.level1Count <= clubLevel1 && scenario.level2Count <= clubLevel2;
+  const visibleScenarios = scenarios
+    .filter((scenario) => scenario.participantCount === participantFilter && isAvailable(scenario))
+    .sort((a, b) => a.level1Count - b.level1Count);
+  const countEnabled = (count: ParticipantCount) => scenarios.some((scenario) => scenario.participantCount === count && isAvailable(scenario));
   return <section className="schedule-library">
     <PageHero
       eyebrow="THƯ VIỆN LỊCH"
@@ -1444,7 +1495,7 @@ function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
       stats={[{ label: "Người tham gia", value: participantFilter }, { label: "Trường hợp", value: visibleScenarios.length }]}
     />
     <div className="schedule-filter" role="group" aria-label="Lọc lịch theo số lượng thành viên">
-      {scheduleParticipants.map((count) => <button key={count} type="button" className={participantFilter === count ? "active" : ""} onClick={() => setParticipantFilter(count)}>{count} người</button>)}
+      {scheduleParticipants.map((count) => <button key={count} type="button" className={participantFilter === count ? "active" : ""} disabled={!countEnabled(count)} title={countEnabled(count) ? undefined : `Mở khi CLB có từ ${count} thành viên`} onClick={() => setParticipantFilter(count)}>{count} người</button>)}
     </div>
     <div className="schedule-case-list">
       {visibleScenarios.map((scenario) => <article className="panel schedule-case" key={scenario.id}>
@@ -2007,6 +2058,55 @@ function History({ sessions, currentMonth }: { sessions: HistorySession[]; curre
     <Presence show={Boolean(detail)}>{detail && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="history-detail"><header className="history-detail-header"><p className="eyebrow">KẾT QUẢ THI ĐẤU</p><h2>{detail.title}</h2><button className="modal-close" onClick={() => setDetail(null)} aria-label="Đóng">×</button></header><div className="history-detail-body"><div className="history-match-list">{detail.rows.map((match) => <article className="history-match-row" key={match.no}><span className="history-match-index">Trận {match.no}</span><span className="history-team history-team-a">{match.a}</span><strong className="history-score"><span>{match.sa}</span><i>:</i><span>{match.sb}</span></strong><span className="history-team history-team-b">{match.b}</span></article>)}</div></div></section></div>}</Presence>
   </>;
 }
+// Password input with a show / hide toggle.
+function PasswordField({ value, onChange, placeholder, autoFocus }: { value: string; onChange: (value: string) => void; placeholder?: string; autoFocus?: boolean }) {
+  const [visible, setVisible] = useState(false);
+  return <span className="password-field">
+    <input type={visible ? "text" : "password"} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} autoComplete="new-password" autoFocus={autoFocus} />
+    <button type="button" className="password-toggle" onClick={() => setVisible((current) => !current)} aria-label={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"} title={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}>
+      {visible
+        ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 3l18 18" /><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-3.2 4.1M6.6 6.6A17 17 0 0 0 2.5 12S6 19 12 19a9.8 9.8 0 0 0 4.4-1" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" /></svg>
+        : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7S2.5 12 2.5 12Z" /><circle cx="12" cy="12" r="3" /></svg>}
+    </button>
+  </span>;
+}
+
+// Admin: create a member. The name doubles as the login (accents and spaces removed).
+function AddMemberModal({ onClose, onCreate }: { onClose: () => void; onCreate: (values: { name: string; role: "member" | "sub-admin"; password: string }) => Promise<void> }) {
+  const [name, setName] = useState("");
+  const [role, setRole] = useState<"member" | "sub-admin">("member");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const username = usernameFromName(name);
+  const submit = async () => {
+    if (name.trim().length < 2 || username.length < 2) return setError("Nhập tên thành viên (ít nhất 2 ký tự).");
+    if (password.length < MEMBER_PASSWORD_MIN) return setError(`Mật khẩu cần ít nhất ${MEMBER_PASSWORD_MIN} ký tự.`);
+    setBusy(true);
+    setError("");
+    try {
+      await onCreate({ name: name.trim(), role, password });
+    } catch (createError) {
+      setError(createError instanceof Error ? createError.message : "Không thể thêm thành viên.");
+      setBusy(false);
+    }
+  };
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Thêm thành viên">
+    <form className="member-editor member-add-form" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
+      <button type="button" className="modal-close" onClick={onClose} aria-label="Đóng">×</button>
+      <p className="eyebrow">THÊM THÀNH VIÊN</p>
+      <h2>Thành viên mới</h2>
+      <label>Tên<input value={name} onChange={(event) => setName(event.target.value)} maxLength={40} autoFocus disabled={busy} placeholder="Ví dụ: Tuấn" />
+        <small className="member-editor-hint">Tên đăng nhập: <b>{username || "—"}</b></small></label>
+      <label className="member-role-field">Quyền<select className="member-role-select member-role-editor-select" value={role} disabled={busy} onChange={(event) => setRole(event.target.value as "member" | "sub-admin")}><option value="member">Thành viên</option><option value="sub-admin">Sub-admin</option></select>
+        <small>{role === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label>
+      <label className="member-password-field">Mật khẩu<PasswordField value={password} onChange={setPassword} placeholder={`Ít nhất ${MEMBER_PASSWORD_MIN} ký tự`} /></label>
+      {error && <p className="member-editor-error" role="alert">{error}</p>}
+      <div className="editor-actions"><button type="button" className="soft-btn" onClick={onClose} disabled={busy}>Hủy bỏ</button><button type="submit" className="primary" disabled={busy}>{busy ? "Đang thêm…" : "Thêm thành viên"}</button></div>
+    </form>
+  </div>;
+}
+
 function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated: (username: string, role: MemberRole) => void }) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [editing, setEditing] = useState<Member | null>(null);
@@ -2016,6 +2116,8 @@ function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated:
   const [roleNotice, setRoleNotice] = useState("");
   const [roleSaving, setRoleSaving] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<{ title: string; message: string; action: () => Promise<void> } | null>(null);
+  const [editPassword, setEditPassword] = useState("");
+  const [adding, setAdding] = useState(false);
   const normalizeSearch = (value: string) => value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -2034,7 +2136,7 @@ function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated:
       pointerDownTarget = null;
       if (!(target instanceof Element)) return;
       if (!target.closest(".member-actions")) setOpenMenu(null);
-      if (target.closest(".modal-backdrop") && !target.closest(".member-editor, .confirm-modal")) setEditing(null);
+      if (target.closest(".modal-backdrop") && !target.closest(".member-editor, .confirm-modal")) { setEditing(null); setAdding(false); }
     };
     document.addEventListener("pointerdown", rememberPointerDown);
     document.addEventListener("click", closeOutside);
@@ -2069,11 +2171,17 @@ function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated:
     const nextRole = editRole;
     const roleChanged = !roleLocked && currentRole !== nextRole;
     const nameChanged = fullName.trim() !== editing.name;
+    const newPassword = editPassword;
+    if (newPassword && newPassword.length < MEMBER_PASSWORD_MIN) return window.alert(`Mật khẩu mới cần ít nhất ${MEMBER_PASSWORD_MIN} ký tự.`);
     setConfirm({ title: "Xác nhận cập nhật", message: `Lưu thông tin mới cho ${editing.name}?`, action: async () => {
       try {
         if (supabase) {
           if (nameChanged) { const { error } = await supabase.rpc("admin_update_member", { p_username: editing.username, p_full_name: fullName.trim() }); if (error) throw error; }
           if (roleChanged) await saveMemberRole(editing, nextRole);
+          if (newPassword) {
+            await adminPost("/api/member-password", { username: editing.username, password: newPassword }, "Không thể đổi mật khẩu.");
+            setRoleNotice(`Đã đổi mật khẩu cho ${editing.name}.`);
+          }
         }
         if (nameChanged) window.location.reload();
         else setEditing(null);
@@ -2081,6 +2189,18 @@ function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated:
         window.alert(error instanceof Error ? error.message : "Không thể lưu thông tin thành viên.");
       }
     }});
+  };
+  const adminPost = async (path: string, body: Record<string, unknown>, fallbackError: string) => {
+    if (!supabase) throw new Error("Chưa kết nối Supabase.");
+    const { data: { session } } = await supabase.auth.getSession();
+    const response = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+      body: JSON.stringify(body),
+    });
+    const payload = await response.json().catch(() => ({ error: fallbackError })) as { error?: string };
+    if (!response.ok) throw new Error(payload.error || fallbackError);
+    return payload;
   };
   const remove = (member: Member) => setConfirm({ title: "Xác nhận xóa thành viên", message: `Xóa ${member.name} khỏi danh sách hoạt động? Lịch sử thi đấu vẫn được giữ lại.`, action: async () => {
     try {
@@ -2107,7 +2227,10 @@ function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated:
     <section className="panel">
       <div className="panel-head">
         <div><h2>Danh sách thành viên</h2><p>Quản lý thông tin các thành viên CLB.</p></div>
-        <input className="search" placeholder="⌕  Tìm tên, username, quyền..." value={searchTerm} onChange={(event) => { setSearchTerm(event.target.value); setOpenMenu(null); }} />
+        <div className="member-head-actions">
+          <input className="search" placeholder="⌕  Tìm tên, username, quyền..." value={searchTerm} onChange={(event) => { setSearchTerm(event.target.value); setOpenMenu(null); }} />
+          <button type="button" className="primary member-add-btn" onClick={() => setAdding(true)}>+ Thêm thành viên</button>
+        </div>
       </div>
       {roleNotice && <div className="member-role-notice">{roleNotice}</div>}
       <div className="member-table">{visibleMembers.length ? visibleMembers.map((member, index) => {
@@ -2116,11 +2239,15 @@ function Members({ members, onRoleUpdated }: { members: Member[]; onRoleUpdated:
         return <div key={member.username}>
           <div className="person"><div className={avatarClassName("avatar", member)} style={avatarStyle(member)}>{member.initials}</div><div><b>{member.name}</b><small>@{member.username}</small></div></div>
           <span className="status">● Hoạt động</span>
-          <div className="member-actions"><button className="more" aria-label={`Thao tác ${member.name}`} onClick={() => setOpenMenu(openMenu === member.username ? null : member.username)}>•••</button>{/* The panel clips overflow, so menus on the bottom rows open upwards. */}{openMenu === member.username && <div className={`member-menu${index >= visibleMembers.length - 2 ? " member-menu-up" : ""}`}><button onClick={() => { setEditing(member); setFullName(member.name); setEditRole(role === "sub-admin" ? "sub-admin" : "member"); setOpenMenu(null); }}>Sửa thành viên</button>{canDelete && <button className="danger-text" onClick={() => { remove(member); setOpenMenu(null); }}>Xóa thành viên</button>}</div>}</div>
+          <div className="member-actions"><button className="more" aria-label={`Thao tác ${member.name}`} onClick={() => setOpenMenu(openMenu === member.username ? null : member.username)}>•••</button>{/* The panel clips overflow, so menus on the bottom rows open upwards. */}{openMenu === member.username && <div className={`member-menu${index >= visibleMembers.length - 2 ? " member-menu-up" : ""}`}><button onClick={() => { setEditing(member); setFullName(member.name); setEditRole(role === "sub-admin" ? "sub-admin" : "member"); setEditPassword(""); setOpenMenu(null); }}>Sửa thành viên</button>{canDelete && <button className="danger-text" onClick={() => { remove(member); setOpenMenu(null); }}>Xóa thành viên</button>}</div>}</div>
         </div>;
       }) : <div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div>}</div>
     </section>
-    <Presence show={Boolean(editing)}>{editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={() => setEditing(null)}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <select className="member-role-select member-role-editor-select" value={editRole} disabled={roleSaving === editing.username} onChange={(event) => setEditRole(event.target.value as "member" | "sub-admin")}><option value="member">Thành viên</option><option value="sub-admin">Sub-admin</option></select>}<small>{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? "Mạnh luôn là Admin, không thể đổi quyền." : editRole === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label><div className="editor-actions"><button className="soft-btn" onClick={() => setEditing(null)}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></section></div>}</Presence>
+    <Presence show={Boolean(editing)}>{editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={() => setEditing(null)}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <select className="member-role-select member-role-editor-select" value={editRole} disabled={roleSaving === editing.username} onChange={(event) => setEditRole(event.target.value as "member" | "sub-admin")}><option value="member">Thành viên</option><option value="sub-admin">Sub-admin</option></select>}<small>{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? "Mạnh luôn là Admin, không thể đổi quyền." : editRole === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label><label className="member-password-field">Mật khẩu mới<PasswordField value={editPassword} onChange={setEditPassword} placeholder="Để trống nếu giữ nguyên" /><small className="member-editor-hint">Mật khẩu hiện tại được mã hoá nên không hiển thị được; nhập mật khẩu mới nếu muốn đổi.</small></label><div className="editor-actions"><button className="soft-btn" onClick={() => setEditing(null)}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></section></div>}</Presence>
+    <Presence show={adding}>{adding && <AddMemberModal onClose={() => setAdding(false)} onCreate={async (values) => {
+      await adminPost("/api/member-create", values, "Không thể thêm thành viên.");
+      window.location.reload();
+    }} />}</Presence>
     <Presence show={Boolean(confirm)}>{confirm && <ConfirmActionModal title={confirm.title} message={confirm.message} onCancel={() => setConfirm(null)} onConfirm={async () => { try { await confirm.action(); } finally { setConfirm(null); } }} />}</Presence>
   </>;
 }

@@ -1,31 +1,8 @@
-import { ApiError, jsonError, requireAdmin, SUB_ADMIN_ROLE_MARKER } from "@/lib/supabase-admin";
+import { ApiError, clearSubAdminMarker, isMissingEnumValueError, jsonError, requireAdmin, setSubAdminMarker } from "@/lib/supabase-admin";
 
 type Body = {
   username?: string;
   role?: "member" | "sub-admin";
-};
-
-const setSubAdminMarker = (description?: string | null) => {
-  const text = String(description || "").trim();
-  return text.includes(SUB_ADMIN_ROLE_MARKER) ? text : [text, SUB_ADMIN_ROLE_MARKER].filter(Boolean).join("\n");
-};
-
-const clearSubAdminMarker = (description?: string | null) => {
-  const text = String(description || "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line && line !== SUB_ADMIN_ROLE_MARKER)
-    .join("\n");
-  return text || null;
-};
-
-const isMissingEnumValueError = (error: unknown) => {
-  const message = error instanceof Error
-    ? error.message
-    : typeof error === "object" && error
-      ? Object.values(error).map(String).join(" ")
-      : String(error || "");
-  return /invalid input value for enum|22P02|sub-admin/i.test(message);
 };
 
 export async function POST(request: Request) {
