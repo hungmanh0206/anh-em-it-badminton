@@ -1224,7 +1224,7 @@ export default function Home() {
     <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setActiveUser(null); }} />}</Presence>
     <section className="content">
       <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className={avatarClassName("welcome-avatar", currentUser)} style={avatarStyle(currentUser)} aria-hidden="true">{welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
-      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={formByUsername} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
+      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={formByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
         <section className="hero">
           <div className="hero-copy"><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div>
           <img className="hero-logo" src="/club-logo.png?v=club-glass-logo" alt="" aria-hidden="true" />
@@ -1613,6 +1613,9 @@ const rankingMonthForFile = (label: string) => {
   const monthText = String(date.getMonth() + 1).padStart(2, "0");
   return { display: `Tháng ${monthText}/${date.getFullYear()}`, file: `${monthText}-${date.getFullYear()}` };
 };
+// ELO with one decimal, as on the ELO page; shown for information only (never used for the order).
+const formatElo = (value?: number) => (typeof value === "number" ? value.toLocaleString("vi-VN", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "—");
+
 const loadCanvasImage = (src: string) => new Promise<HTMLImageElement | null>((resolve) => {
   const image = new Image();
   image.onload = () => resolve(image);
@@ -1622,7 +1625,7 @@ const loadCanvasImage = (src: string) => new Promise<HTMLImageElement | null>((r
 
 // Draws the monthly ranking exactly like the desktop BXH table in the app (same columns, colours,
 // medals, avatars, Level pills and form icons), at a fixed 1200px width whatever device saves it.
-async function downloadRankingImage(month: string, rows: RankingRow[], form: FormByUsername) {
+async function downloadRankingImage(month: string, rows: RankingRow[], form: FormByUsername, elo: Record<string, number>) {
   if (typeof document === "undefined") return;
   const bodyFont = `"Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif`;
   const numberFont = `"JetBrains Mono", ui-monospace, monospace`;
@@ -1652,11 +1655,11 @@ async function downloadRankingImage(month: string, rows: RankingRow[], form: For
   const rowHeights = visibleRows.map((_, index) => (hasRankingData && index < 3 ? 69 : 60));
   const cardH = headH + rowHeights.reduce((sum, h) => sum + h, 0);
   const height = cardY + cardH + 58;
-  const fixed = [56, 70, 86, 82, 76, 70, 116];
+  const fixed = [56, 70, 86, 82, 76, 70, 84, 116];
   const gap = 10;
   const innerX = cardX + 1 + 20;
   const innerW = cardW - 2 - 40;
-  const nameW = innerW - fixed.reduce((sum, w) => sum + w, 0) - gap * 7;
+  const nameW = innerW - fixed.reduce((sum, w) => sum + w, 0) - gap * 8;
   const widths = [fixed[0], nameW, ...fixed.slice(1)];
   const columns = widths.map((w, index) => ({ x: innerX + widths.slice(0, index).reduce((sum, value) => sum + value + gap, 0), w }));
   const center = (index: number) => columns[index].x + columns[index].w / 2;
@@ -1716,7 +1719,7 @@ async function downloadRankingImage(month: string, rows: RankingRow[], form: For
   ctx.fillStyle = "rgba(74, 62, 44, 0.62)";
   ctx.font = `800 10.5px ${bodyFont}`;
   ctx.letterSpacing = "0.735px";
-  ["Vị trí", "Thành viên", "Điểm", "Điểm thắng", "Điểm thua", "Hiệu số", "Số trận", "Phong độ"].forEach((label, index) => {
+  ["Vị trí", "Thành viên", "Điểm", "Điểm thắng", "Điểm thua", "Hiệu số", "Số trận", "ELO", "Phong độ"].forEach((label, index) => {
     ctx.textAlign = index === 1 ? "left" : "center";
     ctx.fillText(label.toUpperCase(), index === 1 ? columns[1].x : center(index), cardY + headH / 2 + 0.5);
   });
@@ -1820,12 +1823,15 @@ async function downloadRankingImage(month: string, rows: RankingRow[], form: For
     ctx.fillText(`${row.pointDiff > 0 ? "+" : ""}${row.pointDiff}`, center(5), mid + 0.5);
     ctx.fillStyle = "#3d3528";
     ctx.fillText(String(row.matches), center(6), mid + 0.5);
+    ctx.fillStyle = "#6b5a3a";
+    ctx.font = `700 14px ${numberFont}`;
+    ctx.fillText(formatElo(row.username ? elo[row.username] : undefined), center(7), mid + 0.5);
 
     // Form: last four results, oldest → newest, empty dashed slots when fewer.
     const recent = [...((row.username && form[row.username]) || [])].slice(0, 4).reverse();
     const badge = 22;
     const badgeGap = 4;
-    const startX = center(7) - (badge * 4 + badgeGap * 3) / 2;
+    const startX = center(8) - (badge * 4 + badgeGap * 3) / 2;
     for (let slot = 0; slot < 4; slot += 1) {
       const bx = startX + slot * (badge + badgeGap);
       const entry = recent[slot];
@@ -1884,10 +1890,10 @@ async function downloadRankingImage(month: string, rows: RankingRow[], form: For
     }, 1500);
   }, "image/png", 0.96);
 }
-function Ranking({ month, rows, form, onMonthChange, monthOptions, isAdmin, closeStatus, closeNotice, closingMonth, onCloseMonth }: { month: string; rows: RankingRow[]; form: FormByUsername; onMonthChange: (month: string) => void; monthOptions: string[]; isAdmin: boolean; closeStatus: MonthCloseStatus | null; closeNotice: string; closingMonth: boolean; onCloseMonth: () => void }) {
+function Ranking({ month, rows, form, elo, onMonthChange, monthOptions, isAdmin, closeStatus, closeNotice, closingMonth, onCloseMonth }: { month: string; rows: RankingRow[]; form: FormByUsername; elo: Record<string, number>; onMonthChange: (month: string) => void; monthOptions: string[]; isAdmin: boolean; closeStatus: MonthCloseStatus | null; closeNotice: string; closingMonth: boolean; onCloseMonth: () => void }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
   return <section className="ranking">
-    <div className="ranking-toolbar"><div className="ranking-filter-row"><select value={month} onChange={(e) => onMonthChange(e.target.value)} aria-label="Tháng">{monthOptions.map((option) => <option key={option}>{option}</option>)}</select><button type="button" className="soft-btn ranking-export-btn" onClick={() => void downloadRankingImage(month, rows, form)}><span className="ranking-export-full">Lưu ảnh BXH</span><span className="ranking-export-short">Lưu ảnh</span></button></div><p className="ranking-note">{closeStatus?.closed ? "BXH tháng này đã chốt, dữ liệu chỉ còn xem." : "Admin chốt BXH sau khi buổi cuối tháng hoàn tất để tạo tháng mới."}</p></div>
+    <div className="ranking-toolbar"><div className="ranking-filter-row"><select value={month} onChange={(e) => onMonthChange(e.target.value)} aria-label="Tháng">{monthOptions.map((option) => <option key={option}>{option}</option>)}</select><button type="button" className="soft-btn ranking-export-btn" onClick={() => void downloadRankingImage(month, rows, form, elo)}><span className="ranking-export-full">Lưu ảnh BXH</span><span className="ranking-export-short">Lưu ảnh</span></button></div><p className="ranking-note">{closeStatus?.closed ? "BXH tháng này đã chốt, dữ liệu chỉ còn xem." : "Admin chốt BXH sau khi buổi cuối tháng hoàn tất để tạo tháng mới."}</p></div>
     {isAdmin && closeStatus && <div className={"month-close-card " + (closeStatus.closed ? "closed" : closeStatus.eligible ? "ready" : "waiting")}>
       <div>
         <span>{closeStatus.closed ? "ĐÃ CHỐT THÁNG" : closeStatus.eligible ? "SẴN SÀNG CHỐT" : "CHỜ ĐỦ ĐIỀU KIỆN"}</span>
@@ -1897,9 +1903,9 @@ function Ranking({ month, rows, form, onMonthChange, monthOptions, isAdmin, clos
       </div>
       {!closeStatus.closed && <button className="primary" disabled={!closeStatus.eligible || closingMonth} onClick={onCloseMonth}>{closingMonth ? "Đang chốt..." : `Chốt BXH ${closeStatus.monthLabel}`}</button>}
     </div>}
-    <div className="rank-table rank-table-form"><div className="rank-head rank-columns"><span>Vị trí</span><span>Thành viên</span><span>Điểm</span><span>Điểm thắng</span><span>Điểm thua</span><span>Hiệu số</span><span>Số trận</span><span>Phong độ</span></div>{rows.length ? rows.map((row, i) => {
+    <div className="rank-table rank-table-form"><div className="rank-head rank-columns"><span>Vị trí</span><span>Thành viên</span><span>Điểm</span><span>Điểm thắng</span><span>Điểm thua</span><span>Hiệu số</span><span>Số trận</span><span>ELO</span><span>Phong độ</span></div>{rows.length ? rows.map((row, i) => {
       const isTopRank = hasRankingData && i < 3;
-      return <div className={"rank-row rank-columns " + (isTopRank ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={isTopRank ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</div><b>{row.name}</b><span className="level">L{row.level}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span><FormBadges form={row.username ? form[row.username] : undefined} className="rank-form" /><div className="rank-mobile-stats" aria-hidden="true"><span><em>Thắng</em><b>{row.pointsWon}</b></span><span><em>Thua</em><b>{row.pointsLost}</b></span><span><em>Hiệu</em><b className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</b></span><span><em>Trận</em><b>{row.matches}</b></span></div></div>;
+      return <div className={"rank-row rank-columns " + (isTopRank ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={isTopRank ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</div><b>{row.name}</b><span className="level">L{row.level}</span><span className="rank-elo-chip">ELO {formatElo(row.username ? elo[row.username] : undefined)}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span><div className="rank-elo">{formatElo(row.username ? elo[row.username] : undefined)}</div><FormBadges form={row.username ? form[row.username] : undefined} className="rank-form" /><div className="rank-mobile-stats" aria-hidden="true"><span><em>Thắng</em><b>{row.pointsWon}</b></span><span><em>Thua</em><b>{row.pointsLost}</b></span><span><em>Hiệu</em><b className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</b></span><span><em>Trận</em><b>{row.matches}</b></span></div></div>;
     }) : <div className="empty-ranking">Chưa có thành viên hoạt động để hiển thị BXH {month}.</div>}</div>
   </section>;
 }
