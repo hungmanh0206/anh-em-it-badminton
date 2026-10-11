@@ -770,11 +770,6 @@
   gap: 16px;
 }
 
-/* The gallery hero has two stats (total, categories) instead of the ELO hero's three. */
-.photo-hero-panel .elo-hero-stats {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-}
-
 /* View toggle (grid / list) */
 .photo-view-toggle {
   display: inline-flex;

@@ -3,6 +3,7 @@
 import { type CSSProperties, useCallback, useEffect, useState } from "react";
 import { backdropDismissProps, Presence } from "@/app/ui/modal";
 import { PhotoGallery } from "@/app/photo-gallery";
+import { PageHero } from "@/app/ui/page-hero";
 import { supabase } from "@/lib/supabase";
 import { isCheckinWindowOpenForDate, sessionDatesOfMonth, sessionStateForDate, sessionWeekdayLabel, sessionWeekInMonth, targetSessionDateKey } from "@/lib/session-dates";
 import { reorderMatchesForRest } from "@/lib/schedule-reorder";
@@ -1333,18 +1334,13 @@ function Rules({ members }: { members: Member[] }) {
   }));
 
   return <section className="rules-page">
-    <section className="rules-hero">
-      <div className="rules-hero-copy">
-        <p className="eyebrow">BỘ LUẬT CLB</p>
-        <h2>Giải cầu lông Anh Em IT</h2>
-        <p>Lịch đấu được tạo để mọi thành viên có số trận cân bằng, gặp nhiều đối thủ khác nhau và vẫn giữ tinh thần vui vẻ, cạnh tranh lành mạnh.</p>
-      </div>
-      <div className="rules-hero-stats" aria-label="Tóm tắt thể lệ">
-        <div><b>2 vs 2</b><span>Thể thức đánh đôi</span></div>
-        <div><b>4</b><span>Trận mỗi người / tuần</span></div>
-        <div><b>10</b><span>Thành viên tối đa</span></div>
-      </div>
-    </section>
+    <PageHero
+      eyebrow="BỘ LUẬT CLB"
+      title="Giải cầu lông Anh Em IT"
+      description="Lịch đấu được tạo để mọi thành viên có số trận cân bằng, gặp nhiều đối thủ khác nhau và vẫn giữ tinh thần vui vẻ, cạnh tranh lành mạnh."
+      statsLabel="Tóm tắt thể lệ"
+      stats={[{ label: "Thể thức đánh đôi", value: "2 vs 2" }, { label: "Trận mỗi người / tuần", value: 4 }, { label: "Thành viên tối đa", value: 10 }]}
+    />
 
     <section className="rules-section" aria-labelledby="rules-process-title">
       <h2 className="rules-section-title" id="rules-process-title">Quy trình tham gia</h2>
@@ -1440,17 +1436,13 @@ function ScheduleLibrary({ scenarios }: { scenarios: ScheduleScenario[] }) {
   const [participantFilter, setParticipantFilter] = useState<ParticipantCount>(5);
   const visibleScenarios = scenarios.filter((scenario) => scenario.participantCount === participantFilter);
   return <section className="schedule-library">
-    <section className="panel schedule-overview">
-      <div>
-        <p className="eyebrow">THƯ VIỆN LỊCH</p>
-        <h2>Mẫu lịch theo số người & Level</h2>
-        <p>Lịch chỉ có khi buổi chơi có từ 5 thành viên trở lên. Trang này chỉ để xem các trường hợp tạo lịch, không chọn hay ghi đè lịch của buổi hiện tại.</p>
-      </div>
-      <div className="schedule-overview-stats">
-        <div><b>{participantFilter}</b><span>người tham gia</span></div>
-        <div><b>{visibleScenarios.length}</b><span>trường hợp</span></div>
-      </div>
-    </section>
+    <PageHero
+      eyebrow="THƯ VIỆN LỊCH"
+      title="Mẫu lịch theo số người & Level"
+      description="Lịch chỉ có khi buổi chơi có từ 5 thành viên trở lên. Trang này chỉ để xem các trường hợp tạo lịch, không chọn hay ghi đè lịch của buổi hiện tại."
+      statsLabel="Tóm tắt thư viện lịch"
+      stats={[{ label: "Người tham gia", value: participantFilter }, { label: "Trường hợp", value: visibleScenarios.length }]}
+    />
     <div className="schedule-filter" role="group" aria-label="Lọc lịch theo số lượng thành viên">
       {scheduleParticipants.map((count) => <button key={count} type="button" className={participantFilter === count ? "active" : ""} onClick={() => setParticipantFilter(count)}>{count} người</button>)}
     </div>
@@ -1937,13 +1929,11 @@ function EloGuideModal({ onClose }: { onClose: () => void }) {
 function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus | null }) {
   const [guideOpen, setGuideOpen] = useState(false);
   return <section className="elo-page">
-    <section className="panel elo-hero-panel">
-      <div className="elo-hero-copy">
-        <p className="eyebrow">ELO RATING</p>
-        <h2>Bảng ELO thành viên</h2>
-        <p>Top 4 ELO hiện tại là Level 1, còn lại là Level 2. Sau mỗi trận đã lưu, ELO và level sẽ cập nhật để tuần sau xếp lịch đúng trình độ mới.</p>
-      </div>
-    </section>
+    <PageHero
+      eyebrow="ELO RATING"
+      title="Bảng ELO thành viên"
+      description="Top 4 ELO hiện tại là Level 1, còn lại là Level 2. Sau mỗi trận đã lưu, ELO và level sẽ cập nhật để tuần sau xếp lịch đúng trình độ mới."
+    />
 
     <section className="panel elo-ranking-panel">
       <div className="panel-head elo-panel-head">

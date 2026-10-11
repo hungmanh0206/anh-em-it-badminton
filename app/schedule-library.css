@@ -14,79 +14,6 @@
   --slot-level-2-border: #bbf7d0;
 }
 
-.schedule-overview {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 24px 26px;
-  overflow: hidden;
-  position: relative;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(255, 183, 0, 0.22), transparent 30%),
-    linear-gradient(135deg, #ffffff, #fff9ea) !important;
-}
-
-.schedule-overview::after {
-  content: "";
-  position: absolute;
-  right: -46px;
-  bottom: -78px;
-  width: 180px;
-  height: 180px;
-  border: 1px solid rgba(255, 183, 0, 0.24);
-  border-radius: 999px;
-}
-
-.schedule-overview h2 {
-  margin-bottom: 8px !important;
-  font-size: 24px !important;
-}
-
-.schedule-overview p:not(.eyebrow) {
-  max-width: 680px;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.6;
-}
-
-.schedule-overview-stats {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(94px, 1fr));
-  gap: 10px;
-  min-width: 220px;
-}
-
-.schedule-overview-stats div {
-  padding: 14px 16px;
-  border: 1px solid rgba(31, 27, 18, 0.08);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 10px 22px rgba(30, 24, 12, 0.07);
-}
-
-.schedule-overview-stats b {
-  display: block;
-  color: #1a1916;
-  font-family: "JetBrains Mono", ui-monospace, monospace;
-  font-size: 28px;
-  font-weight: 900;
-  letter-spacing: -0.06em;
-  line-height: 1;
-}
-
-.schedule-overview-stats span {
-  display: block;
-  margin-top: 6px;
-  color: #79736a;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
 /* Wraps instead of scrolling: a scroll box would clip the pill shadows into a visible strip. */
 .schedule-filter {
   display: flex;
@@ -418,15 +345,6 @@
 }
 
 @media (max-width: 800px) {
-  .schedule-overview {
-    display: grid;
-    padding: 22px 18px;
-  }
-
-  .schedule-overview-stats {
-    min-width: 0;
-    width: 100%;
-  }
 
   .schedule-filter {
     display: grid;

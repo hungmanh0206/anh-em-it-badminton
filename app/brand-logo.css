@@ -124,11 +124,6 @@
   }
 }
 
-.rules-hero::after {
-  background: var(--club-logo-image) center / contain no-repeat !important;
-  opacity: 0.16 !important;
-}
-
 @media (max-width: 800px) {
   .sidebar .brand .brand-mark {
     width: 42px !important;

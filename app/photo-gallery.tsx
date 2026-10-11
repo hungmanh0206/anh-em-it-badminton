@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { PHOTO_FORMATS, PHOTO_MAX_BYTES } from "@/lib/photos/assets";
 import { folderLabel, sanitizeFolderInput } from "@/lib/photos/folders";
 import { backdropDismissProps, Presence } from "@/app/ui/modal";
+import { PageHero } from "@/app/ui/page-hero";
 
 type Photo = {
   id: string;
@@ -189,17 +190,13 @@ export function PhotoGallery() {
   const firstOnPage = (page - 1) * pageSize;
 
   return <div className="photo-page">
-    <section className="panel elo-hero-panel photo-hero-panel">
-      <div className="elo-hero-copy">
-        <p className="eyebrow">KHO ẢNH CLB</p>
-        <h2>Kho ảnh Anh Em IT</h2>
-        <p>Ảnh các buổi chơi, giải đấu và sự kiện của CLB. Mở một ảnh để xem lớn, chuyển ảnh bằng phím mũi tên hoặc vuốt trên điện thoại.</p>
-      </div>
-      <div className="elo-hero-stats" aria-label="Tổng quan kho ảnh">
-        <div><span>Tổng ảnh</span><b>{allCount}</b></div>
-        <div><span>Danh mục</span><b>{folders.length}</b></div>
-      </div>
-    </section>
+    <PageHero
+      eyebrow="KHO ẢNH CLB"
+      title="Kho ảnh Anh Em IT"
+      description="Ảnh các buổi chơi, giải đấu và sự kiện của CLB. Mở một ảnh để xem lớn, chuyển ảnh bằng phím mũi tên hoặc vuốt trên điện thoại."
+      statsLabel="Tổng quan kho ảnh"
+      stats={[{ label: "Tổng ảnh", value: allCount }, { label: "Danh mục", value: folders.length }]}
+    />
 
     <section className="panel photo-panel" ref={panel}>
     <div className="panel-head photo-panel-head">

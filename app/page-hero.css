@@ -1,0 +1,150 @@
+/* One hero look for every screen except the home page (see app/ui/page-hero.tsx). */
+.page-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  min-height: 0;
+  margin: 0;
+  padding: 24px 26px !important;
+  overflow: hidden;
+  border: 1px solid rgba(255, 183, 0, 0.2) !important;
+  border-radius: 20px !important;
+  background:
+    radial-gradient(circle at 92% -10%, rgba(255, 183, 0, 0.22), transparent 32%),
+    radial-gradient(circle at 0% 100%, rgba(255, 237, 182, 0.42), transparent 36%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 239, 0.94)) !important;
+  box-shadow: 0 10px 26px rgba(62, 47, 18, 0.06) !important;
+}
+
+.page-hero::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  bottom: -64px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 183, 0, 0.1);
+  pointer-events: none;
+}
+
+.page-hero-copy,
+.page-hero-stats {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.page-hero-eyebrow {
+  margin: 0 0 8px !important;
+  color: #b67500 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.12em !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase;
+}
+
+.page-hero h2 {
+  margin: 0 0 8px !important;
+  color: #0f0c08 !important;
+  font-size: clamp(26px, 3vw, 36px) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.045em !important;
+}
+
+.page-hero-text {
+  max-width: 680px;
+  margin: 0 !important;
+  color: rgba(28, 24, 18, 0.68) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.55 !important;
+}
+
+.page-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(var(--hero-stat-count, 2), minmax(112px, auto));
+  gap: 10px;
+}
+
+.page-hero-stats div {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 13px 16px;
+  border: 1px solid rgba(255, 183, 0, 0.3);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 10px 24px rgba(62, 47, 18, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.page-hero-stats span {
+  color: rgba(111, 92, 63, 0.78);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.page-hero-stats b {
+  color: #17140f;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+/* Tablets and narrow laptops: stats move under the text and share the width. */
+@media (max-width: 1100px) {
+  .page-hero {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 16px;
+  }
+
+  .page-hero-stats {
+    grid-template-columns: repeat(var(--hero-stat-count, 2), minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .page-hero {
+    gap: 14px;
+    padding: 18px 16px !important;
+    border-radius: 18px !important;
+  }
+
+  .page-hero h2 {
+    font-size: 24px !important;
+  }
+
+  .page-hero-text {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+  }
+
+  .page-hero-stats {
+    gap: 8px;
+  }
+
+  .page-hero-stats div {
+    gap: 4px;
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+
+  .page-hero-stats span {
+    font-size: 9px;
+    letter-spacing: 0.05em;
+  }
+
+  .page-hero-stats b {
+    font-size: 19px;
+  }
+}
