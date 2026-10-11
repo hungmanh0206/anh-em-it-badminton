@@ -1,9 +1,9 @@
-import { ELO_INITIAL_RATING } from "@/lib/elo/constants";
 import { rankEloPlayers, replayEloMatches } from "@/lib/elo/calculate-elo";
+import { startRatingForProfile } from "@/lib/elo/start-rating";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type SupabaseMaybeError = { code?: string; message?: string } | null | undefined;
-type ProfileRow = { id: string; is_active?: boolean | null };
+type ProfileRow = { id: string; is_active?: boolean | null; description?: string | null };
 type StoredMatch = { id: string; match_no: number; team_a: string[] | null; team_b: string[] | null; score_a: number | null; score_b: number | null };
 type SessionRow = { session_date: string; matches?: StoredMatch[] | null };
 
@@ -27,9 +27,11 @@ const isScoredMatch = (match: StoredMatch) =>
   typeof match.score_b === "number" &&
   match.score_a !== match.score_b;
 
-async function recalculateEloLevelsInApplication(admin: SupabaseClient) {
+// Replays every scored match (each member starting from their stored start rating) and returns the
+// current ratings of active members.
+async function replayActiveEloRatings(admin: SupabaseClient): Promise<{ memberId: string; eloRating: number }[]> {
   const [{ data: profiles, error: profileError }, { data: sessions, error: sessionError }] = await Promise.all([
-    admin.from("profiles").select("id, is_active"),
+    admin.from("profiles").select("id, is_active, description"),
     admin.from("play_sessions").select("session_date, matches(id, match_no, team_a, team_b, score_a, score_b)").order("session_date", { ascending: true }),
   ]);
   if (profileError) throw profileError;
@@ -37,7 +39,7 @@ async function recalculateEloLevelsInApplication(admin: SupabaseClient) {
 
   const profileRows = (profiles || []) as ProfileRow[];
   const activeMemberIds = new Set(profileRows.filter((profile) => profile.is_active !== false).map((profile) => profile.id));
-  if (!activeMemberIds.size) return;
+  if (!activeMemberIds.size) return [];
 
   const matches = ((sessions || []) as SessionRow[]).flatMap((session) => (session.matches || [])
     .filter(isScoredMatch)
@@ -53,10 +55,24 @@ async function recalculateEloLevelsInApplication(admin: SupabaseClient) {
     })));
 
   const replay = replayEloMatches({
-    players: profileRows.map((profile) => ({ memberId: profile.id, rating: ELO_INITIAL_RATING })),
+    players: profileRows.map((profile) => ({ memberId: profile.id, rating: startRatingForProfile(profile) })),
     matches,
   });
-  const assignments = rankEloPlayers(replay.ratings.filter((row: { memberId: string }) => activeMemberIds.has(row.memberId)));
+  return replay.ratings.filter((row: { memberId: string }) => activeMemberIds.has(row.memberId));
+}
+
+// Current ELO of every active member: the stored table when the ELO migration is applied, otherwise a replay.
+export async function currentEloRatings(admin: SupabaseClient) {
+  const { data, error } = await admin.from("elo_ratings").select("member_id, elo_rating");
+  if (!error && data?.length) return (data as { elo_rating: number | string | null }[]).map((row) => Number(row.elo_rating));
+  if (error && !isMissingEloFeature(error)) throw error;
+  return (await replayActiveEloRatings(admin)).map((row) => row.eloRating);
+}
+
+async function recalculateEloLevelsInApplication(admin: SupabaseClient) {
+  const ratings = await replayActiveEloRatings(admin);
+  if (!ratings.length) return;
+  const assignments = rankEloPlayers(ratings);
 
   const updates = await Promise.all(assignments.map((assignment: { memberId: string; level: 1 | 2 }) => admin
     .from("profiles")

@@ -3,6 +3,7 @@ import test from "node:test";
 import { calculateDoublesElo, rankEloPlayers, replayEloMatches } from "../lib/elo/calculate-elo.js";
 import { ELO_ACCEPTANCE_TOLERANCE, ELO_SPLIT_FROM_DATE, ELO_SPLIT_GAP } from "../lib/elo/constants.js";
 import { buildHistoricalEloReport } from "../lib/elo/backfill-report.js";
+import { eloStartFromDescription, newMemberStartRating, startRatingForProfile, withEloStart } from "../lib/elo/start-rating.js";
 
 const team = (prefix, rating) => [
   { memberId: `${prefix}1`, rating },
@@ -115,4 +116,20 @@ test("matches before ELO_SPLIT_FROM_DATE keep the equal split; later matches use
   assert.equal(before[0].eloChange, before[1].eloChange);
   const after = replayEloMatches({ players, matches: [match("new", ELO_SPLIT_FROM_DATE)] }).history.filter((row) => row.team === "A");
   assert.notEqual(after[0].eloChange, after[1].eloChange);
+});
+
+test("a new member starts at 1000, or just below the 4th best ELO, so they join as Level 2", () => {
+  assert.equal(newMemberStartRating([1169.6, 1124.7, 1108.3, 1069.8, 1065, 992]), 1000);
+  assert.equal(newMemberStartRating([990, 980, 970, 960.25, 900]), 959.2);
+  assert.equal(newMemberStartRating([1200, 1100]), 1000);
+  const ranked = rankEloPlayers([1050, 990, 980, 970, 960].map((eloRating, index) => ({ memberId: `m${index}`, eloRating })).concat({ memberId: "new", eloRating: newMemberStartRating([1050, 990, 980, 970, 960]) }));
+  assert.equal(ranked.find((row) => row.memberId === "new").level, 2);
+});
+
+test("the stored start rating survives other description markers", () => {
+  const description = withEloStart("[aemit-role:sub-admin]", 959.2);
+  assert.equal(eloStartFromDescription(description), 959.2);
+  assert.ok(description.includes("[aemit-role:sub-admin]"));
+  assert.equal(eloStartFromDescription(withEloStart(description, 940)), 940);
+  assert.equal(startRatingForProfile({ description: null }), 1000);
 });

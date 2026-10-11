@@ -1,5 +1,6 @@
 import { ELO_INITIAL_RATING } from "@/lib/elo/constants";
 import { rankEloPlayers, replayEloMatches } from "@/lib/elo/calculate-elo";
+import { startRatingForProfile } from "@/lib/elo/start-rating";
 import { isMissingEloFeature } from "@/lib/elo/server";
 import { ApiError, jsonError, requireUser } from "@/lib/supabase-admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -13,6 +14,7 @@ type SupabaseProfile = {
   level?: number | string | null;
   role?: "admin" | "member" | string | null;
   is_active?: boolean | null;
+  description?: string | null;
 };
 
 type MonthlyResultRow = {
@@ -269,7 +271,7 @@ async function loadPersistedEloRows(eloRatingsRead: EloRatingsRead, activeProfil
     memberId: profile.id,
     username: profile.username || profile.id,
     name: profile.full_name || "Thành viên",
-    eloRating: ratingByMember.get(profile.id) ?? ELO_INITIAL_RATING,
+    eloRating: ratingByMember.get(profile.id) ?? startRatingForProfile(profile),
     matches: 0,
   }] : []));
 
@@ -309,7 +311,7 @@ async function buildCalculatedEloRows(admin: SupabaseClient, activeProfiles: Sup
       memberId: profile.id,
       username: profile.username || profile.id,
       name: profile.full_name || "Thành viên",
-      rating: ELO_INITIAL_RATING,
+      rating: startRatingForProfile(profile),
     }] : []),
     matches,
  });
@@ -416,7 +418,7 @@ export async function GET(request: Request) {
     ] = await Promise.all([
       admin.from("monthly_results").select(rankingSelect).in("month", requestedRankingMonths),
       admin.from("play_sessions").select("session_date, status").in("session_date", championFinalSessionKeys),
-      admin.from("profiles").select("id, username, full_name, level").eq("is_active", true).order("full_name"),
+      admin.from("profiles").select("id, username, full_name, level, description").eq("is_active", true).order("full_name"),
       admin.from("play_sessions").select("status").eq("session_date", selectedFinalSaturdayKey).maybeSingle(),
       admin.from("monthly_results").select("id", { count: "exact", head: true }).eq("month", selectedNextMonthKey),
       admin.from("play_sessions").select("id, session_date, matches(match_no, team_a, team_b), attendances(choice)").eq("status", "completed").order("session_date", { ascending: false }),

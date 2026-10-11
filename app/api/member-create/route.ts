@@ -1,5 +1,7 @@
+import { currentEloRatings } from "@/lib/elo/server";
+import { newMemberStartRating, withEloStart } from "@/lib/elo/start-rating";
 import { isValidMemberUsername, MEMBER_EMAIL_DOMAIN, MEMBER_PASSWORD_MIN, usernameFromName } from "@/lib/member-username";
-import { ApiError, isMissingEnumValueError, jsonError, requireAdmin, setSubAdminMarker } from "@/lib/supabase-admin";
+import { ApiError, clearSubAdminMarker, isMissingEnumValueError, jsonError, requireAdmin, setSubAdminMarker } from "@/lib/supabase-admin";
 
 type Body = {
   name?: string;
@@ -9,7 +11,8 @@ type Body = {
 
 // POST /api/member-create { name, role, password } — admin only.
 // Creates the login (username derived from the name) and the profile; a previously removed
-// member with the same username is reactivated with the new password instead.
+// member with the same username is reactivated with the new password instead (keeping their history).
+// A brand-new member's starting ELO sits below the Level 1 cut-off, so they always join as Level 2.
 export async function POST(request: Request) {
   try {
     const { admin } = await requireAdmin(request);
@@ -44,10 +47,11 @@ export async function POST(request: Request) {
     if (existing) {
       const { error: passwordError } = await admin.auth.admin.updateUserById(existing.id, { password });
       if (passwordError) throw passwordError;
-      await saveProfile(existing.id, null, false);
+      await saveProfile(existing.id, clearSubAdminMarker(existing.description), false);
       return Response.json({ ok: true, username, reactivated: true });
     }
 
+    const startRating = newMemberStartRating(await currentEloRatings(admin));
     const { data: created, error: createError } = await admin.auth.admin.createUser({
       email: `${username}@${MEMBER_EMAIL_DOMAIN}`,
       password,
@@ -60,13 +64,13 @@ export async function POST(request: Request) {
     }
 
     try {
-      await saveProfile(created.user.id, null, true);
+      await saveProfile(created.user.id, withEloStart(null, startRating), true);
     } catch (profileError) {
       // Never leave a login without a profile behind.
       await admin.auth.admin.deleteUser(created.user.id).catch(() => undefined);
       throw profileError;
     }
-    return Response.json({ ok: true, username });
+    return Response.json({ ok: true, username, startRating });
   } catch (error) {
     return jsonError(error);
   }
