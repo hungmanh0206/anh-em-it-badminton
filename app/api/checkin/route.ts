@@ -1,5 +1,6 @@
 import { recalculateEloIfAvailable } from "@/lib/elo/server";
 import { buildDrawReassignmentPlan } from "@/lib/draw-reassign";
+import { monthStart, nextMonthStart } from "@/lib/match-result";
 import { ApiError, jsonError, requireUser } from "@/lib/supabase-admin";
 import { isCheckinWindowOpenForDate, normalizeSessionDateKey, rescheduledOriginalDateKey, targetSessionDateKey } from "@/lib/session-dates";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -53,14 +54,6 @@ type MonthlyResult = {
 
 const vietnamNow = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
 const isTestFlowEnabled = () => process.env.ENABLE_TEST_FLOW === "true" || process.env.NEXT_PUBLIC_ENABLE_TEST_FLOW === "true";
-const monthStart = (dateText: string) => {
-  const date = new Date(`${dateText}T00:00:00`);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-01`;
-};
-const nextMonthStart = (dateText: string) => {
-  const date = new Date(`${dateText}T00:00:00`);
-  return `${date.getFullYear()}-${String(date.getMonth() + 2).padStart(2, "0")}-01`;
-};
 const toProfile = (profiles: ProfileJoin | ProfileJoin[] | null) => Array.isArray(profiles) ? profiles[0] : profiles;
 const toLevel = (level: ProfileJoin["level"]): 1 | 2 => Number(level) === 1 ? 1 : 2;
 const attendanceLevel = (attendance: AttendanceStatusRow): 1 | 2 =>

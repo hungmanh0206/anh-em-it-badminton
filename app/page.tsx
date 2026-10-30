@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useCallback, useEffect, useState } from "react";
+import { type CSSProperties, type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { backdropDismissProps, Presence } from "@/app/ui/modal";
 import { PhotoGallery } from "@/app/photo-gallery";
 import { PageHero } from "@/app/ui/page-hero";
@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { isCheckinWindowOpenForDate, sessionDatesOfMonth, sessionStateForDate, sessionWeekdayLabel, sessionWeekInMonth, targetSessionDateKey } from "@/lib/session-dates";
 import { reorderMatchesForRest } from "@/lib/schedule-reorder";
 import { MEMBER_PASSWORD_MIN, usernameFromName } from "@/lib/member-username";
-import { isScoreText, SCORE_FORMAT_ERROR, scoreEntryError } from "@/lib/score-input";
+import { isScoreText, mergeSavedScores, SCORE_FORMAT_ERROR, scoreEntryError } from "@/lib/score-input";
 
 type MemberRole = "admin" | "sub-admin" | "member";
 type Member = { name: string; initials: string; level: 1 | 2; color: string; present: boolean; username: string; password: string; role?: MemberRole; responded?: boolean };
@@ -326,6 +326,7 @@ export default function Home() {
   const [members, setMembers] = useState(initialMembers);
   const [drawn, setDrawn] = useState<Record<string, number>>({});
   const [scores, setScores] = useState<Record<number, [string, string]>>({});
+  const savedMatchRows = useRef<Set<number>>(new Set());
   const [confirmedMatches, setConfirmedMatches] = useState<Record<number, boolean>>({});
   const [activeUser, setActiveUser] = useState<Member | null>(null);
   const [showCheckin, setShowCheckin] = useState(false);
@@ -993,6 +994,7 @@ export default function Home() {
   useEffect(() => {
     setScores({});
     setConfirmedMatches({});
+    savedMatchRows.current = new Set();
     if (!supabase || !sessionId) return;
     const client = supabase;
     let cancelled = false;
@@ -1008,7 +1010,10 @@ export default function Home() {
           nextConfirmed[match.match_no - 1] = true;
         }
       });
-      setScores(nextScores);
+      // Boxes still being typed in stay; a row that was saved before and is gone now was deleted.
+      const previouslySaved = savedMatchRows.current;
+      savedMatchRows.current = new Set(Object.keys(nextScores).map(Number));
+      setScores((current) => mergeSavedScores(current, nextScores, previouslySaved));
       setConfirmedMatches(nextConfirmed);
     };
     void loadSavedMatches();
@@ -1356,7 +1361,7 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, curren
     {canManageSession && <div className="panel-foot draw-actions-foot"><button className="primary" disabled={!allDrawn} onClick={onContinue}>Tạo lịch thi đấu <span>→</span></button></div>}
   </section>;
 }
-function Schedule({ scenario, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, rankingRows, rankingMonth, onSaved }: { scenario: ScheduleScenario | null; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; canManageScores: boolean; rankingRows: RankingRow[]; rankingMonth: string; onSaved: (completed: boolean) => void }) {
+function Schedule({ scenario, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, rankingRows, rankingMonth, onSaved }: { scenario: ScheduleScenario | null; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: Dispatch<SetStateAction<Record<number, [string, string]>>>; confirmedMatches: Record<number, boolean>; setConfirmedMatches: Dispatch<SetStateAction<Record<number, boolean>>>; sessionId: string | null; canManageScores: boolean; rankingRows: RankingRow[]; rankingMonth: string; onSaved: (completed: boolean) => void }) {
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
   if (!scenario) return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Lịch chỉ được tạo khi có tối thiểu 5 thành viên và đúng tổ hợp trong thư viện lịch.</p></div></div><div className="empty-ranking">Chưa có lịch phù hợp cho danh sách điểm danh hiện tại.</div></section>;
   return <>
@@ -1517,7 +1522,7 @@ function ScheduleLibrary({ scenarios, members }: { scenarios: ScheduleScenario[]
 function SlotToken({ no, name, open }: { no: number; name?: string; open?: boolean }) { return <span className={`slot-token ${open ? "level-open" : `level-${slotLevel(no)}`}`}><b>{no}</b>{name && <small>{name}</small>}</span>; }
 function TeamPair({ team, namesBySlot, open }: { team: readonly [number, number]; namesBySlot?: Record<number, string>; open?: boolean }) { return <span className="team-pair"><SlotToken no={team[0]} name={namesBySlot?.[team[0]]} open={open} /><i>+</i><SlotToken no={team[1]} name={namesBySlot?.[team[1]]} open={open} /></span>; }
 function Match({ match, i, namesBySlot }: { match: ScheduleMatch; i: number; namesBySlot?: Record<number, string> }) { const open = match.type === "MỞ"; return <article className="match schedule-match-card"><div className="match-top"><b>TRẬN {String(i + 1).padStart(2, "0")}</b></div><div className="teams"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={open} /><strong>VS</strong><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={open} /></div></article>; }
-function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, onSaved }: { matches: ScheduleMatch[]; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; canManageScores: boolean; onSaved: (completed: boolean) => void }) {
+function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, onSaved }: { matches: ScheduleMatch[]; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: Dispatch<SetStateAction<Record<number, [string, string]>>>; confirmedMatches: Record<number, boolean>; setConfirmedMatches: Dispatch<SetStateAction<Record<number, boolean>>>; sessionId: string | null; canManageScores: boolean; onSaved: (completed: boolean) => void }) {
   const [editing, setEditing] = useState<Record<number, boolean>>({});
   // Scores saved before "Sửa": the row keeps showing that result until the edit is saved.
   const [savedBeforeEdit, setSavedBeforeEdit] = useState<Record<number, [string, string]>>({});
@@ -1545,44 +1550,54 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     const scoreB = Number(scoreBText);
     setSaving(index);
     setRedBoxes({ ...redBoxes, [index]: { a: false, b: false } });
-    const { data: { session } } = await supabase.auth.getSession();
-    const response = await fetch("/api/match-result", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
-      body: JSON.stringify({ sessionId, matchNo: index + 1, matchType: match.type, teamA: match.teamA, teamB: match.teamB, scoreA, scoreB, totalMatches: matches.length }),
-    });
-    const payload = await response.json().catch(() => ({})) as { error?: string; completed?: boolean };
-    setSaving(null);
-    if (!response.ok) {
-      return showToast(payload.error || "Không thể lưu kết quả trận.");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch("/api/match-result", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+        body: JSON.stringify({ sessionId, matchNo: index + 1, matchType: match.type, teamA: match.teamA, teamB: match.teamB, scoreA, scoreB, totalMatches: matches.length }),
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string; completed?: boolean };
+      if (!response.ok) return showToast(payload.error || "Không thể lưu kết quả trận.");
+      setConfirmedMatches((current) => ({ ...current, [index]: true }));
+      setEditing((current) => ({ ...current, [index]: false }));
+      showToast(`Đã lưu trận ${index + 1} (${scoreA}–${scoreB}), BXH đã cập nhật.`, "success");
+      onSaved(Boolean(payload.completed));
+    } catch {
+      showToast("Không kết nối được máy chủ, điểm chưa được lưu.");
+    } finally {
+      setSaving(null);
     }
-    setConfirmedMatches({ ...confirmedMatches, [index]: true });
-    setEditing({ ...editing, [index]: false });
-    showToast(`Đã lưu trận ${index + 1} (${scoreA}–${scoreB}), BXH đã cập nhật.`, "success");
-    onSaved(Boolean(payload.completed));
   };
   // Takes a saved result back out (e.g. entered on the wrong match); the ranking and ELO follow.
   const clearMatch = async (index: number) => {
     if (saving !== null) return;
     if (!supabase || !sessionId) return showToast("Chưa có phiên Supabase để lưu kết quả.");
     setSaving(index);
-    const { data: { session } } = await supabase.auth.getSession();
-    const response = await fetch("/api/match-result", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
-      body: JSON.stringify({ sessionId, matchNo: index + 1 }),
-    });
-    const payload = await response.json().catch(() => ({})) as { error?: string };
-    setSaving(null);
-    if (!response.ok) return showToast(payload.error || "Không thể xóa điểm trận này.");
-    const remainingScores = { ...scores };
-    delete remainingScores[index];
-    setScores(remainingScores);
-    setConfirmedMatches({ ...confirmedMatches, [index]: false });
-    setEditing({ ...editing, [index]: false });
-    setRedBoxes({ ...redBoxes, [index]: { a: false, b: false } });
-    showToast(`Đã xóa điểm trận ${index + 1}, BXH đã cập nhật.`, "success");
-    onSaved(false);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch("/api/match-result", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+        body: JSON.stringify({ sessionId, matchNo: index + 1 }),
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) return showToast(payload.error || "Không thể xóa điểm trận này.");
+      setScores((current) => {
+        const remaining = { ...current };
+        delete remaining[index];
+        return remaining;
+      });
+      setConfirmedMatches((current) => ({ ...current, [index]: false }));
+      setEditing((current) => ({ ...current, [index]: false }));
+      setRedBoxes((current) => ({ ...current, [index]: { a: false, b: false } }));
+      showToast(`Đã xóa điểm trận ${index + 1}, BXH đã cập nhật.`, "success");
+      onSaved(false);
+    } catch {
+      showToast("Không kết nối được máy chủ, điểm chưa được xóa.");
+    } finally {
+      setSaving(null);
+    }
   };
   return <section className="panel result-entry-panel"><div className="panel-head"><div><h2>Điểm số từng trận</h2></div><span className="count-pill match-count-pill"><b>{confirmedCount}</b><small>/{matches.length} trận</small></span></div><div className="result-list">{matches.map((match, i) => {
     const confirmed = Boolean(confirmedMatches[i]);
@@ -1599,7 +1614,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     const changeScore = (next: [string, string], box: "a" | "b") => {
       const typed = next[box === "a" ? 0 : 1];
       const wrong = typed !== "" && !isScoreText(typed);
-      setScores({ ...scores, [i]: next });
+      setScores((current) => ({ ...current, [i]: next }));
       setRedBoxes({ ...redBoxes, [i]: { a: scoreAInvalid, b: scoreBInvalid, [box]: wrong } });
       if (wrong) showToast(SCORE_FORMAT_ERROR);
     };
@@ -1612,7 +1627,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
       <div className={"result-actions" + (confirmed && editing[i] ? " result-actions-edit" : "")}>{canManageScores && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" disabled={saving !== null} onClick={() => { setSavedBeforeEdit({ ...savedBeforeEdit, [i]: [scoreAText, scoreBText] }); setEditing({ ...editing, [i]: true }); }}><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving !== null} onClick={() => void saveMatch(match, i)}><span className="result-action-text">{saving === i ? "Lưu..." : confirmed ? "Lưu lại" : "Xác nhận"}</span></button>)}{canManageScores && confirmed && editing[i] && <button className="soft-btn result-icon-button result-clear-button" aria-label={`Xóa điểm trận ${i + 1}`} disabled={saving !== null} onClick={() => setClearing(i)}><span className="result-action-text">Xóa điểm</span></button>}</div>
     </div>;
   })}</div><Toast toast={toast} onClose={dismissToast} />
-    <Presence show={clearing !== null}>{clearing !== null && <ConfirmActionModal title={`Xóa điểm trận ${clearing + 1}?`} message="Trận này sẽ trở về chưa có kết quả. BXH và ELO được tính lại ngay." confirmLabel="Xóa điểm" cancelLabel="Hủy" onCancel={() => setClearing(null)} onConfirm={async () => { const index = clearing; setClearing(null); await clearMatch(index); }} />}</Presence>
+    <Presence show={clearing !== null}>{clearing !== null && <ConfirmActionModal title={`Xóa điểm trận ${clearing + 1}?`} message={`Kết quả ${savedBeforeEdit[clearing]?.join("–") ?? ""} sẽ bị xóa, trận trở về chưa có điểm. BXH, ELO và Phong độ được tính lại ngay.`} confirmLabel="Xóa điểm" cancelLabel="Hủy" onCancel={() => setClearing(null)} onConfirm={async () => { const index = clearing; setClearing(null); await clearMatch(index); }} />}</Presence>
   </section>;
 }
 function LiveRankingSnapshot({ rows, month }: { rows: RankingRow[]; month: string }) {

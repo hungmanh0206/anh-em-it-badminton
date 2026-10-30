@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { recalculateEloIfAvailable } from "@/lib/elo/server";
+import { CLOSED_MONTH_ERROR, deleteMatchResult, isMonthClosed, monthStart, rerankMonth } from "@/lib/match-result";
 import { isValidScore } from "@/lib/score-input";
 import { jsonError, requireScoreManager } from "@/lib/supabase-admin";
 
@@ -34,26 +35,7 @@ type MonthlyResult = {
 
 type MemberLevels = Map<string, "1" | "2">;
 
-const CLOSED_MONTH_ERROR = "Tháng này đã chốt BXH, không thể nhập hoặc sửa điểm nữa.";
 const SCHEDULE_NOT_CONFIRMED_ERROR = "Lịch thi đấu chưa được xác nhận nên chưa thể nhập điểm.";
-
-const monthStart = (dateText: string) => {
-  const date = new Date(`${dateText}T00:00:00`);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-01`;
-};
-const nextMonthStart = (dateText: string) => {
-  const date = new Date(`${dateText}T00:00:00`);
-  return `${date.getFullYear()}-${String(date.getMonth() + 2).padStart(2, "0")}-01`;
-};
-
-const isMonthClosed = async (admin: SupabaseClient, sessionDate: string) => {
-  const { count, error } = await admin
-    .from("monthly_results")
-    .select("id", { count: "exact", head: true })
-    .eq("month", nextMonthStart(sessionDate));
-  if (error) throw error;
-  return (count || 0) > 0;
-};
 
 async function adjustMonthlyResult(admin: SupabaseClient, month: string, levels: MemberLevels, memberId: string, delta: { total: number; for: number; against: number; matches: number }) {
   const { data: existing, error: readError } = await admin
@@ -92,29 +74,6 @@ async function applyMatchDelta(admin: SupabaseClient, month: string, levels: Mem
     ...match.team_a.map((memberId) => adjustMonthlyResult(admin, month, levels, memberId, { total: aWon ? sign : 0, for: match.score_a! * sign, against: match.score_b! * sign, matches: sign })),
     ...match.team_b.map((memberId) => adjustMonthlyResult(admin, month, levels, memberId, { total: aWon ? 0 : sign, for: match.score_b! * sign, against: match.score_a! * sign, matches: sign })),
   ]);
-}
-
-async function rerankMonth(admin: SupabaseClient, month: string) {
-  const { data: rankRows, error: rankError } = await admin
-    .from("monthly_results")
-    .select("id, rank, total_points, points_for, point_diff, matches_played, created_at")
-    .eq("month", month)
-    .gt("matches_played", 0);
-  if (rankError) throw rankError;
-  const sortedRows = [...(rankRows || [])].sort((a, b) =>
-    b.total_points - a.total_points ||
-    b.point_diff - a.point_diff ||
-    b.points_for - a.points_for ||
-    a.matches_played - b.matches_played ||
-    String(a.created_at).localeCompare(String(b.created_at))
-  );
-  // Only rows whose rank actually moved are written, all in parallel.
-  const rankUpdates = await Promise.all(sortedRows
-    .map((row, index) => ({ id: row.id, oldRank: row.rank, rank: index + 1 }))
-    .filter((row) => row.oldRank !== row.rank)
-    .map((row) => admin.from("monthly_results").update({ rank: row.rank }).eq("id", row.id)));
-  const failedRankUpdate = rankUpdates.find((result) => result.error);
-  if (failedRankUpdate?.error) throw failedRankUpdate.error;
 }
 
 export async function POST(request: Request) {
@@ -210,38 +169,15 @@ export async function POST(request: Request) {
   }
 }
 
-// DELETE /api/match-result { sessionId, matchNo } — takes a saved result back out of the month's
-// ranking and ELO, leaving the match unplayed. Deleting a match with no result changes nothing.
+// DELETE /api/match-result { sessionId, matchNo } — takes a saved result back out; see deleteMatchResult.
 export async function DELETE(request: Request) {
   try {
     const { admin } = await requireScoreManager(request);
     const body = await request.json().catch(() => ({})) as Body;
-    if (!body.sessionId || !Number.isInteger(body.matchNo)) return Response.json({ error: "Thiếu dữ liệu trận đấu." }, { status: 400 });
+    if (!body.sessionId || !Number.isInteger(body.matchNo) || Number(body.matchNo) < 1) return Response.json({ error: "Thiếu dữ liệu trận đấu." }, { status: 400 });
 
-    const [{ data: playSession, error: sessionError }, { data: savedMatch, error: matchError }] = await Promise.all([
-      admin.from("play_sessions").select("id, session_date, status").eq("id", body.sessionId).single(),
-      admin.from("matches").select("team_a, team_b, score_a, score_b").eq("session_id", body.sessionId).eq("match_no", body.matchNo).maybeSingle(),
-    ]);
-    if (sessionError) throw sessionError;
-    if (matchError) throw matchError;
-    if (!playSession) return Response.json({ error: "Không tìm thấy buổi chơi." }, { status: 404 });
-    if (!["scheduled", "completed"].includes(String(playSession.status))) {
-      return Response.json({ error: SCHEDULE_NOT_CONFIRMED_ERROR }, { status: 400 });
-    }
-    if (await isMonthClosed(admin, playSession.session_date)) return Response.json({ error: CLOSED_MONTH_ERROR }, { status: 400 });
-    if (!savedMatch) return Response.json({ ok: true, completed: false });
-
-    const month = monthStart(playSession.session_date);
-    await applyMatchDelta(admin, month, new Map(), savedMatch as StoredMatch, -1);
-    const { error: deleteError } = await admin.from("matches").delete().eq("session_id", body.sessionId).eq("match_no", body.matchNo);
-    if (deleteError) throw deleteError;
-    await rerankMonth(admin, month);
-
-    // One match is unplayed again, so the session cannot stay completed.
-    const statusUpdate = admin.from("play_sessions").update({ status: "scheduled" }).eq("id", body.sessionId);
-    const [{ error: statusError }] = await Promise.all([statusUpdate, recalculateEloIfAvailable(admin)]);
-    if (statusError) throw statusError;
-
+    const result = await deleteMatchResult(admin, { sessionId: body.sessionId, matchNo: body.matchNo }, { recalculateElo: () => recalculateEloIfAvailable(admin) });
+    if (result.error) return Response.json({ error: result.error }, { status: result.status });
     return Response.json({ ok: true, completed: false });
   } catch (error) {
     return jsonError(error);
