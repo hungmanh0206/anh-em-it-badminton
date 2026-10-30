@@ -1,0 +1,24 @@
+/* iOS Safari zooms the page when a focused field's text is under 16px, so touch devices get 16px
+   everywhere. (`:not(#_)` outranks the per-screen sizes; maximum-scale=1 would block pinch zoom on Android.) */
+@media (hover: none) and (pointer: coarse) {
+  input:not(#_):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select:not(#_),
+  textarea:not(#_) {
+    font-size: 16px !important;
+  }
+
+  /* The phone score boxes are only 23-25px wide: give the two digits the whole box. */
+  .result-entry-panel .match-score-controls input:not(#_) {
+    padding: 0 !important;
+    letter-spacing: -0.04em;
+    text-align: center;
+  }
+}
+
+/* Phones: room for "Tháng 10, 2026" at the larger size. */
+@media (hover: none) and (pointer: coarse) and (max-width: 800px) {
+  .ranking-toolbar .ranking-filter-row {
+    width: 100%;
+    grid-template-columns: minmax(0, 172px) auto;
+  }
+}
