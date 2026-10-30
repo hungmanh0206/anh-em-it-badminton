@@ -1520,8 +1520,8 @@ function Match({ match, i, namesBySlot }: { match: ScheduleMatch; i: number; nam
 function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, onSaved }: { matches: ScheduleMatch[]; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; canManageScores: boolean; onSaved: (completed: boolean) => void }) {
   const [editing, setEditing] = useState<Record<number, boolean>>({});
   const [saving, setSaving] = useState<number | null>(null);
-  // Rows whose confirm was refused: their empty / drawn boxes stay red until edited.
-  const [flaggedRows, setFlaggedRows] = useState<Record<number, boolean>>({});
+  // Score boxes shown in red: set by a wrong entry or a refused confirm, cleared when focus leaves the row's boxes.
+  const [redBoxes, setRedBoxes] = useState<Record<number, { a: boolean; b: boolean }>>({});
   const { toast, showToast, dismissToast } = useToast();
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
   const confirmedCount = Object.values(confirmedMatches).filter(Boolean).length;
@@ -1532,7 +1532,8 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     const entryError = scoreEntryError(scoreAText, scoreBText);
     if (entryError) {
       showToast(entryError);
-      setFlaggedRows({ ...flaggedRows, [index]: true });
+      const bothValid = isScoreText(scoreAText) && isScoreText(scoreBText);
+      setRedBoxes({ ...redBoxes, [index]: { a: bothValid || !isScoreText(scoreAText), b: bothValid || !isScoreText(scoreBText) } });
       document.getElementById(`match-score-${index}-${isScoreText(scoreAText) && !isScoreText(scoreBText) ? "b" : "a"}`)?.focus();
       return;
     }
@@ -1540,7 +1541,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     const scoreA = Number(scoreAText);
     const scoreB = Number(scoreBText);
     setSaving(index);
-    setFlaggedRows({ ...flaggedRows, [index]: false });
+    setRedBoxes({ ...redBoxes, [index]: { a: false, b: false } });
     const { data: { session } } = await supabase.auth.getSession();
     const response = await fetch("/api/match-result", {
       method: "POST",
@@ -1566,22 +1567,21 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     const hasResultColor = confirmed && scoreAText.trim() !== "" && scoreBText.trim() !== "" && Number.isInteger(scoreAValue) && Number.isInteger(scoreBValue) && scoreAValue !== scoreBValue;
     const scoreAClassName = hasResultColor ? (scoreAValue > scoreBValue ? "score-win" : "score-lose") : undefined;
     const scoreBClassName = hasResultColor ? (scoreBValue > scoreAValue ? "score-win" : "score-lose") : undefined;
-    const flagged = !locked && Boolean(flaggedRows[i]);
-    const isDraw = isScoreText(scoreAText) && isScoreText(scoreBText) && Number(scoreAText) === Number(scoreBText);
-    const boxInvalid = (text: string) => !locked && (text !== "" ? !isScoreText(text) || (flagged && isDraw) : flagged);
-    const scoreAInvalid = boxInvalid(scoreAText);
-    const scoreBInvalid = boxInvalid(scoreBText);
+    const scoreAInvalid = !locked && Boolean(redBoxes[i]?.a);
+    const scoreBInvalid = !locked && Boolean(redBoxes[i]?.b);
     // Keeps exactly what was typed; wrong content only raises a warning and blocks the confirm.
-    const changeScore = (next: [string, string], typed: string) => {
+    const changeScore = (next: [string, string], box: "a" | "b") => {
+      const typed = next[box === "a" ? 0 : 1];
+      const wrong = typed !== "" && !isScoreText(typed);
       setScores({ ...scores, [i]: next });
-      if (flaggedRows[i]) setFlaggedRows({ ...flaggedRows, [i]: false });
-      if (typed !== "" && !isScoreText(typed)) showToast(SCORE_FORMAT_ERROR);
+      setRedBoxes({ ...redBoxes, [i]: { a: scoreAInvalid, b: scoreBInvalid, [box]: wrong } });
+      if (wrong) showToast(SCORE_FORMAT_ERROR);
     };
     const scoreInputProps = { inputMode: "numeric", autoComplete: "off", required: true, disabled: locked } as const;
     return <div className={"result-row schedule-result-row match-result-row " + (confirmed ? "confirmed" : "")} key={i}>
       <div className="match-result-meta"><b>{i + 1}</b>{confirmed && <span aria-label="Đã xác nhận">✓</span>}</div>
       <div className="match-result-team match-result-team-a"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
-      <div className="match-score-controls"><input {...scoreInputProps} id={`match-score-${i}-a`} className={scoreAInvalid ? "score-invalid" : scoreAClassName} aria-invalid={scoreAInvalid} aria-label={`Điểm đội A trận ${i + 1}`} value={scoreAText} onChange={e => changeScore([e.target.value, scoreBText], e.target.value)}/><em>:</em><input {...scoreInputProps} id={`match-score-${i}-b`} className={scoreBInvalid ? "score-invalid" : scoreBClassName} aria-invalid={scoreBInvalid} aria-label={`Điểm đội B trận ${i + 1}`} value={scoreBText} onChange={e => changeScore([scoreAText, e.target.value], e.target.value)}/></div>
+      <div className="match-score-controls" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setRedBoxes((current) => ({ ...current, [i]: { a: false, b: false } })); }}><input {...scoreInputProps} id={`match-score-${i}-a`} className={scoreAInvalid ? "score-invalid" : scoreAClassName} aria-invalid={scoreAInvalid} aria-label={`Điểm đội A trận ${i + 1}`} value={scoreAText} onChange={e => changeScore([e.target.value, scoreBText], "a")}/><em>:</em><input {...scoreInputProps} id={`match-score-${i}-b`} className={scoreBInvalid ? "score-invalid" : scoreBClassName} aria-invalid={scoreBInvalid} aria-label={`Điểm đội B trận ${i + 1}`} value={scoreBText} onChange={e => changeScore([scoreAText, e.target.value], "b")}/></div>
       <div className="match-result-team match-result-team-b"><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
       <div className="result-actions">{canManageScores && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" disabled={saving !== null} onClick={() => setEditing({ ...editing, [i]: true })}><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving !== null} onClick={() => void saveMatch(match, i)}><span className="result-action-text">{saving === i ? "Lưu..." : confirmed ? "Lưu lại" : "Xác nhận"}</span></button>)}</div>
     </div>;
