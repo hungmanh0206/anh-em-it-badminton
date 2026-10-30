@@ -1519,6 +1519,8 @@ function TeamPair({ team, namesBySlot, open }: { team: readonly [number, number]
 function Match({ match, i, namesBySlot }: { match: ScheduleMatch; i: number; namesBySlot?: Record<number, string> }) { const open = match.type === "MỞ"; return <article className="match schedule-match-card"><div className="match-top"><b>TRẬN {String(i + 1).padStart(2, "0")}</b></div><div className="teams"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={open} /><strong>VS</strong><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={open} /></div></article>; }
 function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, onSaved }: { matches: ScheduleMatch[]; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; canManageScores: boolean; onSaved: (completed: boolean) => void }) {
   const [editing, setEditing] = useState<Record<number, boolean>>({});
+  // Scores saved before "Sửa": the row keeps showing that result until the edit is saved.
+  const [savedBeforeEdit, setSavedBeforeEdit] = useState<Record<number, [string, string]>>({});
   const [saving, setSaving] = useState<number | null>(null);
   // Score boxes shown in red: set by a wrong entry or a refused confirm, cleared when focus leaves the row's boxes.
   const [redBoxes, setRedBoxes] = useState<Record<number, { a: boolean; b: boolean }>>({});
@@ -1562,9 +1564,10 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     const confirmed = Boolean(confirmedMatches[i]);
     const locked = !canManageScores || (confirmed && !editing[i]);
     const [scoreAText = "", scoreBText = ""] = scores[i] ?? ["", ""];
-    const scoreAValue = Number(scoreAText);
-    const scoreBValue = Number(scoreBText);
-    const hasResultColor = confirmed && scoreAText.trim() !== "" && scoreBText.trim() !== "" && Number.isInteger(scoreAValue) && Number.isInteger(scoreBValue) && scoreAValue !== scoreBValue;
+    const [savedAText, savedBText] = (editing[i] && savedBeforeEdit[i]) || [scoreAText, scoreBText];
+    const scoreAValue = Number(savedAText);
+    const scoreBValue = Number(savedBText);
+    const hasResultColor = confirmed && isScoreText(savedAText) && isScoreText(savedBText) && scoreAValue !== scoreBValue;
     const resultClassName = hasResultColor ? (scoreAValue > scoreBValue ? " result-a-wins" : " result-b-wins") : "";
     const scoreAInvalid = !locked && Boolean(redBoxes[i]?.a);
     const scoreBInvalid = !locked && Boolean(redBoxes[i]?.b);
@@ -1582,7 +1585,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
       <div className="match-result-team match-result-team-a"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
       <div className="match-score-controls" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setRedBoxes((current) => ({ ...current, [i]: { a: false, b: false } })); }}><input {...scoreInputProps} id={`match-score-${i}-a`} className={scoreAInvalid ? "score-invalid" : undefined} aria-invalid={scoreAInvalid} aria-label={`Điểm đội A trận ${i + 1}`} value={scoreAText} onChange={e => changeScore([e.target.value, scoreBText], "a")}/><em>:</em><input {...scoreInputProps} id={`match-score-${i}-b`} className={scoreBInvalid ? "score-invalid" : undefined} aria-invalid={scoreBInvalid} aria-label={`Điểm đội B trận ${i + 1}`} value={scoreBText} onChange={e => changeScore([scoreAText, e.target.value], "b")}/></div>
       <div className="match-result-team match-result-team-b"><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
-      <div className="result-actions">{canManageScores && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" disabled={saving !== null} onClick={() => setEditing({ ...editing, [i]: true })}><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving !== null} onClick={() => void saveMatch(match, i)}><span className="result-action-text">{saving === i ? "Lưu..." : confirmed ? "Lưu lại" : "Xác nhận"}</span></button>)}</div>
+      <div className="result-actions">{canManageScores && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" disabled={saving !== null} onClick={() => { setSavedBeforeEdit({ ...savedBeforeEdit, [i]: [scoreAText, scoreBText] }); setEditing({ ...editing, [i]: true }); }}><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving !== null} onClick={() => void saveMatch(match, i)}><span className="result-action-text">{saving === i ? "Lưu..." : confirmed ? "Lưu lại" : "Xác nhận"}</span></button>)}</div>
     </div>;
   })}</div><Toast toast={toast} onClose={dismissToast} /></section>;
 }
