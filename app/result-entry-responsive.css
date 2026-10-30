@@ -4,7 +4,7 @@
 
 .result-entry-panel .match-result-row {
   display: grid;
-  grid-template-columns: 44px minmax(160px, 1fr) minmax(110px, auto) minmax(160px, 1fr) minmax(86px, auto) !important;
+  grid-template-columns: 44px minmax(160px, 1fr) minmax(110px, auto) minmax(160px, 1fr) 86px !important;
   gap: 10px;
   align-items: center;
   min-width: 0 !important;
@@ -416,16 +416,54 @@
 /* A saved match: the whole block goes green on the winner's side, red on the loser's, blended in the middle. */
 .result-entry-panel .match-result-row.result-a-wins,
 .result-entry-panel .match-result-row.result-b-wins {
+  --result-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.36) 0%, rgba(255, 255, 255, 0.1) 44%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.12) 100%);
   border-color: transparent !important;
-  box-shadow: none !important;
 }
 
 .result-entry-panel .match-result-row.result-a-wins {
-  background: linear-gradient(90deg, #22c55e 0%, #6fe08f 30%, #f6e9c8 50%, #ff9a8c 70%, #f75555 100%) border-box !important;
+  background:
+    var(--result-sheen) border-box,
+    linear-gradient(90deg, rgba(34, 197, 94, 0.94) 0%, rgba(111, 224, 143, 0.9) 30%, rgba(246, 233, 200, 0.88) 50%, rgba(255, 154, 140, 0.9) 70%, rgba(247, 85, 85, 0.94) 100%) border-box !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.62),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+    -12px 10px 22px -14px rgba(34, 197, 94, 0.75),
+    12px 10px 22px -14px rgba(247, 85, 85, 0.75) !important;
 }
 
 .result-entry-panel .match-result-row.result-b-wins {
-  background: linear-gradient(90deg, #f75555 0%, #ff9a8c 30%, #f6e9c8 50%, #6fe08f 70%, #22c55e 100%) border-box !important;
+  background:
+    var(--result-sheen) border-box,
+    linear-gradient(90deg, rgba(247, 85, 85, 0.94) 0%, rgba(255, 154, 140, 0.9) 30%, rgba(246, 233, 200, 0.88) 50%, rgba(111, 224, 143, 0.9) 70%, rgba(34, 197, 94, 0.94) 100%) border-box !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.62),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+    -12px 10px 22px -14px rgba(247, 85, 85, 0.75),
+    12px 10px 22px -14px rgba(34, 197, 94, 0.75) !important;
+}
+
+/* Frosted tiles on the colour; phones draw the score pill and round numbers instead. */
+@media (min-width: 561px) {
+  .result-entry-panel .match-result-row.result-a-wins .slot-token,
+  .result-entry-panel .match-result-row.result-b-wins .slot-token,
+  .result-entry-panel .match-result-row.result-a-wins .match-score-controls input,
+  .result-entry-panel .match-result-row.result-b-wins .match-score-controls input {
+    border-color: rgba(255, 255, 255, 0.72) !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+    box-shadow: 0 6px 14px rgba(42, 34, 18, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    backdrop-filter: blur(8px) saturate(140%);
+  }
+}
+
+@media (max-width: 560px) {
+  .result-entry-panel .match-result-row.result-a-wins .match-score-controls,
+  .result-entry-panel .match-result-row.result-b-wins .match-score-controls {
+    border-color: rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.72);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    backdrop-filter: blur(8px) saturate(140%);
+  }
 }
 
 .result-entry-panel .match-result-row.result-a-wins .match-result-meta b,
@@ -451,16 +489,50 @@
   -webkit-text-fill-color: #14110a;
 }
 
-/* While editing a saved match: "Lưu lại" above "Xóa điểm". */
+/* While editing a saved match: save and clear share the space of one button, so the row keeps its height. */
 .result-entry-panel .result-actions.result-actions-edit {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 5px;
+  gap: 4px;
+  width: 100%;
+}
+
+.result-entry-panel .result-actions.result-actions-edit .primary,
+.result-entry-panel .result-actions.result-actions-edit .soft-btn {
+  position: relative;
+  flex: 1 1 calc(50% - 2px);
+  min-width: 0 !important;
+  min-height: 37px;
+  padding: 0 !important;
+}
+
+@media (max-width: 1024px) {
+  .result-entry-panel .result-actions.result-actions-edit .primary,
+  .result-entry-panel .result-actions.result-actions-edit .soft-btn {
+    min-height: 33px;
+  }
+}
+
+@media (max-width: 560px) {
+  .result-entry-panel .result-actions.result-actions-edit .primary,
+  .result-entry-panel .result-actions.result-actions-edit .soft-btn {
+    min-height: 0;
+  }
+}
+
+/* Taller touch area than the drawn button. */
+.result-entry-panel .result-actions.result-actions-edit button::after {
+  content: "";
+  position: absolute;
+  inset: -8px -2px;
+}
+
+.result-actions-edit svg {
+  width: 17px;
+  height: 17px;
 }
 
 .result-entry-panel .result-actions .soft-btn.result-clear-button {
-  border-color: rgba(194, 65, 59, 0.4) !important;
-  background: #fff !important;
+  border-color: rgba(255, 255, 255, 0.72) !important;
+  background: rgba(255, 255, 255, 0.76) !important;
   color: #c2413b !important;
 }
 

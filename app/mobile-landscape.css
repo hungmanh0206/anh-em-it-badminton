@@ -253,7 +253,7 @@
   }
 
   .result-entry-panel .match-result-row {
-    grid-template-columns: 34px minmax(120px, 1fr) 96px minmax(120px, 1fr) 46px !important;
+    grid-template-columns: 34px minmax(120px, 1fr) 96px minmax(120px, 1fr) 62px !important;
     gap: 7px !important;
     padding: 10px 11px !important;
   }
