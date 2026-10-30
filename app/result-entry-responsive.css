@@ -421,15 +421,28 @@
 }
 
 .result-entry-panel .match-result-row.result-a-wins {
-  background:
-    linear-gradient(90deg, #6fe68f 0%, #aef0bb 30%, #f5efdc 50%, #ffbdb3 70%, #ff8f8f 100%) padding-box,
-    linear-gradient(90deg, #16b84e, #f24848) border-box !important;
+  background: linear-gradient(90deg, #22c55e 0%, #6fe08f 30%, #f6e9c8 50%, #ff9a8c 70%, #f75555 100%) border-box !important;
 }
 
 .result-entry-panel .match-result-row.result-b-wins {
-  background:
-    linear-gradient(90deg, #ff8f8f 0%, #ffbdb3 30%, #f5efdc 50%, #aef0bb 70%, #6fe68f 100%) padding-box,
-    linear-gradient(90deg, #f24848, #16b84e) border-box !important;
+  background: linear-gradient(90deg, #f75555 0%, #ff9a8c 30%, #f6e9c8 50%, #6fe08f 70%, #22c55e 100%) border-box !important;
+}
+
+.result-entry-panel .match-result-row.result-a-wins .match-result-meta b,
+.result-entry-panel .match-result-row.result-b-wins .match-result-meta b {
+  color: #fff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* Names and "+" on the strong colours (phones show them directly on the row). */
+.result-entry-panel .match-result-row.result-a-wins .slot-token small,
+.result-entry-panel .match-result-row.result-b-wins .slot-token small {
+  color: #14110a !important;
+}
+
+.result-entry-panel .match-result-row.result-a-wins .team-pair > i,
+.result-entry-panel .match-result-row.result-b-wins .team-pair > i {
+  color: #fff !important;
 }
 
 .result-entry-panel .match-score-controls input:disabled {
