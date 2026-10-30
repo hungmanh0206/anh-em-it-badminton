@@ -1565,8 +1565,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     const scoreAValue = Number(scoreAText);
     const scoreBValue = Number(scoreBText);
     const hasResultColor = confirmed && scoreAText.trim() !== "" && scoreBText.trim() !== "" && Number.isInteger(scoreAValue) && Number.isInteger(scoreBValue) && scoreAValue !== scoreBValue;
-    const scoreAClassName = hasResultColor ? (scoreAValue > scoreBValue ? "score-win" : "score-lose") : undefined;
-    const scoreBClassName = hasResultColor ? (scoreBValue > scoreAValue ? "score-win" : "score-lose") : undefined;
+    const resultClassName = hasResultColor ? (scoreAValue > scoreBValue ? " result-a-wins" : " result-b-wins") : "";
     const scoreAInvalid = !locked && Boolean(redBoxes[i]?.a);
     const scoreBInvalid = !locked && Boolean(redBoxes[i]?.b);
     // Keeps exactly what was typed; wrong content only raises a warning and blocks the confirm.
@@ -1578,10 +1577,10 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
       if (wrong) showToast(SCORE_FORMAT_ERROR);
     };
     const scoreInputProps = { inputMode: "numeric", autoComplete: "off", required: true, disabled: locked } as const;
-    return <div className={"result-row schedule-result-row match-result-row " + (confirmed ? "confirmed" : "")} key={i}>
-      <div className="match-result-meta"><b>{i + 1}</b>{confirmed && <span aria-label="Đã xác nhận">✓</span>}</div>
+    return <div className={"result-row schedule-result-row match-result-row " + (confirmed ? "confirmed" : "") + resultClassName} key={i}>
+      <div className="match-result-meta"><b>{i + 1}</b></div>
       <div className="match-result-team match-result-team-a"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
-      <div className="match-score-controls" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setRedBoxes((current) => ({ ...current, [i]: { a: false, b: false } })); }}><input {...scoreInputProps} id={`match-score-${i}-a`} className={scoreAInvalid ? "score-invalid" : scoreAClassName} aria-invalid={scoreAInvalid} aria-label={`Điểm đội A trận ${i + 1}`} value={scoreAText} onChange={e => changeScore([e.target.value, scoreBText], "a")}/><em>:</em><input {...scoreInputProps} id={`match-score-${i}-b`} className={scoreBInvalid ? "score-invalid" : scoreBClassName} aria-invalid={scoreBInvalid} aria-label={`Điểm đội B trận ${i + 1}`} value={scoreBText} onChange={e => changeScore([scoreAText, e.target.value], "b")}/></div>
+      <div className="match-score-controls" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setRedBoxes((current) => ({ ...current, [i]: { a: false, b: false } })); }}><input {...scoreInputProps} id={`match-score-${i}-a`} className={scoreAInvalid ? "score-invalid" : undefined} aria-invalid={scoreAInvalid} aria-label={`Điểm đội A trận ${i + 1}`} value={scoreAText} onChange={e => changeScore([e.target.value, scoreBText], "a")}/><em>:</em><input {...scoreInputProps} id={`match-score-${i}-b`} className={scoreBInvalid ? "score-invalid" : undefined} aria-invalid={scoreBInvalid} aria-label={`Điểm đội B trận ${i + 1}`} value={scoreBText} onChange={e => changeScore([scoreAText, e.target.value], "b")}/></div>
       <div className="match-result-team match-result-team-b"><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
       <div className="result-actions">{canManageScores && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" disabled={saving !== null} onClick={() => setEditing({ ...editing, [i]: true })}><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving !== null} onClick={() => void saveMatch(match, i)}><span className="result-action-text">{saving === i ? "Lưu..." : confirmed ? "Lưu lại" : "Xác nhận"}</span></button>)}</div>
     </div>;

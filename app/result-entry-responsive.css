@@ -39,20 +39,6 @@
   line-height: 1;
 }
 
-.match-result-meta span {
-  display: inline-grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background: #1f9a68;
-  color: #fff;
-  font-family: system-ui, sans-serif;
-  font-size: 11px;
-  font-weight: 950;
-  box-shadow: 0 5px 10px rgba(31, 154, 104, 0.22);
-}
-
 .match-result-team {
   min-width: 0;
 }
@@ -207,12 +193,6 @@
 
   .match-result-meta b {
     font-size: 12px;
-  }
-
-  .match-result-meta span {
-    width: 14px;
-    height: 14px;
-    font-size: 8px;
   }
 
   .match-result-team-a {
@@ -433,32 +413,29 @@
     padding: 0;
   }
 }
-.result-entry-panel .match-score-controls input.score-win {
-  border-color: rgba(21, 139, 92, 0.56) !important;
-  background: linear-gradient(180deg, #f0fff7 0%, #ddf7ec 100%) !important;
-  color: #0f7a53 !important;
-  box-shadow: 0 8px 18px rgba(21, 139, 92, 0.16) !important;
+/* A saved match: the whole block goes green on the winner's side, red on the loser's, blended in the middle. */
+.result-entry-panel .match-result-row.result-a-wins,
+.result-entry-panel .match-result-row.result-b-wins {
+  border-color: transparent !important;
+  box-shadow: none !important;
 }
 
-.result-entry-panel .match-score-controls input.score-lose {
-  border-color: rgba(202, 62, 77, 0.48) !important;
-  background: linear-gradient(180deg, #fff6f7 0%, #ffe2e6 100%) !important;
-  color: #b83246 !important;
-  box-shadow: 0 8px 18px rgba(202, 62, 77, 0.14) !important;
+.result-entry-panel .match-result-row.result-a-wins {
+  background:
+    linear-gradient(90deg, #c3f5cc 0%, #e6f6e0 32%, #fbeee2 52%, #ffdcd8 72%, #ffc4c4 100%) padding-box,
+    linear-gradient(90deg, #4fd274, #ff8a8a) border-box !important;
 }
 
-.result-entry-panel .match-score-controls input.score-win:disabled,
-.result-entry-panel .match-score-controls input.score-lose:disabled {
+.result-entry-panel .match-result-row.result-b-wins {
+  background:
+    linear-gradient(90deg, #ffc4c4 0%, #ffdcd8 28%, #fbeee2 48%, #e6f6e0 68%, #c3f5cc 100%) padding-box,
+    linear-gradient(90deg, #ff8a8a, #4fd274) border-box !important;
+}
+
+.result-entry-panel .match-score-controls input:disabled {
   opacity: 1 !important;
-  -webkit-text-fill-color: currentColor;
-}
-
-.result-entry-panel .match-score-controls input.score-win:focus {
-  outline: 2px solid rgba(21, 139, 92, 0.24) !important;
-}
-
-.result-entry-panel .match-score-controls input.score-lose:focus {
-  outline: 2px solid rgba(202, 62, 77, 0.22) !important;
+  color: #14110a !important;
+  -webkit-text-fill-color: #14110a;
 }
 
 /* Score boxes to fix: red outline (the message itself is a toast). */
