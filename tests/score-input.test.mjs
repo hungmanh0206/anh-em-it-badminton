@@ -1,28 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isValidScore, sanitizeScoreInput, scoreEntryError } from "../lib/score-input.js";
+import { isScoreText, isValidScore, SCORE_FORMAT_ERROR, scoreEntryError } from "../lib/score-input.js";
 
-test("score boxes keep digits only, two at most", () => {
-  assert.equal(sanitizeScoreInput("21"), "21");
-  assert.equal(sanitizeScoreInput("123"), "12");
-  assert.equal(sanitizeScoreInput("2a1"), "21");
-  assert.equal(sanitizeScoreInput("-5"), "5");
-  assert.equal(sanitizeScoreInput("1.5"), "15");
-  assert.equal(sanitizeScoreInput("1e5"), "15");
-  assert.equal(sanitizeScoreInput(" 2 1 "), "21");
-  assert.equal(sanitizeScoreInput("２１"), "");
-  assert.equal(sanitizeScoreInput("abc!@#"), "");
-  assert.equal(sanitizeScoreInput(undefined), "");
+test("a score box holds one or two ASCII digits", () => {
+  for (const text of ["0", "7", "21", "05", "99"]) assert.equal(isScoreText(text), true, text);
+  for (const text of ["", "123", "2a", "a", "-5", "1.5", "1e5", " 21", "21 ", "２１", "2!", null, undefined]) assert.equal(isScoreText(text), false, String(text));
 });
 
-test("both scores are required and a match cannot be a draw", () => {
+test("both scores are required, must be valid and cannot be a draw", () => {
   assert.equal(scoreEntryError("", ""), "Nhập đủ điểm của cả hai đội.");
   assert.equal(scoreEntryError("21", ""), "Nhập đủ điểm của cả hai đội.");
   assert.equal(scoreEntryError("", "0"), "Nhập đủ điểm của cả hai đội.");
   assert.equal(scoreEntryError("21", "21"), "Kết quả không được hòa.");
   assert.equal(scoreEntryError("05", "5"), "Kết quả không được hòa.");
-  assert.equal(scoreEntryError("100", "5"), "Điểm chỉ gồm số, tối đa 2 chữ số.");
-  assert.equal(scoreEntryError("2a", "5"), "Điểm chỉ gồm số, tối đa 2 chữ số.");
+  assert.equal(scoreEntryError("100", "5"), SCORE_FORMAT_ERROR);
+  assert.equal(scoreEntryError("2a", "5"), SCORE_FORMAT_ERROR);
+  assert.equal(scoreEntryError("2a", ""), SCORE_FORMAT_ERROR);
   assert.equal(scoreEntryError("21", "0"), null);
   assert.equal(scoreEntryError("30", "29"), null);
 });

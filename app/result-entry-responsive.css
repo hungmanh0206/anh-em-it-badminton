@@ -461,19 +461,83 @@
   outline: 2px solid rgba(202, 62, 77, 0.22) !important;
 }
 
-/* Required score boxes: red outline on the box to fix, message on its own line of the row. */
+/* Score boxes to fix: red outline (the message itself is a toast). */
 .result-entry-panel .match-score-controls input.score-invalid {
   border-color: #d64545 !important;
   background: #fff5f4 !important;
   box-shadow: 0 0 0 3px rgba(214, 69, 69, 0.14) !important;
 }
 
-.result-entry-panel .match-result-row .match-score-error {
-  grid-column: 1 / -1;
+/* Warning toast (app/ui/toast.tsx): top centre, above every modal. */
+.app-toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 10px 10px 10px 12px;
+  border: 1px solid rgba(214, 69, 69, 0.3);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(35, 28, 18, 0.18);
+  color: #2a241b;
+  transform: translateX(-50%);
+  animation: app-toast-in 200ms ease-out;
+}
+
+.app-toast p {
   margin: 0;
-  color: #c2413b !important;
-  font-size: 12.5px;
+  color: #2a241b;
+  font-size: 13.5px;
   font-weight: 700;
-  line-height: 1.35;
-  text-align: center;
+  line-height: 1.4;
+}
+
+.app-toast-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #d64545;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.app-toast button {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(61, 53, 40, 0.6);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.app-toast button:hover {
+  background: #faf6ee;
+  color: #1a1408;
+}
+
+@keyframes app-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-toast {
+    animation: none;
+  }
 }

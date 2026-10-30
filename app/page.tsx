@@ -4,11 +4,12 @@ import { type CSSProperties, useCallback, useEffect, useState } from "react";
 import { backdropDismissProps, Presence } from "@/app/ui/modal";
 import { PhotoGallery } from "@/app/photo-gallery";
 import { PageHero } from "@/app/ui/page-hero";
+import { Toast, useToast } from "@/app/ui/toast";
 import { supabase } from "@/lib/supabase";
 import { isCheckinWindowOpenForDate, sessionDatesOfMonth, sessionStateForDate, sessionWeekdayLabel, sessionWeekInMonth, targetSessionDateKey } from "@/lib/session-dates";
 import { reorderMatchesForRest } from "@/lib/schedule-reorder";
 import { MEMBER_PASSWORD_MIN, usernameFromName } from "@/lib/member-username";
-import { MAX_SCORE_DIGITS, sanitizeScoreInput, scoreEntryError } from "@/lib/score-input";
+import { isScoreText, SCORE_FORMAT_ERROR, scoreEntryError } from "@/lib/score-input";
 
 type MemberRole = "admin" | "sub-admin" | "member";
 type Member = { name: string; initials: string; level: 1 | 2; color: string; present: boolean; username: string; password: string; role?: MemberRole; responded?: boolean };
@@ -1520,7 +1521,9 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
   const [editing, setEditing] = useState<Record<number, boolean>>({});
   const [saving, setSaving] = useState<number | null>(null);
   const [notice, setNotice] = useState("");
-  const [rowErrors, setRowErrors] = useState<Record<number, string>>({});
+  // Rows whose confirm was refused: their empty / drawn boxes stay red until edited.
+  const [flaggedRows, setFlaggedRows] = useState<Record<number, boolean>>({});
+  const { toastMessage, showToast, dismissToast } = useToast();
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
   const confirmedCount = Object.values(confirmedMatches).filter(Boolean).length;
   const saveMatch = async (match: ScheduleMatch, index: number) => {
@@ -1529,8 +1532,9 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     const [scoreAText, scoreBText] = scores[index] ?? ["", ""];
     const entryError = scoreEntryError(scoreAText, scoreBText);
     if (entryError) {
-      setRowErrors({ ...rowErrors, [index]: entryError });
-      document.getElementById(`match-score-${index}-${scoreAText === "" || scoreBText !== "" ? "a" : "b"}`)?.focus();
+      showToast(entryError);
+      setFlaggedRows({ ...flaggedRows, [index]: true });
+      document.getElementById(`match-score-${index}-${isScoreText(scoreAText) && !isScoreText(scoreBText) ? "b" : "a"}`)?.focus();
       return;
     }
     if (!supabase || !sessionId) return setNotice("Chưa có phiên Supabase để lưu kết quả.");
@@ -1538,7 +1542,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     const scoreB = Number(scoreBText);
     setSaving(index);
     setNotice("");
-    setRowErrors({ ...rowErrors, [index]: "" });
+    setFlaggedRows({ ...flaggedRows, [index]: false });
     const { data: { session } } = await supabase.auth.getSession();
     const response = await fetch("/api/match-result", {
       method: "POST",
@@ -1548,7 +1552,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     const payload = await response.json().catch(() => ({})) as { error?: string; completed?: boolean };
     setSaving(null);
     if (!response.ok) {
-      return setRowErrors({ ...rowErrors, [index]: payload.error || "Không thể lưu kết quả trận." });
+      return showToast(payload.error || "Không thể lưu kết quả trận.");
     }
     setConfirmedMatches({ ...confirmedMatches, [index]: true });
     setEditing({ ...editing, [index]: false });
@@ -1564,24 +1568,26 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     const hasResultColor = confirmed && scoreAText.trim() !== "" && scoreBText.trim() !== "" && Number.isInteger(scoreAValue) && Number.isInteger(scoreBValue) && scoreAValue !== scoreBValue;
     const scoreAClassName = hasResultColor ? (scoreAValue > scoreBValue ? "score-win" : "score-lose") : undefined;
     const scoreBClassName = hasResultColor ? (scoreBValue > scoreAValue ? "score-win" : "score-lose") : undefined;
-    const rowError = locked ? "" : rowErrors[i] ?? "";
-    const isDraw = scoreAText !== "" && Number(scoreAText) === Number(scoreBText);
-    const scoreAInvalid = Boolean(rowError) && (scoreAText === "" || isDraw);
-    const scoreBInvalid = Boolean(rowError) && (scoreBText === "" || isDraw);
-    const changeScore = (next: [string, string]) => {
+    const flagged = !locked && Boolean(flaggedRows[i]);
+    const isDraw = isScoreText(scoreAText) && isScoreText(scoreBText) && Number(scoreAText) === Number(scoreBText);
+    const boxInvalid = (text: string) => !locked && (text !== "" ? !isScoreText(text) || (flagged && isDraw) : flagged);
+    const scoreAInvalid = boxInvalid(scoreAText);
+    const scoreBInvalid = boxInvalid(scoreBText);
+    // Keeps exactly what was typed; wrong content only raises a warning and blocks the confirm.
+    const changeScore = (next: [string, string], typed: string) => {
       setScores({ ...scores, [i]: next });
-      if (rowErrors[i]) setRowErrors({ ...rowErrors, [i]: "" });
+      if (flaggedRows[i]) setFlaggedRows({ ...flaggedRows, [i]: false });
+      if (typed !== "" && !isScoreText(typed)) showToast(SCORE_FORMAT_ERROR);
     };
-    const scoreInputProps = { inputMode: "numeric", pattern: "[0-9]*", maxLength: MAX_SCORE_DIGITS, autoComplete: "off", required: true, disabled: locked } as const;
+    const scoreInputProps = { inputMode: "numeric", autoComplete: "off", required: true, disabled: locked } as const;
     return <div className={"result-row schedule-result-row match-result-row " + (confirmed ? "confirmed" : "")} key={i}>
       <div className="match-result-meta"><b>{i + 1}</b>{confirmed && <span aria-label="Đã xác nhận">✓</span>}</div>
       <div className="match-result-team match-result-team-a"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
-      <div className="match-score-controls"><input {...scoreInputProps} id={`match-score-${i}-a`} className={scoreAInvalid ? "score-invalid" : scoreAClassName} aria-invalid={scoreAInvalid} aria-label={`Điểm đội A trận ${i + 1}`} value={scoreAText} onChange={e => changeScore([sanitizeScoreInput(e.target.value), scoreBText])}/><em>:</em><input {...scoreInputProps} id={`match-score-${i}-b`} className={scoreBInvalid ? "score-invalid" : scoreBClassName} aria-invalid={scoreBInvalid} aria-label={`Điểm đội B trận ${i + 1}`} value={scoreBText} onChange={e => changeScore([scoreAText, sanitizeScoreInput(e.target.value)])}/></div>
+      <div className="match-score-controls"><input {...scoreInputProps} id={`match-score-${i}-a`} className={scoreAInvalid ? "score-invalid" : scoreAClassName} aria-invalid={scoreAInvalid} aria-label={`Điểm đội A trận ${i + 1}`} value={scoreAText} onChange={e => changeScore([e.target.value, scoreBText], e.target.value)}/><em>:</em><input {...scoreInputProps} id={`match-score-${i}-b`} className={scoreBInvalid ? "score-invalid" : scoreBClassName} aria-invalid={scoreBInvalid} aria-label={`Điểm đội B trận ${i + 1}`} value={scoreBText} onChange={e => changeScore([scoreAText, e.target.value], e.target.value)}/></div>
       <div className="match-result-team match-result-team-b"><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
       <div className="result-actions">{canManageScores && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" disabled={saving !== null} onClick={() => setEditing({ ...editing, [i]: true })}><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving !== null} onClick={() => void saveMatch(match, i)}><span className="result-action-text">{saving === i ? "Lưu..." : confirmed ? "Lưu lại" : "Xác nhận"}</span></button>)}</div>
-      {rowError && <p className="match-score-error" role="alert">{rowError}</p>}
     </div>;
-  })}</div></section>;
+  })}</div><Toast message={toastMessage} onClose={dismissToast} /></section>;
 }
 function LiveRankingSnapshot({ rows, month }: { rows: RankingRow[]; month: string }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
