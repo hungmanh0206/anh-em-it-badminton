@@ -312,10 +312,6 @@
   white-space: nowrap;
 }
 
-.result-notice {
-  margin-top: 0 !important;
-}
-
 .schedule-result-row > b {
   color: #8a6506 !important;
   font-family: "JetBrains Mono", ui-monospace, monospace;

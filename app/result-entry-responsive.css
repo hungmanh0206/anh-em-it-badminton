@@ -468,7 +468,7 @@
   box-shadow: 0 0 0 3px rgba(214, 69, 69, 0.14) !important;
 }
 
-/* Warning toast (app/ui/toast.tsx): top centre, above every modal. */
+/* Toast (app/ui/toast.tsx): top centre, above every modal. */
 .app-toast {
   position: fixed;
   top: 16px;
@@ -508,6 +508,14 @@
   color: #fff;
   font-size: 13px;
   font-weight: 900;
+}
+
+.app-toast-success {
+  border-color: rgba(31, 138, 91, 0.32);
+}
+
+.app-toast-success .app-toast-icon {
+  background: #1f9d55;
 }
 
 .app-toast button {

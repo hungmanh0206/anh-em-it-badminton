@@ -1520,10 +1520,9 @@ function Match({ match, i, namesBySlot }: { match: ScheduleMatch; i: number; nam
 function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, onSaved }: { matches: ScheduleMatch[]; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: (x: Record<number, [string, string]>) => void; confirmedMatches: Record<number, boolean>; setConfirmedMatches: (x: Record<number, boolean>) => void; sessionId: string | null; canManageScores: boolean; onSaved: (completed: boolean) => void }) {
   const [editing, setEditing] = useState<Record<number, boolean>>({});
   const [saving, setSaving] = useState<number | null>(null);
-  const [notice, setNotice] = useState("");
   // Rows whose confirm was refused: their empty / drawn boxes stay red until edited.
   const [flaggedRows, setFlaggedRows] = useState<Record<number, boolean>>({});
-  const { toastMessage, showToast, dismissToast } = useToast();
+  const { toast, showToast, dismissToast } = useToast();
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
   const confirmedCount = Object.values(confirmedMatches).filter(Boolean).length;
   const saveMatch = async (match: ScheduleMatch, index: number) => {
@@ -1537,11 +1536,10 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
       document.getElementById(`match-score-${index}-${isScoreText(scoreAText) && !isScoreText(scoreBText) ? "b" : "a"}`)?.focus();
       return;
     }
-    if (!supabase || !sessionId) return setNotice("Chưa có phiên Supabase để lưu kết quả.");
+    if (!supabase || !sessionId) return showToast("Chưa có phiên Supabase để lưu kết quả.");
     const scoreA = Number(scoreAText);
     const scoreB = Number(scoreBText);
     setSaving(index);
-    setNotice("");
     setFlaggedRows({ ...flaggedRows, [index]: false });
     const { data: { session } } = await supabase.auth.getSession();
     const response = await fetch("/api/match-result", {
@@ -1556,10 +1554,10 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     }
     setConfirmedMatches({ ...confirmedMatches, [index]: true });
     setEditing({ ...editing, [index]: false });
-    setNotice(`Đã cập nhật BXH sau trận ${index + 1}.`);
+    showToast(`Đã lưu trận ${index + 1} (${scoreA}–${scoreB}), BXH đã cập nhật.`, "success");
     onSaved(Boolean(payload.completed));
   };
-  return <section className="panel result-entry-panel"><div className="panel-head"><div><h2>Điểm số từng trận</h2></div><span className="count-pill match-count-pill"><b>{confirmedCount}</b><small>/{matches.length} trận</small></span></div>{notice && <div className="warning result-notice">{notice}</div>}<div className="result-list">{matches.map((match, i) => {
+  return <section className="panel result-entry-panel"><div className="panel-head"><div><h2>Điểm số từng trận</h2></div><span className="count-pill match-count-pill"><b>{confirmedCount}</b><small>/{matches.length} trận</small></span></div><div className="result-list">{matches.map((match, i) => {
     const confirmed = Boolean(confirmedMatches[i]);
     const locked = !canManageScores || (confirmed && !editing[i]);
     const [scoreAText = "", scoreBText = ""] = scores[i] ?? ["", ""];
@@ -1587,7 +1585,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
       <div className="match-result-team match-result-team-b"><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
       <div className="result-actions">{canManageScores && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" disabled={saving !== null} onClick={() => setEditing({ ...editing, [i]: true })}><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving !== null} onClick={() => void saveMatch(match, i)}><span className="result-action-text">{saving === i ? "Lưu..." : confirmed ? "Lưu lại" : "Xác nhận"}</span></button>)}</div>
     </div>;
-  })}</div><Toast message={toastMessage} onClose={dismissToast} /></section>;
+  })}</div><Toast toast={toast} onClose={dismissToast} /></section>;
 }
 function LiveRankingSnapshot({ rows, month }: { rows: RankingRow[]; month: string }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
