@@ -1237,7 +1237,7 @@ export default function Home() {
         {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
         {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
-        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { if (completed) { setSessionStatus("completed"); setHistoryRefreshTick((tick) => tick + 1); } setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
+        {step === 2 && <Schedule scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { setSessionStatus(completed ? "completed" : "scheduled"); if (completed) setHistoryRefreshTick((tick) => tick + 1); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}</div>
     </section>
     <Presence show={Boolean(showCheckin)}>{showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}</Presence>
@@ -1525,6 +1525,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
   // Score boxes shown in red: set by a wrong entry or a refused confirm, cleared when focus leaves the row's boxes.
   const [redBoxes, setRedBoxes] = useState<Record<number, { a: boolean; b: boolean }>>({});
   const { toast, showToast, dismissToast } = useToast();
+  const [clearing, setClearing] = useState<number | null>(null);
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
   const confirmedCount = Object.values(confirmedMatches).filter(Boolean).length;
   const saveMatch = async (match: ScheduleMatch, index: number) => {
@@ -1533,7 +1534,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     const [scoreAText, scoreBText] = scores[index] ?? ["", ""];
     const entryError = scoreEntryError(scoreAText, scoreBText);
     if (entryError) {
-      showToast(entryError);
+      showToast(confirmedMatches[index] && scoreAText === "" && scoreBText === "" ? "Muốn bỏ kết quả trận này, bấm Xóa điểm." : entryError);
       const bothValid = isScoreText(scoreAText) && isScoreText(scoreBText);
       setRedBoxes({ ...redBoxes, [index]: { a: bothValid || !isScoreText(scoreAText), b: bothValid || !isScoreText(scoreBText) } });
       document.getElementById(`match-score-${index}-${isScoreText(scoreAText) && !isScoreText(scoreBText) ? "b" : "a"}`)?.focus();
@@ -1560,6 +1561,29 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     showToast(`Đã lưu trận ${index + 1} (${scoreA}–${scoreB}), BXH đã cập nhật.`, "success");
     onSaved(Boolean(payload.completed));
   };
+  // Takes a saved result back out (e.g. entered on the wrong match); the ranking and ELO follow.
+  const clearMatch = async (index: number) => {
+    if (saving !== null) return;
+    if (!supabase || !sessionId) return showToast("Chưa có phiên Supabase để lưu kết quả.");
+    setSaving(index);
+    const { data: { session } } = await supabase.auth.getSession();
+    const response = await fetch("/api/match-result", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+      body: JSON.stringify({ sessionId, matchNo: index + 1 }),
+    });
+    const payload = await response.json().catch(() => ({})) as { error?: string };
+    setSaving(null);
+    if (!response.ok) return showToast(payload.error || "Không thể xóa điểm trận này.");
+    const remainingScores = { ...scores };
+    delete remainingScores[index];
+    setScores(remainingScores);
+    setConfirmedMatches({ ...confirmedMatches, [index]: false });
+    setEditing({ ...editing, [index]: false });
+    setRedBoxes({ ...redBoxes, [index]: { a: false, b: false } });
+    showToast(`Đã xóa điểm trận ${index + 1}, BXH đã cập nhật.`, "success");
+    onSaved(false);
+  };
   return <section className="panel result-entry-panel"><div className="panel-head"><div><h2>Điểm số từng trận</h2></div><span className="count-pill match-count-pill"><b>{confirmedCount}</b><small>/{matches.length} trận</small></span></div><div className="result-list">{matches.map((match, i) => {
     const confirmed = Boolean(confirmedMatches[i]);
     const locked = !canManageScores || (confirmed && !editing[i]);
@@ -1585,9 +1609,11 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
       <div className="match-result-team match-result-team-a"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
       <div className="match-score-controls" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setRedBoxes((current) => ({ ...current, [i]: { a: false, b: false } })); }}><input {...scoreInputProps} id={`match-score-${i}-a`} className={scoreAInvalid ? "score-invalid" : undefined} aria-invalid={scoreAInvalid} aria-label={`Điểm đội A trận ${i + 1}`} value={scoreAText} onChange={e => changeScore([e.target.value, scoreBText], "a")}/><em>:</em><input {...scoreInputProps} id={`match-score-${i}-b`} className={scoreBInvalid ? "score-invalid" : undefined} aria-invalid={scoreBInvalid} aria-label={`Điểm đội B trận ${i + 1}`} value={scoreBText} onChange={e => changeScore([scoreAText, e.target.value], "b")}/></div>
       <div className="match-result-team match-result-team-b"><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
-      <div className="result-actions">{canManageScores && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" disabled={saving !== null} onClick={() => { setSavedBeforeEdit({ ...savedBeforeEdit, [i]: [scoreAText, scoreBText] }); setEditing({ ...editing, [i]: true }); }}><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving !== null} onClick={() => void saveMatch(match, i)}><span className="result-action-text">{saving === i ? "Lưu..." : confirmed ? "Lưu lại" : "Xác nhận"}</span></button>)}</div>
+      <div className={"result-actions" + (confirmed && editing[i] ? " result-actions-edit" : "")}>{canManageScores && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" disabled={saving !== null} onClick={() => { setSavedBeforeEdit({ ...savedBeforeEdit, [i]: [scoreAText, scoreBText] }); setEditing({ ...editing, [i]: true }); }}><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving !== null} onClick={() => void saveMatch(match, i)}><span className="result-action-text">{saving === i ? "Lưu..." : confirmed ? "Lưu lại" : "Xác nhận"}</span></button>)}{canManageScores && confirmed && editing[i] && <button className="soft-btn result-icon-button result-clear-button" aria-label={`Xóa điểm trận ${i + 1}`} disabled={saving !== null} onClick={() => setClearing(i)}><span className="result-action-text">Xóa điểm</span></button>}</div>
     </div>;
-  })}</div><Toast toast={toast} onClose={dismissToast} /></section>;
+  })}</div><Toast toast={toast} onClose={dismissToast} />
+    <Presence show={clearing !== null}>{clearing !== null && <ConfirmActionModal title={`Xóa điểm trận ${clearing + 1}?`} message="Trận này sẽ trở về chưa có kết quả. BXH và ELO được tính lại ngay." confirmLabel="Xóa điểm" cancelLabel="Hủy" onCancel={() => setClearing(null)} onConfirm={async () => { const index = clearing; setClearing(null); await clearMatch(index); }} />}</Presence>
+  </section>;
 }
 function LiveRankingSnapshot({ rows, month }: { rows: RankingRow[]; month: string }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);

@@ -438,6 +438,19 @@
   -webkit-text-fill-color: #14110a;
 }
 
+/* While editing a saved match: "Lưu lại" above "Xóa điểm". */
+.result-entry-panel .result-actions.result-actions-edit {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+}
+
+.result-entry-panel .result-actions .soft-btn.result-clear-button {
+  border-color: rgba(194, 65, 59, 0.4) !important;
+  background: #fff !important;
+  color: #c2413b !important;
+}
+
 /* Score boxes to fix: red outline (the message itself is a toast). */
 .result-entry-panel .match-score-controls input.score-invalid {
   border-color: #d64545 !important;
