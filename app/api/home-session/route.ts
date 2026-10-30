@@ -1,4 +1,5 @@
 import { recalculateEloIfAvailable } from "@/lib/elo/server";
+import { isMonthClosed, monthStart, sessionHasResults, syncMonthlyResults } from "@/lib/match-result";
 import { ApiError, jsonError, requireUser } from "@/lib/supabase-admin";
 import { isCheckinWindowOpenForDate, normalizeSessionDateKey, rescheduledOriginalDateKey, targetSessionDateKey } from "@/lib/session-dates";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -118,6 +119,10 @@ async function loadSessionPayload(request: Request, reset: boolean) {
   }
 
   if (reset) {
+    const hadResults = await sessionHasResults(admin, session.id);
+    if (hadResults && await isMonthClosed(admin, session.session_date)) {
+      throw new ApiError(400, "Tháng này đã chốt BXH nên không thể reset buổi đã có điểm.");
+    }
     const [{ error: matchesError }, { error: requestsError }, { error: attendancesError }, { error: sessionError }] = await Promise.all([
       admin.from("matches").delete().eq("session_id", session.id),
       admin.from("attendance_change_requests").delete().eq("session_id", session.id),
@@ -128,6 +133,8 @@ async function loadSessionPayload(request: Request, reset: boolean) {
     if (requestsError) throw requestsError;
     if (attendancesError) throw attendancesError;
     if (sessionError) throw sessionError;
+    // Saved results leave the month's ranking together with their matches.
+    if (hadResults) await syncMonthlyResults(admin, monthStart(session.session_date));
     await recalculateEloIfAvailable(admin);
     session.status = "draft";
   }

@@ -30,4 +30,5 @@ test("reloading saved matches keeps unsaved typing and clears deleted rows", () 
   assert.deepEqual(mergeSavedScores({ 0: ["21", "15"], ...typing }, { 0: ["21", "15"] }, new Set([0])), { 0: ["21", "15"], ...typing });
   assert.deepEqual(mergeSavedScores({ 0: ["21", "15"], ...typing }, {}, new Set([0])), typing);
   assert.deepEqual(mergeSavedScores(typing, { 2: ["21", "19"] }, new Set()), { 1: ["21", ""], 2: ["21", "19"] });
+  assert.deepEqual(mergeSavedScores({ 0: ["13", ""] }, { 0: ["21", "15"], 1: ["21", "9"] }, new Set([0]), new Set([0])), { 0: ["13", ""], 1: ["21", "9"] });
 });

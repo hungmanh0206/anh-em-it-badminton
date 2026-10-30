@@ -422,14 +422,14 @@
 
 .result-entry-panel .match-result-row.result-a-wins {
   background:
-    linear-gradient(90deg, #c3f5cc 0%, #e6f6e0 32%, #fbeee2 52%, #ffdcd8 72%, #ffc4c4 100%) padding-box,
-    linear-gradient(90deg, #4fd274, #ff8a8a) border-box !important;
+    linear-gradient(90deg, #6fe68f 0%, #aef0bb 30%, #f5efdc 50%, #ffbdb3 70%, #ff8f8f 100%) padding-box,
+    linear-gradient(90deg, #16b84e, #f24848) border-box !important;
 }
 
 .result-entry-panel .match-result-row.result-b-wins {
   background:
-    linear-gradient(90deg, #ffc4c4 0%, #ffdcd8 28%, #fbeee2 48%, #e6f6e0 68%, #c3f5cc 100%) padding-box,
-    linear-gradient(90deg, #ff8a8a, #4fd274) border-box !important;
+    linear-gradient(90deg, #ff8f8f 0%, #ffbdb3 30%, #f5efdc 50%, #aef0bb 70%, #6fe68f 100%) padding-box,
+    linear-gradient(90deg, #f24848, #16b84e) border-box !important;
 }
 
 .result-entry-panel .match-score-controls input:disabled {

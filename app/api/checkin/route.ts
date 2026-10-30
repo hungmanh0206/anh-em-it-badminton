@@ -1,6 +1,6 @@
 import { recalculateEloIfAvailable } from "@/lib/elo/server";
 import { buildDrawReassignmentPlan } from "@/lib/draw-reassign";
-import { monthStart, nextMonthStart } from "@/lib/match-result";
+import { monthStart, nextMonthStart, sessionHasResults, syncMonthlyResults } from "@/lib/match-result";
 import { ApiError, jsonError, requireUser } from "@/lib/supabase-admin";
 import { isCheckinWindowOpenForDate, normalizeSessionDateKey, rescheduledOriginalDateKey, targetSessionDateKey } from "@/lib/session-dates";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -34,61 +34,12 @@ type AttendanceStatusRow = {
   profiles: ProfileJoin | ProfileJoin[] | null;
 };
 
-type StoredMatch = {
-  team_a: string[];
-  team_b: string[];
-  score_a: number | null;
-  score_b: number | null;
-};
-
-type MonthlyResult = {
-  id: string;
-  rank: number;
-  total_points: number;
-  points_for: number;
-  points_against: number;
-  point_diff: number;
-  matches_played: number;
-  level_next_month: "1" | "2";
-};
-
 const vietnamNow = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
 const isTestFlowEnabled = () => process.env.ENABLE_TEST_FLOW === "true" || process.env.NEXT_PUBLIC_ENABLE_TEST_FLOW === "true";
 const toProfile = (profiles: ProfileJoin | ProfileJoin[] | null) => Array.isArray(profiles) ? profiles[0] : profiles;
 const toLevel = (level: ProfileJoin["level"]): 1 | 2 => Number(level) === 1 ? 1 : 2;
 const attendanceLevel = (attendance: AttendanceStatusRow): 1 | 2 =>
   toLevel(attendance.level_at_time ?? toProfile(attendance.profiles)?.level);
-
-async function rerankMonthlyResults(admin: SupabaseClient, month: string) {
-  const [{ error: zeroRankError }, { data: rankRows, error: rankError }] = await Promise.all([
-    admin
-      .from("monthly_results")
-      .update({ rank: 999 })
-      .eq("month", month)
-      .eq("matches_played", 0),
-    admin
-      .from("monthly_results")
-      .select("id, rank, total_points, points_for, point_diff, matches_played, created_at")
-      .eq("month", month)
-      .gt("matches_played", 0),
-  ]);
-  if (zeroRankError) throw zeroRankError;
-  if (rankError) throw rankError;
-
-  const sortedRows = [...(rankRows || [])].sort((a, b) =>
-    b.total_points - a.total_points ||
-    b.point_diff - a.point_diff ||
-    b.points_for - a.points_for ||
-    a.matches_played - b.matches_played ||
-    String(a.created_at).localeCompare(String(b.created_at))
-  );
-  const rankUpdates = await Promise.all(sortedRows
-    .map((row, index) => ({ id: row.id, oldRank: row.rank, rank: index + 1 }))
-    .filter((row) => row.oldRank !== row.rank)
-    .map((row) => admin.from("monthly_results").update({ rank: row.rank }).eq("id", row.id)));
-  const failedRankUpdate = rankUpdates.find((result) => result.error);
-  if (failedRankUpdate?.error) throw failedRankUpdate.error;
-}
 
 async function assertSessionResultsAreReversible(admin: SupabaseClient, session: PlaySession) {
   const [{ count: scoredMatchCount, error: scoredMatchError }, { count: nextMonthCount, error: nextMonthError }] = await Promise.all([
@@ -111,71 +62,6 @@ async function assertSessionResultsAreReversible(admin: SupabaseClient, session:
   }
 }
 
-async function reverseSessionResults(admin: SupabaseClient, session: PlaySession) {
-  const { data: matches, error: matchesError } = await admin
-    .from("matches")
-    .select("team_a, team_b, score_a, score_b")
-    .eq("session_id", session.id);
-  if (matchesError) throw matchesError;
-
-  const storedMatches = ((matches || []) as StoredMatch[]).filter((match) =>
-    typeof match.score_a === "number" && typeof match.score_b === "number"
-  );
-  if (!storedMatches.length) return;
-
-  const month = monthStart(session.session_date);
-  type Delta = { total: number; for: number; against: number; matches: number };
-  const deltas = new Map<string, Delta>();
-  const addDelta = (memberId: string, delta: Delta) => {
-    const sum = deltas.get(memberId) ?? { total: 0, for: 0, against: 0, matches: 0 };
-    deltas.set(memberId, { total: sum.total + delta.total, for: sum.for + delta.for, against: sum.against + delta.against, matches: sum.matches + delta.matches });
-  };
-  for (const match of storedMatches) {
-    const aWon = Number(match.score_a) > Number(match.score_b);
-    match.team_a.forEach((memberId) => addDelta(memberId, { total: aWon ? -1 : 0, for: -Number(match.score_a), against: -Number(match.score_b), matches: -1 }));
-    match.team_b.forEach((memberId) => addDelta(memberId, { total: aWon ? 0 : -1, for: -Number(match.score_b), against: -Number(match.score_a), matches: -1 }));
-  }
-
-  const participantIds = [...deltas.keys()];
-  const [{ data: profiles, error: profilesError }, { data: existingRows, error: existingError }] = await Promise.all([
-    admin.from("profiles").select("id, level").in("id", participantIds),
-    admin
-      .from("monthly_results")
-      .select("id, member_id, rank, total_points, points_for, points_against, point_diff, matches_played, level_next_month")
-      .eq("month", month)
-      .in("member_id", participantIds),
-  ]);
-  if (profilesError) throw profilesError;
-  if (existingError) throw existingError;
-  const levels = new Map(((profiles || []) as { id: string; level: "1" | "2" }[]).map((profile) => [profile.id, profile.level]));
-  const existingByMember = new Map(((existingRows || []) as (MonthlyResult & { member_id: string })[]).map((row) => [row.member_id, row]));
-
-  const writes = await Promise.all(participantIds.map((memberId) => {
-    const delta = deltas.get(memberId)!;
-    const base = existingByMember.get(memberId) ?? null;
-    const current = base || { rank: 999, total_points: 0, points_for: 0, points_against: 0, matches_played: 0, level_next_month: levels.get(memberId) || "2" };
-    const pointsFor = Math.max(0, current.points_for + delta.for);
-    const pointsAgainst = Math.max(0, current.points_against + delta.against);
-    const matchesPlayed = Math.max(0, current.matches_played + delta.matches);
-    const nextValues = {
-      rank: matchesPlayed > 0 ? current.rank : 999,
-      total_points: Math.max(0, current.total_points + delta.total),
-      points_for: pointsFor,
-      points_against: pointsAgainst,
-      point_diff: pointsFor - pointsAgainst,
-      matches_played: matchesPlayed,
-      level_next_month: current.level_next_month,
-    };
-    return base
-      ? admin.from("monthly_results").update(nextValues).eq("month", month).eq("member_id", memberId)
-      : admin.from("monthly_results").insert({ month, member_id: memberId, ...nextValues });
-  }));
-  const failedWrite = writes.find((result) => result.error);
-  if (failedWrite?.error) throw failedWrite.error;
-
-  await rerankMonthlyResults(admin, month);
-}
-
 async function resetWorkflowAfterAttendanceChange(admin: SupabaseClient, session: PlaySession) {
   const scheduleWasOpen = session.status === "scheduled" || session.status === "completed";
   const { data: attendanceSnapshot, error: attendanceSnapshotError } = await admin
@@ -196,14 +82,14 @@ async function resetWorkflowAfterAttendanceChange(admin: SupabaseClient, session
   })), { assignAll: scheduleWasOpen });
   const canOpenDraw = allResponded && reassignmentPlan.canOpenDraw;
 
-  await reverseSessionResults(admin, session);
-
+  const hadResults = await sessionHasResults(admin, session.id);
   const [{ error: matchesDeleteError }, { error: requestCleanupError }] = await Promise.all([
     admin.from("matches").delete().eq("session_id", session.id),
     admin.from("attendance_change_requests").delete().eq("session_id", session.id),
   ]);
   if (matchesDeleteError) throw matchesDeleteError;
   if (requestCleanupError) throw requestCleanupError;
+  if (hadResults) await syncMonthlyResults(admin, monthStart(session.session_date));
   const eloRecalculation = recalculateEloIfAvailable(admin);
 
   const memberIdsToClear = canOpenDraw
