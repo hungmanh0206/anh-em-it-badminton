@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { isCheckinWindowOpenForDate, sessionDatesOfMonth, sessionStateForDate, sessionWeekdayLabel, sessionWeekInMonth, targetSessionDateKey } from "@/lib/session-dates";
 import { reorderMatchesForRest } from "@/lib/schedule-reorder";
 import { MEMBER_PASSWORD_MIN, usernameFromName } from "@/lib/member-username";
+import { MAX_SCORE_DIGITS, sanitizeScoreInput, scoreEntryError } from "@/lib/score-input";
 
 type MemberRole = "admin" | "sub-admin" | "member";
 type Member = { name: string; initials: string; level: 1 | 2; color: string; present: boolean; username: string; password: string; role?: MemberRole; responded?: boolean };
@@ -1519,19 +1520,25 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
   const [editing, setEditing] = useState<Record<number, boolean>>({});
   const [saving, setSaving] = useState<number | null>(null);
   const [notice, setNotice] = useState("");
+  const [rowErrors, setRowErrors] = useState<Record<number, string>>({});
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
   const confirmedCount = Object.values(confirmedMatches).filter(Boolean).length;
   const saveMatch = async (match: ScheduleMatch, index: number) => {
     // Serialize score writes so monthly totals cannot lose updates.
     if (saving !== null) return;
-    if (!supabase || !sessionId) return setNotice("Chưa có phiên Supabase để lưu kết quả.");
     const [scoreAText, scoreBText] = scores[index] ?? ["", ""];
+    const entryError = scoreEntryError(scoreAText, scoreBText);
+    if (entryError) {
+      setRowErrors({ ...rowErrors, [index]: entryError });
+      document.getElementById(`match-score-${index}-${scoreAText === "" || scoreBText !== "" ? "a" : "b"}`)?.focus();
+      return;
+    }
+    if (!supabase || !sessionId) return setNotice("Chưa có phiên Supabase để lưu kết quả.");
     const scoreA = Number(scoreAText);
     const scoreB = Number(scoreBText);
-    if (!Number.isInteger(scoreA) || !Number.isInteger(scoreB) || scoreA < 0 || scoreB < 0) return setNotice("Điểm phải là số nguyên không âm.");
-    if (scoreA === scoreB) return setNotice("Kết quả không được hòa.");
     setSaving(index);
     setNotice("");
+    setRowErrors({ ...rowErrors, [index]: "" });
     const { data: { session } } = await supabase.auth.getSession();
     const response = await fetch("/api/match-result", {
       method: "POST",
@@ -1541,7 +1548,7 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     const payload = await response.json().catch(() => ({})) as { error?: string; completed?: boolean };
     setSaving(null);
     if (!response.ok) {
-      return setNotice(payload.error || "Không thể lưu kết quả trận.");
+      return setRowErrors({ ...rowErrors, [index]: payload.error || "Không thể lưu kết quả trận." });
     }
     setConfirmedMatches({ ...confirmedMatches, [index]: true });
     setEditing({ ...editing, [index]: false });
@@ -1557,12 +1564,22 @@ function Results({ matches, drawn, scores, setScores, confirmedMatches, setConfi
     const hasResultColor = confirmed && scoreAText.trim() !== "" && scoreBText.trim() !== "" && Number.isInteger(scoreAValue) && Number.isInteger(scoreBValue) && scoreAValue !== scoreBValue;
     const scoreAClassName = hasResultColor ? (scoreAValue > scoreBValue ? "score-win" : "score-lose") : undefined;
     const scoreBClassName = hasResultColor ? (scoreBValue > scoreAValue ? "score-win" : "score-lose") : undefined;
+    const rowError = locked ? "" : rowErrors[i] ?? "";
+    const isDraw = scoreAText !== "" && Number(scoreAText) === Number(scoreBText);
+    const scoreAInvalid = Boolean(rowError) && (scoreAText === "" || isDraw);
+    const scoreBInvalid = Boolean(rowError) && (scoreBText === "" || isDraw);
+    const changeScore = (next: [string, string]) => {
+      setScores({ ...scores, [i]: next });
+      if (rowErrors[i]) setRowErrors({ ...rowErrors, [i]: "" });
+    };
+    const scoreInputProps = { inputMode: "numeric", pattern: "[0-9]*", maxLength: MAX_SCORE_DIGITS, autoComplete: "off", required: true, disabled: locked } as const;
     return <div className={"result-row schedule-result-row match-result-row " + (confirmed ? "confirmed" : "")} key={i}>
       <div className="match-result-meta"><b>{i + 1}</b>{confirmed && <span aria-label="Đã xác nhận">✓</span>}</div>
       <div className="match-result-team match-result-team-a"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
-      <div className="match-score-controls"><input className={scoreAClassName} disabled={locked} aria-label={`Điểm đội A trận ${i + 1}`} value={scoreAText} onChange={e => setScores({ ...scores, [i]: [e.target.value, scoreBText] })}/><em>:</em><input className={scoreBClassName} disabled={locked} aria-label={`Điểm đội B trận ${i + 1}`} value={scoreBText} onChange={e => setScores({ ...scores, [i]: [scoreAText, e.target.value] })}/></div>
+      <div className="match-score-controls"><input {...scoreInputProps} id={`match-score-${i}-a`} className={scoreAInvalid ? "score-invalid" : scoreAClassName} aria-invalid={scoreAInvalid} aria-label={`Điểm đội A trận ${i + 1}`} value={scoreAText} onChange={e => changeScore([sanitizeScoreInput(e.target.value), scoreBText])}/><em>:</em><input {...scoreInputProps} id={`match-score-${i}-b`} className={scoreBInvalid ? "score-invalid" : scoreBClassName} aria-invalid={scoreBInvalid} aria-label={`Điểm đội B trận ${i + 1}`} value={scoreBText} onChange={e => changeScore([scoreAText, sanitizeScoreInput(e.target.value)])}/></div>
       <div className="match-result-team match-result-team-b"><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
       <div className="result-actions">{canManageScores && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" disabled={saving !== null} onClick={() => setEditing({ ...editing, [i]: true })}><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving !== null} onClick={() => void saveMatch(match, i)}><span className="result-action-text">{saving === i ? "Lưu..." : confirmed ? "Lưu lại" : "Xác nhận"}</span></button>)}</div>
+      {rowError && <p className="match-score-error" role="alert">{rowError}</p>}
     </div>;
   })}</div></section>;
 }

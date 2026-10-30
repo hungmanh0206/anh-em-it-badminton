@@ -1,4 +1,5 @@
 import { recalculateEloIfAvailable } from "@/lib/elo/server";
+import { isValidScore } from "@/lib/score-input";
 import { jsonError, requireScoreManager } from "@/lib/supabase-admin";
 
 type Body = {
@@ -39,7 +40,6 @@ const nextMonthStart = (dateText: string) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 2).padStart(2, "0")}-01`;
 };
 
-const assertScore = (score: unknown) => Number.isInteger(score) && Number(score) >= 0;
 export async function POST(request: Request) {
   try {
     const { admin } = await requireScoreManager(request);
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Thiếu dữ liệu trận đấu." }, { status: 400 });
     }
     if (body.teamA.length !== 2 || body.teamB.length !== 2) return Response.json({ error: "Mỗi đội phải có đúng 2 người." }, { status: 400 });
-    if (!assertScore(body.scoreA) || !assertScore(body.scoreB)) return Response.json({ error: "Điểm phải là số nguyên không âm." }, { status: 400 });
+    if (!isValidScore(body.scoreA) || !isValidScore(body.scoreB)) return Response.json({ error: "Điểm chỉ gồm số, tối đa 2 chữ số." }, { status: 400 });
     if (body.scoreA === body.scoreB) return Response.json({ error: "Kết quả không được hòa." }, { status: 400 });
     const scoreA = Number(body.scoreA);
     const scoreB = Number(body.scoreB);

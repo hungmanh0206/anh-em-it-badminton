@@ -460,3 +460,20 @@
 .result-entry-panel .match-score-controls input.score-lose:focus {
   outline: 2px solid rgba(202, 62, 77, 0.22) !important;
 }
+
+/* Required score boxes: red outline on the box to fix, message on its own line of the row. */
+.result-entry-panel .match-score-controls input.score-invalid {
+  border-color: #d64545 !important;
+  background: #fff5f4 !important;
+  box-shadow: 0 0 0 3px rgba(214, 69, 69, 0.14) !important;
+}
+
+.result-entry-panel .match-result-row .match-score-error {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #c2413b !important;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+}
