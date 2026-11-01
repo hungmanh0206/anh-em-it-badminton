@@ -285,3 +285,21 @@ body::before {
   box-shadow: 0 0 0 1.5px rgba(255, 200, 61, 0.75), var(--glass-lift-card) !important;
 }
 
+/* Score pill in the history modal: the same gold glass tile as the logo, following the theme. */
+.history-score:not(#_) {
+  border-color: transparent;
+  background: var(--brand-tile);
+  box-shadow: var(--brand-tile-shadow);
+  color: var(--brand-title) !important;
+}
+
+.history-score:not(#_) i {
+  color: var(--brand-sub);
+}
+
+/* The VS badge is pale gold on the light theme; the dark theme keeps its dark one. */
+:root:not([data-theme="dark"]) .schedule-match-card .teams strong:not(#_) {
+  background: var(--brand-tile);
+  box-shadow: var(--brand-tile-shadow);
+  color: var(--brand-sub) !important;
+}
