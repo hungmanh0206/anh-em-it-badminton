@@ -57,11 +57,16 @@
 .champion-avatar {
   --avatar-size: clamp(150px, 42vmin, 220px);
   --crown-size: clamp(50px, 14vmin, 74px);
-  /* From the crown's place on the head: down to the avatar's centre, and the radius of the loop around it,
-     wide of the avatar but still inside a phone screen. */
+  /* From the crown's place on the head: down to the avatar's centre, and the radius of the orbit around it,
+     wide of the avatar but still inside a phone screen. Tilting that circle in 3D is what makes it a slanted ellipse. */
   --orbit-y: calc(var(--avatar-size) * 0.7 - var(--crown-size) / 2);
   --orbit-r: min(calc(var(--avatar-size) / 2 + 84px), calc(50vw - var(--crown-size) * 0.75));
+  --orbit-tilt: -22deg;
+  --orbit-lean: 68deg;
   position: relative;
+  /* One 3D scene: the crown really passes behind the avatar, and grows as it comes near. */
+  perspective: 800px;
+  transform-style: preserve-3d;
   margin-bottom: 18px;
   border-radius: 50%;
 }
@@ -84,8 +89,8 @@
   width: var(--crown-size);
   height: var(--crown-size);
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
-  transform: translateX(-50%) rotate(-8deg);
-  animation: championCrownFly 2400ms 900ms backwards, championCrownShow 260ms ease-out 900ms backwards;
+  transform: translateX(-50%) translateZ(2px) rotate(-8deg);
+  animation: championCrownFly 2400ms 900ms backwards, championCrownShow 120ms 900ms backwards;
 }
 
 .champion-stage p {
@@ -94,7 +99,7 @@
   font-size: clamp(15px, 4vmin, 20px);
   font-weight: 800;
   letter-spacing: 0.02em;
-  animation: championTextIn 520ms ease-out 2950ms backwards;
+  animation: championTextIn 520ms ease-out 3060ms backwards;
 }
 
 .champion-stage h2 {
@@ -106,7 +111,7 @@
   letter-spacing: -0.03em;
   line-height: 1.1;
   text-shadow: 0 4px 22px var(--celebrate-glow);
-  animation: championTextIn 520ms ease-out 3110ms backwards;
+  animation: championTextIn 520ms ease-out 3220ms backwards;
 }
 
 @keyframes championAvatarIn {
@@ -116,26 +121,37 @@
   }
 }
 
-/* Starts once the avatar has zoomed in: from its left, under it to the right, up and over, then down onto the head.
-   Every step lists the same functions, so the rotation angle itself is what animates: a true circle. */
+/* Starts small behind the avatar once it has zoomed in, grows as it comes out, makes one lap of the slanted ellipse
+   (right, across the front, left, round the back), rises over the head and drops onto it.
+   Every step lists the same functions, so the angles themselves animate and the path stays a true ellipse. */
 @keyframes championCrownFly {
   0% {
-    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotate(-90deg) translateY(calc(var(--orbit-r) * -1)) rotate(90deg) rotate(8deg) scale(0.8);
-    animation-timing-function: cubic-bezier(0.3, 0, 0.55, 1);
+    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotateZ(var(--orbit-tilt)) rotateX(var(--orbit-lean)) rotateZ(0deg) translateY(-30px) rotateZ(0deg) rotateX(calc(var(--orbit-lean) * -1)) rotateZ(calc(var(--orbit-tilt) * -1)) translateZ(2px) rotate(8deg) scale(0.35);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.8, 0.75);
   }
 
-  72% {
-    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotate(-360deg) translateY(calc(var(--orbit-r) * -1)) rotate(360deg) rotate(8deg) scale(1.2);
+  24% {
+    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotateZ(var(--orbit-tilt)) rotateX(var(--orbit-lean)) rotateZ(100deg) translateY(calc(var(--orbit-r) * -1)) rotateZ(-100deg) rotateX(calc(var(--orbit-lean) * -1)) rotateZ(calc(var(--orbit-tilt) * -1)) translateZ(2px) rotate(8deg) scale(1.2);
+    animation-timing-function: linear;
+  }
+
+  68% {
+    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotateZ(var(--orbit-tilt)) rotateX(var(--orbit-lean)) rotateZ(360deg) translateY(calc(var(--orbit-r) * -1)) rotateZ(-360deg) rotateX(calc(var(--orbit-lean) * -1)) rotateZ(calc(var(--orbit-tilt) * -1)) translateZ(2px) rotate(8deg) scale(1.2);
+    animation-timing-function: ease-in-out;
+  }
+
+  84% {
+    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotateZ(0deg) rotateX(0deg) rotateZ(360deg) translateY(calc(var(--orbit-y) * -1 - 46px)) rotateZ(-360deg) rotateX(calc(0deg * -1)) rotateZ(calc(0deg * -1)) translateZ(2px) rotate(-8deg) scale(1.2);
     animation-timing-function: ease-in;
   }
 
-  90% {
-    transform: translate(-50%, 7px) translateY(var(--orbit-y)) rotate(-360deg) translateY(calc(var(--orbit-y) * -1)) rotate(360deg) rotate(-8deg) scale(0.94);
+  94% {
+    transform: translate(-50%, 7px) translateY(var(--orbit-y)) rotateZ(0deg) rotateX(0deg) rotateZ(360deg) translateY(calc(var(--orbit-y) * -1)) rotateZ(-360deg) rotateX(calc(0deg * -1)) rotateZ(calc(0deg * -1)) translateZ(2px) rotate(-8deg) scale(0.94);
     animation-timing-function: ease-out;
   }
 
   100% {
-    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotate(-360deg) translateY(calc(var(--orbit-y) * -1)) rotate(360deg) rotate(-8deg) scale(1);
+    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotateZ(0deg) rotateX(0deg) rotateZ(360deg) translateY(calc(var(--orbit-y) * -1)) rotateZ(-360deg) rotateX(calc(0deg * -1)) rotateZ(calc(0deg * -1)) translateZ(2px) rotate(-8deg) scale(1);
   }
 }
 
