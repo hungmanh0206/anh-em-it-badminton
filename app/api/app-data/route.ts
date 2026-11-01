@@ -2,6 +2,7 @@ import { ELO_INITIAL_RATING } from "@/lib/elo/constants";
 import { rankEloPlayers, replayEloMatches } from "@/lib/elo/calculate-elo";
 import { startRatingForProfile } from "@/lib/elo/start-rating";
 import { isMissingEloFeature } from "@/lib/elo/server";
+import { nextMonthStart } from "@/lib/match-result";
 import { ApiError, jsonError, requireUser } from "@/lib/supabase-admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -440,6 +441,10 @@ export async function GET(request: Request) {
     const activeProfileRows = (activeProfiles || []) as SupabaseProfile[];
     const { rows: eloRows, status: eloStatus } = await loadEloRanking(admin, eloRatingsRead, activeProfileRows);
     const formByUsername = buildFormByUsername((formSessions || []) as EloSessionRow[], activeProfileRows);
+    // A past month's ranking shows the form its players ended that month with, not their latest matches.
+    const rankingFormByUsername = month < currentMonthKey
+      ? buildFormByUsername(((formSessions || []) as EloSessionRow[]).filter((session) => session.session_date >= month && session.session_date < nextMonthStart(month)), activeProfileRows)
+      : formByUsername;
     const selectedRows = rankingRowsByMonth.get(month) ?? [];
     const currentRowsForCalendarMonth = rankingRowsByMonth.get(currentMonthKey) ?? [];
     const liveRowsForSessionMonth = rankingRowsByMonth.get(sessionMonthKey) ?? [];
@@ -491,6 +496,7 @@ export async function GET(request: Request) {
       eloRows,
       eloStatus,
       formByUsername,
+      rankingFormByUsername,
       historySessions,
       monthCloseStatus: {
         monthKey: month,
