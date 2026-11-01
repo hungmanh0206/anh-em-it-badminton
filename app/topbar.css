@@ -119,18 +119,18 @@
   gap: 12px;
 }
 
-/* The racket on a pale gold glass tile, the same look as the theme switch. */
+/* The racket alone, without a tile behind it. */
 .topbar-brand .brand-mark:not(#_) {
-  width: 40px !important;
-  min-width: 40px !important;
-  max-width: 40px !important;
-  height: 40px !important;
-  flex: 0 0 40px;
+  width: 52px !important;
+  min-width: 52px !important;
+  max-width: 52px !important;
+  height: 52px !important;
+  flex: 0 0 52px;
   padding: 0 !important;
   border: 0 !important;
-  border-radius: 9px !important;
-  background: var(--club-mark-image) center / 76% auto no-repeat, var(--brand-tile) !important;
-  box-shadow: var(--brand-tile-shadow) !important;
+  border-radius: 0 !important;
+  background: var(--club-mark-image) center / contain no-repeat !important;
+  box-shadow: none !important;
 }
 
 .topbar-brand b {
@@ -536,11 +536,11 @@
   }
 
   .topbar-brand .brand-mark:not(#_) {
-    width: 38px !important;
-    min-width: 38px !important;
-    max-width: 38px !important;
-    height: 38px !important;
-    flex-basis: 38px;
+    width: 46px !important;
+    min-width: 46px !important;
+    max-width: 46px !important;
+    height: 46px !important;
+    flex-basis: 46px;
   }
 
   .topbar-brand b {

@@ -44,6 +44,8 @@
   --gold-glass: linear-gradient(180deg, rgba(255, 216, 115, 0.86), rgba(255, 183, 0, 0.72));
   --gold-glass-hover: linear-gradient(180deg, rgba(255, 216, 115, 0.96), rgba(255, 183, 0, 0.86));
   --gold-glass-shadow: 0 6px 16px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  --button-off: rgba(255, 255, 255, 0.08);
+  --button-off-text: rgba(255, 250, 240, 0.6);
   --glass-page: #15120d;
   --glass-blob-1: rgba(255, 170, 0, 0.34);
   --glass-blob-2: rgba(226, 88, 44, 0.3);
@@ -129,27 +131,6 @@
 
 :root[data-theme="dark"]:not(#_) :is(.negative, .negative b) {
   color: #ff978c !important;
-}
-
-/* Disabled buttons: clearly off, still readable. */
-:root[data-theme="dark"]:not(#_) :is(.primary, .primary *):disabled,
-:root[data-theme="dark"]:not(#_) .primary:disabled * {
-  color: rgba(255, 236, 190, 0.8) !important;
-}
-
-:root[data-theme="dark"]:not(#_) .primary:disabled {
-  border-color: transparent !important;
-  background: rgba(255, 200, 61, 0.2) !important;
-  box-shadow: none !important;
-  opacity: 1 !important;
-}
-
-:root[data-theme="dark"]:not(#_) :is(.soft-btn, .secondary, .attendance-actions .soft-btn, .schedule-filter button):disabled {
-  border-color: transparent !important;
-  background: rgba(255, 255, 255, 0.07) !important;
-  box-shadow: none !important;
-  color: rgba(255, 250, 240, 0.62) !important;
-  opacity: 1 !important;
 }
 
 /* Draw wheel: a dark gold disc instead of the cream one. */

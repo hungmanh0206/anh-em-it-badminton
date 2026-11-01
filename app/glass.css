@@ -19,6 +19,8 @@
   --glass-lift: 0 2px 6px rgba(62, 47, 18, 0.05), 0 16px 38px rgba(62, 47, 18, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.85);
   --glass-lift-card: 0 1px 2px rgba(62, 47, 18, 0.05), 0 6px 16px rgba(62, 47, 18, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --glass-blur: blur(18px) saturate(160%);
+  --button-off: rgba(60, 48, 28, 0.08);
+  --button-off-text: rgba(26, 20, 8, 0.52);
   --gold-glass: linear-gradient(180deg, rgba(255, 220, 125, 0.76), rgba(255, 190, 30, 0.62));
   --gold-glass-hover: linear-gradient(180deg, rgba(255, 220, 125, 0.92), rgba(255, 190, 30, 0.8));
   --gold-glass-shadow: 0 6px 16px rgba(184, 118, 14, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.65);
@@ -327,12 +329,17 @@ body::before {
   background: var(--gold-glass-hover) !important;
 }
 
-:root:not([data-theme="dark"]) :is(.primary, .new-btn, .attendance-actions .soft-btn):disabled:not(#_) {
+/* Every disabled button looks the same: flat glass, muted text. */
+:is(.primary, .new-btn, .soft-btn, .secondary):disabled:not(#_):not(#_) {
   border-color: transparent !important;
-  background: rgba(255, 200, 61, 0.26) !important;
+  background: var(--button-off) !important;
   box-shadow: none !important;
-  color: rgba(26, 20, 8, 0.56) !important;
+  color: var(--button-off-text) !important;
   opacity: 1 !important;
+}
+
+:is(.primary, .new-btn, .soft-btn, .secondary):disabled:not(#_):not(#_) * {
+  color: var(--button-off-text) !important;
 }
 
 /* No borders anywhere: blocks, buttons and fields stand out through their fill and shadow. The two ids
