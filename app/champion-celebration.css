@@ -120,7 +120,7 @@
   font-size: clamp(15px, 4vmin, 20px);
   font-weight: 800;
   letter-spacing: 0.02em;
-  animation: championTextIn 520ms ease-out 3060ms backwards;
+  animation: championTextIn 520ms ease-out 420ms backwards;
 }
 
 .champion-stage h2 {
@@ -132,7 +132,7 @@
   letter-spacing: -0.03em;
   line-height: 1.1;
   text-shadow: 0 4px 22px var(--celebrate-glow);
-  animation: championTextIn 520ms ease-out 3220ms backwards;
+  animation: championTextIn 520ms ease-out 540ms backwards;
 }
 
 .champion-runners {
