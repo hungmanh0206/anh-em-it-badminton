@@ -23,10 +23,14 @@ export function useCollapsingTopbar(page: string) {
       if (window.scrollY >= COLLAPSE_AFTER) setCollapsed(true);
       else if (window.scrollY <= EXPAND_BEFORE) setCollapsed(false);
     };
-    const onScroll = () => { frame ||= requestAnimationFrame(measure); };
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const check = () => { frame ||= requestAnimationFrame(measure); };
+    window.addEventListener("scroll", check, { passive: true });
+    // Modals are portalled straight into <body>, so this also catches one closing: the bar catches up with the page then.
+    const portals = new MutationObserver(check);
+    portals.observe(document.body, { childList: true });
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", check);
+      portals.disconnect();
       cancelAnimationFrame(frame);
     };
   }, []);
