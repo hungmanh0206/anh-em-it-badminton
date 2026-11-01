@@ -206,23 +206,42 @@ button.hero-champion:focus-visible {
   white-space: nowrap;
 }
 
-/* No room between the title and the numbers: progress and champion take their own line. */
-@media (max-width: 1130px) {
+/* iPad: title and month status as two matching columns, the numbers evenly across the full width. */
+@media (min-width: 601px) and (max-width: 1130px) {
   .hero:not(#_) {
-    flex-wrap: wrap;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 34%);
+    grid-template-areas: "copy status" "stats stats";
+    align-items: center;
+    gap: 20px 32px !important;
+  }
+
+  .hero-copy {
+    grid-area: copy;
   }
 
   .hero-status {
-    flex: 1 0 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-    order: 4;
-    justify-content: flex-start;
-    gap: 14px 32px;
+    grid-area: status;
+    width: 100%;
   }
 
-  .hero-progress {
-    flex: 0 1 200px;
+  .hero-stats:not(#_) {
+    display: grid !important;
+    grid-area: stats;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 !important;
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .hero-stats:not(#_) div {
+    min-width: 0;
+    padding-inline: 8px !important;
+    text-align: center;
+  }
+
+  .hero-stats:not(#_) div:first-child {
+    border-left: 0 !important;
   }
 }
 

@@ -264,3 +264,10 @@
 .elo-guide-table > div {
   grid-template-columns: minmax(0, 1fr) 96px 96px;
 }
+
+.elo-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}

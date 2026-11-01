@@ -1525,6 +1525,11 @@
 :root[data-theme="dark"] .hero-champion .avatar.small {
     box-shadow: 0 0 0 2px rgba(255, 200, 61, 0.8) !important
 }
+@media (min-width: 601px) and (max-width: 1130px) {
+    :root[data-theme="dark"] .hero-stats:not(#_) div:first-child {
+        border-left: 0 !important
+    }
+}
 :root[data-theme="dark"] .rules-section-title {
     color: hsla(42, 20%, 95%, 1)
 }

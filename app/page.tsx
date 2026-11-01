@@ -1441,14 +1441,14 @@ function Schedule({ onEditingChange, scenario, drawn, scores, setScores, confirm
     return () => document.removeEventListener("click", clearOutside);
   }, [focusSlot]);
   if (!scenario) return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Lịch chỉ được tạo khi có tối thiểu 5 thành viên và đúng tổ hợp trong thư viện lịch.</p></div></div><div className="empty-ranking">Chưa có lịch phù hợp cho danh sách điểm danh hiện tại.</div></section>;
-  return <SlotFocusContext.Provider value={{ slot: focusSlot, setSlot: setFocusSlot }}>
-    <section className="panel combined-schedule-panel">
-      <div className="panel-head"><div><h2>Lịch thi đấu & nhập điểm</h2></div><span className="count-pill schedule-count-pill">{scenario.matches.length} trận</span></div>
+  return <>
+    <SlotFocusContext.Provider value={{ slot: focusSlot, setSlot: setFocusSlot }}><section className="panel combined-schedule-panel">
+      <div className="panel-head"><div><h2>Lịch thi đấu</h2></div><span className="count-pill schedule-count-pill">{scenario.matches.length} trận</span></div>
       <div className="schedule-grid">{scenario.matches.map((match, i) => <Match match={match} i={i} namesBySlot={namesBySlot} key={i} />)}</div>
-    </section>
+    </section></SlotFocusContext.Provider>
     <Results key={`${sessionId ?? "local"}-${scenario.id}`} onEditingChange={onEditingChange} matches={scenario.matches} drawn={drawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} onSaved={onSaved} />
     <LiveRankingSnapshot rows={rankingRows} month={rankingMonth} />
-  </SlotFocusContext.Provider>;
+  </>;
 }
 function Rules({ members }: { members: Member[] }) {
   // Grouped by the live level (top 4 ELO = Level 1), so the list never goes stale.
@@ -1779,19 +1779,193 @@ const loadCanvasImage = (src: string) => new Promise<HTMLImageElement | null>((r
   image.src = src;
 });
 
-// Draws the monthly ranking exactly like the desktop BXH table in the app (same columns, colours,
-// medals, avatars, Level pills and form icons), at a fixed 1200px width whatever device saves it.
-async function downloadRankingImage(month: string, rows: RankingRow[], form: FormByUsername, elo: Record<string, number>) {
-  if (typeof document === "undefined") return;
-  const bodyFont = `"Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif`;
-  const numberFont = `"JetBrains Mono", ui-monospace, monospace`;
-  const headingFont = `"Bricolage Grotesque", "Be Vietnam Pro", sans-serif`;
+// Downloaded images follow the theme the member is using.
+const bodyFont = `"Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif`;
+const numberFont = `"JetBrains Mono", ui-monospace, monospace`;
+const headingFont = `"Bricolage Grotesque", "Be Vietnam Pro", sans-serif`;
+const imagePalette = () => (document.documentElement.dataset.theme === "dark" ? {
+  page: ["#241d13", "#18150f", "#120f0b"], glow: "255, 170, 0", glowAlpha: 0.22,
+  eyebrow: "#ffc83d", title: "#fffaf0", card: "#24211b", cardShadow: "rgba(0, 0, 0, 0.4)", head: "#2d2920",
+  line: "rgba(255, 255, 255, 0.08)", headText: "rgba(255, 250, 240, 0.68)", footer: "rgba(255, 250, 240, 0.58)",
+  circle: "#2f2a21", circleLine: "rgba(255, 255, 255, 0.14)", pillBack: "rgba(255, 200, 61, 0.14)", pillLine: "rgba(255, 200, 61, 0.45)", pillText: "#ffc83d",
+  cell: "#e6e0d4", positive: "#62dfa6", negative: "#ff978c", elo: "#ddd3bc", emptySlot: "rgba(255, 255, 255, 0.24)",
+  avatarShadow: "rgba(0, 0, 0, 0.4)", blankBack: "#3a352b", blankShape: "#8a8274", tintAlpha: 0.2,
+  podium: [{ tint: "255, 183, 0", edge: "#ffb700", points: "#ffc83d" }, { tint: "150, 165, 190", edge: "#a3adbd", points: "#cdd6e4" }, { tint: "206, 126, 68", edge: "#cd8a52", points: "#eeaf80" }],
+} : {
+  page: ["#fffdf8", "#faf8f3", "#f7f3ea"], glow: "255, 183, 0", glowAlpha: 0.14,
+  eyebrow: "#b67500", title: "#17140f", card: "#ffffff", cardShadow: "rgba(35, 28, 18, 0.06)", head: "#faf7f0",
+  line: "rgba(30, 25, 18, 0.08)", headText: "rgba(74, 62, 44, 0.62)", footer: "rgba(61, 53, 40, 0.55)",
+  circle: "#fffaf0", circleLine: "rgba(43, 34, 22, 0.1)", pillBack: "rgba(255, 250, 236, 0.94)", pillLine: "rgba(255, 183, 0, 0.42)", pillText: "#b67500",
+  cell: "#3d3528", positive: "#1f8a5b", negative: "#c2413b", elo: "#6b5a3a", emptySlot: "rgba(61, 53, 40, 0.22)",
+  avatarShadow: "rgba(35, 28, 18, 0.12)", blankBack: "#ece7dd", blankShape: "#a79f92", tintAlpha: 0.13,
+  podium: [{ tint: "255, 183, 0", edge: "#ffb700", points: "#b87900" }, { tint: "126, 138, 160", edge: "#a3adbd", points: "#5d6878" }, { tint: "196, 116, 58", edge: "#cd8a52", points: "#a85a24" }],
+});
+type ImagePalette = ReturnType<typeof imagePalette>;
+async function loadImageFonts() {
   await Promise.all([
     document.fonts?.load(`800 15px "Be Vietnam Pro"`),
     document.fonts?.load(`700 26px "JetBrains Mono"`),
     document.fonts?.load(`750 30px "Bricolage Grotesque"`),
   ]).catch(() => undefined);
   await document.fonts?.ready.catch(() => undefined);
+}
+function createImageCanvas(width: number, height: number, palette: ImagePalette) {
+  const ratio = 2;
+  const canvas = document.createElement("canvas");
+  canvas.width = width * ratio;
+  canvas.height = height * ratio;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.scale(ratio, ratio);
+  ctx.textBaseline = "middle";
+  const page = ctx.createLinearGradient(0, 0, 0, height);
+  palette.page.forEach((color, index) => page.addColorStop([0, 0.44, 1][index], color));
+  ctx.fillStyle = page;
+  ctx.fillRect(0, 0, width, height);
+  const glow = ctx.createRadialGradient(width * 0.18, height * 0.06, 0, width * 0.18, height * 0.06, Math.max(width, height) * 0.28);
+  glow.addColorStop(0, `rgba(${palette.glow}, ${palette.glowAlpha})`);
+  glow.addColorStop(1, `rgba(${palette.glow}, 0)`);
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, width, height);
+  return { canvas, ctx };
+}
+function drawImageTitle(ctx: CanvasRenderingContext2D, title: string, x: number, palette: ImagePalette) {
+  ctx.textAlign = "left";
+  ctx.fillStyle = palette.eyebrow;
+  ctx.font = `800 12px ${bodyFont}`;
+  ctx.letterSpacing = "1.5px";
+  ctx.fillText("ANH EM IT BADMINTON", x + 4, 40);
+  ctx.letterSpacing = "0px";
+  ctx.fillStyle = palette.title;
+  ctx.font = `750 32px ${headingFont}`;
+  ctx.fillText(title, x + 2, 76);
+}
+// Leaves the context clipped to the card: restore after drawing its rows.
+function drawImageCard(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, headH: number, palette: ImagePalette) {
+  ctx.save();
+  ctx.shadowColor = palette.cardShadow;
+  ctx.shadowBlur = 26;
+  ctx.shadowOffsetY = 10;
+  ctx.fillStyle = palette.card;
+  fillRoundRect(ctx, x, y, w, h, 18);
+  ctx.restore();
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, 18);
+  ctx.clip();
+  ctx.fillStyle = palette.head;
+  ctx.fillRect(x, y, w, headH);
+  ctx.fillStyle = palette.line;
+  ctx.fillRect(x, y + headH - 1, w, 1);
+}
+function drawImageRow(ctx: CanvasRenderingContext2D, x: number, w: number, y: number, h: number, top: ImagePalette["podium"][number] | null, divider: boolean, palette: ImagePalette) {
+  if (top) {
+    const tint = ctx.createLinearGradient(x, 0, x + w, 0);
+    tint.addColorStop(0, `rgba(${top.tint}, ${palette.tintAlpha})`);
+    tint.addColorStop(0.7, `rgba(${top.tint}, 0.02)`);
+    tint.addColorStop(1, `rgba(${top.tint}, 0.02)`);
+    ctx.fillStyle = tint;
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = top.edge;
+    ctx.fillRect(x + 1, y, 3, h);
+  }
+  if (divider) {
+    ctx.fillStyle = palette.line;
+    ctx.fillRect(x, y + h - 1, w, 1);
+  }
+}
+// Medal for the podium, numbered circle otherwise.
+function drawImageRank(ctx: CanvasRenderingContext2D, medal: HTMLImageElement | null, rank: number, x: number, mid: number, palette: ImagePalette) {
+  if (medal) {
+    ctx.drawImage(medal, x - 22, mid - 22, 44, 44);
+    return;
+  }
+  ctx.fillStyle = palette.circle;
+  ctx.beginPath();
+  ctx.arc(x, mid, 17, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = palette.circleLine;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = palette.title;
+  ctx.font = `800 14px ${bodyFont}`;
+  ctx.textAlign = "center";
+  ctx.fillText(String(rank), x, mid + 0.5);
+}
+// Avatar (or the blank one), name and Level pill.
+function drawImageMember(ctx: CanvasRenderingContext2D, avatar: HTMLImageElement | null, name: string, level: number, x: number, mid: number, palette: ImagePalette) {
+  ctx.save();
+  ctx.shadowColor = palette.avatarShadow;
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetY = 4;
+  if (avatar) {
+    ctx.drawImage(avatar, x, mid - 15, 30, 30);
+  } else {
+    ctx.fillStyle = palette.blankBack;
+    ctx.beginPath();
+    ctx.arc(x + 15, mid, 15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.clip();
+    ctx.fillStyle = palette.blankShape;
+    ctx.beginPath();
+    ctx.arc(x + 15, mid - 4, 5.4, 0, Math.PI * 2);
+    ctx.arc(x + 15, mid + 15, 10.5, Math.PI, 0);
+    ctx.fill();
+  }
+  ctx.restore();
+  ctx.textAlign = "left";
+  ctx.fillStyle = palette.title;
+  ctx.font = `800 15px ${bodyFont}`;
+  ctx.letterSpacing = "-0.14px";
+  const nameX = x + 40;
+  ctx.fillText(name, nameX, mid + 0.5);
+  const nameWidth = ctx.measureText(name).width;
+  ctx.letterSpacing = "0px";
+  const pillLabel = `L${level}`;
+  ctx.font = `800 8px ${bodyFont}`;
+  const pillW = ctx.measureText(pillLabel).width + 12;
+  const pillX = nameX + nameWidth + 10;
+  ctx.fillStyle = palette.pillBack;
+  fillRoundRect(ctx, pillX, mid - 9, pillW, 18, 9);
+  ctx.strokeStyle = palette.pillLine;
+  strokeRoundRect(ctx, pillX + 0.5, mid - 8.5, pillW - 1, 17, 8.5);
+  ctx.fillStyle = palette.pillText;
+  ctx.textAlign = "center";
+  ctx.fillText(pillLabel, pillX + pillW / 2, mid + 0.5);
+}
+function drawImageFooter(ctx: CanvasRenderingContext2D, x: number, width: number, height: number, palette: ImagePalette) {
+  ctx.fillStyle = palette.footer;
+  ctx.font = `600 12px ${bodyFont}`;
+  ctx.textAlign = "left";
+  ctx.fillText(`Xuất lúc ${new Date().toLocaleString("vi-VN")}`, x + 4, height - 26);
+  ctx.textAlign = "right";
+  ctx.fillText("anh-em-it-badminton.vercel.app", width - x - 4, height - 26);
+}
+function saveImage(canvas: HTMLCanvasElement, fileName: string) {
+  canvas.toBlob((blob) => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    link.rel = "noopener";
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    window.setTimeout(() => {
+      link.remove();
+      URL.revokeObjectURL(url);
+    }, 1500);
+  }, "image/png", 0.96);
+}
+
+// Draws the monthly ranking exactly like the desktop BXH table in the app (same columns, colours,
+// medals, avatars, Level pills and form icons), at a fixed 1200px width whatever device saves it.
+async function downloadRankingImage(month: string, rows: RankingRow[], form: FormByUsername, elo: Record<string, number>) {
+  if (typeof document === "undefined") return;
+  await loadImageFonts();
+  const palette = imagePalette();
 
   const visibleRows: RankingRow[] = rows.length ? rows : [{ name: "Chưa có dữ liệu", initials: "—", level: 2, points: 0, pointsWon: 0, pointsLost: 0, pointDiff: 0, matches: 0, color: "#b8760e", placeholder: true }];
   const hasRankingData = visibleRows.some((row) => !row.placeholder && row.matches > 0);
@@ -1820,59 +1994,16 @@ async function downloadRankingImage(month: string, rows: RankingRow[], form: For
   const columns = widths.map((w, index) => ({ x: innerX + widths.slice(0, index).reduce((sum, value) => sum + value + gap, 0), w }));
   const center = (index: number) => columns[index].x + columns[index].w / 2;
 
-  const ratio = 2;
-  const canvas = document.createElement("canvas");
-  canvas.width = width * ratio;
-  canvas.height = height * ratio;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-  ctx.scale(ratio, ratio);
-  ctx.textBaseline = "middle";
-
-  // Page background (same as the app body).
-  const page = ctx.createLinearGradient(0, 0, 0, height);
-  page.addColorStop(0, "#fffdf8");
-  page.addColorStop(0.44, "#faf8f3");
-  page.addColorStop(1, "#f7f3ea");
-  ctx.fillStyle = page;
-  ctx.fillRect(0, 0, width, height);
-  const glow = ctx.createRadialGradient(width * 0.18, height * 0.06, 0, width * 0.18, height * 0.06, Math.max(width, height) * 0.28);
-  glow.addColorStop(0, "rgba(255, 183, 0, 0.14)");
-  glow.addColorStop(1, "rgba(255, 183, 0, 0)");
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, width, height);
+  const image = createImageCanvas(width, height, palette);
+  if (!image) return;
+  const { canvas, ctx } = image;
 
   // Title.
   const { display, file } = rankingMonthForFile(month);
-  ctx.textAlign = "left";
-  ctx.fillStyle = "#b67500";
-  ctx.font = `800 12px ${bodyFont}`;
-  ctx.letterSpacing = "1.5px";
-  ctx.fillText("ANH EM IT BADMINTON", cardX + 4, 40);
-  ctx.letterSpacing = "0px";
-  ctx.fillStyle = "#17140f";
-  ctx.font = `750 32px ${headingFont}`;
-  ctx.fillText(`Bảng xếp hạng ${display.replace(/^Tháng/, "tháng")}`, cardX + 2, 76);
+  drawImageTitle(ctx, `Bảng xếp hạng ${display.replace(/^Tháng/, "tháng")}`, cardX, palette);
 
-  // Card.
-  ctx.save();
-  ctx.shadowColor = "rgba(35, 28, 18, 0.06)";
-  ctx.shadowBlur = 26;
-  ctx.shadowOffsetY = 10;
-  ctx.fillStyle = "#ffffff";
-  fillRoundRect(ctx, cardX, cardY, cardW, cardH, 18);
-  ctx.restore();
-  ctx.save();
-  ctx.beginPath();
-  ctx.roundRect(cardX, cardY, cardW, cardH, 18);
-  ctx.clip();
-
-  // Header row.
-  ctx.fillStyle = "#faf7f0";
-  ctx.fillRect(cardX, cardY, cardW, headH);
-  ctx.fillStyle = "rgba(30, 25, 18, 0.08)";
-  ctx.fillRect(cardX, cardY + headH - 1, cardW, 1);
-  ctx.fillStyle = "rgba(74, 62, 44, 0.62)";
+  drawImageCard(ctx, cardX, cardY, cardW, cardH, headH, palette);
+  ctx.fillStyle = palette.headText;
   ctx.font = `800 10.5px ${bodyFont}`;
   ctx.letterSpacing = "0.735px";
   ["Vị trí", "Thành viên", "Điểm", "Điểm thắng", "Điểm thua", "Hiệu số", "Số trận", "ELO", "Phong độ"].forEach((label, index) => {
@@ -1882,105 +2013,34 @@ async function downloadRankingImage(month: string, rows: RankingRow[], form: For
   ctx.letterSpacing = "0px";
 
   // Member rows.
-  const podium = [
-    { tint: "255, 183, 0", edge: "#ffb700", points: "#b87900" },
-    { tint: "126, 138, 160", edge: "#a3adbd", points: "#5d6878" },
-    { tint: "196, 116, 58", edge: "#cd8a52", points: "#a85a24" },
-  ];
   let y = cardY + headH;
   visibleRows.forEach((row, index) => {
     const h = rowHeights[index];
     const mid = y + h / 2;
-    const top = hasRankingData && index < 3 ? podium[index] : null;
-    if (top) {
-      const tint = ctx.createLinearGradient(cardX, 0, cardX + cardW, 0);
-      tint.addColorStop(0, `rgba(${top.tint}, 0.13)`);
-      tint.addColorStop(0.7, `rgba(${top.tint}, 0.02)`);
-      tint.addColorStop(1, `rgba(${top.tint}, 0.02)`);
-      ctx.fillStyle = tint;
-      ctx.fillRect(cardX, y, cardW, h);
-      ctx.fillStyle = top.edge;
-      ctx.fillRect(cardX + 1, y, 3, h);
-    }
-    if (index < visibleRows.length - 1) {
-      ctx.fillStyle = "rgba(30, 25, 18, 0.07)";
-      ctx.fillRect(cardX, y + h - 1, cardW, 1);
-    }
+    const top = hasRankingData && index < 3 ? palette.podium[index] : null;
+    drawImageRow(ctx, cardX, cardW, y, h, top, index < visibleRows.length - 1, palette);
 
     // Rank: medal for the podium, numbered circle otherwise.
-    const medal = top ? medals[index] : null;
-    if (medal) {
-      ctx.drawImage(medal, center(0) - 22, mid - 22, 44, 44);
-    } else {
-      ctx.fillStyle = "#fffaf0";
-      ctx.beginPath();
-      ctx.arc(center(0), mid, 17, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(43, 34, 22, 0.1)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.fillStyle = "#14110d";
-      ctx.font = `800 14px ${bodyFont}`;
-      ctx.textAlign = "center";
-      ctx.fillText(String(index + 1), center(0), mid + 0.5);
-    }
+    drawImageRank(ctx, top ? medals[index] : null, index + 1, center(0), mid, palette);
 
     // Avatar, name and Level pill.
     const avatarX = columns[1].x;
-    const avatar = avatars[index];
-    ctx.save();
-    ctx.shadowColor = "rgba(35, 28, 18, 0.12)";
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetY = 4;
-    if (avatar) {
-      ctx.drawImage(avatar, avatarX, mid - 15, 30, 30);
-    } else {
-      ctx.fillStyle = "#ece7dd";
-      ctx.beginPath();
-      ctx.arc(avatarX + 15, mid, 15, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowColor = "transparent";
-      ctx.clip();
-      ctx.fillStyle = "#a79f92";
-      ctx.beginPath();
-      ctx.arc(avatarX + 15, mid - 4, 5.4, 0, Math.PI * 2);
-      ctx.arc(avatarX + 15, mid + 15, 10.5, Math.PI, 0);
-      ctx.fill();
-    }
-    ctx.restore();
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#17120d";
-    ctx.font = `800 15px ${bodyFont}`;
-    ctx.letterSpacing = "-0.14px";
-    const nameX = avatarX + 40;
-    ctx.fillText(row.name, nameX, mid + 0.5);
-    const nameWidth = ctx.measureText(row.name).width;
-    ctx.letterSpacing = "0px";
-    const pillLabel = `L${row.level}`;
-    ctx.font = `800 8px ${bodyFont}`;
-    const pillW = ctx.measureText(pillLabel).width + 12;
-    const pillX = nameX + nameWidth + 10;
-    ctx.fillStyle = "rgba(255, 250, 236, 0.94)";
-    fillRoundRect(ctx, pillX, mid - 9, pillW, 18, 9);
-    ctx.strokeStyle = "rgba(255, 183, 0, 0.42)";
-    strokeRoundRect(ctx, pillX + 0.5, mid - 8.5, pillW - 1, 17, 8.5);
-    ctx.fillStyle = "#b67500";
-    ctx.textAlign = "center";
-    ctx.fillText(pillLabel, pillX + pillW / 2, mid + 0.5);
+    drawImageMember(ctx, avatars[index], row.name, row.level, avatarX, mid, palette);
 
     // Numbers.
-    ctx.fillStyle = top ? top.points : "#17140f";
+    ctx.textAlign = "center";
+    ctx.fillStyle = top ? top.points : palette.title;
     ctx.font = top ? `700 26px ${numberFont}` : `700 19px ${numberFont}`;
     ctx.fillText(String(row.points), center(2), mid + 1);
     ctx.font = `700 14px ${bodyFont}`;
-    ctx.fillStyle = "#3d3528";
+    ctx.fillStyle = palette.cell;
     ctx.fillText(String(row.pointsWon), center(3), mid + 0.5);
     ctx.fillText(String(row.pointsLost), center(4), mid + 0.5);
-    ctx.fillStyle = row.pointDiff >= 0 ? "#1f8a5b" : "#c2413b";
+    ctx.fillStyle = row.pointDiff >= 0 ? palette.positive : palette.negative;
     ctx.fillText(`${row.pointDiff > 0 ? "+" : ""}${row.pointDiff}`, center(5), mid + 0.5);
-    ctx.fillStyle = "#3d3528";
+    ctx.fillStyle = palette.cell;
     ctx.fillText(String(row.matches), center(6), mid + 0.5);
-    ctx.fillStyle = "#6b5a3a";
+    ctx.fillStyle = palette.elo;
     ctx.font = `700 14px ${numberFont}`;
     ctx.fillText(formatElo(row.username ? elo[row.username] : undefined), center(7), mid + 0.5);
 
@@ -2006,7 +2066,7 @@ async function downloadRankingImage(month: string, rows: RankingRow[], form: For
       } else {
         ctx.save();
         ctx.setLineDash([2.5, 2.5]);
-        ctx.strokeStyle = "rgba(61, 53, 40, 0.22)";
+        ctx.strokeStyle = palette.emptySlot;
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.arc(bx + badge / 2, mid, badge / 2 - 0.75, 0, Math.PI * 2);
@@ -2019,33 +2079,70 @@ async function downloadRankingImage(month: string, rows: RankingRow[], form: For
   });
   ctx.restore();
 
-  // Card border on top of the rows.
-  ctx.strokeStyle = "rgba(30, 25, 18, 0.09)";
-  ctx.lineWidth = 1;
-  strokeRoundRect(ctx, cardX + 0.5, cardY + 0.5, cardW - 1, cardH - 1, 18);
+  drawImageFooter(ctx, cardX, width, height, palette);
 
-  ctx.fillStyle = "rgba(61, 53, 40, 0.55)";
-  ctx.font = `600 12px ${bodyFont}`;
-  ctx.textAlign = "left";
-  ctx.fillText(`Xuất lúc ${new Date().toLocaleString("vi-VN")}`, cardX + 4, height - 26);
-  ctx.textAlign = "right";
-  ctx.fillText("anh-em-it-badminton.vercel.app", width - cardX - 4, height - 26);
+  saveImage(canvas, `Bảng xếp hạng tháng ${file}.png`);
+}
 
-  canvas.toBlob((blob) => {
-    if (!blob) return;
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `Bảng xếp hạng tháng ${file}.png`;
-    link.rel = "noopener";
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.click();
-    window.setTimeout(() => {
-      link.remove();
-      URL.revokeObjectURL(url);
-    }, 1500);
-  }, "image/png", 0.96);
+// The ELO table as an image, in the same style as the ranking one.
+async function downloadEloImage(rows: EloRankingRow[]) {
+  if (typeof document === "undefined") return;
+  await loadImageFonts();
+  const palette = imagePalette();
+  const sorted = [...rows].sort((a, b) => a.rank - b.rank);
+  const [medals, avatars] = await Promise.all([
+    Promise.all([1, 2, 3].map((rank) => loadCanvasImage(`/app-icons/rank-${rank}.png?v=ranking-medals-nobg-20260904`))),
+    Promise.all(sorted.map((row) => (hasAvatarArt(row.username) ? loadCanvasImage(avatarImageUrl(row.username)!) : Promise.resolve(null)))),
+  ]);
+  const width = 900;
+  const cardX = 24;
+  const cardW = width - cardX * 2;
+  const cardY = 112;
+  const headH = 36;
+  const rowHeights = sorted.map((_, index) => (index < 3 ? 69 : 60));
+  const cardH = headH + rowHeights.reduce((sum, h) => sum + h, 0);
+  const height = cardY + cardH + 58;
+  const rankX = cardX + 48;
+  const memberX = cardX + 96;
+  const eloX = cardX + cardW - 280;
+  const matchesX = cardX + cardW - 150;
+  const levelX = cardX + cardW - 56;
+
+  const image = createImageCanvas(width, height, palette);
+  if (!image) return;
+  const { canvas, ctx } = image;
+  drawImageTitle(ctx, "Bảng ELO thành viên", cardX, palette);
+  drawImageCard(ctx, cardX, cardY, cardW, cardH, headH, palette);
+  ctx.fillStyle = palette.headText;
+  ctx.font = `800 10.5px ${bodyFont}`;
+  ctx.letterSpacing = "0.735px";
+  ([["HẠNG", rankX], ["THÀNH VIÊN", memberX], ["ELO", eloX], ["SỐ TRẬN", matchesX], ["LEVEL", levelX]] as const).forEach(([label, x]) => {
+    ctx.textAlign = label === "THÀNH VIÊN" ? "left" : "center";
+    ctx.fillText(label, x, cardY + headH / 2 + 0.5);
+  });
+  ctx.letterSpacing = "0px";
+
+  let y = cardY + headH;
+  sorted.forEach((row, index) => {
+    const h = rowHeights[index];
+    const mid = y + h / 2;
+    const top = index < 3 ? palette.podium[index] : null;
+    drawImageRow(ctx, cardX, cardW, y, h, top, index < sorted.length - 1, palette);
+    drawImageRank(ctx, top ? medals[index] : null, row.rank, rankX, mid, palette);
+    drawImageMember(ctx, avatars[index], row.name, row.level, memberX, mid, palette);
+    ctx.textAlign = "center";
+    ctx.fillStyle = top ? top.points : palette.title;
+    ctx.font = top ? `700 22px ${numberFont}` : `700 18px ${numberFont}`;
+    ctx.fillText(formatElo(row.eloRating), eloX, mid + 1);
+    ctx.fillStyle = palette.cell;
+    ctx.font = `700 14px ${bodyFont}`;
+    ctx.fillText(String(row.matches), matchesX, mid + 0.5);
+    ctx.fillText(`Level ${row.level}`, levelX, mid + 0.5);
+    y += h;
+  });
+  ctx.restore();
+  drawImageFooter(ctx, cardX, width, height, palette);
+  saveImage(canvas, `Bảng ELO ${new Date().toLocaleDateString("vi-VN").replaceAll("/", "-")}.png`);
 }
 function Ranking({ month, rows, form, elo, onMonthChange, monthOptions, isAdmin, closeStatus, closeNotice, closingMonth, onCloseMonth }: { month: string; rows: RankingRow[]; form: FormByUsername; elo: Record<string, number>; onMonthChange: (month: string) => void; monthOptions: string[]; isAdmin: boolean; closeStatus: MonthCloseStatus | null; closeNotice: string; closingMonth: boolean; onCloseMonth: () => void }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
@@ -2153,7 +2250,7 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
       <div className="panel-head elo-panel-head">
         <div><h2>Thứ hạng ELO</h2><p>Level lấy theo thứ hạng ELO hiện tại, tách riêng với BXH điểm thưởng tháng.</p></div>
         <div className="elo-head-actions">
-          <button type="button" className="soft-btn elo-guide-btn" onClick={() => setGuideOpen(true)}>Cách tính ELO</button>
+          <div className="elo-head-actions"><button type="button" className="soft-btn elo-guide-btn" onClick={() => void downloadEloImage(rows)}>Lưu ảnh ELO</button><button type="button" className="soft-btn elo-guide-btn" onClick={() => setGuideOpen(true)}>Cách tính ELO</button></div>
         </div>
       </div>
       {status && <div className={`elo-status elo-${status.source}`}>{status.message}</div>}
@@ -2235,12 +2332,42 @@ function PasswordField({ value, onChange, placeholder, autoFocus }: { value: str
 }
 
 // Admin: create a member. The name doubles as the login (accents and spaces removed).
-function AddMemberModal({ onClose, onCreate }: { onClose: () => void; onCreate: (values: { name: string; role: "member" | "sub-admin"; password: string }) => Promise<void> }) {
+// A photo chosen for a member: cropped round, kept here until the form is saved.
+function useAvatarPicker() {
+  const [picked, setPicked] = useState<{ blob: Blob; preview: string } | null>(null);
+  const [error, setError] = useState("");
+  const pick = async (file?: File) => {
+    if (!file) return false;
+    setError("");
+    try {
+      const blob = await roundAvatarImage(file);
+      setPicked({ blob, preview: URL.createObjectURL(blob) });
+      return true;
+    } catch (pickError) {
+      setError(pickError instanceof Error ? pickError.message : "Không đọc được ảnh này.");
+      return false;
+    }
+  };
+  const reset = () => { setPicked(null); setError(""); };
+  return { picked, error, pick, reset };
+}
+
+function AvatarField({ url, initials, canRemove, error, onPick, onRemove }: { url: string | null; initials: string; canRemove: boolean; error: string; onPick: (file?: File) => void; onRemove: () => void }) {
+  const input = useRef<HTMLInputElement>(null);
+  return <div className="member-avatar-field">
+    <div className={`avatar${url ? " avatar-art" : ""}`} style={{ "--avatar-image": url ? `url("${url}")` : "none" } as CSSProperties}>{initials}</div>
+    <div className="member-avatar-copy"><b>Ảnh đại diện</b><div className="member-avatar-actions"><button type="button" className="soft-btn" onClick={() => input.current?.click()}>{url ? "Đổi ảnh" : "Chọn ảnh"}</button>{canRemove && <button type="button" className="soft-btn member-avatar-remove" onClick={onRemove}>Xóa ảnh</button>}</div>{error ? <small className="member-editor-error">{error}</small> : <small className="member-editor-hint">Ảnh được cắt tròn và chỉ áp dụng khi lưu.</small>}</div>
+    <input ref={input} type="file" accept="image/*" hidden onChange={(event) => { onPick(event.target.files?.[0]); event.target.value = ""; }} />
+  </div>;
+}
+
+function AddMemberModal({ onClose, onCreate }: { onClose: () => void; onCreate: (values: { name: string; role: "member" | "sub-admin"; password: string; avatar?: Blob }) => Promise<void> }) {
   const [name, setName] = useState("");
   const [role, setRole] = useState<"member" | "sub-admin">("member");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const photo = useAvatarPicker();
   const username = usernameFromName(name);
   const submit = async () => {
     if (name.trim().length < 2 || username.length < 2) return setError("Nhập tên thành viên (ít nhất 2 ký tự).");
@@ -2248,7 +2375,7 @@ function AddMemberModal({ onClose, onCreate }: { onClose: () => void; onCreate: 
     setBusy(true);
     setError("");
     try {
-      await onCreate({ name: name.trim(), role, password });
+      await onCreate({ name: name.trim(), role, password, avatar: photo.picked?.blob });
     } catch (createError) {
       setError(createError instanceof Error ? createError.message : "Không thể thêm thành viên.");
       setBusy(false);
@@ -2259,6 +2386,7 @@ function AddMemberModal({ onClose, onCreate }: { onClose: () => void; onCreate: 
       <button type="button" className="modal-close" onClick={onClose} aria-label="Đóng">×</button>
       <p className="eyebrow">THÊM THÀNH VIÊN</p>
       <h2>Thành viên mới</h2>
+      <AvatarField url={photo.picked?.preview ?? null} initials={memberInitials(name)} canRemove={Boolean(photo.picked)} error={photo.error} onPick={(file) => void photo.pick(file)} onRemove={photo.reset} />
       <label>Tên<input value={name} onChange={(event) => setName(event.target.value)} maxLength={40} autoFocus disabled={busy} placeholder="Ví dụ: Tuấn" />
         <small className="member-editor-hint">Tên đăng nhập: <b>{username || "—"}</b></small></label>
       <label className="member-role-field">Quyền<select className="member-role-select member-role-editor-select" value={role} disabled={busy} onChange={(event) => setRole(event.target.value as "member" | "sub-admin")}><option value="member">Thành viên</option><option value="sub-admin">Sub-admin</option></select>
@@ -2274,10 +2402,9 @@ function Members({ members, rankingRows, rankingMonth, eloRows, formByUsername, 
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [viewing, setViewing] = useState<Member | null>(null);
   const [editing, setEditing] = useState<Member | null>(null);
-  const [newAvatar, setNewAvatar] = useState<{ blob: Blob; preview: string } | null>(null);
+  const photo = useAvatarPicker();
+  const newAvatar = photo.picked;
   const [avatarRemoved, setAvatarRemoved] = useState(false);
-  const [avatarError, setAvatarError] = useState("");
-  const avatarInput = useRef<HTMLInputElement>(null);
   const [fullName, setFullName] = useState("");
   const [editRole, setEditRole] = useState<"member" | "sub-admin">("member");
   const [searchTerm, setSearchTerm] = useState("");
@@ -2370,22 +2497,11 @@ function Members({ members, rankingRows, rankingMonth, eloRows, formByUsername, 
     setFullName(member.name);
     setEditRole(effectiveRole(member.role) === "sub-admin" ? "sub-admin" : "member");
     setEditPassword("");
-    setNewAvatar(null);
+    photo.reset();
     setAvatarRemoved(false);
-    setAvatarError("");
   };
   const closeEditor = () => setEditing(null);
-  const pickAvatar = async (file?: File) => {
-    if (!file) return;
-    setAvatarError("");
-    try {
-      const blob = await roundAvatarImage(file);
-      setNewAvatar({ blob, preview: URL.createObjectURL(blob) });
-      setAvatarRemoved(false);
-    } catch (error) {
-      setAvatarError(error instanceof Error ? error.message : "Không đọc được ảnh này.");
-    }
-  };
+  const pickAvatar = async (file?: File) => { if (await photo.pick(file)) setAvatarRemoved(false); };
   // Direct browser -> Cloudinary upload, then the profile keeps the delivery URL.
   const uploadAvatar = async (username: string, blob: Blob) => {
     const signed = await adminPost("/api/member-avatar/sign", { username }, "Không thể tải ảnh lên.") as unknown as Record<string, string>;
@@ -2453,10 +2569,7 @@ function Members({ members, rankingRows, rankingMonth, eloRows, formByUsername, 
         </div>;
       }) : <div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div>}</div>
     </section>
-    <Presence show={Boolean(editing)}>{editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={closeEditor}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><div className="member-avatar-field">{(() => {
-        const shownUrl = newAvatar?.preview ?? (avatarRemoved ? null : avatarImageUrl(editing.username));
-        return <div className={`avatar${shownUrl ? " avatar-art" : ""}`} style={{ "--avatar-image": shownUrl ? `url("${shownUrl}")` : "none" } as CSSProperties}>{editing.initials}</div>;
-      })()}<div className="member-avatar-copy"><b>Ảnh đại diện</b><div className="member-avatar-actions"><button type="button" className="soft-btn" onClick={() => avatarInput.current?.click()}>Đổi ảnh</button>{(newAvatar || (memberAvatars.has(editing.username) && !avatarRemoved)) && <button type="button" className="soft-btn member-avatar-remove" onClick={() => { setNewAvatar(null); setAvatarRemoved(memberAvatars.has(editing.username)); }}>Xóa ảnh</button>}</div>{avatarError ? <small className="member-editor-error">{avatarError}</small> : <small className="member-editor-hint">Ảnh được cắt tròn và chỉ áp dụng khi bấm Lưu.</small>}</div><input ref={avatarInput} type="file" accept="image/*" hidden onChange={(event) => { void pickAvatar(event.target.files?.[0]); event.target.value = ""; }} /></div><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <select className="member-role-select member-role-editor-select" value={editRole} disabled={roleSaving === editing.username} onChange={(event) => setEditRole(event.target.value as "member" | "sub-admin")}><option value="member">Thành viên</option><option value="sub-admin">Sub-admin</option></select>}<small>{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? "Mạnh luôn là Admin, không thể đổi quyền." : editRole === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label><label className="member-password-field">Mật khẩu mới<PasswordField value={editPassword} onChange={setEditPassword} placeholder="Để trống nếu giữ nguyên" /><small className="member-editor-hint">Mật khẩu hiện tại được mã hoá nên không hiển thị được; nhập mật khẩu mới nếu muốn đổi.</small></label><div className="editor-actions"><button className="soft-btn" onClick={closeEditor}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></section></div>}</Presence>
+    <Presence show={Boolean(editing)}>{editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={closeEditor}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><AvatarField url={newAvatar?.preview ?? (avatarRemoved ? null : avatarImageUrl(editing.username))} initials={editing.initials} canRemove={Boolean(newAvatar) || (memberAvatars.has(editing.username) && !avatarRemoved)} error={photo.error} onPick={(file) => void pickAvatar(file)} onRemove={() => { photo.reset(); setAvatarRemoved(memberAvatars.has(editing.username)); }} /><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <select className="member-role-select member-role-editor-select" value={editRole} disabled={roleSaving === editing.username} onChange={(event) => setEditRole(event.target.value as "member" | "sub-admin")}><option value="member">Thành viên</option><option value="sub-admin">Sub-admin</option></select>}<small>{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? "Mạnh luôn là Admin, không thể đổi quyền." : editRole === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label><label className="member-password-field">Mật khẩu mới<PasswordField value={editPassword} onChange={setEditPassword} placeholder="Để trống nếu giữ nguyên" /><small className="member-editor-hint">Mật khẩu hiện tại được mã hoá nên không hiển thị được; nhập mật khẩu mới nếu muốn đổi.</small></label><div className="editor-actions"><button className="soft-btn" onClick={closeEditor}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></section></div>}</Presence>
     <Presence show={Boolean(viewing)}>{viewing && (() => {
       const rank = rankingRows.findIndex((row) => row.username === viewing.username || row.name === viewing.name) + 1;
       const achievement = rank > 0 ? rankingRows[rank - 1] : null;
@@ -2466,7 +2579,12 @@ function Members({ members, rankingRows, rankingMonth, eloRows, formByUsername, 
       return <div className="modal-backdrop"><ProfilePopover detail member={viewing} rank={rank} achievement={achievement} achievementMonth={rankingMonth} rankClass={rankClass} hasRankingData={hasRankingData} elo={elo} form={formByUsername[viewing.username]} onClose={() => setViewing(null)} /></div>;
     })()}</Presence>
     <Presence show={adding}>{adding && <AddMemberModal onClose={() => setAdding(false)} onCreate={async (values) => {
-      await adminPost("/api/member-create", values, "Không thể thêm thành viên.");
+      const { avatar, ...member } = values;
+      const created = await adminPost("/api/member-create", member, "Không thể thêm thành viên.") as { username?: string };
+      if (avatar) {
+        // The member already exists at this point, so a failed photo only needs a retry from "Sửa thành viên".
+        await uploadAvatar(created.username ?? usernameFromName(member.name), avatar).catch(() => window.alert("Đã thêm thành viên nhưng chưa tải được ảnh đại diện. Bạn có thể thêm ảnh ở mục Sửa thành viên."));
+      }
       window.location.reload();
     }} />}</Presence>
     <Presence show={Boolean(confirm)}>{confirm && <ConfirmActionModal title={confirm.title} message={confirm.message} onCancel={() => setConfirm(null)} onConfirm={async () => { try { await confirm.action(); } finally { setConfirm(null); } }} />}</Presence>
