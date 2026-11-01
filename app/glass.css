@@ -789,6 +789,21 @@ html:has(.champion-celebration) body::after {
   background: var(--celebrate-edge);
 }
 
+/* The page stays put behind any modal, the profile card included. The reserved gutter keeps it from shifting sideways
+   as the scrollbar goes; a long modal scrolls inside itself and stops at its own ends. */
+html:has(.modal-backdrop, .champion-celebration):not(#_),
+html:has(.modal-backdrop, .champion-celebration) body:not(#_) {
+  overflow: hidden !important;
+}
+
+html:has(.modal-backdrop, .champion-celebration):not(#_) {
+  scrollbar-gutter: stable;
+}
+
+:is(.modal-backdrop, .modal-backdrop > *, .member-profile-popover):not(#_) {
+  overscroll-behavior: contain;
+}
+
 /* The profile card drops from the bars, so they stay sharp: its blur and colour sit under them (z-index 15). */
 html:has(.profile-backdrop) body::after {
   z-index: 14;

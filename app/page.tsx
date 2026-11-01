@@ -7,6 +7,7 @@ import { PageHero } from "@/app/ui/page-hero";
 import { roundAvatarImage } from "@/app/ui/avatar-image";
 import { ChampionCelebration } from "@/app/ui/champion-celebration";
 import { useCollapsingTopbar } from "@/app/ui/use-collapsing-topbar";
+import { useModalScrollLock } from "@/app/ui/use-modal-scroll-lock";
 import { unlockFireworkSound } from "@/app/ui/firework-sound";
 import { DRAW_SPIN_MS, DrawWheel } from "@/app/ui/draw-wheel";
 import { GlassSelect } from "@/app/ui/glass-select";
@@ -378,6 +379,7 @@ export default function Home() {
   const [attendanceChangeNotice, setAttendanceChangeNotice] = useState<string | null>(null);
   const [showProfileCard, setShowProfileCard] = useState(false);
   const topbarCollapsed = useCollapsingTopbar(screen);
+  useModalScrollLock();
   const [authRestoring, setAuthRestoring] = useState(Boolean(supabase));
   const [now, setNow] = useState(() => new Date());
   const [attendanceSynced, setAttendanceSynced] = useState(!supabase);
