@@ -7,6 +7,8 @@
   --topbar-inset: max(var(--page-gutter), calc((100% - 1280px) / 2 + var(--page-gutter)));
   --bar-bg: radial-gradient(circle at 92% 0%, rgba(255, 183, 0, 0.16), transparent 34%), rgba(255, 255, 255, 0.58);
   --bar-shadow: 0 2px 6px rgba(62, 47, 18, 0.06), 0 16px 38px rgba(62, 47, 18, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --bar-shadow-up: 0 -2px 6px rgba(62, 47, 18, 0.06), 0 -16px 38px -16px rgba(62, 47, 18, 0.26);
+  --bar-edge: inset 0 1px 0 rgba(255, 255, 255, 0.9);
   --bar-text: #1a1408;
   --bar-muted: #6f6657;
   --bar-accent: #a66c00;
@@ -463,8 +465,8 @@
     padding-inline: 4px;
     border-radius: 16px;
     /* Phones can show the page below the bottom edge CSS knows, and cut anything reaching past it into
-       a straight line. So nothing here extends past the 6px gap: the shadow only rises upwards. */
-    box-shadow: 0 -4px 14px -6px rgba(26, 25, 22, 0.28);
+       a straight line. So nothing here extends past the 6px gap: the top bar's shadow, turned upwards. */
+    box-shadow: var(--bar-shadow-up);
   }
 
   .topbar-nav::before {
@@ -474,6 +476,7 @@
     z-index: -1;
     border-radius: inherit;
     background: var(--bar-bg);
+    box-shadow: var(--bar-edge);
     -webkit-backdrop-filter: blur(18px) saturate(170%);
     backdrop-filter: blur(18px) saturate(170%);
   }
