@@ -466,6 +466,21 @@
     box-shadow: 0 2px 12px rgba(26, 25, 22, 0.18);
   }
 
+  /* Blocks are as wide as the bar: page content dissolves before it, so no block corner shows at the bar's. */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 14;
+    height: calc(var(--bottombar-height) + 26px);
+    background: linear-gradient(to top, var(--glass-page) 42%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    -webkit-mask-image: linear-gradient(to top, #000 62%, transparent);
+    mask-image: linear-gradient(to top, #000 62%, transparent);
+    pointer-events: none;
+  }
+
   /* Frosted on a layer of its own, cut to the corners: Safari can leave the blur square otherwise. */
   .topbar-nav::before {
     content: "";
