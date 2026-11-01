@@ -822,24 +822,17 @@ html:has(.profile-backdrop) body::after {
 }
 
 /* No fixed blur for a first modal: Safari cuts fixed layers at the layout viewport's edge, which drew a line above
-   its address bar. The page and the bars blur themselves instead, so the effect runs on under Safari's bars. */
+   its address bar. The page blurs itself instead, so the effect runs on under Safari's bars. */
 .modal-backdrop:not(.photo-confirm-backdrop, .presence ~ .presence > *):not(#_):not(#_) {
   background: transparent !important;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 
-html:has(.modal-backdrop:not(.profile-backdrop), .champion-celebration) :is(.topbar-brand, .topbar-theme, .topbar-profile, .topbar-nav):not(#_) {
-  filter: var(--modal-scrim-blur);
-}
-
-/* The bars' glass melts into the blur too, or their outline would still show. */
-html:has(.modal-backdrop:not(.profile-backdrop), .champion-celebration) :is(.topbar, .topbar-nav):not(#_) {
-  box-shadow: none;
-}
-
-html:has(.modal-backdrop:not(.profile-backdrop), .champion-celebration) :is(.topbar, .topbar-nav):not(#_)::before {
-  filter: blur(16px);
+/* The fixed bars cannot blur with the page, and even blurred their outline shows, so they step aside behind a modal. */
+html:has(.modal-backdrop:not(.profile-backdrop), .champion-celebration) .topbar:not(#_) {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .profile-backdrop:not(#_):not(#_) {

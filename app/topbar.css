@@ -25,6 +25,7 @@
 }
 
 .topbar {
+  transition: opacity 220ms ease;
   position: fixed;
   inset: 8px var(--topbar-inset) auto;
   z-index: 15;
@@ -674,7 +675,7 @@ button.topbar-brand {
     --collapsed-bar: 50px;
     --bar-ease: cubic-bezier(0.32, 0.72, 0, 1);
     left: var(--page-gutter);
-    transition: left 460ms var(--bar-ease), border-radius 460ms var(--bar-ease);
+    transition: left 460ms var(--bar-ease), border-radius 460ms var(--bar-ease), opacity 220ms ease;
   }
 
   .topbar-row {
