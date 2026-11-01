@@ -56,37 +56,35 @@
 }
 
 /* Month progress and champion: the bottom row of the Home hero. */
-.hero:not(#_) {
-  flex-wrap: wrap;
+.hero-copy {
+  order: 1;
+}
+
+.hero-stats {
+  order: 3;
+}
+
+.hero-copy:not(#_) {
+  min-width: 0;
 }
 
 .hero-status {
   position: relative;
   z-index: 2;
   display: flex;
-  flex: 1 0 100%;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 14px 40px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(180, 130, 30, 0.22);
+  flex: 0 0 214px;
+  flex-direction: column;
+  order: 2;
+  align-items: stretch;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
   color: var(--club-ink-900);
 }
 
 .hero-progress {
   display: grid;
-  flex: 1 1 220px;
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 12px;
   align-content: center;
-  max-width: 340px;
-}
-
-.hero-progress-icon {
-  grid-row: 1 / 4;
-  align-self: center;
-  width: 34px;
-  height: 34px;
 }
 
 .hero-progress-month {
@@ -132,7 +130,7 @@
 
 .hero-champion {
   display: flex;
-  flex: 1 1 220px;
+  flex: 0 1 auto;
   align-items: center;
   gap: 12px;
   min-width: 0;
@@ -206,4 +204,24 @@ button.hero-champion:focus-visible {
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* No room between the title and the numbers: progress and champion take their own line. */
+@media (max-width: 1130px) {
+  .hero:not(#_) {
+    flex-wrap: wrap;
+  }
+
+  .hero-status {
+    flex: 1 0 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    order: 4;
+    justify-content: flex-start;
+    gap: 14px 32px;
+  }
+
+  .hero-progress {
+    flex: 0 1 200px;
+  }
 }

@@ -1,13 +1,12 @@
-/* One floating block fixed at the top: club, month, champion, theme and profile split by thin lines,
-   then the sections. Phones and iPad mini float the sections in their own block at the bottom. */
+/* One floating bar fixed at the top: club, sections, theme and profile. Phones and iPad mini keep
+   the sections in a second floating bar at the bottom. */
 :root {
-  --topbar-height: 104px;
+  --topbar-height: 68px;
   --bottombar-height: 0px;
   --page-gutter: 52px;
   --topbar-inset: max(var(--page-gutter), calc((100% - 1280px) / 2 + var(--page-gutter)));
   --bar-bg: radial-gradient(circle at 92% 0%, rgba(255, 183, 0, 0.16), transparent 34%), rgba(255, 255, 255, 0.58);
-  --bar-border: rgba(214, 160, 40, 0.42);
-  --bar-shadow: 0 8px 22px rgba(62, 47, 18, 0.12);
+  --bar-shadow: 0 2px 6px rgba(62, 47, 18, 0.06), 0 16px 38px rgba(62, 47, 18, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   --bar-text: #1a1408;
   --bar-muted: #6f6657;
   --bar-accent: #a66c00;
@@ -22,7 +21,10 @@
 }
 
 .topbar {
-  border: 1px solid var(--bar-border);
+  display: flex;
+  align-items: center;
+  height: 60px;
+  padding-inline: 14px;
   border-radius: 16px;
   box-shadow: var(--bar-shadow);
 }
@@ -76,17 +78,27 @@
 }
 
 /* ---------- First bar ---------- */
+/* On desktop its items sit directly in the bar, around the sections. */
 .topbar-row {
-  display: flex;
-  align-items: center;
-  height: 52px;
-  padding-inline: 14px;
+  display: contents;
 }
 
-.topbar-row > * + * {
-  align-self: center;
+.topbar-brand {
+  order: 1;
+}
+
+.topbar-nav {
+  order: 2;
+}
+
+.topbar-theme {
+  order: 3;
+}
+
+.topbar-profile {
+  order: 4;
   height: 40px;
-  margin-left: 26px;
+  margin-left: 16px;
 }
 
 .topbar-brand {
@@ -130,7 +142,6 @@
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  margin-left: auto !important;
 }
 
 /* The two pictures of the switch, one over the other, cross-fading. */
@@ -234,9 +245,11 @@
 /* ---------- Sections ---------- */
 .topbar-nav {
   display: flex;
+  flex: 1 1 0;
   align-items: stretch;
-  height: 42px;
-  padding-inline: 6px;
+  align-self: stretch;
+  min-width: 0;
+  margin-inline: 18px;
   overflow: hidden;
 }
 
@@ -350,9 +363,26 @@
   }
 }
 
-@media (max-width: 1040px) {
-  .topbar-row > * + * {
-    margin-left: 18px;
+/* All five sections stay on the row when the window narrows. */
+@media (max-width: 1120px) {
+  .topbar-profile-text {
+    display: none;
+  }
+
+  .topbar-nav {
+    margin-inline: 10px;
+  }
+
+  .topbar-nav button:not(#_) {
+    gap: 6px;
+    padding-inline: 4px;
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 980px) {
+  .topbar-brand > div {
+    display: none;
   }
 }
 
@@ -365,7 +395,25 @@
   }
 
   .topbar {
+    display: block;
     inset: calc(6px + env(safe-area-inset-top)) var(--topbar-inset) auto;
+    height: auto;
+    padding-inline: 0;
+  }
+
+  .topbar-row {
+    display: flex;
+    align-items: center;
+    height: 60px;
+    padding-inline: 14px;
+  }
+
+  .topbar-theme {
+    margin-left: auto;
+  }
+
+  .topbar-profile {
+    margin-left: 12px;
   }
 
   .topbar-profile-text {
@@ -375,10 +423,10 @@
   .topbar-nav {
     position: fixed;
     inset: auto var(--topbar-inset) calc(6px + env(safe-area-inset-bottom));
+    margin-inline: 0;
     z-index: 15;
     height: 62px;
     padding-inline: 4px;
-    border: 1px solid var(--bar-border);
     border-radius: 16px;
     background: var(--bar-bg);
     box-shadow: var(--bar-shadow);

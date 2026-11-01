@@ -6,11 +6,11 @@
   --glass-blob-2: rgba(255, 170, 120, 0.26);
   --glass-blob-3: rgba(110, 180, 255, 0.2);
   --glass-block: rgba(255, 255, 255, 0.56);
-  --glass-card: rgba(255, 255, 255, 0.52);
-  --glass-solid: rgba(255, 255, 255, 0.8);
-  --glass-edge: rgba(255, 255, 255, 0.75);
-  --glass-line: rgba(90, 70, 30, 0.12);
-  --glass-shadow: 0 10px 30px rgba(62, 47, 18, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --glass-card: rgba(255, 255, 255, 0.66);
+  --glass-solid: rgba(255, 255, 255, 0.82);
+  --glass-line: rgba(90, 70, 30, 0.1);
+  --glass-lift: 0 2px 6px rgba(62, 47, 18, 0.05), 0 16px 38px rgba(62, 47, 18, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --glass-lift-card: 0 1px 2px rgba(62, 47, 18, 0.05), 0 6px 16px rgba(62, 47, 18, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --glass-blur: blur(18px) saturate(160%);
 }
 
@@ -39,9 +39,9 @@ body::before {
 .page-hero:not(#_),
 .hero:not(#_),
 .member-summary > div:not(#_) {
-  border-color: var(--glass-edge) !important;
+  border-color: transparent !important;
   background: var(--glass-block) !important;
-  box-shadow: var(--glass-shadow) !important;
+  box-shadow: var(--glass-lift) !important;
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
 }
@@ -57,9 +57,13 @@ body::before {
 /* Inside a block everything lets the glass show through. */
 .panel-head:not(#_),
 .rank-head:not(#_),
-.rank-table:not(#_),
 .schedule-case-head:not(#_) {
   border-color: var(--glass-line) !important;
+  background: transparent !important;
+}
+
+.rank-table:not(#_) {
+  border-color: transparent !important;
   background: transparent !important;
 }
 
@@ -70,10 +74,29 @@ body::before {
 .rules-total:not(#_),
 .profile-stat:not(#_),
 .profile-form:not(#_),
-.profile-score-card:not(#_) {
-  border-color: var(--glass-line) !important;
+.profile-score-card:not(#_),
+.rules-pane:not(#_),
+.rules-steps > li:not(#_),
+.rules-prizes > div:not(#_),
+.history-list > article:not(#_),
+.page-hero-stats > div:not(#_),
+.draw-list > .drawn:not(#_),
+.draw-body:not(#_),
+.elo-status:not(#_),
+.photo-state:not(#_),
+.warning:not(#_) {
+  border-color: transparent !important;
   background: var(--glass-card) !important;
-  box-shadow: none !important;
+  box-shadow: var(--glass-lift-card) !important;
+}
+
+/* Small labels and tiles: their tint is enough. */
+.count-pill:not(#_),
+.mode:not(#_),
+.slot-token:not(#_),
+.profile-elo-badge:not(#_),
+.member-role-badge:not(#_) {
+  border-color: transparent !important;
 }
 
 /* ---------- Modals: frosted, but solid enough to read ---------- */
@@ -84,8 +107,9 @@ body::before {
 .history-detail:not(#_),
 .elo-guide-modal:not(#_),
 .photo-sheet:not(#_) {
-  border-color: var(--glass-edge) !important;
+  border-color: transparent !important;
   background: var(--glass-solid) !important;
+  box-shadow: var(--glass-lift) !important;
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
 }

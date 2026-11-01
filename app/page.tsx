@@ -1270,7 +1270,6 @@ export default function Home() {
           <div className="hero-stats"><div><b>{present.length}</b><small>THAM GIA</small></div><div><b>{notAttending.length}</b><small>KHÔNG THAM GIA</small></div><div><b>{String(step + 1).padStart(2, "0")}<em>/{String(steps.length).padStart(2, "0")}</em></b><small>BƯỚC HIỆN TẠI</small></div></div>
           <div className="hero-status">
           <div className="hero-progress">
-            <AppIcon name="schedule" className="hero-progress-icon" />
             <span className="hero-progress-month">{currentMonthLabel.replace(", ", "/").toUpperCase()}</span>
             <span className="hero-progress-count"><b>{progress.completed} / {progress.total}</b><small>buổi hoàn thành</small></span>
             <span className="hero-progress-bar"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></span>
