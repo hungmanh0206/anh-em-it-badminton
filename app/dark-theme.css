@@ -29,8 +29,7 @@
   --brand-title: #f5ecd9;
   --brand-sub: #e8a317;
   --brand-tile: linear-gradient(145deg, rgba(255, 200, 80, 0.12), rgba(255, 200, 80, 0.05));
-  --brand-tile-edge: rgba(240, 180, 41, 0.6);
-  --brand-tile-shadow: 0 0 0 3px rgba(240, 180, 41, 0.08), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --brand-tile-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   --bar-switch: rgba(0, 0, 0, 0.34);
   --glass-page: #15120d;
   --glass-blob-1: rgba(255, 170, 0, 0.34);

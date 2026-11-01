@@ -170,7 +170,7 @@ body::before {
   height: 46px !important;
   flex: 0 0 46px;
   padding: 0 !important;
-  border: 1px solid var(--brand-tile-edge) !important;
+  border: 0 !important;
   border-radius: 10px !important;
   background: var(--club-mark-image) center / 76% auto no-repeat, var(--brand-tile) !important;
   box-shadow: var(--brand-tile-shadow) !important;

@@ -14,8 +14,7 @@
   --brand-title: #231a0e;
   --brand-sub: #9a6414;
   --brand-tile: linear-gradient(145deg, #fff8e6, #f6e3b4);
-  --brand-tile-edge: rgba(214, 158, 46, 0.55);
-  --brand-tile-shadow: 0 0 0 3px rgba(240, 180, 41, 0.12), 0 4px 12px rgba(184, 121, 31, 0.25);
+  --brand-tile-shadow: 0 4px 12px rgba(184, 121, 31, 0.25);
   --bar-switch: linear-gradient(180deg, #2e271b, #1f1a11);
 }
 
@@ -117,9 +116,12 @@
 /* The racket on a pale gold glass tile, the same look as the theme switch. */
 .topbar-brand .brand-mark:not(#_) {
   width: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
   height: 44px !important;
   flex: 0 0 44px;
-  border: 1px solid var(--brand-tile-edge) !important;
+  padding: 0 !important;
+  border: 0 !important;
   border-radius: 9px !important;
   background: var(--club-mark-image) center / 76% auto no-repeat, var(--brand-tile) !important;
   box-shadow: var(--brand-tile-shadow) !important;
@@ -500,6 +502,8 @@
 
   .topbar-brand .brand-mark:not(#_) {
     width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
     height: 40px !important;
     flex-basis: 40px;
   }
