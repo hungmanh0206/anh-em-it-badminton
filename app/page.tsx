@@ -360,7 +360,6 @@ export default function Home() {
   const [championRankingRows, setChampionRankingRows] = useState<RankingRow[]>([]);
   const [, setAvatarRevision] = useState(0);
   const [celebrating, setCelebrating] = useState(false);
-  const [previewAttendance, setPreviewAttendance] = useState(false);
   const closeCelebration = useCallback(() => setCelebrating(false), []);
   const [eloRows, setEloRows] = useState<EloRankingRow[]>([]);
   const [eloStatus, setEloStatus] = useState<EloStatus | null>(null);
@@ -1278,17 +1277,12 @@ export default function Home() {
           {champion ? <button type="button" className="hero-champion" aria-label={`Chúc mừng nhà vô địch ${champion.name}`} onClick={() => setCelebrating(true)}><div className={avatarClassName("avatar small", champion)} style={avatarStyle(champion)}>{champion.initials}</div><div className="hero-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b><AppIcon name="crown" /> {champion.name}</b><span>{`${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số`}</span></div></button> : <div className="hero-champion"><div className="hero-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b>Chưa ghi danh</b></div></div>}
           </div>
         </section>
-        <section className="workflow">{steps.map((label, i) => {
-          const shownStep = previewAttendance ? 0 : step;
-          const previewable = i === 0 && isAdmin && !isCheckinWindowOpen;
-          return <button key={label} className={i === shownStep ? "current" : i < shownStep ? "done" : canGoStep(i) ? "" : "locked"} aria-disabled={i !== shownStep && !canGoStep(i)} onClick={() => { setPreviewAttendance(previewable); goStep(i); }}><span>{i < shownStep ? "✓" : i + 1}</span>{label}</button>;
-        })}</section>
+        <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : canGoStep(i) ? "" : "locked"} aria-disabled={i !== step && !canGoStep(i)} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
         {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
-        {!previewAttendance && step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
-        {previewAttendance && <AttendancePreview members={members} currentUser={currentUser} onClose={() => setPreviewAttendance(false)} />}
-        {!previewAttendance && step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
-        {!previewAttendance && step === 2 && <Schedule onEditingChange={(rows) => { editingScoreRows.current = new Set(rows); }} scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { setSessionStatus(completed ? "completed" : "scheduled"); if (completed) setHistoryRefreshTick((tick) => tick + 1); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
+        {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
+        {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
+        {step === 2 && <Schedule onEditingChange={(rows) => { editingScoreRows.current = new Set(rows); }} scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { setSessionStatus(completed ? "completed" : "scheduled"); if (completed) setHistoryRefreshTick((tick) => tick + 1); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}</div>
     </section>
     <Presence show={Boolean(showCheckin)}>{showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}</Presence>
@@ -1369,18 +1363,6 @@ function CheckIn({ members, onContinue, canSchedule, canManageSession, currentUs
     <div className="panel-foot checkin-actions-foot"><div className="attendance-actions"><button className="soft-btn" disabled={!isCheckinWindowOpen} onClick={openSelfCheckin}>{isCheckinWindowOpen ? (currentUser.responded ? "Cập nhật điểm danh của tôi" : "Điểm danh của tôi") : "Mở vào thứ Tư"}</button>{canManageSession && <button className="primary" disabled={!isCheckinWindowOpen || !canSchedule || !allResponded} onClick={onContinue}>Xác nhận điểm danh & mở chọn số <span>→</span></button>}</div></div>
   </section>;
 }
-// Admin look at the attendance tab while attendance is closed. Sample data on the real component:
-// nothing here reaches the server.
-function AttendancePreview({ members, currentUser, onClose }: { members: Member[]; currentUser: Member; onClose: () => void }) {
-  const [attendance, setAttendance] = useState<Member[]>(() => members.map((member, index) => ({ ...member, present: index < 9, responded: true })));
-  const [checkinOpen, setCheckinOpen] = useState(false);
-  return <>
-    <div className="warning">Xem thử giao diện với dữ liệu mẫu, không lưu gì vào hệ thống.</div>
-    <CheckIn members={attendance} setMembers={setAttendance} onContinue={onClose} canSchedule canManageSession currentUser={currentUser} isCheckinWindowOpen isCheckinTestMode={false} openSelfCheckin={() => setCheckinOpen(true)} />
-    <Presence show={checkinOpen}>{checkinOpen && <CheckinModal member={currentUser} onAnswer={() => setCheckinOpen(false)} onSkip={() => setCheckinOpen(false)} />}</Presence>
-  </>;
-}
-
 function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, currentUser, canManageSession, onContinue }: { members: Member[]; drawn: Record<string, number>; allDrawn: boolean; drawSelf: () => void; spinning: boolean; spinTarget: number | null; currentUser: Member; canManageSession: boolean; onContinue: () => void }) {
   const participantCount = members.length;
   const level1Count = members.filter((member) => member.level === 1).length;
