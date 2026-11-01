@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { type CSSProperties, useState } from "react";
 
 // How long a spin runs: the result is only revealed once the wheel has stopped.
 export const DRAW_SPIN_MS = 4500;
@@ -23,15 +23,19 @@ type DrawWheelProps = {
   slotClass: (slot: number) => string;
   spinTarget: number | null;
   holding: boolean;
-  picked?: number;
   value?: number;
   label?: string;
 };
 
 // The wheel turns the target slot up to the pointer while each number counter-rotates to stay upright.
-export function DrawWheel({ slots, slotClass, spinTarget, holding, picked, value, label }: DrawWheelProps) {
+export function DrawWheel({ slots: liveSlots, slotClass, spinTarget, holding, value, label }: DrawWheelProps) {
+  // Someone else can take a number mid-spin: the wheel keeps the slots it started with until it stops.
+  const [heldSlots, setHeldSlots] = useState<number[] | null>(null);
+  const slots = heldSlots ?? liveSlots;
   const targetIndex = spinTarget === null ? -1 : slots.indexOf(spinTarget);
   const spinning = targetIndex >= 0;
+  if (spinning && !heldSlots) setHeldSlots(liveSlots);
+  if (!spinning && heldSlots) setHeldSlots(null);
   const style = {
     "--spin-ms": `${DRAW_SPIN_MS}ms`,
     "--spin-end": `${SPIN_TURNS * 360 - (spinning ? slotAngle(targetIndex, slots.length) : 0)}deg`,
@@ -42,7 +46,7 @@ export function DrawWheel({ slots, slotClass, spinTarget, holding, picked, value
     <span className="prize-pointer" aria-hidden="true" />
     <div className="prize-disc" key={slots.join("-")}>
       {slots.map((slot, index) => <span className="prize-slot" key={slot} style={{ "--slot-angle": `${slotAngle(index, slots.length)}deg` } as CSSProperties}>
-        <b className={`prize-badge ${slotClass(slot)}` + (slot === spinTarget ? " is-target" : "") + (slot === picked ? " is-picked" : "")}>{slot}</b>
+        <b className={`prize-badge ${slotClass(slot)}` + (slot === spinTarget ? " is-target" : "")}>{slot}</b>
       </span>)}
     </div>
     <div className="prize-hub"><div className={"prize-hub-face" + (value ? " has-value" : "")} key={`${value ?? "none"}-${label ?? ""}`}><b>{value ?? "?"}</b>{label && <small>{label}</small>}</div></div>

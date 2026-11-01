@@ -1424,7 +1424,8 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, curren
   const drawnForWheel = Object.entries(drawn).filter(([name]) => !(spinning && name === currentUser.name));
   const usedSlots = new Set(drawnForWheel.map(([, slot]) => slot).filter((slot) => pool.includes(slot)));
   const availableSlots = pool.filter((slot) => !usedSlots.has(slot));
-  const wheelSlots = mine || !availableSlots.length ? pool : availableSlots;
+  // A number that has been drawn leaves the wheel; only someone with no slot left falls back to the whole range.
+  const wheelSlots = availableSlots.length || mine ? availableSlots : pool;
   const isWheelSpinning = spinning && typeof spinTarget === "number";
   const isHoldingSlot = spinning && typeof spinTarget !== "number";
   const isOpenFive = participantCount === 5;
@@ -1436,7 +1437,7 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, curren
   return <section className="panel draw-panel">
     <div className="panel-head draw-panel-head"><div><h2>Chọn số ngẫu nhiên</h2></div><span className="mode draw-mode-pill">{modeLabel}</span></div>
     <div className="draw-body">
-      <DrawWheel slots={wheelSlots} slotClass={(slot) => drawNumberClass(slot, participantCount)} spinTarget={spinTarget} holding={isHoldingSlot} picked={mine} value={hubValue} label={hubLabel} />
+      <DrawWheel slots={wheelSlots} slotClass={(slot) => drawNumberClass(slot, participantCount)} spinTarget={spinTarget} holding={isHoldingSlot} value={hubValue} label={hubLabel} />
       <div className="draw-copy"><span className="tag draw-range-tag">Chọn số · {rangeLabel}</span><h2>{isWheelSpinning ? "Vòng quay đang chọn số…" : isHoldingSlot ? "Đang giữ số hợp lệ…" : mine ? "Bạn đã chọn xong" : currentUser.present ? (autoLastSlot ? "Bạn là người cuối trong dải số này" : "Đến lượt bạn chọn số") : "Bạn chưa điểm danh tham gia"}</h2><button className="primary" disabled={spinning || !currentUser.present || Boolean(mine)} onClick={drawSelf}>{spinning ? "Đang xử lý…" : mine ? "Đã có số" : autoLastSlot ? "Nhận số cuối cùng" : "Chọn số của tôi"} <span>↻</span></button></div>
     </div>
     <div className="draw-list draw-roster">{entries.map(({ member, no }) => <div className={no ? "drawn" : "pending"} key={member.username}><span>{member.name}</span><b>{no ?? "—"}</b><small>Level {member.level}</small></div>)}</div>
