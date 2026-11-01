@@ -226,7 +226,7 @@ button.hero-champion:focus-visible {
   }
 }
 
-/* Phones: the champion sits under the date as one wide line, the month progress last. */
+/* Phones: champion and month progress share one line under the date, the numbers below. */
 @media (max-width: 600px) {
   .hero:not(#_) {
     display: flex !important;
@@ -236,13 +236,19 @@ button.hero-champion:focus-visible {
   }
 
   .hero-status {
-    display: contents;
+    flex: none;
+    flex-flow: row nowrap;
+    order: 2;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
   }
 
   .hero-champion {
-    order: 2;
-    flex: none;
-    width: 100%;
+    flex: 1 1 auto;
+    order: 1;
+    gap: 9px;
   }
 
   .hero-champion .avatar.small {
@@ -251,18 +257,36 @@ button.hero-champion:focus-visible {
     min-width: 38px !important;
   }
 
-  .hero-champion-text {
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    column-gap: 8px;
-    width: 100%;
+  .hero-champion-text small {
+    font-size: 10px;
   }
 
-  .hero-champion-text small {
-    grid-column: 1 / -1;
+  .hero-champion-text b {
+    font-size: 14px;
   }
 
   .hero-champion-text > span {
+    font-size: 10.5px;
+  }
+
+  .hero-progress {
+    flex: 0 0 102px;
+    order: 2;
+  }
+
+  .hero-progress-month {
+    font-size: 10.5px;
+  }
+
+  .hero-progress-count {
+    gap: 4px;
+  }
+
+  .hero-progress-count b {
+    font-size: 13px;
+  }
+
+  .hero-progress-count small {
     font-size: 11px;
   }
 
@@ -272,12 +296,20 @@ button.hero-champion:focus-visible {
     justify-content: start;
     margin: 0;
   }
+}
 
+@media (max-width: 345px) {
   .hero-progress {
-    position: relative;
-    z-index: 2;
-    order: 4;
-    flex: none;
-    width: 100%;
+    flex-basis: 88px;
+  }
+
+  .hero-champion-text > span {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero-progress-rest {
+    display: none;
   }
 }

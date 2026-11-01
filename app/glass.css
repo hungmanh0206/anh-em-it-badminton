@@ -229,3 +229,21 @@ body::before {
     transform: rotate(360deg);
   }
 }
+
+/* Confirm modals show their glass icon on the same tile as the logo. */
+.confirm-modal .modal-icon:not(#_)::before {
+  content: none !important;
+}
+
+.confirm-modal .modal-icon:not(#_) {
+  border: 0 !important;
+  box-shadow: var(--brand-tile-shadow) !important;
+}
+
+.confirm-modal .modal-icon.app-icon-confirm:not(#_) {
+  background: var(--icon-confirm) center / 70% auto no-repeat, var(--brand-tile) !important;
+}
+
+.confirm-modal .modal-icon.app-icon-logout:not(#_) {
+  background: var(--icon-logout) center / 70% auto no-repeat, var(--brand-tile) !important;
+}

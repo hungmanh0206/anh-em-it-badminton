@@ -352,8 +352,9 @@
   margin: -14px 0 20px;
   padding: 4px;
   overflow-x: auto;
-  border-radius: 13px;
-  background: var(--club-ink-100);
+  border-radius: 14px;
+  background: var(--bar-switch);
+  box-shadow: var(--bar-switch-shadow);
   scrollbar-width: none;
 }
 
@@ -363,7 +364,7 @@
   border: 0;
   border-radius: 10px;
   background: none;
-  color: var(--club-ink-600);
+  color: var(--bar-muted);
   font: inherit;
   font-size: 13.5px;
   font-weight: 700;
@@ -373,13 +374,13 @@
 }
 
 .page-tabs button:hover {
-  color: var(--club-ink-900);
+  color: var(--bar-text);
 }
 
 .page-tabs button.active {
-  background: linear-gradient(180deg, #ffd66d, #ffb700);
-  color: #1a1408;
-  box-shadow: 0 4px 10px rgba(184, 118, 14, 0.2);
+  background: var(--bar-thumb);
+  box-shadow: var(--bar-thumb-shadow);
+  color: var(--bar-accent);
 }
 
 .topbar-nav button:focus-visible,

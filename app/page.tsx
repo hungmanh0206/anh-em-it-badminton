@@ -360,6 +360,7 @@ export default function Home() {
   const [championRankingRows, setChampionRankingRows] = useState<RankingRow[]>([]);
   const [, setAvatarRevision] = useState(0);
   const [celebrating, setCelebrating] = useState(false);
+  const [previewStep, setPreviewStep] = useState<number | null>(null);
   const closeCelebration = useCallback(() => setCelebrating(false), []);
   const [eloRows, setEloRows] = useState<EloRankingRow[]>([]);
   const [eloStatus, setEloStatus] = useState<EloStatus | null>(null);
@@ -1271,18 +1272,23 @@ export default function Home() {
           <div className="hero-status">
           <div className="hero-progress">
             <span className="hero-progress-month">{currentMonthLabel.replace(", ", "/").toUpperCase()}</span>
-            <span className="hero-progress-count"><b>{progress.completed} / {progress.total}</b><small>buổi hoàn thành</small></span>
+            <span className="hero-progress-count"><b>{progress.completed} / {progress.total}</b><small>buổi<span className="hero-progress-rest"> hoàn thành</span></small></span>
             <span className="hero-progress-bar"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></span>
           </div>
           {champion ? <button type="button" className="hero-champion" aria-label={`Chúc mừng nhà vô địch ${champion.name}`} onClick={() => setCelebrating(true)}><div className={avatarClassName("avatar small", champion)} style={avatarStyle(champion)}>{champion.initials}</div><div className="hero-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b><AppIcon name="crown" /> {champion.name}</b><span>{`${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số`}</span></div></button> : <div className="hero-champion"><div className="hero-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b>Chưa ghi danh</b></div></div>}
           </div>
         </section>
-        <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : canGoStep(i) ? "" : "locked"} aria-disabled={i !== step && !canGoStep(i)} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
+        <section className="workflow">{steps.map((label, i) => {
+          const shownStep = previewStep ?? step;
+          const previewable = isAdmin && (i === 0 ? !isCheckinWindowOpen : !canGoStep(i));
+          return <button key={label} className={i === shownStep ? "current" : i < shownStep ? "done" : canGoStep(i) || previewable ? "" : "locked"} aria-disabled={i !== shownStep && !canGoStep(i) && !previewable} onClick={() => { setPreviewStep(previewable ? i : null); if (!previewable) goStep(i); }}><span>{i < shownStep ? "✓" : i + 1}</span>{label}</button>;
+        })}</section>
         {loginError && <div className="warning">{loginError}</div>}
         {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
-        {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
-        {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
-        {step === 2 && <Schedule onEditingChange={(rows) => { editingScoreRows.current = new Set(rows); }} scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { setSessionStatus(completed ? "completed" : "scheduled"); if (completed) setHistoryRefreshTick((tick) => tick + 1); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
+        {previewStep === null && step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
+        {previewStep !== null && <WorkflowPreview step={previewStep} members={members} currentUser={currentUser} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onStep={setPreviewStep} />}
+        {previewStep === null && step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
+        {previewStep === null && step === 2 && <Schedule onEditingChange={(rows) => { editingScoreRows.current = new Set(rows); }} scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { setSessionStatus(completed ? "completed" : "scheduled"); if (completed) setHistoryRefreshTick((tick) => tick + 1); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}</div>
     </section>
     <Presence show={Boolean(showCheckin)}>{showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}</Presence>
@@ -1363,6 +1369,26 @@ function CheckIn({ members, onContinue, canSchedule, canManageSession, currentUs
     <div className="panel-foot checkin-actions-foot"><div className="attendance-actions"><button className="soft-btn" disabled={!isCheckinWindowOpen} onClick={openSelfCheckin}>{isCheckinWindowOpen ? (currentUser.responded ? "Cập nhật điểm danh của tôi" : "Điểm danh của tôi") : "Mở vào thứ Tư"}</button>{canManageSession && <button className="primary" disabled={!isCheckinWindowOpen || !canSchedule || !allResponded} onClick={onContinue}>Xác nhận điểm danh & mở chọn số <span>→</span></button>}</div></div>
   </section>;
 }
+// Admin look at the three tabs while no session is open. Sample data on the real components:
+// without a session id nothing can be saved.
+function WorkflowPreview({ step, members, currentUser, rankingRows, rankingMonth, onStep }: { step: number; members: Member[]; currentUser: Member; rankingRows: RankingRow[]; rankingMonth: string; onStep: (step: number) => void }) {
+  const sample = [...members].sort((a, b) => a.level - b.level).slice(0, 9).map((member) => ({ ...member, present: true, responded: true }));
+  const drawn = Object.fromEntries(sample.map((member, index) => [member.name, index + 1]));
+  const scenario = findScheduleScenario(sample.length, sample.filter((member) => member.level === 1).length) ?? scheduleScenarios.find((item) => item.participantCount === sample.length) ?? null;
+  const [scores, setScores] = useState<Record<number, [string, string]>>({ 0: ["21", "15"], 1: ["12", "21"] });
+  const [confirmedMatches, setConfirmedMatches] = useState<Record<number, boolean>>({ 0: true, 1: true });
+  const [attendance, setAttendance] = useState<Member[]>(() => [...sample, ...members.filter((member) => !sample.some((item) => item.username === member.username)).map((member) => ({ ...member, present: false, responded: true }))]);
+  const [checkinOpen, setCheckinOpen] = useState(false);
+  return <>
+    <div className="warning">Xem thử giao diện với dữ liệu mẫu, không lưu gì vào hệ thống.</div>
+    {step === 0 && <CheckIn members={attendance} setMembers={setAttendance} onContinue={() => onStep(1)} canSchedule canManageSession currentUser={currentUser} isCheckinWindowOpen isCheckinTestMode={false} openSelfCheckin={() => setCheckinOpen(true)} />}
+    <Presence show={checkinOpen}>{checkinOpen && <CheckinModal member={currentUser} onAnswer={() => setCheckinOpen(false)} onSkip={() => setCheckinOpen(false)} />}</Presence>
+    {step === 0 ? null : step === 1
+      ? <Draw members={sample} drawn={drawn} allDrawn drawSelf={() => {}} spinning={false} spinTarget={null} currentUser={currentUser} canManageSession onContinue={() => onStep(2)} />
+      : <Schedule onEditingChange={() => {}} scenario={scenario} drawn={drawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={null} canManageScores rankingRows={rankingRows} rankingMonth={rankingMonth} onSaved={() => {}} />}
+  </>;
+}
+
 function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, currentUser, canManageSession, onContinue }: { members: Member[]; drawn: Record<string, number>; allDrawn: boolean; drawSelf: () => void; spinning: boolean; spinTarget: number | null; currentUser: Member; canManageSession: boolean; onContinue: () => void }) {
   const participantCount = members.length;
   const level1Count = members.filter((member) => member.level === 1).length;
