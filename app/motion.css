@@ -158,11 +158,6 @@
   scale: 1.08;
 }
 
-.workflow button,
-.workflow button span {
-  transition: color var(--motion-base) ease, background-color var(--motion-base) ease, border-color var(--motion-base) ease !important;
-}
-
 /* ---------- Buttons & inputs ---------- */
 .primary,
 .secondary,

@@ -278,25 +278,6 @@
 :root[data-theme="dark"] .hero-stats small {
     color: #c3bada
 }
-:root[data-theme="dark"] .workflow button {
-    border: 0;
-    background: transparent;
-    color: #a6a2b1;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.14)
-}
-:root[data-theme="dark"] .workflow button span {
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.14)
-}
-:root[data-theme="dark"] .workflow button.current {
-    color: hsla(250, 59%, 85%, 1);
-    border-bottom-color: #5c43d5
-}
-:root[data-theme="dark"] .workflow button.current span, :root[data-theme="dark"] .workflow button.done span {
-    background: #5c43d5;
-    color: #fff;
-    border-color: #5c43d5
-}
 :root[data-theme="dark"] .panel {
     background: white;
     border: 1px solid rgba(255, 255, 255, 0.14);
@@ -660,24 +641,6 @@
 }
 :root[data-theme="dark"] .hero-stats div {
     border-left-color: rgba(255, 183, 0, 0.34) !important
-}
-:root[data-theme="dark"] .workflow button {
-    color: var(--club-ink-500) !important;
-    border-bottom-color: var(--club-ink-200) !important
-}
-:root[data-theme="dark"] .workflow button span {
-    border-color: var(--club-ink-300) !important;
-    background: var(--club-white);
-    color: var(--club-ink-600)
-}
-:root[data-theme="dark"] .workflow button.current, :root[data-theme="dark"] .workflow button.done {
-    color: var(--club-ink-900) !important;
-    border-bottom-color: var(--club-gold-500) !important
-}
-:root[data-theme="dark"] .workflow button.current span, :root[data-theme="dark"] .workflow button.done span {
-    background: var(--club-gold-500) !important;
-    border-color: var(--club-gold-500) !important;
-    color: #1a1408 !important
 }
 :root[data-theme="dark"] .panel, :root[data-theme="dark"] .rank-table, :root[data-theme="dark"] .member-summary div, :root[data-theme="dark"] .login-card, :root[data-theme="dark"] .checkin-modal, :root[data-theme="dark"] .history-detail, :root[data-theme="dark"] .confirm-modal, :root[data-theme="dark"] .member-editor, :root[data-theme="dark"] .member-profile-popover {
     border: 1px solid var(--club-ink-200) !important;

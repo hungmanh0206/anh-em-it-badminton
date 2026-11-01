@@ -333,6 +333,13 @@ export default function Home() {
     return monthLabel(ENABLE_TEST_FLOW ? homeSession(initialNow).date : initialNow);
   });
   const [step, setStep] = useState(0);
+  // Which way the last step change went, so the stepper and the content can animate in that direction.
+  const [shownStep, setShownStep] = useState(0);
+  const [stepDirection, setStepDirection] = useState<"forward" | "back" | null>(null);
+  if (step !== shownStep) {
+    setShownStep(step);
+    setStepDirection(step > shownStep ? "forward" : "back");
+  }
   const [members, setMembers] = useState(initialMembers);
   const [drawn, setDrawn] = useState<Record<string, number>>({});
   const [scores, setScores] = useState<Record<number, [string, string]>>({});
@@ -1277,7 +1284,7 @@ export default function Home() {
           {champion ? <button type="button" className="hero-champion" aria-label={`Chúc mừng nhà vô địch ${champion.name}`} onClick={() => { unlockFireworkSound(); setCelebrating(true); }}><div className={avatarClassName("avatar small", champion)} style={avatarStyle(champion)}>{champion.initials}</div><div className="hero-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b><AppIcon name="crown" /> {champion.name}</b><span>{`${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số`}</span></div></button> : <div className="hero-champion"><div className="hero-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b>Chưa ghi danh</b></div></div>}
           </div>
         </section>
-        <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : canGoStep(i) ? "" : "locked"} aria-disabled={i !== step && !canGoStep(i)} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
+        <section className={"workflow" + (stepDirection ? ` step-${stepDirection}` : "")}>{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : canGoStep(i) ? "" : "locked"} aria-disabled={i !== step && !canGoStep(i)} onClick={() => goStep(i)}><span key={i < step ? "done" : "number"}>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
         {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}

@@ -197,18 +197,6 @@
     font-size: 22px !important;
   }
 
-  .workflow {
-    margin: 16px 0 !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .workflow button {
-    min-width: 120px !important;
-    padding-bottom: 12px !important;
-    font-size: 11px !important;
-  }
-
   .panel-head {
     padding: 18px 18px 14px !important;
   }

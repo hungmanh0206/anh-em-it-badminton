@@ -341,30 +341,6 @@ header {
   font-family: "JetBrains Mono", ui-monospace, monospace !important;
 }
 
-.workflow button {
-  color: var(--club-ink-500) !important;
-  border-bottom-color: var(--club-ink-200) !important;
-}
-
-.workflow button span {
-  border-color: var(--club-ink-300) !important;
-  background: var(--club-white);
-  color: var(--club-ink-600);
-}
-
-.workflow button.current,
-.workflow button.done {
-  color: var(--club-ink-900) !important;
-  border-bottom-color: var(--club-gold-500) !important;
-}
-
-.workflow button.current span,
-.workflow button.done span {
-  background: var(--club-gold-500) !important;
-  border-color: var(--club-gold-500) !important;
-  color: var(--club-ink-900) !important;
-}
-
 .panel,
 .rank-table,
 .member-summary div,
