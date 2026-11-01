@@ -413,14 +413,13 @@
     padding: 0;
   }
 }
-/* A saved match: the whole block goes green on the winner's side, red on the loser's, blended in the middle. */
+/* A saved match: the whole block goes green on the winner's side, red on the loser's (the colour itself is in glass.css). */
 .result-entry-panel .match-result-row.result-a-wins:not(#_),
 .result-entry-panel .match-result-row.result-b-wins:not(#_) {
   border-color: transparent !important;
 }
 
 .result-entry-panel .match-result-row.result-a-wins:not(#_) {
-  background: linear-gradient(90deg, rgba(34, 197, 94, 0.66) 0%, rgba(34, 197, 94, 0.3) 28%, rgba(255, 255, 255, 0.4) 50%, rgba(247, 85, 85, 0.3) 72%, rgba(247, 85, 85, 0.66) 100%) border-box !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.6),
     -12px 10px 24px -16px rgba(34, 197, 94, 0.7),
@@ -428,7 +427,6 @@
 }
 
 .result-entry-panel .match-result-row.result-b-wins:not(#_) {
-  background: linear-gradient(90deg, rgba(247, 85, 85, 0.66) 0%, rgba(247, 85, 85, 0.3) 28%, rgba(255, 255, 255, 0.4) 50%, rgba(34, 197, 94, 0.3) 72%, rgba(34, 197, 94, 0.66) 100%) border-box !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.6),
     -12px 10px 24px -16px rgba(247, 85, 85, 0.7),

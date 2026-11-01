@@ -94,10 +94,10 @@ const attendeeCountFromAttendances = (attendances: HistorySessionRow["attendance
 // Five sections; a section with several pages shows them as tabs under the page title.
 const navGroups: { key: string; label: string; icon: AppIconName; screens: { screen: Screen; label: string }[] }[] = [
   { key: "home", label: "Home", icon: "home", screens: [{ screen: "home", label: "Home" }] },
-  { key: "members", label: "Thành viên", icon: "members", screens: [{ screen: "members", label: "Thành viên" }] },
   { key: "matches", label: "Thi đấu", icon: "schedule", screens: [{ screen: "schedules", label: "Lịch thi đấu" }, { screen: "history", label: "Kết quả & lịch sử" }] },
   { key: "standings", label: "Xếp hạng", icon: "ranking", screens: [{ screen: "ranking", label: "Bảng xếp hạng" }, { screen: "elo", label: "ELO" }] },
   { key: "library", label: "Thư viện", icon: "photos", screens: [{ screen: "photos", label: "Kho ảnh" }, { screen: "rules", label: "Thể lệ" }] },
+  { key: "members", label: "Thành viên", icon: "members", screens: [{ screen: "members", label: "Thành viên" }] },
 ];
 const screenTitles: Record<Screen, string> = {
   home: "Home",

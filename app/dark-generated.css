@@ -1573,9 +1573,6 @@
 :root[data-theme="dark"] .rules-list strong {
     color: hsla(42, 20%, 95%, 1)
 }
-:root[data-theme="dark"] .rules-level-group + .rules-level-group {
-    border-top: 1px dashed var(--rules-line)
-}
 :root[data-theme="dark"] .rules-level-head b {
     color: hsla(42, 20%, 95%, 1)
 }
@@ -1609,12 +1606,10 @@
     color: hsla(156, 79%, 72%, 1)
 }
 :root[data-theme="dark"] .level-chip.level-one {
-    background: hsla(209, 42%, 17%, 1);
-    box-shadow: inset 0 0 0 1px #b8dcff
+    background: hsla(209, 42%, 17%, 1)
 }
 :root[data-theme="dark"] .level-chip.level-two {
-    background: hsla(147, 42%, 17%, 1);
-    box-shadow: inset 0 0 0 1px #b9f2d2
+    background: hsla(147, 42%, 17%, 1)
 }
 :root[data-theme="dark"] .rules-lead {
     color: var(--rules-text)

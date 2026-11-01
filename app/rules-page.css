@@ -177,7 +177,6 @@
 
 .rules-level-group + .rules-level-group {
   padding-top: 16px;
-  border-top: 1px dashed var(--rules-line);
 }
 
 .rules-level-head {
@@ -258,12 +257,10 @@
 
 .level-chip.level-one {
   background: #eaf5ff;
-  box-shadow: inset 0 0 0 1px #b8dcff;
 }
 
 .level-chip.level-two {
   background: #ebfff4;
-  box-shadow: inset 0 0 0 1px #b9f2d2;
 }
 
 /* Weekly schedule */

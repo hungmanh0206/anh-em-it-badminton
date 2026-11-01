@@ -30,6 +30,8 @@
   --pill-text: #4a4133;
   --mark-well: rgba(120, 92, 40, 0.13);
   --mark-well-sink: inset 0 2px 5px rgba(90, 65, 20, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.5), 0 1px 0 rgba(255, 255, 255, 0.9);
+  --row-tint: 66%;
+  --row-tint-mid: rgba(255, 255, 255, 0.4);
   --button-off: rgba(60, 48, 28, 0.08);
   --button-off-text: rgba(26, 20, 8, 0.52);
   --button-soft: rgba(255, 255, 255, 0.74);
@@ -104,7 +106,7 @@ body::before {
 
 .member-card:not(#_),
 .schedule-match-card:not(#_),
-.result-row:not(.result-a-wins, .result-b-wins):not(#_),
+.result-row:not(#_),
 .rules-note:not(#_),
 .rules-total:not(#_),
 .profile-stat:not(#_),
@@ -562,4 +564,58 @@ body::before {
   --mark-fill: #e24b5e;
   background-size: 100% 100% !important;
   box-shadow: 0 6px 14px rgba(226, 75, 94, 0.24) !important;
+}
+
+/* Saved match colour: a layer behind the row whose edges run in from both ends to the middle, and back out when the
+   score is cleared. The colours change only after the edges have gone, so they stay visible on the way out. */
+@property --row-sweep {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 0%;
+}
+
+@property --row-start {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+@property --row-end {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
+.result-entry-panel .match-result-row:not(#_):not(#_) {
+  position: relative;
+  isolation: isolate;
+  transition: --row-sweep 640ms cubic-bezier(0.4, 0, 0.2, 1), --row-start 0s linear 640ms, --row-end 0s linear 640ms, box-shadow 420ms ease;
+}
+
+.result-entry-panel .match-result-row.result-a-wins:not(#_):not(#_) {
+  --row-sweep: 112%;
+  --row-start: rgb(34, 197, 94);
+  --row-end: rgb(247, 85, 85);
+  transition-delay: 0s;
+}
+
+.result-entry-panel .match-result-row.result-b-wins:not(#_):not(#_) {
+  --row-sweep: 112%;
+  --row-start: rgb(247, 85, 85);
+  --row-end: rgb(34, 197, 94);
+  transition-delay: 0s;
+}
+
+.result-entry-panel .match-result-row::before {
+  --row-edge: linear-gradient(90deg, #000 calc(var(--row-sweep) - 12%), transparent var(--row-sweep));
+  --row-edge-end: linear-gradient(270deg, #000 calc(var(--row-sweep) - 12%), transparent var(--row-sweep));
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--row-start) var(--row-tint), transparent) 0%, color-mix(in srgb, var(--row-start) 30%, transparent) 28%, var(--row-tint-mid) 50%, color-mix(in srgb, var(--row-end) 30%, transparent) 72%, color-mix(in srgb, var(--row-end) var(--row-tint), transparent) 100%);
+  pointer-events: none;
+  -webkit-mask: var(--row-edge) left / 50.5% 100% no-repeat, var(--row-edge-end) right / 50.5% 100% no-repeat;
+  mask: var(--row-edge) left / 50.5% 100% no-repeat, var(--row-edge-end) right / 50.5% 100% no-repeat;
 }

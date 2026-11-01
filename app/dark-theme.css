@@ -46,6 +46,8 @@
   --gold-glass-shadow: 0 6px 16px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.42);
   --mark-well: rgba(0, 0, 0, 0.34);
   --mark-well-sink: inset 0 2px 5px rgba(0, 0, 0, 0.62), 0 1px 0 rgba(255, 255, 255, 0.1);
+  --row-tint: 60%;
+  --row-tint-mid: rgba(255, 255, 255, 0.05);
   --button-off: rgba(255, 255, 255, 0.08);
   --button-off-text: rgba(255, 250, 240, 0.6);
   --button-soft: rgba(255, 255, 255, 0.12);
@@ -227,12 +229,10 @@
 
 /* Saved matches: the light theme's green and red, deep and fading out towards the middle. */
 :root[data-theme="dark"]:not(#_) .match-result-row.result-a-wins {
-  background: linear-gradient(90deg, rgba(34, 197, 94, 0.6) 0%, rgba(34, 197, 94, 0.3) 28%, rgba(255, 255, 255, 0.05) 50%, rgba(247, 85, 85, 0.3) 72%, rgba(247, 85, 85, 0.6) 100%) border-box !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), -12px 10px 24px -16px rgba(34, 197, 94, 0.6), 12px 10px 24px -16px rgba(247, 85, 85, 0.6) !important;
 }
 
 :root[data-theme="dark"]:not(#_) .match-result-row.result-b-wins {
-  background: linear-gradient(90deg, rgba(247, 85, 85, 0.6) 0%, rgba(247, 85, 85, 0.3) 28%, rgba(255, 255, 255, 0.05) 50%, rgba(34, 197, 94, 0.3) 72%, rgba(34, 197, 94, 0.6) 100%) border-box !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), -12px 10px 24px -16px rgba(247, 85, 85, 0.6), 12px 10px 24px -16px rgba(34, 197, 94, 0.6) !important;
 }
 
