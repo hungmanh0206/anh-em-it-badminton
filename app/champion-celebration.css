@@ -56,11 +56,15 @@
 
 .champion-avatar {
   --avatar-size: clamp(150px, 42vmin, 220px);
-  --crown-size: clamp(50px, 14vmin, 74px);
+  /* Member portraits share a framing (hair top at 0-12% of the height, head centred), so a band at 18% sinks into
+     the hair of every one of them. The band is 86% down the crown's square image. Worn off-centre, tipped right. */
+  --crown-size: calc(var(--avatar-size) * 0.42);
+  --crown-top: calc(var(--avatar-size) * 0.18 - var(--crown-size) * 0.86);
+  --crown-x: calc(var(--avatar-size) * 0.07);
   /* From the crown's place on the head: down to the avatar's centre, and the radius of the orbit around it,
      wide of the avatar but still inside a phone screen. Tilting that circle in 3D is what makes it a slanted ellipse. */
-  --orbit-y: calc(var(--avatar-size) * 0.7 - var(--crown-size) / 2);
-  --orbit-r: min(calc(var(--avatar-size) / 2 + 84px), calc(50vw - var(--crown-size) * 0.75));
+  --orbit-y: calc(var(--avatar-size) / 2 - var(--crown-top) - var(--crown-size) / 2);
+  --orbit-r: min(calc(var(--avatar-size) / 2 + 84px), calc(50vw - var(--crown-size) * 0.65));
   --orbit-tilt: -22deg;
   --orbit-lean: 68deg;
   position: relative;
@@ -99,13 +103,14 @@
 
 .champion-avatar .app-icon {
   position: absolute;
-  top: calc(var(--avatar-size) * -0.2);
+  top: var(--crown-top);
   left: 50%;
   z-index: 1;
   width: var(--crown-size);
   height: var(--crown-size);
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
-  transform: translateX(-50%) translateZ(2px) rotate(-8deg);
+  /* The picture itself leans 5deg left, so this reads as 13deg to the right. */
+  transform: translateX(calc(-50% + var(--crown-x))) translateZ(2px) rotate(18deg);
   animation: championCrownFly 2400ms 900ms backwards, championCrownShow 120ms 900ms backwards;
 }
 
@@ -220,32 +225,32 @@
    Every step lists the same functions, so the angles themselves animate and the path stays a true ellipse. */
 @keyframes championCrownFly {
   0% {
-    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotateZ(var(--orbit-tilt)) rotateX(var(--orbit-lean)) rotateZ(0deg) translateY(-30px) rotateZ(0deg) rotateX(calc(var(--orbit-lean) * -1)) rotateZ(calc(var(--orbit-tilt) * -1)) translateZ(2px) rotate(8deg) scale(0.35);
+    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotateZ(var(--orbit-tilt)) rotateX(var(--orbit-lean)) rotateZ(0deg) translateY(-30px) rotateZ(0deg) rotateX(calc(var(--orbit-lean) * -1)) rotateZ(calc(var(--orbit-tilt) * -1)) translateZ(2px) rotate(8deg) scale(0.22);
     animation-timing-function: cubic-bezier(0.45, 0, 0.8, 0.75);
   }
 
   24% {
-    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotateZ(var(--orbit-tilt)) rotateX(var(--orbit-lean)) rotateZ(100deg) translateY(calc(var(--orbit-r) * -1)) rotateZ(-100deg) rotateX(calc(var(--orbit-lean) * -1)) rotateZ(calc(var(--orbit-tilt) * -1)) translateZ(2px) rotate(8deg) scale(1.2);
+    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotateZ(var(--orbit-tilt)) rotateX(var(--orbit-lean)) rotateZ(100deg) translateY(calc(var(--orbit-r) * -1)) rotateZ(-100deg) rotateX(calc(var(--orbit-lean) * -1)) rotateZ(calc(var(--orbit-tilt) * -1)) translateZ(2px) rotate(8deg) scale(1.1);
     animation-timing-function: linear;
   }
 
   68% {
-    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotateZ(var(--orbit-tilt)) rotateX(var(--orbit-lean)) rotateZ(360deg) translateY(calc(var(--orbit-r) * -1)) rotateZ(-360deg) rotateX(calc(var(--orbit-lean) * -1)) rotateZ(calc(var(--orbit-tilt) * -1)) translateZ(2px) rotate(8deg) scale(1.2);
+    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotateZ(var(--orbit-tilt)) rotateX(var(--orbit-lean)) rotateZ(360deg) translateY(calc(var(--orbit-r) * -1)) rotateZ(-360deg) rotateX(calc(var(--orbit-lean) * -1)) rotateZ(calc(var(--orbit-tilt) * -1)) translateZ(2px) rotate(8deg) scale(1.1);
     animation-timing-function: ease-in-out;
   }
 
   84% {
-    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotateZ(0deg) rotateX(0deg) rotateZ(360deg) translateY(calc(var(--orbit-y) * -1 - 46px)) rotateZ(-360deg) rotateX(calc(0deg * -1)) rotateZ(calc(0deg * -1)) translateZ(2px) rotate(-8deg) scale(1.2);
+    transform: translate(calc(-50% + var(--crown-x)), 0) translateY(var(--orbit-y)) rotateZ(0deg) rotateX(0deg) rotateZ(360deg) translateY(calc(var(--orbit-y) * -1 - 46px)) rotateZ(-360deg) rotateX(calc(0deg * -1)) rotateZ(calc(0deg * -1)) translateZ(2px) rotate(18deg) scale(1.2);
     animation-timing-function: ease-in;
   }
 
   94% {
-    transform: translate(-50%, 7px) translateY(var(--orbit-y)) rotateZ(0deg) rotateX(0deg) rotateZ(360deg) translateY(calc(var(--orbit-y) * -1)) rotateZ(-360deg) rotateX(calc(0deg * -1)) rotateZ(calc(0deg * -1)) translateZ(2px) rotate(-8deg) scale(0.94);
+    transform: translate(calc(-50% + var(--crown-x)), 7px) translateY(var(--orbit-y)) rotateZ(0deg) rotateX(0deg) rotateZ(360deg) translateY(calc(var(--orbit-y) * -1)) rotateZ(-360deg) rotateX(calc(0deg * -1)) rotateZ(calc(0deg * -1)) translateZ(2px) rotate(18deg) scale(0.96);
     animation-timing-function: ease-out;
   }
 
   100% {
-    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotateZ(0deg) rotateX(0deg) rotateZ(360deg) translateY(calc(var(--orbit-y) * -1)) rotateZ(-360deg) rotateX(calc(0deg * -1)) rotateZ(calc(0deg * -1)) translateZ(2px) rotate(-8deg) scale(1);
+    transform: translate(calc(-50% + var(--crown-x)), 0) translateY(var(--orbit-y)) rotateZ(0deg) rotateX(0deg) rotateZ(360deg) translateY(calc(var(--orbit-y) * -1)) rotateZ(-360deg) rotateX(calc(0deg * -1)) rotateZ(calc(0deg * -1)) translateZ(2px) rotate(18deg) scale(1);
   }
 }
 
