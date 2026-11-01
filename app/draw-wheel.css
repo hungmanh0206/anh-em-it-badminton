@@ -21,17 +21,16 @@
 }
 
 :root[data-theme="dark"] .prize-wheel {
-  --rim: conic-gradient(from 24deg, #8a5a0c, #f2cf73 9%, #c48a1c 21%, #ffe08a 34%, #9c6c12 48%, #e9b949 62%, #8a5a0c 76%, #f6d680 90%, #8a5a0c);
-  --rim-shadow: 0 14px 32px rgba(0, 0, 0, 0.55), 0 0 26px rgba(255, 183, 0, 0.14);
-  --disc-shade: radial-gradient(circle, transparent 52%, rgba(0, 0, 0, 0.34) 100%);
-  --disc-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 46%);
-  --disc-dash: rgba(255, 214, 110, 0.32);
-  --hub-face: radial-gradient(circle at 38% 28%, #4a3a1a, #2c2312 72%, #1e180c);
-  --hub-text: #ffe08a;
+  --rim-shadow: 0 0 34px rgba(255, 190, 60, 0.34), 0 14px 32px rgba(0, 0, 0, 0.6);
+  --disc-shade: radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.26) 100%);
+  --disc-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent 46%);
+  --disc-dash: rgba(255, 236, 170, 0.6);
+  --hub-face: radial-gradient(circle at 38% 28%, #54401a, #2a1e0b 70%, #1a1206);
+  --hub-text: #ffe9a8;
   --hub-stroke: transparent;
+  --hub-glow: 0 0 14px rgba(255, 200, 80, 0.75);
   --hub-pill-text: #3d2500;
-  --badge-face: radial-gradient(circle at 36% 26%, #3d3a44, #24222c 80%);
-  --badge-shadow: 0 3px 8px rgba(0, 0, 0, 0.55);
+  --badge-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
 }
 
 /* ---------- Gold rim and bulbs ---------- */
@@ -92,7 +91,7 @@
 .prize-disc::after {
   content: "";
   position: absolute;
-  inset: 14.5%;
+  inset: 12.6%;
   border: 1.5px dashed var(--disc-dash);
   border-radius: 50%;
   pointer-events: none;
@@ -103,7 +102,7 @@
 }
 
 .prize-slot {
-  --badge-size: calc(var(--wheel-size) * 0.185);
+  --badge-size: calc(var(--wheel-size) * 0.17);
   position: absolute;
   top: 50%;
   left: 50%;
@@ -111,7 +110,7 @@
   width: var(--badge-size);
   height: var(--badge-size);
   margin: calc(var(--badge-size) / -2);
-  transform: rotate(var(--slot-angle)) translateY(calc(var(--wheel-size) * -0.3)) rotate(calc(var(--slot-angle) * -1));
+  transform: rotate(var(--slot-angle)) translateY(calc(var(--wheel-size) * -0.31)) rotate(calc(var(--slot-angle) * -1));
 }
 
 .prize-badge {
@@ -140,18 +139,6 @@
   --badge-text: #b8760e;
 }
 
-:root[data-theme="dark"] .prize-badge {
-  --badge-text: #8fc2ff;
-}
-
-:root[data-theme="dark"] .prize-badge.level-2 {
-  --badge-text: #6ee7a8;
-}
-
-:root[data-theme="dark"] .prize-badge.level-open {
-  --badge-text: #ffd566;
-}
-
 .is-spinning .prize-badge {
   animation: prizeSpinBack var(--spin-ms) both;
 }
@@ -169,7 +156,7 @@
 /* ---------- Hub ---------- */
 .prize-hub {
   position: absolute;
-  inset: 26.5%;
+  inset: 28.5%;
   z-index: 2;
   display: grid;
   place-items: center;
@@ -193,10 +180,11 @@
 
 .prize-hub-face b {
   color: var(--hub-text);
-  font-size: calc(var(--wheel-size) * 0.19);
+  font-size: calc(var(--wheel-size) * 0.17);
   font-weight: 1000;
   line-height: 0.92;
   letter-spacing: -0.04em;
+  text-shadow: var(--hub-glow, none);
   -webkit-text-stroke: 1.5px var(--hub-stroke);
   paint-order: stroke fill;
 }
@@ -336,7 +324,8 @@
 /* Transitions, so they play when a number arrives and not on every page load. */
 .draw-roster > div:not(#_):not(#_) {
   position: relative;
-  border-color: transparent !important;
+  border: 0 !important;
+  box-shadow: var(--glass-lift-card) !important;
   isolation: isolate;
   overflow: hidden;
 }

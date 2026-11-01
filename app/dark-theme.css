@@ -39,10 +39,10 @@
   --bar-thumb-shadow: 0 1px 4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.16);
   --draw-glow: radial-gradient(circle at 24% 50%, rgba(255, 183, 0, 0.26), transparent 58%);
   --draw-glow-end: radial-gradient(circle at 96% 0%, rgba(226, 88, 44, 0.2), transparent 50%);
-  --wheel-1: #4a3a18;
-  --wheel-2: #2b2416;
-  --wheel-3: #6b5120;
-  --wheel-4: #2f2718;
+  --wheel-1: #d99a25;
+  --wheel-2: #2e2212;
+  --wheel-3: #f0b83a;
+  --wheel-4: #3a2a12;
   --gold-glass: linear-gradient(180deg, rgba(255, 216, 115, 0.86), rgba(255, 183, 0, 0.72));
   --gold-glass-hover: linear-gradient(180deg, rgba(255, 216, 115, 0.96), rgba(255, 183, 0, 0.86));
   --gold-glass-shadow: 0 6px 16px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.42);
