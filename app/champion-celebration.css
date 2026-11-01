@@ -142,7 +142,7 @@
   margin-top: 14px;
 }
 
-/* No card: a silver or bronze glow, popping out together as the champion's avatar arrives, ahead of the crown. */
+/* No card: a silver or bronze glow, popping out as the champion's avatar arrives, second place first, ahead of the crown. */
 .champion-runner {
   --runner-avatar: clamp(60px, 18vmin, 78px);
   --runner-glow: rgba(150, 170, 215, 0.8);
@@ -157,6 +157,7 @@
 
 .champion-runner.rank-3 {
   --runner-glow: rgba(222, 134, 66, 0.8);
+  animation-delay: 1150ms;
 }
 
 .champion-runner .avatar:not(#_):not(#_):not(#_):not(#_) {
