@@ -67,14 +67,44 @@
   font-weight: 600 !important;
 }
 
+/* Every block in the profile card: the same side margin and the same gap between them. */
+.member-profile-popover:not(#_) > .profile-hero-card {
+  padding-right: 16px !important;
+  padding-bottom: 12px !important;
+  padding-left: 16px !important;
+}
+
+.member-profile-popover:not(#_) .profile-rank-stat b {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.member-profile-popover:not(#_) > :is(.profile-score-card, .profile-form, .profile-stat-grid, .profile-logout) {
+  width: auto;
+  margin: 0 16px 12px !important;
+}
+
+.member-profile-popover:not(#_) > .profile-logout {
+  width: calc(100% - 32px);
+}
+
+.member-profile-popover:not(#_) > .profile-stat-grid {
+  gap: 12px !important;
+  padding: 0 !important;
+}
+
+.member-profile-popover:not(#_) > :last-child {
+  margin-bottom: 16px !important;
+}
+
 .profile-logout {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: calc(100% - 44px);
   min-height: 44px;
-  margin: 2px 22px 20px;
   border: 0;
   border-radius: 12px;
   background: var(--glass-card);
