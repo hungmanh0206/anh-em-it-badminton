@@ -134,13 +134,19 @@ body::before {
 }
 
 /* The scrim only tints: a blur here would stop the modal from blurring the page behind it. */
-.modal-backdrop:not(.photo-preview-backdrop):not(#_) {
+.modal-backdrop:not(#_) {
   background: var(--modal-scrim) !important;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 
+/* Photo preview: the picture sits on the modal's glass; only fullscreen goes black. */
+.photo-preview-stage:not(.is-fullscreen, :fullscreen):not(#_):not(#_) {
+  background: transparent !important;
+}
+
 /* Every modal is one colour: its header, footer and decorations add none of their own. */
+.photo-preview-footer:not(#_),
 .history-detail-header:not(#_),
 .elo-guide-header:not(#_),
 .photo-sheet-header:not(#_),
