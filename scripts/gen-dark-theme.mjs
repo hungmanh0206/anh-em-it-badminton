@@ -101,11 +101,11 @@ for (const file of files) {
         const map = mapperFor(decl.prop);
         if (!map) continue;
         if (map === mapText && onGold) {
-          if (/var\(--club-ink/.test(decl.value)) decls.push(postcss.decl({ prop: decl.prop, value: "#1a1408", important: decl.important }));
+          decls.push(postcss.decl({ prop: decl.prop, value: /var\(--club-ink/.test(decl.value) ? "#1a1408" : decl.value, important: decl.important }));
           continue;
         }
-        const value = mapValue(decl.value, map);
-        if (value !== decl.value) decls.push(postcss.decl({ prop: decl.prop, value, important: decl.important }));
+        // Unchanged values are kept too: a later "background: transparent" must still beat an earlier colour.
+        decls.push(postcss.decl({ prop: decl.prop, value: mapValue(decl.value, map), important: decl.important }));
       }
       if (!decls.length) continue;
       const rule = postcss.rule({ selectors: selectors.map((selector) => `${PREFIX} ${selector}`) });

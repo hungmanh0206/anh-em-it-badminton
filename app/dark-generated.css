@@ -3,17 +3,38 @@
     color: hsla(159, 71%, 72%, 1)
 }
 :root[data-theme="dark"] .attendance-live i {
+    border-radius: 50%;
+    background: #27bd7c;
     box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.12)
 }
+:root[data-theme="dark"] .attendance-mark {
+    border: 2px solid transparent
+}
 :root[data-theme="dark"] .attendance-mark.yes {
+    background: #16a46f !important;
+    color: #fff !important;
+    border-color: #b8efd8 !important;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5)
+}
+:root[data-theme="dark"] .attendance-mark.no {
+    background: #e24b5e !important;
+    color: #fff !important;
+    border-color: #ffd1d8 !important;
+    box-shadow: 0 4px 10px #e24b5e38
 }
 :root[data-theme="dark"] .attendance-mark.waiting {
     background: hsla(42, 10%, 15%, 1) !important;
+    color: #8d8797 !important;
     border-color: rgba(255, 255, 255, 0.14) !important
 }
 :root[data-theme="dark"] .rank-table {
+    border: 0 !important;
+    border-radius: 16px !important;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12) !important
+}
+:root[data-theme="dark"] .rank-head {
+    background: linear-gradient(90deg,#28203f,#4f3979) !important;
+    color: #dcd6f0 !important
 }
 :root[data-theme="dark"] .rank-row.top-rank {
     background: linear-gradient(90deg,hsla(48, 42%, 17%, 1),hsla(42, 10%, 14%, 1))
@@ -22,11 +43,17 @@
     color: hsla(251, 56%, 84%, 1) !important
 }
 :root[data-theme="dark"] .wheel:after {
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
     border-top: 18px solid rgba(255, 255, 255, 0.12)
 }
 :root[data-theme="dark"] .member-card.readonly em {
     background: hsla(253, 42%, 17%, 1);
-    color: hsla(251, 57%, 87%, 1)
+    color: hsla(251, 57%, 87%, 1);
+    border-radius: 4px
+}
+:root[data-theme="dark"] .attendance-mark {
+    border-radius: 50%
 }
 :root[data-theme="dark"] .attendance-mark.yes {
     background: hsla(155, 42%, 17%, 1);
@@ -37,15 +64,28 @@
     color: hsla(353, 59%, 88%, 1)
 }
 :root[data-theme="dark"] .attendance-mark.waiting {
-    background: hsla(42, 10%, 15%, 1)
+    background: hsla(42, 10%, 15%, 1);
+    color: #918b9a
 }
 :root[data-theme="dark"] .month-tabs button {
     border: 1px solid rgba(255, 255, 255, 0.14);
     background: hsla(42, 10%, 14%, 1);
+    border-radius: 8px;
     color: hsla(42, 20%, 69%, 1)
+}
+:root[data-theme="dark"] .month-tabs button.chosen {
+    background: #5c43d5;
+    color: #fff;
+    border-color: #5c43d5
 }
 :root[data-theme="dark"] .rank-table {
+    border: 0 !important;
+    border-radius: 16px !important;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12) !important
+}
+:root[data-theme="dark"] .rank-head {
+    background: linear-gradient(90deg,#28203f,#4f3979) !important;
+    color: #dcd6f0 !important
 }
 :root[data-theme="dark"] .rank-row.top-rank {
     background: linear-gradient(90deg,hsla(48, 42%, 17%, 1),hsla(42, 10%, 14%, 1))
@@ -54,11 +94,17 @@
     color: hsla(251, 56%, 84%, 1) !important
 }
 :root[data-theme="dark"] .wheel:after {
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
     border-top: 18px solid rgba(255, 255, 255, 0.12)
 }
 :root[data-theme="dark"] .member-card.readonly em {
     background: hsla(253, 42%, 17%, 1);
-    color: hsla(251, 57%, 87%, 1)
+    color: hsla(251, 57%, 87%, 1);
+    border-radius: 4px
+}
+:root[data-theme="dark"] .attendance-mark {
+    border-radius: 50%
 }
 :root[data-theme="dark"] .attendance-mark.yes {
     background: hsla(155, 42%, 17%, 1);
@@ -69,25 +115,34 @@
     color: hsla(353, 59%, 88%, 1)
 }
 :root[data-theme="dark"] .attendance-mark.waiting {
-    background: hsla(42, 10%, 15%, 1)
+    background: hsla(42, 10%, 15%, 1);
+    color: #918b9a
 }
 :root[data-theme="dark"] .month-tabs button {
     border: 1px solid rgba(255, 255, 255, 0.14);
     background: hsla(42, 10%, 14%, 1);
+    border-radius: 8px;
     color: hsla(42, 20%, 69%, 1)
+}
+:root[data-theme="dark"] .month-tabs button.chosen {
+    background: #5c43d5;
+    color: #fff;
+    border-color: #5c43d5
 }
 :root[data-theme="dark"] .rank-number {
     color: hsla(42, 20%, 68%, 1)
 }
 :root[data-theme="dark"] .top-1 {
-    background: linear-gradient(90deg,hsla(49, 42%, 17%, 1),hsla(42, 10%, 14%, 1)) !important
+    background: linear-gradient(90deg,hsla(49, 42%, 17%, 1),hsla(42, 10%, 14%, 1)) !important;
+    border-left: 4px solid #e8b229
 }
 :root[data-theme="dark"] .top-2 {
     background: linear-gradient(90deg,hsla(42, 10%, 16%, 1),hsla(42, 10%, 14%, 1)) !important;
     border-left: 4px solid rgba(255, 255, 255, 0.14)
 }
 :root[data-theme="dark"] .top-3 {
-    background: linear-gradient(90deg,hsla(22, 42%, 17%, 1),hsla(42, 10%, 14%, 1)) !important
+    background: linear-gradient(90deg,hsla(22, 42%, 17%, 1),hsla(42, 10%, 14%, 1)) !important;
+    border-left: 4px solid #cd8752
 }
 :root[data-theme="dark"] .positive {
     color: hsla(159, 71%, 72%, 1) !important
@@ -104,13 +159,15 @@
 }
 :root[data-theme="dark"] .login-card {
     background: hsla(42, 10%, 14%, 1);
+    border-radius: 20px;
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5)
 }
 :root[data-theme="dark"] .login-brand small {
     color: hsla(42, 20%, 68%, 1)
 }
 :root[data-theme="dark"] .login-card input {
-    border: 1px solid rgba(255, 255, 255, 0.14)
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px
 }
 :root[data-theme="dark"] .login-error {
     color: hsla(343, 60%, 82%, 1) !important
@@ -122,30 +179,73 @@
 :root[data-theme="dark"] .demo-login code {
     color: hsla(250, 55%, 86%, 1)
 }
+:root[data-theme="dark"] .modal-backdrop {
+    background: #171527aa
+}
 :root[data-theme="dark"] .checkin-modal {
     background: hsla(42, 10%, 14%, 1);
+    border-radius: 18px;
     box-shadow: 0 22px 55px rgba(0, 0, 0, 0.5)
 }
 :root[data-theme="dark"] .modal-close {
+    border: 0;
+    background: transparent;
     color: hsla(42, 20%, 70%, 1)
 }
 :root[data-theme="dark"] .modal-icon {
+    border-radius: 50%;
     background: hsla(250, 42%, 17%, 1)
 }
 :root[data-theme="dark"] .secondary, :root[data-theme="dark"] .skip {
     border: 1px solid rgba(255, 255, 255, 0.14);
     background: hsla(42, 10%, 14%, 1);
-    color: hsla(42, 20%, 79%, 1)
+    color: hsla(42, 20%, 79%, 1);
+    border-radius: 8px
 }
 :root[data-theme="dark"] .skip {
-    color: hsla(42, 20%, 68%, 1)
+    border: 0;
+    color: hsla(42, 20%, 68%, 1);
+    background: transparent
+}
+@media (max-width:560px) {
+    :root[data-theme="dark"] .login-card {
+        border-radius: 16px
+    }
 }
 :root[data-theme="dark"] body {
     background: hsla(240, 33%, 17%, 1);
     color: hsla(42, 20%, 90%, 1)
 }
+:root[data-theme="dark"] .brand small, :root[data-theme="dark"] .profile small {
+    color: #9491a9
+}
+:root[data-theme="dark"] nav button {
+    background: none;
+    border: 0;
+    color: #aaa8ba;
+    border-radius: 8px
+}
+:root[data-theme="dark"] nav button.active {
+    background: #40336d;
+    color: #fff
+}
+:root[data-theme="dark"] .progress {
+    background: #403b57;
+    border-radius: 4px
+}
+:root[data-theme="dark"] .progress i {
+    background: #a89bff;
+    border-radius: 4px
+}
 :root[data-theme="dark"] .profile {
     border-top: 1px solid rgba(255, 255, 255, 0.12)
+}
+:root[data-theme="dark"] .profile>span {
+    color: #aaa
+}
+:root[data-theme="dark"] .avatar {
+    border-radius: 50%;
+    color: white
 }
 :root[data-theme="dark"] .eyebrow {
     color: hsla(42, 20%, 68%, 1)
@@ -155,37 +255,89 @@
 }
 :root[data-theme="dark"] .icon-btn, :root[data-theme="dark"] .soft-btn, :root[data-theme="dark"] .text-btn {
     border: 1px solid rgba(255, 255, 255, 0.14);
-    background: hsla(42, 10%, 14%, 1)
+    background: hsla(42, 10%, 14%, 1);
+    border-radius: 8px
+}
+:root[data-theme="dark"] .new-btn, :root[data-theme="dark"] .primary {
+    border: 0;
+    background: #5c43d5;
+    color: white;
+    border-radius: 8px
 }
 :root[data-theme="dark"] .hero {
+    border-radius: 14px;
+    background: linear-gradient(110deg,#292143,#4c367d);
+    color: #fff;
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.36)
 }
+:root[data-theme="dark"] .live-dot {
+    color: #d7ffbb
+}
+:root[data-theme="dark"] .hero h2 span {
+    color: #a294cd
+}
+:root[data-theme="dark"] .hero p {
+    color: #cbc4df
+}
+:root[data-theme="dark"] .hero-stats div {
+    border-left: 1px solid #786aa5
+}
+:root[data-theme="dark"] .hero-stats em {
+    color: #aaa0cc
+}
+:root[data-theme="dark"] .hero-stats small {
+    color: #c3bada
+}
 :root[data-theme="dark"] .workflow button {
+    border: 0;
+    background: transparent;
+    color: #a6a2b1;
     border-bottom: 2px solid rgba(255, 255, 255, 0.14)
 }
 :root[data-theme="dark"] .workflow button span {
+    border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.14)
 }
 :root[data-theme="dark"] .workflow button.current {
-    color: hsla(250, 59%, 85%, 1)
+    color: hsla(250, 59%, 85%, 1);
+    border-bottom-color: #5c43d5
+}
+:root[data-theme="dark"] .workflow button.current span, :root[data-theme="dark"] .workflow button.done span {
+    background: #5c43d5;
+    color: #fff;
+    border-color: #5c43d5
 }
 :root[data-theme="dark"] .panel {
+    background: white;
     border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
     box-shadow: 0 3px 9px rgba(0, 0, 0, 0.15)
 }
 :root[data-theme="dark"] .count-pill, :root[data-theme="dark"] .mode {
     background: hsla(253, 42%, 17%, 1);
-    color: hsla(250, 63%, 89%, 1)
+    color: hsla(250, 63%, 89%, 1);
+    border-radius: 20px
 }
 :root[data-theme="dark"] .member-card {
     border: 1px solid rgba(255, 255, 255, 0.14);
-    background: hsla(42, 10%, 14%, 1)
+    background: hsla(42, 10%, 14%, 1);
+    border-radius: 9px
 }
 :root[data-theme="dark"] .member-card.selected {
+    border-color: #8c7aee;
     background: hsla(250, 42%, 17%, 1)
 }
+:root[data-theme="dark"] .member-card small {
+    color: #8b8796
+}
 :root[data-theme="dark"] .toggle {
-    border: 1px solid rgba(255, 255, 255, 0.14)
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 50%;
+    color: white
+}
+:root[data-theme="dark"] .selected .toggle {
+    background: #5c43d5;
+    border-color: #5c43d5
 }
 :root[data-theme="dark"] .panel-foot {
     border-top: 1px solid rgba(255, 255, 255, 0.14);
@@ -193,54 +345,81 @@
 }
 :root[data-theme="dark"] .warning {
     background: hsla(38, 42%, 17%, 1);
-    color: hsla(33, 79%, 72%, 1)
+    color: hsla(33, 79%, 72%, 1);
+    border-radius: 7px
 }
 :root[data-theme="dark"] .draw-body {
-    background: hsla(252, 42%, 17%, 1)
+    background: hsla(252, 42%, 17%, 1);
+    border-radius: 10px
+}
+:root[data-theme="dark"] .wheel {
+    border-radius: 50%;
+    background: conic-gradient(#f1bc55 0 45deg,#6f56d9 45deg 90deg,#ed7872 90deg 135deg,#57b695 135deg 180deg,#e89848 180deg 225deg,#537ce8 225deg 270deg,#ae74e5 270deg 315deg,#e661a1 315deg);
+    box-shadow: 0 5px 15px #5944a733
 }
 :root[data-theme="dark"] .wheel-inner {
     background: hsla(42, 10%, 14%, 1);
+    border-radius: 50%;
     color: hsla(250, 63%, 89%, 1)
+}
+:root[data-theme="dark"] .wheel-inner small {
+    color: #8c8699
 }
 :root[data-theme="dark"] .tag {
     color: hsla(250, 63%, 89%, 1)
 }
 :root[data-theme="dark"] .draw-list div {
-    border: 1px solid rgba(255, 255, 255, 0.14)
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 7px
 }
 :root[data-theme="dark"] .draw-list b {
     color: hsla(250, 63%, 89%, 1)
 }
 :root[data-theme="dark"] .match {
-    border: 1px solid rgba(255, 255, 255, 0.14)
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 9px
 }
 :root[data-theme="dark"] .match-top {
     color: hsla(42, 20%, 68%, 1)
 }
 :root[data-theme="dark"] .match-top span {
     background: hsla(253, 39%, 17%, 1);
-    color: hsla(42, 20%, 69%, 1)
+    color: hsla(42, 20%, 69%, 1);
+    border-radius: 4px
+}
+:root[data-theme="dark"] .teams small {
+    color: #8d8997
+}
+:root[data-theme="dark"] .teams strong {
+    color: #aaa5b4
 }
 :root[data-theme="dark"] .result-row {
-    border: 1px solid rgba(255, 255, 255, 0.14)
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px
 }
 :root[data-theme="dark"] .result-row>b {
     color: hsla(42, 20%, 68%, 1)
 }
 :root[data-theme="dark"] .result-row input {
-    border: 1px solid rgba(255, 255, 255, 0.14)
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 5px
 }
 :root[data-theme="dark"] .result-row em {
     color: hsla(42, 20%, 68%, 1)
 }
 :root[data-theme="dark"] .text-btn {
+    border: 0;
+    background: none;
     color: hsla(250, 63%, 89%, 1)
 }
 :root[data-theme="dark"] .rank-table {
-    border: 1px solid rgba(255, 255, 255, 0.14)
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: white;
+    border-radius: 10px
 }
 :root[data-theme="dark"] .rank-head {
-    background: hsla(260, 33%, 17%, 1)
+    background: hsla(260, 33%, 17%, 1);
+    color: #908b9a
 }
 :root[data-theme="dark"] .rank-row {
     border-top: 1px solid rgba(255, 255, 255, 0.14)
@@ -248,12 +427,27 @@
 :root[data-theme="dark"] .rank-row>span {
     color: hsla(42, 20%, 71%, 1)
 }
+:root[data-theme="dark"] .person small {
+    color: #918b9c
+}
 :root[data-theme="dark"] .level {
     color: hsla(250, 61%, 89%, 1) !important;
-    background: hsla(253, 42%, 17%, 1)
+    background: hsla(253, 42%, 17%, 1);
+    border-radius: 4px
+}
+:root[data-theme="dark"] .m0 {
+    background: #ecb62b
+}
+:root[data-theme="dark"] .m1 {
+    background: #aeb4c1
+}
+:root[data-theme="dark"] .m2 {
+    background: #cb8553
 }
 :root[data-theme="dark"] .member-summary div {
-    border: 1px solid rgba(255, 255, 255, 0.14)
+    background: white;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px
 }
 :root[data-theme="dark"] .member-summary b {
     color: hsla(250, 63%, 89%, 1)
@@ -262,7 +456,8 @@
     color: hsla(42, 20%, 68%, 1)
 }
 :root[data-theme="dark"] .search {
-    border: 1px solid rgba(255, 255, 255, 0.14)
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 7px
 }
 :root[data-theme="dark"] .member-table>div {
     border-top: 1px solid rgba(255, 255, 255, 0.14)
@@ -271,6 +466,8 @@
     color: hsla(156, 51%, 73%, 1)
 }
 :root[data-theme="dark"] .more {
+    border: 0;
+    background: none;
     color: hsla(42, 20%, 70%, 1)
 }
 :root[data-theme="dark"] .history-filters label, :root[data-theme="dark"] .ranking-toolbar label {
@@ -278,11 +475,13 @@
 }
 :root[data-theme="dark"] .history-filters select, :root[data-theme="dark"] .ranking-toolbar select {
     border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
     background: hsla(42, 10%, 14%, 1);
     color: hsla(42, 20%, 84%, 1)
 }
 :root[data-theme="dark"] .history-list article {
-    border: 1px solid rgba(255, 255, 255, 0.14)
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px
 }
 :root[data-theme="dark"] .history-list span {
     color: hsla(250, 63%, 89%, 1)
@@ -295,14 +494,19 @@
     border-color: rgba(255, 255, 255, 0.14);
     background: hsla(42, 10%, 14%, 1)
 }
+:root[data-theme="dark"] .attendance-mark.waiting {
+    color: transparent !important
+}
 :root[data-theme="dark"] .empty-ranking {
     color: hsla(42, 20%, 68%, 1)
 }
 :root[data-theme="dark"] .history-detail, :root[data-theme="dark"] .confirm-modal {
-    background: hsla(42, 10%, 14%, 1)
+    background: hsla(42, 10%, 14%, 1);
+    border-radius: 16px
 }
 :root[data-theme="dark"] .history-match-list>div {
-    border: 1px solid rgba(255, 255, 255, 0.14)
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px
 }
 :root[data-theme="dark"] .history-match-list strong {
     color: hsla(250, 63%, 89%, 1)
@@ -310,7 +514,13 @@
 :root[data-theme="dark"] .member-menu {
     background: hsla(42, 10%, 14%, 1);
     border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.36)
+}
+:root[data-theme="dark"] .member-menu button {
+    border: 0;
+    background: transparent;
+    border-radius: 6px
 }
 :root[data-theme="dark"] .member-menu button:hover {
     background: hsla(253, 42%, 17%, 1)
@@ -320,17 +530,20 @@
 }
 :root[data-theme="dark"] .member-editor {
     background: hsla(42, 10%, 14%, 1);
+    border-radius: 16px;
     box-shadow: 0 20px 45px rgba(0, 0, 0, 0.48)
 }
 :root[data-theme="dark"] .member-editor label {
     color: hsla(42, 20%, 74%, 1)
 }
 :root[data-theme="dark"] .member-editor input {
-    border: 1px solid rgba(255, 255, 255, 0.14)
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 9px
 }
 :root[data-theme="dark"] .member-profile-popover {
     background: linear-gradient(145deg,hsla(42, 10%, 14%, 1),hsla(256, 42%, 17%, 1));
     border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
     box-shadow: 0 18px 45px rgba(0, 0, 0, 0.39)
 }
 :root[data-theme="dark"] .member-profile-popover h2 {
@@ -344,9 +557,13 @@
     color: hsla(250, 63%, 89%, 1)
 }
 :root[data-theme="dark"] .rank-table::-webkit-scrollbar-thumb {
-    background: hsla(255, 42%, 17%, 1)
+    background: hsla(255, 42%, 17%, 1);
+    border-radius: 99px
 }
 @media (max-width:800px) {
+    :root[data-theme="dark"] .rank-table {
+        border-radius: 12px
+    }
     :root[data-theme="dark"] .rank-table:after {
         background: hsla(255, 42%, 17%, 1);
         color: hsla(42, 20%, 68%, 1)
@@ -354,136 +571,448 @@
 }
 :root[data-theme="dark"] body {
     background: radial-gradient(circle at 18% 6%, rgba(255, 183, 0, 0.14), transparent 28%),
-    linear-gradient(180deg, hsla(43, 42%, 17%, 1) 0%, var(--club-ink-50) 44%, hsla(42, 42%, 17%, 1) 100%) !important
+    linear-gradient(180deg, hsla(43, 42%, 17%, 1) 0%, var(--club-ink-50) 44%, hsla(42, 42%, 17%, 1) 100%) !important;
+    color: var(--club-ink-900) !important
+}
+:root[data-theme="dark"] h1, :root[data-theme="dark"] h2, :root[data-theme="dark"] h3, :root[data-theme="dark"] .brand b, :root[data-theme="dark"] .login-brand b {
+    color: var(--club-ink-900)
+}
+:root[data-theme="dark"] p, :root[data-theme="dark"] small, :root[data-theme="dark"] .panel-head p, :root[data-theme="dark"] .hero p, :root[data-theme="dark"] .member-card small {
+    color: var(--club-ink-600)
+}
+:root[data-theme="dark"] button:focus-visible, :root[data-theme="dark"] input:focus-visible, :root[data-theme="dark"] select:focus-visible {
+    outline: none !important;
+    box-shadow: var(--club-focus) !important;
+    border-color: var(--club-gold-500) !important
+}
+:root[data-theme="dark"] .app-shell {
+    background: radial-gradient(circle at 82% 2%, rgba(255, 183, 0, 0.18), transparent 24%),
+    var(--club-ink-50) !important
 }
 :root[data-theme="dark"] .brand-mark, :root[data-theme="dark"] .login-brand > span {
-    color: #1a1408 !important
+    border-radius: 14px !important;
+    background: var(--club-gold-500) !important;
+    color: #1a1408 !important;
+    box-shadow: var(--club-shadow-gold) !important
+}
+:root[data-theme="dark"] .brand small, :root[data-theme="dark"] .login-brand small {
+    color: rgba(255, 255, 255, 0.62) !important
+}
+:root[data-theme="dark"] nav button {
+    border: 1px solid transparent !important;
+    border-radius: var(--club-radius-md) !important;
+    color: rgba(255, 255, 255, 0.66) !important
 }
 :root[data-theme="dark"] nav button:hover {
-    background: rgba(255, 255, 255, 0.015) !important
+    background: rgba(255, 255, 255, 0.015) !important;
+    color: var(--club-white) !important
+}
+:root[data-theme="dark"] nav button.active {
+    background: rgba(255, 183, 0, 0.14) !important;
+    border-color: rgba(255, 183, 0, 0.32) !important;
+    color: var(--club-gold-100) !important;
+    box-shadow: inset 3px 0 0 var(--club-gold-500)
+}
+:root[data-theme="dark"] .live-dot, :root[data-theme="dark"] .eyebrow {
+    color: var(--club-gold-700) !important
 }
 :root[data-theme="dark"] .progress {
     background: rgba(255, 255, 255, 0.026) !important
 }
+:root[data-theme="dark"] .progress i {
+    background: linear-gradient(90deg, var(--club-gold-500), var(--club-gold-200)) !important
+}
 :root[data-theme="dark"] .profile {
     border-top-color: rgba(255, 255, 255, 0.14) !important
 }
+:root[data-theme="dark"] .icon-btn, :root[data-theme="dark"] .soft-btn, :root[data-theme="dark"] .text-btn, :root[data-theme="dark"] .secondary, :root[data-theme="dark"] .skip {
+    border: 1px solid var(--club-ink-200) !important;
+    border-radius: var(--club-radius-md) !important;
+    background: var(--club-white) !important;
+    color: var(--club-ink-700) !important;
+    box-shadow: var(--club-shadow-xs) !important
+}
+:root[data-theme="dark"] .icon-btn:hover, :root[data-theme="dark"] .soft-btn:hover, :root[data-theme="dark"] .text-btn:hover, :root[data-theme="dark"] .secondary:hover {
+    border-color: var(--club-gold-400) !important;
+    background: var(--club-gold-50) !important
+}
 :root[data-theme="dark"] .attendance-actions .soft-btn {
-    color: #1a1408 !important
+    border: 2px solid var(--club-gold-600) !important;
+    background: linear-gradient(180deg, var(--club-gold-300), var(--club-gold-500)) !important;
+    color: #1a1408 !important;
+    box-shadow: var(--club-shadow-gold) !important
+}
+:root[data-theme="dark"] .attendance-actions .soft-btn:hover:not(:disabled) {
+    border-color: var(--club-gold-700) !important;
+    background: linear-gradient(180deg, var(--club-gold-400), var(--club-gold-600)) !important
+}
+:root[data-theme="dark"] .attendance-actions .soft-btn:disabled {
+    border-color: var(--club-ink-200) !important;
+    background: var(--club-ink-100) !important;
+    color: var(--club-ink-500) !important;
+    box-shadow: none !important
 }
 :root[data-theme="dark"] .primary, :root[data-theme="dark"] .new-btn {
-    color: #1a1408 !important
+    border: 0 !important;
+    border-radius: var(--club-radius-md) !important;
+    background: linear-gradient(180deg, var(--club-gold-400), var(--club-gold-500)) !important;
+    color: #1a1408 !important;
+    box-shadow: var(--club-shadow-sm) !important
+}
+:root[data-theme="dark"] .primary:hover:not(:disabled), :root[data-theme="dark"] .new-btn:hover:not(:disabled) {
+    background: linear-gradient(180deg, var(--club-gold-500), var(--club-gold-600)) !important;
+    box-shadow: var(--club-shadow-gold) !important
 }
 :root[data-theme="dark"] .hero {
+    border: 1px solid rgba(255, 183, 0, 0.24);
+    border-radius: var(--club-radius-xl) !important;
     background: radial-gradient(circle at 92% -10%, rgba(255, 183, 0, 0.24), transparent 32%),
     radial-gradient(circle at 0% 100%, rgba(255, 237, 182, 0.189), transparent 36%),
-    linear-gradient(135deg, hsla(42, 10%, 14%, 0.98), hsla(41, 42%, 17%, 0.94)) !important
+    linear-gradient(135deg, hsla(42, 10%, 14%, 0.98), hsla(41, 42%, 17%, 0.94)) !important;
+    box-shadow: var(--club-shadow-md) !important
+}
+:root[data-theme="dark"] .hero::after {
+    border: 1px solid rgba(255, 183, 0, 0.22);
+    border-radius: 50%
+}
+:root[data-theme="dark"] .hero h2, :root[data-theme="dark"] .hero-stats b {
+    color: var(--club-ink-900) !important
+}
+:root[data-theme="dark"] .hero h2 span, :root[data-theme="dark"] .hero p, :root[data-theme="dark"] .hero-stats em, :root[data-theme="dark"] .hero-stats small {
+    color: var(--club-ink-600) !important
+}
+:root[data-theme="dark"] .hero-stats div {
+    border-left-color: rgba(255, 183, 0, 0.34) !important
+}
+:root[data-theme="dark"] .workflow button {
+    color: var(--club-ink-500) !important;
+    border-bottom-color: var(--club-ink-200) !important
+}
+:root[data-theme="dark"] .workflow button span {
+    border-color: var(--club-ink-300) !important;
+    background: var(--club-white);
+    color: var(--club-ink-600)
+}
+:root[data-theme="dark"] .workflow button.current, :root[data-theme="dark"] .workflow button.done {
+    color: var(--club-ink-900) !important;
+    border-bottom-color: var(--club-gold-500) !important
 }
 :root[data-theme="dark"] .workflow button.current span, :root[data-theme="dark"] .workflow button.done span {
+    background: var(--club-gold-500) !important;
+    border-color: var(--club-gold-500) !important;
     color: #1a1408 !important
+}
+:root[data-theme="dark"] .panel, :root[data-theme="dark"] .rank-table, :root[data-theme="dark"] .member-summary div, :root[data-theme="dark"] .login-card, :root[data-theme="dark"] .checkin-modal, :root[data-theme="dark"] .history-detail, :root[data-theme="dark"] .confirm-modal, :root[data-theme="dark"] .member-editor, :root[data-theme="dark"] .member-profile-popover {
+    border: 1px solid var(--club-ink-200) !important;
+    border-radius: var(--club-radius-lg) !important;
+    background: var(--club-white) !important;
+    box-shadow: var(--club-shadow-sm) !important
+}
+:root[data-theme="dark"] .panel-head, :root[data-theme="dark"] .panel-foot {
+    border-color: var(--club-ink-200) !important
 }
 :root[data-theme="dark"] .panel-head {
     background: linear-gradient(180deg, hsla(41, 42%, 17%, 0.82), hsla(42, 10%, 14%, 0.74))
+}
+:root[data-theme="dark"] .count-pill, :root[data-theme="dark"] .mode, :root[data-theme="dark"] .tag, :root[data-theme="dark"] .level {
+    border: 1px solid rgba(255, 183, 0, 0.34) !important;
+    background: var(--club-gold-50) !important;
+    color: var(--club-gold-700) !important;
+    border-radius: 999px !important
+}
+:root[data-theme="dark"] .member-card, :root[data-theme="dark"] .match, :root[data-theme="dark"] .history-list article, :root[data-theme="dark"] .result-row, :root[data-theme="dark"] .draw-list div {
+    border-color: var(--club-ink-200) !important;
+    border-radius: var(--club-radius-md) !important;
+    background: var(--club-white) !important
+}
+:root[data-theme="dark"] .member-card.selected {
+    background: var(--club-gold-50) !important;
+    border-color: var(--club-gold-500) !important
 }
 :root[data-theme="dark"] .avatar {
     border: 2px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.19)
 }
+:root[data-theme="dark"] .attendance-live {
+    color: var(--club-success) !important
+}
+:root[data-theme="dark"] .attendance-live i {
+    background: var(--club-success) !important
+}
 :root[data-theme="dark"] .attendance-mark.yes {
-    border-color: rgba(255, 255, 255, 0.12) !important
+    background: var(--club-success) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: var(--club-white) !important
+}
+:root[data-theme="dark"] .attendance-mark.no {
+    background: var(--club-danger) !important;
+    border-color: rgba(214, 69, 69, 0.2) !important;
+    color: var(--club-white) !important
+}
+:root[data-theme="dark"] .attendance-mark.waiting {
+    background: var(--club-ink-100) !important;
+    border-color: var(--club-ink-200) !important
+}
+:root[data-theme="dark"] .warning {
+    border: 1px solid var(--club-gold-200) !important;
+    background: var(--club-gold-50) !important;
+    color: var(--club-gold-700) !important
 }
 :root[data-theme="dark"] .draw-body {
+    border: 1px solid var(--club-ink-200);
     background: radial-gradient(circle at 18% 12%, rgba(255, 183, 0, 0.24), transparent 26%),
     linear-gradient(135deg, hsla(42, 10%, 14%, 0.92), rgba(255, 247, 220, 0.189)),
-    var(--club-ink-50) !important
+    var(--club-ink-50) !important;
+    border-radius: var(--club-radius-lg) !important
 }
 :root[data-theme="dark"] .wheel {
+    border: 10px solid #fff8e7;
+    background: var(--wheel-gradient, conic-gradient(var(--club-gold-500), var(--club-ink-900))) !important;
     box-shadow: 0 22px 42px rgba(0, 0, 0, 0.48),
     0 0 0 1px rgba(0, 0, 0, 0.29),
     inset 0 0 0 1px rgba(255, 255, 255, 0.074) !important
 }
 :root[data-theme="dark"] .wheel::before {
+    border-radius: 999px;
     border: 1px dashed rgba(255, 255, 255, 0.14);
     box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0.014),
     inset 0 0 24px rgba(0, 0, 0, 0.24)
 }
+:root[data-theme="dark"] .wheel::after {
+    border-left-width: 13px !important;
+    border-right-width: 13px !important;
+    border-top-width: 24px !important;
+    border-top-color: var(--club-ink-900) !important
+}
 :root[data-theme="dark"] .wheel-inner {
+    border: 6px solid rgba(255, 183, 0, 0.22);
     background: radial-gradient(circle at 34% 22%, hsla(42, 10%, 14%, 1), hsla(45, 42%, 17%, 1) 56%, hsla(45, 42%, 17%, 1));
+    color: var(--club-ink-900) !important;
     box-shadow: 0 14px 30px rgba(0, 0, 0, 0.38),
     inset 0 0 0 1px rgba(255, 255, 255, 0.098)
 }
+:root[data-theme="dark"] .wheel-inner b {
+    color: var(--club-ink-900)
+}
+:root[data-theme="dark"] .wheel-inner small {
+    color: var(--club-gold-700) !important
+}
+:root[data-theme="dark"] .wheel-numbers {
+    border-radius: 999px
+}
 :root[data-theme="dark"] .wheel-numbers span {
+    border-radius: 999px;
     border: 3px solid rgba(255, 255, 255, 0.14);
     background: hsla(48, 42%, 17%, 1);
+    color: var(--club-ink-900);
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.38),
     inset 0 0 0 1px rgba(255, 183, 0, 0.22)
 }
 :root[data-theme="dark"] .level-wheel-1 .wheel-numbers span {
-    color: hsla(213, 85%, 75%, 1)
+    border-color: rgba(191, 228, 255, 0.9);
+    color: hsla(213, 85%, 75%, 1);
+    box-shadow: 0 8px 18px rgba(29, 127, 242, 0.18),
+    inset 0 0 0 1px rgba(29, 127, 242, 0.22)
 }
 :root[data-theme="dark"] .level-wheel-2 .wheel-numbers span {
+    border-color: rgba(185, 245, 208, 0.9);
     color: hsla(159, 85%, 72%, 1);
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.43),
     inset 0 0 0 1px rgba(0, 0, 0, 0.5)
 }
+@media (max-width: 560px) {
+    :root[data-theme="dark"] .wheel {
+        border-width: 8px
+    }
+    :root[data-theme="dark"] .wheel-inner {
+        border-width: 5px
+    }
+}
+:root[data-theme="dark"] .wheel {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important
+}
+:root[data-theme="dark"] .wheel-pointer {
+    border-left: 13px solid transparent;
+    border-right: 13px solid transparent;
+    border-top: 25px solid var(--club-ink-900)
+}
 :root[data-theme="dark"] .wheel-disc {
+    border: 10px solid #fff8e7;
+    border-radius: 999px;
     background: var(--wheel-gradient, conic-gradient(hsla(47, 42%, 17%, 1), hsla(42, 10%, 14%, 1), #ffe39a, hsla(40, 42%, 17%, 1))) !important;
     box-shadow: 0 22px 42px rgba(0, 0, 0, 0.48),
     0 0 0 1px rgba(0, 0, 0, 0.29),
     inset 0 0 0 1px rgba(255, 255, 255, 0.074)
 }
 :root[data-theme="dark"] .wheel-disc::before {
+    border-radius: 999px;
+    border: 1px dashed rgba(184, 118, 14, 0.28);
     box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0.022),
     inset 0 0 24px rgba(0, 0, 0, 0.24)
 }
+:root[data-theme="dark"] .wheel .wheel-inner {
+    border-radius: 999px
+}
 :root[data-theme="dark"] .wheel-number.level-1 {
-    color: hsla(213, 85%, 75%, 1) !important
+    border-color: rgba(191, 228, 255, 0.95) !important;
+    color: hsla(213, 85%, 75%, 1) !important;
+    box-shadow: 0 8px 18px rgba(29, 127, 242, 0.18),
+    inset 0 0 0 1px rgba(29, 127, 242, 0.22) !important
 }
 :root[data-theme="dark"] .wheel-number.level-2 {
+    border-color: rgba(185, 245, 208, 0.95) !important;
     color: hsla(159, 85%, 72%, 1) !important;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.43),
     inset 0 0 0 1px rgba(0, 0, 0, 0.5) !important
 }
 :root[data-theme="dark"] .wheel-number.level-open {
+    border-color: rgba(255, 183, 0, 0.55) !important;
+    color: var(--club-gold-700) !important;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.43),
     inset 0 0 0 1px rgba(255, 183, 0, 0.28) !important
 }
+@media (max-width: 560px) {
+    :root[data-theme="dark"] .wheel-disc {
+        border-width: 8px
+    }
+}
+:root[data-theme="dark"] .draw-roster small {
+    color: var(--club-ink-500)
+}
+:root[data-theme="dark"] .draw-roster .drawn {
+    border-color: rgba(255, 183, 0, 0.45) !important;
+    background: var(--club-gold-50) !important
+}
+:root[data-theme="dark"] .rank-head {
+    background: radial-gradient(circle at 100% 0%, rgba(255, 183, 0, 0.2), transparent 30%),
+    var(--club-ink-900) !important;
+    color: rgba(255, 255, 255, 0.72) !important
+}
+:root[data-theme="dark"] .rank-row.top-rank {
+    background: linear-gradient(90deg, var(--club-gold-50), var(--club-white)) !important
+}
+:root[data-theme="dark"] .top-1, :root[data-theme="dark"] .top-2, :root[data-theme="dark"] .top-3 {
+    border-left-color: var(--club-gold-500) !important
+}
+:root[data-theme="dark"] .point-value, :root[data-theme="dark"] .rank-number, :root[data-theme="dark"] .text-btn, :root[data-theme="dark"] .history-list span, :root[data-theme="dark"] .draw-list b, :root[data-theme="dark"] .member-summary b {
+    color: var(--club-gold-700) !important
+}
 :root[data-theme="dark"] .m0, :root[data-theme="dark"] .m1, :root[data-theme="dark"] .m2 {
+    background: var(--club-gold-500) !important;
     color: #1a1408 !important
+}
+:root[data-theme="dark"] .positive {
+    color: var(--club-success) !important
+}
+:root[data-theme="dark"] .negative, :root[data-theme="dark"] .danger-text, :root[data-theme="dark"] .login-error {
+    color: var(--club-danger) !important
+}
+:root[data-theme="dark"] .search, :root[data-theme="dark"] .login-card input, :root[data-theme="dark"] .member-editor input, :root[data-theme="dark"] .result-row input, :root[data-theme="dark"] .history-filters select, :root[data-theme="dark"] .ranking-toolbar select {
+    border: 1px solid var(--club-ink-200) !important;
+    border-radius: var(--club-radius-md) !important;
+    background: var(--club-white) !important;
+    color: var(--club-ink-900) !important;
+    box-shadow: var(--club-shadow-xs)
+}
+:root[data-theme="dark"] .login-page {
+    background: radial-gradient(circle at 12% 12%, rgba(255, 183, 0, 0.28), transparent 28%),
+    linear-gradient(135deg, var(--club-ink-900), var(--club-ink-950)) !important
+}
+:root[data-theme="dark"] .login-card {
+    border-radius: var(--club-radius-xl) !important
+}
+:root[data-theme="dark"] .login-card::before {
+    background: linear-gradient(90deg, var(--club-gold-500), var(--club-gold-200))
+}
+:root[data-theme="dark"] .login-brand small {
+    color: var(--club-ink-500) !important
+}
+:root[data-theme="dark"] .modal-backdrop {
+    background: rgba(26, 25, 22, 0.58) !important
+}
+:root[data-theme="dark"] .modal-icon {
+    color: var(--club-ink-900) !important;
+    background: var(--club-gold-50) !important;
+    border: 1px solid var(--club-gold-200)
+}
+:root[data-theme="dark"] .member-menu {
+    border-color: var(--club-ink-200) !important;
+    border-radius: var(--club-radius-md) !important;
+    box-shadow: var(--club-shadow-md) !important
+}
+:root[data-theme="dark"] .member-menu button:hover {
+    background: var(--club-gold-50) !important
 }
 :root[data-theme="dark"] .brand-mark, :root[data-theme="dark"] .login-brand > span {
     background: radial-gradient(circle at 32% 26%, hsla(48, 42%, 17%, 1) 0 12%, transparent 13%),
     linear-gradient(145deg, var(--club-gold-300), var(--club-gold-500)) !important
 }
+:root[data-theme="dark"] .brand-mark::before, :root[data-theme="dark"] .login-brand > span::before {
+    border: 2.4px solid var(--club-ink-900);
+    border-radius: 52% 52% 46% 46%;
+    background: repeating-linear-gradient(90deg, transparent 0 4px, rgba(26, 25, 22, 0.38) 4px 5px),
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(26, 25, 22, 0.28) 5px 6px)
+}
+:root[data-theme="dark"] .brand-mark::after, :root[data-theme="dark"] .login-brand > span::after {
+    background: linear-gradient(135deg, var(--club-white), var(--club-gold-100))
+}
 :root[data-theme="dark"] .history-match-list > .history-match-row {
-    background: linear-gradient(90deg, hsla(41, 42%, 17%, 0.76), hsla(42, 10%, 14%, 0.98) 34%, hsla(42, 10%, 14%, 0.98) 66%, hsla(41, 42%, 17%, 0.76))
+    border: 1px solid var(--club-ink-200);
+    border-radius: var(--club-radius-md);
+    background: linear-gradient(90deg, hsla(41, 42%, 17%, 0.76), hsla(42, 10%, 14%, 0.98) 34%, hsla(42, 10%, 14%, 0.98) 66%, hsla(41, 42%, 17%, 0.76));
+    box-shadow: var(--club-shadow-xs)
+}
+:root[data-theme="dark"] .history-match-index {
+    color: var(--club-ink-500) !important
+}
+:root[data-theme="dark"] .history-team {
+    color: var(--club-ink-900) !important
 }
 :root[data-theme="dark"] .history-score {
+    border: 1px solid rgba(255, 183, 0, 0.38);
+    border-radius: 999px;
+    background: var(--club-ink-900);
+    color: var(--club-gold-100) !important;
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34)
 }
 :root[data-theme="dark"] .history-score i {
     color: hsla(42, 20%, 72%, 1)
 }
 @media (max-width: 800px) {
+    :root[data-theme="dark"] .hero {
+        border-radius: var(--club-radius-lg) !important
+    }
+}
+@media (max-width: 800px) {
+    :root[data-theme="dark"] .title-group .eyebrow {
+        color: var(--club-gold-700) !important
+    }
     :root[data-theme="dark"] .title-group h1 {
         color: hsla(42, 20%, 95%, 1) !important
     }
 }
 :root[data-theme="dark"] .member-profile-popover {
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 24px !important;
     background: linear-gradient(180deg, hsla(42, 10%, 14%, 1) 0%, hsla(43, 42%, 17%, 1) 100%) !important;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.43), 0 0 0 1px rgba(255, 255, 255, 0.089) inset !important
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.43), 0 0 0 1px rgba(255, 255, 255, 0.089) inset !important;
+    color: var(--club-ink-900) !important
 }
 :root[data-theme="dark"] .member-profile-popover::before {
     background: radial-gradient(circle at 18% 18%, hsla(42, 10%, 14%, 0.78), transparent 30%),
     linear-gradient(135deg, var(--profile-accent-soft), rgba(255, 255, 255, 0))
 }
 :root[data-theme="dark"] .profile-close {
+    border-radius: 999px !important;
     background: hsla(42, 10%, 14%, 0.76) !important;
     color: hsla(42, 20%, 94%, 1) !important;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.19)
 }
 :root[data-theme="dark"] .profile-hero-card p {
+    border-radius: 999px;
+    background: var(--profile-accent-soft);
     color: hsla(42, 20%, 94%, 1)
 }
 :root[data-theme="dark"] .profile-hero-card h2 {
@@ -491,6 +1020,7 @@
 }
 :root[data-theme="dark"] .profile-score-card {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
     background: linear-gradient(135deg, hsla(42, 10%, 14%, 0.88), hsla(42, 10%, 14%, 0.62)),
     linear-gradient(135deg, var(--profile-accent-soft), rgba(255, 255, 255, 0));
     box-shadow: 0 12px 26px rgba(0, 0, 0, 0.17)
@@ -506,6 +1036,7 @@
 }
 :root[data-theme="dark"] .member-profile-popover .profile-stat {
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 16px;
     background: hsla(42, 10%, 14%, 1) !important;
     color: hsla(42, 20%, 94%, 1) !important;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12)
@@ -524,25 +1055,79 @@
     background: hsla(42, 42%, 17%, 0.64);
     color: hsla(42, 20%, 75%, 1)
 }
+@media (max-width: 560px) {
+    :root[data-theme="dark"] .member-profile-popover {
+        border-radius: 22px !important
+    }
+}
+:root[data-theme="dark"] .month-close-card {
+    border: 1px solid var(--club-ink-200);
+    border-radius: var(--club-radius-lg);
+    background: radial-gradient(circle at 0% 0%, rgba(255, 183, 0, 0.12), transparent 30%),
+    var(--club-white);
+    box-shadow: var(--club-shadow-sm)
+}
+:root[data-theme="dark"] .month-close-card span {
+    color: var(--club-ink-600)
+}
+:root[data-theme="dark"] .month-close-card h3 {
+    color: var(--club-ink-950)
+}
+:root[data-theme="dark"] .month-close-card p {
+    color: var(--club-ink-600)
+}
+:root[data-theme="dark"] .month-close-card .month-close-feedback {
+    border-radius: 999px;
+    background: rgba(255, 183, 0, 0.16);
+    color: var(--club-ink-950)
+}
 :root[data-theme="dark"] .month-close-card.ready {
+    border-color: rgba(255, 183, 0, 0.5);
     background: radial-gradient(circle at 4% 8%, rgba(255, 183, 0, 0.22), transparent 33%),
-    linear-gradient(135deg, hsla(44, 42%, 17%, 1), hsla(42, 10%, 14%, 1))
+    linear-gradient(135deg, hsla(44, 42%, 17%, 1), hsla(42, 10%, 14%, 1));
+    box-shadow: 0 12px 30px rgba(255, 183, 0, 0.2)
+}
+:root[data-theme="dark"] .month-close-card.ready span {
+    color: var(--club-gold-700)
 }
 :root[data-theme="dark"] .month-close-card.closed {
     border-color: rgba(255, 255, 255, 0.12);
     background: radial-gradient(circle at 4% 8%, rgba(31, 138, 91, 0.12), transparent 33%),
     linear-gradient(135deg, hsla(152, 42%, 17%, 1), hsla(42, 10%, 14%, 1))
 }
+:root[data-theme="dark"] .month-close-card.closed span {
+    color: var(--club-success)
+}
+:root[data-theme="dark"] .month-close-card.waiting {
+    background: radial-gradient(circle at 4% 8%, rgba(121, 115, 106, 0.08), transparent 32%),
+    var(--club-white)
+}
+:root[data-theme="dark"] .brand-mark, :root[data-theme="dark"] .login-brand > span {
+    background: transparent url("/favicon.svg?v=sapp-badminton-icons") center / contain no-repeat !important;
+    box-shadow: 0 10px 24px rgba(255, 183, 0, 0.26) !important
+}
 :root[data-theme="dark"] .schedule-filter button {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
     background: hsla(42, 10%, 14%, 1);
-    color: hsla(42, 20%, 81%, 1)
+    color: hsla(42, 20%, 81%, 1);
+    box-shadow: none
+}
+:root[data-theme="dark"] .schedule-filter button.active {
+    border-color: rgba(255, 183, 0, 0.7);
+    background: linear-gradient(180deg, #ffcf55, #ffb700);
+    color: #17120a;
+    box-shadow: 0 4px 10px rgba(255, 183, 0, 0.22)
+}
+:root[data-theme="dark"] .schedule-case.relaxed {
+    border-color: rgba(37, 99, 235, 0.2) !important
 }
 :root[data-theme="dark"] .schedule-case.relaxed .schedule-case-head {
     background: radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.12), transparent 32%),
     linear-gradient(180deg, hsla(214, 42%, 17%, 0.92), hsla(42, 10%, 14%, 0.82))
 }
 :root[data-theme="dark"] .schedule-case.relaxed .schedule-case-badge {
+    border-color: rgba(37, 99, 235, 0.28);
     background: hsla(214, 42%, 17%, 1);
     color: hsla(224, 76%, 82%, 1)
 }
@@ -554,6 +1139,8 @@
     color: hsla(42, 20%, 77%, 1)
 }
 :root[data-theme="dark"] .schedule-case-badge {
+    border: 1px solid rgba(255, 183, 0, 0.38);
+    border-radius: 999px;
     background: hsla(46, 42%, 17%, 1);
     color: hsla(41, 85%, 72%, 1)
 }
@@ -568,7 +1155,14 @@
     border-top: 1px solid rgba(255, 255, 255, 0.12);
     color: hsla(42, 20%, 74%, 1)
 }
+:root[data-theme="dark"] .schedule-readonly-note b {
+    border-radius: 999px;
+    background: #1a1916;
+    color: #ffdc74
+}
 :root[data-theme="dark"] .schedule-relaxed-note {
+    border: 1px dashed rgba(37, 99, 235, 0.26);
+    border-radius: 16px;
     background: radial-gradient(circle at 0 0, rgba(37, 99, 235, 0.11), transparent 34%),
     hsla(214, 42%, 17%, 1)
 }
@@ -578,24 +1172,40 @@
 :root[data-theme="dark"] .schedule-relaxed-note p {
     color: hsla(42, 20%, 78%, 1)
 }
+:root[data-theme="dark"] .team-pair > i {
+    color: #9a8f7f
+}
 :root[data-theme="dark"] .slot-token {
+    border: 2px solid transparent;
+    border-radius: 15px;
     background: hsla(40, 36%, 17%, 1);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19)
+}
+:root[data-theme="dark"] .slot-token b {
+    color: currentColor !important
 }
 :root[data-theme="dark"] .slot-token small {
     color: hsla(42, 20%, 83%, 1)
 }
 :root[data-theme="dark"] .slot-token.level-1 {
-    background: linear-gradient(180deg, hsla(42, 10%, 14%, 1), var(--slot-level-1-soft))
+    border-color: var(--slot-level-1-border);
+    background: linear-gradient(180deg, hsla(42, 10%, 14%, 1), var(--slot-level-1-soft));
+    color: var(--slot-level-1)
 }
 :root[data-theme="dark"] .slot-token.level-2 {
-    background: linear-gradient(180deg, hsla(42, 10%, 14%, 1), var(--slot-level-2-soft))
+    border-color: var(--slot-level-2-border);
+    background: linear-gradient(180deg, hsla(42, 10%, 14%, 1), var(--slot-level-2-soft));
+    color: var(--slot-level-2)
 }
 :root[data-theme="dark"] .slot-token.level-open {
+    border-color: rgba(255, 183, 0, 0.48);
     background: linear-gradient(180deg, hsla(42, 10%, 14%, 1), hsla(46, 42%, 17%, 1));
     color: hsla(37, 85%, 73%, 1)
 }
 :root[data-theme="dark"] .schedule-match-card .teams strong {
+    border-radius: 999px;
+    background: #1a1916;
+    color: #ffdc74 !important;
     box-shadow: 0 10px 22px rgba(0, 0, 0, 0.34)
 }
 :root[data-theme="dark"] .match-result-row.confirmed {
@@ -603,27 +1213,53 @@
     background: radial-gradient(circle at 100% 0%, rgba(31, 138, 91, 0.08), transparent 34%),
     hsla(42, 10%, 14%, 1) !important
 }
+:root[data-theme="dark"] .match-result-row.confirmed > b::after {
+    border-radius: 999px;
+    background: #1f8a5b;
+    color: #fff
+}
 :root[data-theme="dark"] .schedule-result-row > b {
     color: hsla(43, 85%, 72%, 1) !important
+}
+:root[data-theme="dark"] .schedule-result-row .slot-token {
+    border-radius: 12px
 }
 @media (max-width: 800px) {
     :root[data-theme="dark"] .schedule-filter button {
         box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12)
     }
+    :root[data-theme="dark"] .slot-token {
+        border-radius: 12px
+    }
 }
 :root[data-theme="dark"] .schedule-library .schedule-case-head p {
+    border-radius: 999px;
     background: hsla(46, 42%, 17%, 1);
     color: hsla(43, 85%, 72%, 1)
 }
 :root[data-theme="dark"] .schedule-library .slot-token {
+    border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.14)
+}
+:root[data-theme="dark"] .schedule-library .schedule-match-card .teams strong {
+    box-shadow: none
+}
+:root[data-theme="dark"] .schedule-filter button:disabled {
+    box-shadow: none
 }
 @media (max-width: 800px) {
     :root[data-theme="dark"] .ranking-toolbar > p {
         color: var(--club-ink-600, hsla(42, 20%, 71%, 1)) !important
     }
+    :root[data-theme="dark"] .rank-table, :root[data-theme="dark"] .live-rank-table, :root[data-theme="dark"] .live-ranking-panel .rank-table {
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important
+    }
     :root[data-theme="dark"] .rank-row.rank-columns {
         border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 18px !important;
         background: radial-gradient(circle at 0% 0%, rgba(255, 183, 0, 0.12), transparent 32%),
       hsla(42, 10%, 14%, 1) !important;
         box-shadow: 0 12px 28px rgba(0, 0, 0, 0.19) !important
@@ -632,6 +1268,7 @@
         box-shadow: 0 14px 34px rgba(0, 0, 0, 0.29) !important
     }
     :root[data-theme="dark"] .rank-row.top-1 {
+        border-color: rgba(232, 178, 41, 0.5) !important;
         background: linear-gradient(135deg, hsla(49, 42%, 17%, 0.96), hsla(42, 10%, 14%, 0.98)) !important
     }
     :root[data-theme="dark"] .rank-row.top-2 {
@@ -639,10 +1276,12 @@
         background: linear-gradient(135deg, hsla(42, 10%, 16%, 0.96), hsla(42, 10%, 14%, 0.98)) !important
     }
     :root[data-theme="dark"] .rank-row.top-3 {
+        border-color: rgba(205, 135, 82, 0.48) !important;
         background: linear-gradient(135deg, hsla(22, 42%, 17%, 0.96), hsla(42, 10%, 14%, 0.98)) !important
     }
     :root[data-theme="dark"] .rank-row .rank-number {
         border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 50%;
         background: hsla(43, 42%, 17%, 1);
         color: var(--club-ink-950, hsla(42, 20%, 93%, 1)) !important
     }
@@ -657,6 +1296,7 @@
     }
     :root[data-theme="dark"] .rank-row > span {
         border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
         background: hsla(39, 42%, 17%, 0.7);
         color: var(--club-ink-900, hsla(42, 20%, 90%, 1)) !important
     }
@@ -668,10 +1308,15 @@
     color: var(--club-ink-600, hsla(42, 20%, 71%, 1))
 }
 :root[data-theme="dark"] .ranking-export-btn {
+    border-color: rgba(255, 183, 0, 0.42) !important;
     color: hsla(38, 85%, 72%, 1) !important
 }
 @media (max-width: 800px) {
+    :root[data-theme="dark"] .ranking-export-btn {
+        border-radius: 13px !important
+    }
     :root[data-theme="dark"] .rank-row.rank-columns {
+        border-radius: 15px !important;
         background: hsla(42, 10%, 14%, 1) !important;
         box-shadow: 0 7px 18px rgba(0, 0, 0, 0.17) !important
     }
@@ -683,6 +1328,7 @@
         box-shadow: 0 9px 22px rgba(0, 0, 0, 0.26) !important
     }
     :root[data-theme="dark"] .rank-row.top-1 {
+        border-color: rgba(236, 182, 43, 0.58) !important;
         background: radial-gradient(circle at 6% 16%, rgba(255, 199, 49, 0.25), transparent 24%),
       linear-gradient(135deg, hsla(49, 42%, 17%, 1) 0%, hsla(48, 42%, 17%, 1) 62%, hsla(42, 10%, 14%, 1) 100%) !important
     }
@@ -692,15 +1338,19 @@
       linear-gradient(135deg, hsla(218, 36%, 17%, 1) 0%, hsla(42, 10%, 14%, 1) 70%) !important
     }
     :root[data-theme="dark"] .rank-row.top-3 {
+        border-color: rgba(205, 135, 82, 0.58) !important;
         background: radial-gradient(circle at 6% 16%, rgba(211, 133, 63, 0.22), transparent 24%),
       linear-gradient(135deg, hsla(27, 42%, 17%, 1) 0%, hsla(42, 10%, 14%, 1) 72%) !important
     }
     :root[data-theme="dark"] .rank-row .rank-number {
         border-color: rgba(255, 255, 255, 0.12) !important;
         background: hsla(42, 10%, 14%, 1) !important;
-        color: hsla(42, 20%, 94%, 1) !important
+        color: hsla(42, 20%, 94%, 1) !important;
+        box-shadow: none !important
     }
     :root[data-theme="dark"] .rank-mobile-stats span {
+        border: 0 !important;
+        background: transparent !important;
         color: hsla(42, 20%, 94%, 1) !important
     }
     :root[data-theme="dark"] .rank-mobile-stats em {
@@ -719,6 +1369,7 @@
 @media (max-width: 800px) {
     :root[data-theme="dark"] .rank-match-count {
         border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
         background: hsla(42, 10%, 14%, 0.66);
         color: hsla(42, 20%, 77%, 1)
     }
@@ -740,6 +1391,12 @@
     }
 }
 @media (max-width: 800px) {
+    :root[data-theme="dark"] .rank-mobile-stats span {
+        border: 0 !important;
+        background: transparent !important
+    }
+}
+@media (max-width: 800px) {
     :root[data-theme="dark"] .rank-row:not(.top-rank) .point-value {
         color: hsla(42, 20%, 95%, 1) !important
     }
@@ -752,6 +1409,9 @@
     :root[data-theme="dark"] .rank-row.top-3 .point-value {
         color: hsla(24, 67%, 78%, 1) !important
     }
+}
+:root[data-theme="dark"] .ranking-toolbar .ranking-filter-row select, :root[data-theme="dark"] .ranking-toolbar .ranking-export-btn {
+    border-radius: 12px !important
 }
 :root[data-theme="dark"] .attendance-count-pill b {
     color: var(--club-gold-700, hsla(38, 85%, 72%, 1))
@@ -768,7 +1428,21 @@
 :root[data-theme="dark"] .attendance-status.pending {
     color: var(--club-ink-500, hsla(42, 20%, 69%, 1))
 }
+:root[data-theme="dark"] .checkin .attendance-mark {
+    border-radius: 999px !important
+}
+:root[data-theme="dark"] .checkin-actions-foot .soft-btn, :root[data-theme="dark"] .checkin-actions-foot .primary {
+    border-radius: 12px !important
+}
+@media (max-width: 560px) {
+    :root[data-theme="dark"] .attendance-count-pill {
+        border-radius: 999px !important
+    }
+}
 @media (min-width: 801px) {
+    :root[data-theme="dark"] .rank-table .rank-row.rank-columns.top-rank {
+        border-left: 0 !important
+    }
     :root[data-theme="dark"] .rank-table .rank-row.rank-columns.top-1 {
         background: linear-gradient(90deg, rgba(255, 230, 132, 0.34), hsla(48, 42%, 17%, 0.72) 34%, hsla(42, 10%, 14%, 0.98) 74%) !important;
         box-shadow: inset 5px 0 0 #e8b229,
@@ -821,16 +1495,54 @@
         color: var(--club-gold-700, hsla(38, 85%, 72%, 1)) !important
     }
 }
+:root[data-theme="dark"] .hero-status {
+    color: var(--club-ink-900)
+}
+:root[data-theme="dark"] .hero-progress-month {
+    color: var(--bar-accent)
+}
+:root[data-theme="dark"] .hero-progress-count small {
+    color: var(--bar-muted)
+}
+:root[data-theme="dark"] .hero-progress-bar {
+    border-radius: 999px;
+    background: var(--bar-track)
+}
+:root[data-theme="dark"] .hero-progress-bar i {
+    border-radius: inherit;
+    background: linear-gradient(90deg, #ffb700, #ffd66d)
+}
+:root[data-theme="dark"] .hero-champion {
+    border: 0;
+    background: none;
+    color: inherit
+}
+:root[data-theme="dark"] button.hero-champion:focus-visible {
+    border-radius: 12px;
+    outline: 2px solid rgba(255, 183, 0, 0.7);
+    outline-offset: 3px
+}
+:root[data-theme="dark"] .hero-champion .avatar.small {
+    box-shadow: 0 0 0 2px rgba(255, 200, 61, 0.8) !important
+}
 :root[data-theme="dark"] .rules-section-title {
     color: hsla(42, 20%, 95%, 1)
 }
+:root[data-theme="dark"] .rules-section-title::before {
+    border-radius: 4px;
+    background: linear-gradient(180deg, #ffd24d 0%, #ffb700 100%)
+}
 :root[data-theme="dark"] .rules-pane {
+    border: 1px solid var(--rules-line);
+    border-radius: var(--rules-radius);
     background: var(--club-white, hsla(42, 10%, 14%, 1))
 }
 :root[data-theme="dark"] .rules-sub {
     color: hsla(42, 20%, 95%, 1)
 }
 :root[data-theme="dark"] .rules-steps li {
+    border: 1px solid var(--rules-line);
+    border-radius: var(--rules-radius);
     background: var(--club-white, hsla(42, 10%, 14%, 1))
 }
 :root[data-theme="dark"] .rules-step-no {
@@ -839,6 +1551,16 @@
 :root[data-theme="dark"] .rules-steps h3 {
     color: hsla(42, 20%, 95%, 1)
 }
+:root[data-theme="dark"] .rules-steps p {
+    color: var(--rules-muted)
+}
+:root[data-theme="dark"] .rules-list li {
+    color: var(--rules-text)
+}
+:root[data-theme="dark"] .rules-list li::before {
+    border-radius: 50%;
+    background: #f0a800
+}
 :root[data-theme="dark"] .rules-list-numbered li::before {
     background: hsla(44, 42%, 17%, 1);
     color: hsla(43, 85%, 72%, 1)
@@ -846,16 +1568,34 @@
 :root[data-theme="dark"] .rules-list strong {
     color: hsla(42, 20%, 95%, 1)
 }
+:root[data-theme="dark"] .rules-level-group + .rules-level-group {
+    border-top: 1px dashed var(--rules-line)
+}
 :root[data-theme="dark"] .rules-level-head b {
     color: hsla(42, 20%, 95%, 1)
 }
+:root[data-theme="dark"] .rules-level-head small {
+    color: var(--rules-muted)
+}
+:root[data-theme="dark"] .rules-member-list span {
+    border: 1px solid;
+    border-radius: 999px
+}
 :root[data-theme="dark"] .rules-level-1 .rules-member-list span {
+    border-color: #b8dcff;
     background: hsla(210, 42%, 17%, 1);
     color: hsla(212, 84%, 72%, 1)
 }
 :root[data-theme="dark"] .rules-level-2 .rules-member-list span {
+    border-color: #b9f2d2;
     background: hsla(147, 42%, 17%, 1);
     color: hsla(156, 82%, 72%, 1)
+}
+:root[data-theme="dark"] .rules-member-list em {
+    color: var(--rules-muted)
+}
+:root[data-theme="dark"] .level-chip {
+    border-radius: 999px
 }
 :root[data-theme="dark"] .level-one {
     color: hsla(212, 84%, 79%, 1)
@@ -864,33 +1604,56 @@
     color: hsla(156, 79%, 72%, 1)
 }
 :root[data-theme="dark"] .level-chip.level-one {
-    background: hsla(209, 42%, 17%, 1)
+    background: hsla(209, 42%, 17%, 1);
+    box-shadow: inset 0 0 0 1px #b8dcff
 }
 :root[data-theme="dark"] .level-chip.level-two {
-    background: hsla(147, 42%, 17%, 1)
+    background: hsla(147, 42%, 17%, 1);
+    box-shadow: inset 0 0 0 1px #b9f2d2
+}
+:root[data-theme="dark"] .rules-lead {
+    color: var(--rules-text)
 }
 :root[data-theme="dark"] .rules-match-types div {
+    border-radius: 12px;
     background: hsla(42, 42%, 17%, 1)
 }
 :root[data-theme="dark"] .rules-match-types b {
     color: hsla(42, 20%, 75%, 1)
 }
+:root[data-theme="dark"] .rules-vs {
+    border-radius: 50%;
+    background: #1a1916;
+    color: #ffcf64
+}
 :root[data-theme="dark"] .rules-note {
+    border-left: 3px solid #f0a800;
+    border-radius: 0 10px 10px 0;
     background: hsla(43, 42%, 17%, 1);
     color: hsla(45, 77%, 72%, 1) !important
 }
 :root[data-theme="dark"] .rules-prizes div {
+    border: 1px solid var(--rules-line);
+    border-radius: var(--rules-radius);
     background: var(--club-white, hsla(42, 10%, 14%, 1))
 }
 :root[data-theme="dark"] .rules-prizes b {
     color: hsla(42, 20%, 95%, 1)
 }
+:root[data-theme="dark"] .rules-prizes p {
+    color: var(--rules-muted)
+}
 :root[data-theme="dark"] .rules-total {
+    border: 1px solid rgba(255, 183, 0, 0.32);
+    border-radius: 12px;
     background: hsla(43, 42%, 17%, 1);
     color: hsla(45, 77%, 72%, 1) !important
 }
 :root[data-theme="dark"] .rules-total strong {
     color: hsla(39, 85%, 72%, 1)
+}
+:root[data-theme="dark"] .result-entry-panel .match-result-row {
+    border-radius: 15px !important
 }
 :root[data-theme="dark"] .result-entry-panel .match-result-row.confirmed {
     border-color: rgba(255, 255, 255, 0.12) !important;
@@ -900,29 +1663,75 @@
 :root[data-theme="dark"] .match-result-meta {
     color: hsla(43, 85%, 72%, 1)
 }
+:root[data-theme="dark"] .match-result-meta b {
+    color: inherit !important
+}
 :root[data-theme="dark"] .result-entry-panel .match-score-controls input {
     border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    border-radius: 13px !important;
     background: hsla(48, 42%, 17%, 1) !important;
     color: hsla(42, 20%, 95%, 1) !important;
     box-shadow: 0 7px 16px rgba(0, 0, 0, 0.19)
+}
+:root[data-theme="dark"] .result-entry-panel .match-score-controls em {
+    color: #9f927d !important
+}
+:root[data-theme="dark"] .result-entry-panel .result-actions .primary, :root[data-theme="dark"] .result-entry-panel .result-actions .soft-btn {
+    border-radius: 12px
+}
+@media (max-width: 1024px) {
+    :root[data-theme="dark"] .result-entry-panel .slot-token {
+        border-radius: 11px
+    }
 }
 @media (max-width: 560px) {
     :root[data-theme="dark"] .result-entry-panel .match-result-row {
         background: linear-gradient(90deg, hsla(47, 42%, 17%, 0.54), hsla(42, 10%, 14%, 0.92)) !important
     }
+    :root[data-theme="dark"] .result-entry-panel .match-result-team .team-pair {
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none
+    }
     :root[data-theme="dark"] .result-entry-panel .match-score-controls {
+        border: 1px solid rgba(230, 204, 151, 0.78);
+        border-radius: 999px;
         background: hsla(48, 42%, 17%, 1);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.19),
       inset 0 0 0 1px rgba(255, 255, 255, 0.102)
     }
+    :root[data-theme="dark"] .result-entry-panel .match-score-controls input {
+        border: 0 !important;
+        border-radius: 999px !important;
+        background: transparent !important;
+        box-shadow: none !important
+    }
+    :root[data-theme="dark"] .result-entry-panel .match-score-controls input:focus {
+        outline: 2px solid rgba(255, 183, 0, 0.45);
+        outline-offset: 0
+    }
     :root[data-theme="dark"] .result-entry-panel .result-actions .primary, :root[data-theme="dark"] .result-entry-panel .result-actions .soft-btn {
+        border-radius: 999px;
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.43)
     }
     :root[data-theme="dark"] .result-entry-panel .result-actions .soft-btn {
         color: hsla(43, 85%, 72%, 1);
-        background: hsla(40, 42%, 17%, 1)
+        background: hsla(40, 42%, 17%, 1);
+        border-color: rgba(255, 183, 0, 0.45)
+    }
+    :root[data-theme="dark"] .result-entry-panel .result-actions .primary {
+        color: #15120a;
+        background: linear-gradient(180deg, #ffc933, #ffb300)
+    }
+    :root[data-theme="dark"] .result-entry-panel .slot-token {
+        border: 0 !important;
+        border-radius: 0;
+        background: transparent !important;
+        box-shadow: none !important
     }
     :root[data-theme="dark"] .result-entry-panel .slot-token b {
+        border-radius: 999px;
         background: hsla(42, 10%, 14%, 0.96);
         box-shadow: 0 3px 8px rgba(0, 0, 0, 0.19)
     }
@@ -955,9 +1764,13 @@
     color: hsla(3, 53%, 84%, 1) !important
 }
 :root[data-theme="dark"] .result-entry-panel .match-score-controls input.score-invalid {
-    background: hsla(5, 42%, 17%, 1) !important
+    border-color: #d64545 !important;
+    background: hsla(5, 42%, 17%, 1) !important;
+    box-shadow: 0 0 0 3px rgba(214, 69, 69, 0.14) !important
 }
 :root[data-theme="dark"] .draw-mode-pill, :root[data-theme="dark"] .schedule-count-pill, :root[data-theme="dark"] .match-count-pill, :root[data-theme="dark"] .weekly-count-pill {
+    border: 1px solid rgba(255, 183, 0, 0.42) !important;
+    border-radius: 999px !important;
     background: linear-gradient(180deg, hsla(47, 42%, 17%, 1) 0%, hsla(48, 42%, 17%, 1) 100%) !important;
     color: hsla(39, 85%, 72%, 1) !important;
     box-shadow: 0 10px 22px rgba(0, 0, 0, 0.29)
@@ -968,11 +1781,63 @@
 :root[data-theme="dark"] .match-count-pill small, :root[data-theme="dark"] .weekly-count-pill small {
     color: hsla(42, 85%, 72%, 1)
 }
+:root[data-theme="dark"] .draw-panel .draw-copy h2 {
+    color: var(--club-ink-900)
+}
+:root[data-theme="dark"] .draw-panel .draw-copy .primary {
+    box-shadow: 0 12px 24px rgba(255, 183, 0, 0.22)
+}
+:root[data-theme="dark"] .draw-panel .draw-roster span {
+    color: var(--club-ink-900)
+}
+@media (max-width: 900px) {
+    :root[data-theme="dark"] .draw-panel .wheel-disc {
+        border-width: 8px
+    }
+    :root[data-theme="dark"] .draw-panel .wheel-inner {
+        border-width: 5px
+    }
+}
+@media (max-width: 560px) {
+    :root[data-theme="dark"] .draw-panel .wheel-pointer {
+        border-left-width: 10px;
+        border-right-width: 10px;
+        border-top-width: 20px
+    }
+    :root[data-theme="dark"] .draw-panel .wheel-disc {
+        border-width: 7px
+    }
+    :root[data-theme="dark"] .draw-panel .wheel-inner {
+        border-width: 4px
+    }
+    :root[data-theme="dark"] .draw-panel .wheel-numbers span {
+        border-width: 2px
+    }
+    :root[data-theme="dark"] .draw-panel .draw-copy .primary {
+        border-radius: 12px
+    }
+    :root[data-theme="dark"] .draw-panel .draw-roster div {
+        border-radius: 13px !important
+    }
+}
+@media (max-height: 480px) and (max-width: 950px) {
+    :root[data-theme="dark"] .member-profile-popover {
+        border-radius: 20px !important
+    }
+    :root[data-theme="dark"] .member-profile-popover .profile-stat {
+        border-radius: 14px !important
+    }
+}
 :root[data-theme="dark"] .draw-mode-pill {
+    border-width: 1.5px !important;
     color: hsla(38, 85%, 72%, 1) !important;
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.34) !important
 }
+:root[data-theme="dark"] .draw-panel .wheel-disc {
+    border-width: 12px !important
+}
 :root[data-theme="dark"] .draw-panel .wheel-numbers span, :root[data-theme="dark"] .draw-panel .wheel-number {
+    border-width: 3px !important;
     background: radial-gradient(circle at 34% 20%, hsla(42, 10%, 14%, 1) 0 28%, hsla(49, 42%, 17%, 1) 58%, hsla(47, 42%, 17%, 1) 100%) !important
 }
 :root[data-theme="dark"] .draw-panel .wheel-number.level-1 {
@@ -984,13 +1849,41 @@
 :root[data-theme="dark"] .draw-panel .wheel-number.level-open {
     background: radial-gradient(circle at 34% 20%, hsla(42, 10%, 14%, 1) 0 28%, hsla(40, 42%, 17%, 1) 58%, #ffe6a3 100%) !important
 }
+:root[data-theme="dark"] .draw-panel .wheel-inner b {
+    color: var(--club-ink-900) !important
+}
 :root[data-theme="dark"] .draw-panel .wheel-inner small {
+    border-radius: 999px;
+    background: rgba(255, 183, 0, 0.14);
     color: hsla(38, 85%, 72%, 1) !important
 }
 :root[data-theme="dark"] .draw-panel .draw-copy .draw-range-tag {
+    border: 1px solid rgba(255, 183, 0, 0.42);
+    border-radius: 999px;
     background: hsla(42, 42%, 17%, 0.88);
     color: hsla(38, 85%, 72%, 1) !important;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24)
+}
+@media (max-width: 900px) {
+    :root[data-theme="dark"] .draw-panel .wheel-disc {
+        border-width: 9px !important
+    }
+}
+@media (max-width: 560px) {
+    :root[data-theme="dark"] .draw-panel .wheel-pointer {
+        border-left-width: 11px !important;
+        border-right-width: 11px !important;
+        border-top-width: 22px !important
+    }
+    :root[data-theme="dark"] .draw-panel .wheel-disc {
+        border-width: 8px !important
+    }
+    :root[data-theme="dark"] .draw-panel .wheel-numbers span, :root[data-theme="dark"] .draw-panel .wheel-number {
+        border-width: 2.5px !important
+    }
+    :root[data-theme="dark"] .draw-panel .wheel-inner {
+        border-width: 4px !important
+    }
 }
 :root[data-theme="dark"] .draw-panel .draw-roster span {
     color: hsla(42, 20%, 95%, 1) !important
@@ -1005,6 +1898,8 @@
     color: hsla(38, 85%, 72%, 1) !important
 }
 :root[data-theme="dark"] .member-profile-popover {
+    border-radius: 26px !important;
+    border-color: rgba(184, 118, 14, 0.24) !important;
     background: radial-gradient(circle at 92% 0%, rgba(255, 183, 0, 0.16), transparent 32%),
     radial-gradient(circle at 0% 100%, rgba(255, 230, 156, 0.36), transparent 34%),
     linear-gradient(145deg, hsla(42, 10%, 14%, 1) 0%, hsla(43, 42%, 17%, 1) 48%, hsla(44, 42%, 17%, 1) 100%) !important;
@@ -1017,6 +1912,8 @@
     linear-gradient(135deg, rgba(255, 209, 90, 0.2), rgba(255, 255, 255, 0)) !important
 }
 :root[data-theme="dark"] .profile-hero-card .profile-identity p {
+    border-radius: 999px !important;
+    background: var(--profile-accent-soft) !important;
     color: hsla(42, 20%, 95%, 1) !important
 }
 :root[data-theme="dark"] .profile-hero-card .profile-identity h2 {
@@ -1026,6 +1923,8 @@
     color: hsla(42, 20%, 80%, 1) !important
 }
 :root[data-theme="dark"] .profile-elo-badge {
+    border: 1px solid rgba(255, 183, 0, 0.38);
+    border-radius: 999px;
     background: linear-gradient(135deg, hsla(45, 42%, 17%, 0.98), hsla(42, 10%, 14%, 0.9));
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.29)
 }
@@ -1036,10 +1935,14 @@
     color: hsla(42, 20%, 73%, 1)
 }
 :root[data-theme="dark"] .profile-score-card {
+    border-color: rgba(184, 118, 14, 0.12) !important;
+    border-radius: 19px !important;
     background: linear-gradient(135deg, hsla(42, 10%, 14%, 0.92), hsla(44, 42%, 17%, 0.78)),
     linear-gradient(135deg, var(--profile-accent-soft), rgba(255, 255, 255, 0)) !important
 }
 :root[data-theme="dark"] .member-profile-popover .profile-stat {
+    border-color: rgba(184, 118, 14, 0.1) !important;
+    border-radius: 16px !important;
     background: hsla(43, 42%, 17%, 0.92) !important
 }
 :root[data-theme="dark"] .profile-rank-1 .profile-rank-stat b {
@@ -1053,6 +1956,7 @@
 }
 @media (max-width: 560px) {
     :root[data-theme="dark"] .member-profile-popover {
+        border-width: 1.5px !important;
         background: radial-gradient(circle at 88% 0%, rgba(255, 183, 0, 0.18), transparent 30%),
       linear-gradient(155deg, hsla(42, 10%, 14%, 1) 0%, hsla(43, 42%, 17%, 1) 50%, hsla(44, 42%, 17%, 1) 100%) !important;
         box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5),
@@ -1061,22 +1965,39 @@
     }
 }
 :root[data-theme="dark"] .member-role-select, :root[data-theme="dark"] .member-role-badge {
+    border-radius: 999px;
+    border: 1px solid #f2c559;
     background: linear-gradient(135deg, hsla(45, 42%, 17%, 1), hsla(44, 42%, 17%, 1));
     color: hsla(38, 85%, 72%, 1)
 }
+:root[data-theme="dark"] .member-role-select {
+    outline: none
+}
 :root[data-theme="dark"] .member-role-badge.admin {
     border-color: rgba(255, 255, 255, 0.12);
+    background: #17140f;
+    color: #ffd76b;
     box-shadow: 0 10px 22px rgba(0, 0, 0, 0.43)
 }
 :root[data-theme="dark"] .member-role-notice {
     border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
     background: hsla(146, 42%, 17%, 1);
     color: hsla(155, 67%, 72%, 1)
 }
 :root[data-theme="dark"] .member-role-field small {
     color: hsla(42, 20%, 73%, 1)
 }
+:root[data-theme="dark"] .member-role-editor-select, :root[data-theme="dark"] .member-role-editor-badge {
+    border-radius: 13px
+}
+:root[data-theme="dark"] .member-add-btn {
+    border-radius: 10px !important
+}
 :root[data-theme="dark"] .password-toggle {
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
     color: hsla(42, 20%, 76%, 1)
 }
 :root[data-theme="dark"] .password-toggle:hover {
@@ -1093,12 +2014,20 @@
     color: hsla(3, 53%, 84%, 1)
 }
 :root[data-theme="dark"] .brand-mark, :root[data-theme="dark"] .login-brand > span {
+    color: transparent !important;
     background: var(--club-mark-image) center / 96% auto no-repeat,
     radial-gradient(circle at 28% 20%, hsla(42, 10%, 14%, 0.96), rgba(255, 255, 255, 0) 34%),
     linear-gradient(145deg, hsla(47, 42%, 17%, 1) 0%, #ffd66d 52%, #ffb700 100%) !important;
+    border: 1px solid rgba(255, 183, 0, 0.34) !important;
+    border-radius: 16px !important;
     box-shadow: 0 12px 26px rgba(255, 183, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.086) !important
 }
 :root[data-theme="dark"] .login-brand > span {
+    background: var(--club-mark-image) center / 96% auto no-repeat,
+    radial-gradient(circle at 30% 18%, rgba(255, 214, 109, 0.42), transparent 42%),
+    linear-gradient(145deg, #1a1712 0%, #33270a 60%, #7a5a00 100%) !important;
+    border: 1px solid rgba(255, 214, 109, 0.45) !important;
+    border-radius: 18px !important;
     box-shadow: 0 12px 26px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.017) !important
 }
 :root[data-theme="dark"] .login-brand b {
@@ -1107,12 +2036,86 @@
 :root[data-theme="dark"] .login-brand small {
     color: hsla(43, 85%, 72%, 1) !important
 }
+:root[data-theme="dark"] .app-icon-home {
+    background-image: var(--icon-home)
+}
+:root[data-theme="dark"] .app-icon-members {
+    background-image: var(--icon-members)
+}
+:root[data-theme="dark"] .app-icon-schedule {
+    background-image: var(--icon-schedule)
+}
+:root[data-theme="dark"] .app-icon-ranking {
+    background-image: var(--icon-ranking)
+}
+:root[data-theme="dark"] .app-icon-history {
+    background-image: var(--icon-history)
+}
+:root[data-theme="dark"] .app-icon-rules {
+    background-image: var(--icon-rules)
+}
+:root[data-theme="dark"] .app-icon-trophy {
+    background-image: var(--icon-trophy)
+}
+:root[data-theme="dark"] .app-icon-crown {
+    background-image: var(--icon-crown)
+}
+:root[data-theme="dark"] .app-icon-check {
+    background-image: var(--icon-check)
+}
+:root[data-theme="dark"] .app-icon-success {
+    background-image: var(--icon-success)
+}
+:root[data-theme="dark"] .app-icon-error {
+    background-image: var(--icon-error)
+}
+:root[data-theme="dark"] .app-icon-target {
+    background-image: var(--icon-target)
+}
+:root[data-theme="dark"] .app-icon-pencil {
+    background-image: var(--icon-pencil)
+}
+:root[data-theme="dark"] .app-icon-save {
+    background-image: var(--icon-save)
+}
+:root[data-theme="dark"] .app-icon-logout {
+    background-image: var(--icon-logout)
+}
+:root[data-theme="dark"] .app-icon-clipboard {
+    background-image: var(--icon-clipboard)
+}
+:root[data-theme="dark"] .app-icon-gift {
+    background-image: var(--icon-gift)
+}
+:root[data-theme="dark"] .app-icon-photos {
+    background-image: var(--icon-photos)
+}
+:root[data-theme="dark"] .app-icon-confirm {
+    background-image: var(--icon-confirm)
+}
+:root[data-theme="dark"] .app-icon-star {
+    background-image: var(--icon-star)
+}
 :root[data-theme="dark"] .modal-icon.app-icon {
+    border-radius: 20px;
     background-color: hsla(47, 42%, 17%, 1);
     box-shadow: 0 14px 30px rgba(255, 183, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.086)
 }
+:root[data-theme="dark"] .result-icon-button.edit .result-action-icon {
+    background-image: var(--icon-pencil)
+}
+:root[data-theme="dark"] .result-icon-button.save .result-action-icon {
+    background-image: var(--icon-check)
+}
+:root[data-theme="dark"] .result-icon-button.save:disabled .result-action-icon {
+    background-image: var(--icon-save)
+}
+:root[data-theme="dark"] .result-icon-button .result-action-icon {
+    background: none !important
+}
 @media (max-width: 560px) {
     :root[data-theme="dark"] .result-entry-panel .result-actions .primary, :root[data-theme="dark"] .result-entry-panel .result-actions .soft-btn {
+        border-radius: 999px !important;
         box-shadow: 0 7px 15px rgba(0, 0, 0, 0.31) !important
     }
     :root[data-theme="dark"] .result-entry-panel .result-actions .soft-btn {
@@ -1120,29 +2123,71 @@
         background: hsla(43, 42%, 17%, 1) !important;
         color: hsla(36, 40%, 72%, 1) !important
     }
+    :root[data-theme="dark"] .result-entry-panel .result-actions .primary {
+        background: linear-gradient(180deg, #ffc933, #ffb300) !important;
+        color: #15120a !important
+    }
+}
+:root[data-theme="dark"] .avatar.avatar-art {
+    border: 0 !important;
+    background: var(--avatar-image) center / contain no-repeat !important;
+    color: transparent !important;
+    text-shadow: none !important;
+    box-shadow: none !important
+}
+:root[data-theme="dark"] .avatar.avatar-art:not(#_), :root[data-theme="dark"] .avatar:not(.avatar-art):not(#_) {
+    color: transparent !important;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none !important
 }
 :root[data-theme="dark"] .avatar:not(.avatar-art):not(#_) {
+    border: 0 !important;
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a79f92'%3E%3Ccircle cx='12' cy='8.6' r='4.3'/%3E%3Cpath d='M3.6 24c.3-6.6 3.8-9.8 8.4-9.8s8.1 3.2 8.4 9.8z'/%3E%3C/svg%3E") center / 100% no-repeat,
     hsla(42, 10%, 17%, 1) !important;
     box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.19) !important
 }
 :root[data-theme="dark"] .attendance-mark.yes, :root[data-theme="dark"] .checkin .attendance-mark.yes {
+    background: #16a46f !important;
+    color: #ffffff !important;
+    border-color: #b8efd8 !important;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5) !important
+}
+:root[data-theme="dark"] .attendance-mark.no, :root[data-theme="dark"] .checkin .attendance-mark.no {
+    background: #e24b5e !important;
+    color: #ffffff !important;
+    border-color: #ffd1d8 !important;
+    box-shadow: 0 8px 18px rgba(226, 75, 94, 0.24) !important
+}
+:root[data-theme="dark"] .attendance-mark.yes::before, :root[data-theme="dark"] .attendance-mark.no::before, :root[data-theme="dark"] .checkin .attendance-mark.yes::before, :root[data-theme="dark"] .checkin .attendance-mark.no::before {
+    background: none !important;
+    background-image: none !important
 }
 :root[data-theme="dark"] .attendance-mark.waiting, :root[data-theme="dark"] .checkin .attendance-mark.waiting {
     background: hsla(42, 35%, 17%, 1) !important;
     border-color: rgba(255, 255, 255, 0.14) !important;
+    color: transparent !important;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.14) !important
+}
+:root[data-theme="dark"] .rank-table, :root[data-theme="dark"] .live-rank-table, :root[data-theme="dark"] .live-ranking-panel .rank-table {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important
 }
 :root[data-theme="dark"] .rank-row.rank-columns {
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 18px !important;
     background: linear-gradient(135deg, hsla(42, 10%, 14%, 1) 0%, hsla(43, 42%, 17%, 1) 100%) !important;
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.17) !important
 }
 :root[data-theme="dark"] .rank-row .rank-number {
+    border-radius: 999px !important
+}
+:root[data-theme="dark"] .rank-row .rank-number {
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
     background: hsla(40, 42%, 17%, 1) !important;
-    color: hsla(42, 20%, 95%, 1) !important
+    color: hsla(42, 20%, 95%, 1) !important;
+    box-shadow: none !important
 }
 :root[data-theme="dark"] .rank-row .person .avatar.small {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.29) !important
@@ -1151,11 +2196,14 @@
     color: hsla(42, 20%, 95%, 1) !important
 }
 :root[data-theme="dark"] .rank-row .level {
+    border: 1px solid rgba(255, 183, 0, 0.42) !important;
+    border-radius: 999px !important;
     background: hsla(44, 42%, 17%, 0.94) !important;
     color: hsla(39, 85%, 72%, 1) !important
 }
 :root[data-theme="dark"] .rank-row.rank-columns > span, :root[data-theme="dark"] .rank-row.rank-columns > .point-value {
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 12px !important;
     background: hsla(39, 42%, 17%, 0.74) !important;
     color: hsla(42, 20%, 90%, 1) !important
 }
@@ -1163,12 +2211,15 @@
     color: hsla(42, 20%, 74%, 1) !important
 }
 :root[data-theme="dark"] .rank-table .rank-row.rank-columns .point-value {
+    border-color: rgba(255, 183, 0, 0.22) !important;
     background: linear-gradient(135deg, hsla(46, 42%, 17%, 1), hsla(42, 10%, 14%, 1)) !important;
     color: hsla(42, 20%, 95%, 1) !important
 }
 :root[data-theme="dark"] .rank-table .rank-row.rank-columns.top-1 {
+    border-color: rgba(255, 183, 0, 0.45) !important;
     background: radial-gradient(circle at 8% 50%, rgba(255, 183, 0, 0.24), transparent 145px),
-    linear-gradient(135deg, hsla(48, 42%, 17%, 1) 0%, hsla(45, 42%, 17%, 1) 62%, hsla(42, 10%, 14%, 1) 100%) !important
+    linear-gradient(135deg, hsla(48, 42%, 17%, 1) 0%, hsla(45, 42%, 17%, 1) 62%, hsla(42, 10%, 14%, 1) 100%) !important;
+    box-shadow: 0 12px 30px rgba(255, 183, 0, 0.12) !important
 }
 :root[data-theme="dark"] .rank-table .rank-row.rank-columns.top-2 {
     border-color: rgba(255, 255, 255, 0.14) !important;
@@ -1177,11 +2228,13 @@
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22) !important
 }
 :root[data-theme="dark"] .rank-table .rank-row.rank-columns.top-3 {
+    border-color: rgba(205, 135, 82, 0.48) !important;
     background: radial-gradient(circle at 8% 50%, rgba(205, 135, 82, 0.22), transparent 145px),
     linear-gradient(135deg, hsla(28, 42%, 17%, 1) 0%, hsla(42, 10%, 14%, 1) 72%) !important;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22) !important
 }
 :root[data-theme="dark"] .rank-table .rank-row.rank-columns.top-1 .point-value {
+    border-color: rgba(255, 183, 0, 0.42) !important;
     color: hsla(37, 85%, 72%, 1) !important
 }
 :root[data-theme="dark"] .rank-table .rank-row.rank-columns.top-2 .point-value {
@@ -1189,10 +2242,31 @@
     color: hsla(42, 20%, 71%, 1) !important
 }
 :root[data-theme="dark"] .rank-table .rank-row.rank-columns.top-3 .point-value {
+    border-color: rgba(205, 135, 82, 0.38) !important;
     color: hsla(26, 70%, 76%, 1) !important
+}
+@media (min-width: 801px) and (max-width: 1080px) {
+    :root[data-theme="dark"] .rank-row.rank-columns {
+        border-radius: 16px !important
+    }
+}
+@media (max-width: 800px) {
+    :root[data-theme="dark"] .rank-row.rank-columns {
+        border-radius: 15px !important
+    }
+    :root[data-theme="dark"] .rank-table .rank-row.rank-columns .point-value {
+        border: 0 !important;
+        background: transparent !important
+    }
+}
+:root[data-theme="dark"] .ranking .rank-table, :root[data-theme="dark"] .live-ranking-panel .rank-table, :root[data-theme="dark"] .live-rank-table {
+    background: transparent !important
 }
 :root[data-theme="dark"] .ranking .rank-table > .rank-row.rank-columns, :root[data-theme="dark"] .live-ranking-panel .rank-table > .rank-row.rank-columns, :root[data-theme="dark"] .rank-table.live-rank-table > .rank-row.rank-columns {
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.14) !important
+}
+:root[data-theme="dark"] .ranking .rank-table > .rank-row.rank-columns.top-1, :root[data-theme="dark"] .live-ranking-panel .rank-table > .rank-row.rank-columns.top-1, :root[data-theme="dark"] .rank-table.live-rank-table > .rank-row.rank-columns.top-1 {
+    box-shadow: 0 6px 14px rgba(255, 183, 0, 0.09) !important
 }
 :root[data-theme="dark"] .ranking .rank-table > .rank-row.rank-columns.top-2, :root[data-theme="dark"] .live-ranking-panel .rank-table > .rank-row.rank-columns.top-2, :root[data-theme="dark"] .rank-table.live-rank-table > .rank-row.rank-columns.top-2 {
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.19) !important
@@ -1207,6 +2281,8 @@
     color: hsla(42, 20%, 77%, 1)
 }
 :root[data-theme="dark"] .elo-status {
+    border: 1px solid rgba(255, 183, 0, 0.18);
+    border-radius: 16px;
     background: hsla(42, 42%, 17%, 0.78);
     color: hsla(42, 20%, 79%, 1)
 }
@@ -1215,37 +2291,52 @@
     background: hsla(155, 42%, 17%, 0.72)
 }
 :root[data-theme="dark"] .elo-status.elo-calculated {
+    border-color: rgba(255, 183, 0, 0.20);
     background: hsla(46, 42%, 17%, 0.62)
 }
 :root[data-theme="dark"] .elo-status.elo-unavailable {
+    border-color: rgba(226, 75, 94, 0.18);
     background: hsla(353, 42%, 17%, 0.74)
 }
 :root[data-theme="dark"] .elo-row {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 22px;
     background: hsla(42, 10%, 14%, 0.9);
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12)
 }
 :root[data-theme="dark"] .elo-row.top-1 {
-    background: linear-gradient(90deg, hsla(49, 42%, 17%, 0.56), hsla(42, 10%, 14%, 0.94) 64%)
+    border-color: rgba(255, 183, 0, 0.55);
+    background: linear-gradient(90deg, hsla(49, 42%, 17%, 0.56), hsla(42, 10%, 14%, 0.94) 64%);
+    box-shadow: 0 15px 34px rgba(232, 178, 41, 0.11)
 }
 :root[data-theme="dark"] .elo-row.top-2 {
     border-color: rgba(255, 255, 255, 0.14);
     background: linear-gradient(90deg, hsla(219, 42%, 17%, 0.78), hsla(42, 10%, 14%, 0.94) 64%)
 }
 :root[data-theme="dark"] .elo-row.top-3 {
+    border-color: rgba(205, 135, 82, 0.54);
     background: linear-gradient(90deg, hsla(26, 42%, 17%, 0.72), hsla(42, 10%, 14%, 0.94) 64%)
 }
 :root[data-theme="dark"] .elo-rank {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
     background: hsla(40, 42%, 17%, 1);
     color: hsla(42, 20%, 95%, 1)
 }
 :root[data-theme="dark"] .elo-row.top-rank .elo-rank {
+    border: 0;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.062)
+}
+:root[data-theme="dark"] .elo-row.top-1 .elo-rank {
+    background: linear-gradient(135deg, #ffe071, #ffb000 62%, #d99000)
 }
 :root[data-theme="dark"] .elo-row.top-2 .elo-rank {
     background: linear-gradient(135deg, hsla(220, 42%, 17%, 1), hsla(42, 10%, 19%, 1) 55%, #929cab);
     color: hsla(42, 20%, 87%, 1)
+}
+:root[data-theme="dark"] .elo-row.top-3 .elo-rank {
+    background: linear-gradient(135deg, #f2ad5f, #d68037 58%, #a95f2a);
+    color: #fff8ef
 }
 :root[data-theme="dark"] .elo-person b {
     color: hsla(42, 20%, 95%, 1)
@@ -1254,9 +2345,12 @@
     color: hsla(42, 20%, 72%, 1)
 }
 :root[data-theme="dark"] .elo-rating-value, :root[data-theme="dark"] .elo-row-meta {
+    border: 1px solid rgba(171, 132, 71, 0.16);
+    border-radius: 17px;
     background: hsla(40, 42%, 17%, 0.7)
 }
 :root[data-theme="dark"] .elo-rating-value {
+    border-color: rgba(255, 183, 0, 0.34);
     background: hsla(44, 42%, 17%, 0.82)
 }
 :root[data-theme="dark"] .elo-rating-value b {
@@ -1265,15 +2359,53 @@
 :root[data-theme="dark"] .elo-row-meta b {
     color: hsla(42, 20%, 95%, 1)
 }
+@media (max-width: 700px) {
+    :root[data-theme="dark"] .elo-ranking-panel {
+        border-radius: 22px !important
+    }
+    :root[data-theme="dark"] .elo-row {
+        border-radius: 18px
+    }
+    :root[data-theme="dark"] .elo-rating-value {
+        border-radius: 15px
+    }
+    :root[data-theme="dark"] .elo-row-meta {
+        border-radius: 14px
+    }
+}
+:root[data-theme="dark"] .elo-status {
+    border-radius: 12px
+}
 :root[data-theme="dark"] .elo-row {
+    border-radius: 16px;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.11)
 }
+:root[data-theme="dark"] .elo-rating-value, :root[data-theme="dark"] .elo-row-meta {
+    border-radius: 12px
+}
 @media (max-width: 700px) {
+    :root[data-theme="dark"] .elo-ranking-panel {
+        border-radius: 17px !important
+    }
+    :root[data-theme="dark"] .elo-source-pill {
+        border-radius: 12px !important
+    }
+    :root[data-theme="dark"] .elo-row {
+        border-radius: 14px
+    }
     :root[data-theme="dark"] .elo-rating-value {
-        border-left: 1px solid rgba(255, 255, 255, 0.12)
+        border: 0;
+        border-left: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 0;
+        background: transparent
+    }
+    :root[data-theme="dark"] .elo-row-meta {
+        border: 0;
+        background: transparent
     }
     :root[data-theme="dark"] .elo-row-meta span, :root[data-theme="dark"] .elo-row-meta b {
         border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
         background: hsla(39, 42%, 17%, 0.74);
         color: hsla(42, 20%, 79%, 1)
     }
@@ -1282,21 +2414,66 @@
     }
 }
 :root[data-theme="dark"] .checkin-modal .eyebrow {
+    border: 1px solid rgba(255, 183, 0, 0.28) !important;
+    border-radius: 999px !important;
+    background: rgba(255, 183, 0, 0.12) !important;
     color: hsla(40, 85%, 72%, 1) !important
+}
+:root[data-theme="dark"] .rules-prizes .fourth {
+    border-color: rgba(127, 105, 191, 0.28)
 }
 :root[data-theme="dark"] .ranking .rank-table, :root[data-theme="dark"] .live-ranking-panel .rank-table, :root[data-theme="dark"] .rank-table.live-rank-table, :root[data-theme="dark"] .elo-ranking-panel .elo-list {
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 18px !important;
     background: hsla(42, 10%, 14%, 1) !important;
     box-shadow: 0 10px 26px rgba(0, 0, 0, 0.14) !important
 }
 :root[data-theme="dark"] .ranking .rank-table > .rank-row.rank-columns, :root[data-theme="dark"] .live-ranking-panel .rank-table > .rank-row.rank-columns, :root[data-theme="dark"] .rank-table.live-rank-table > .rank-row.rank-columns, :root[data-theme="dark"] .ranking .rank-table > .rank-row.rank-columns.top-rank, :root[data-theme="dark"] .live-ranking-panel .rank-table > .rank-row.rank-columns.top-rank, :root[data-theme="dark"] .rank-table.live-rank-table > .rank-row.rank-columns.top-rank, :root[data-theme="dark"] .elo-ranking-panel .elo-list > .elo-row, :root[data-theme="dark"] .elo-ranking-panel .elo-list > .elo-row.top-rank {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important
+    border: 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important
+}
+:root[data-theme="dark"] .ranking .rank-table > .rank-row.rank-columns:last-child, :root[data-theme="dark"] .live-ranking-panel .rank-table > .rank-row.rank-columns:last-child, :root[data-theme="dark"] .rank-table.live-rank-table > .rank-row.rank-columns:last-child, :root[data-theme="dark"] .elo-ranking-panel .elo-list > .elo-row:last-child {
+    border-bottom: 0 !important
+}
+:root[data-theme="dark"] .ranking .rank-table > .rank-row.rank-columns.top-1, :root[data-theme="dark"] .live-ranking-panel .rank-table > .rank-row.rank-columns.top-1, :root[data-theme="dark"] .rank-table.live-rank-table > .rank-row.rank-columns.top-1, :root[data-theme="dark"] .elo-ranking-panel .elo-list > .elo-row.top-1 {
+    background: linear-gradient(90deg, rgba(255, 183, 0, 0.13), rgba(255, 183, 0, 0.02) 70%) !important;
+    box-shadow: inset 3px 0 0 #ffb700 !important
+}
+:root[data-theme="dark"] .ranking .rank-table > .rank-row.rank-columns.top-2, :root[data-theme="dark"] .live-ranking-panel .rank-table > .rank-row.rank-columns.top-2, :root[data-theme="dark"] .rank-table.live-rank-table > .rank-row.rank-columns.top-2, :root[data-theme="dark"] .elo-ranking-panel .elo-list > .elo-row.top-2 {
+    background: linear-gradient(90deg, rgba(126, 138, 160, 0.13), rgba(126, 138, 160, 0.02) 70%) !important;
+    box-shadow: inset 3px 0 0 #a3adbd !important
+}
+:root[data-theme="dark"] .ranking .rank-table > .rank-row.rank-columns.top-3, :root[data-theme="dark"] .live-ranking-panel .rank-table > .rank-row.rank-columns.top-3, :root[data-theme="dark"] .rank-table.live-rank-table > .rank-row.rank-columns.top-3, :root[data-theme="dark"] .elo-ranking-panel .elo-list > .elo-row.top-3 {
+    background: linear-gradient(90deg, rgba(196, 116, 58, 0.13), rgba(196, 116, 58, 0.02) 70%) !important;
+    box-shadow: inset 3px 0 0 #cd8a52 !important
+}
+:root[data-theme="dark"] .ranking .rank-table > .empty-ranking, :root[data-theme="dark"] .live-ranking-panel .rank-table > .empty-ranking, :root[data-theme="dark"] .elo-ranking-panel .elo-list > .empty-ranking {
+    border: 0 !important;
+    box-shadow: none !important
+}
+:root[data-theme="dark"] .live-ranking-panel .rank-table, :root[data-theme="dark"] .rank-table.live-rank-table, :root[data-theme="dark"] .elo-ranking-panel .elo-list {
+    border: 0 !important;
+    border-radius: 14px !important;
+    background: transparent !important;
+    box-shadow: none !important
 }
 @media (min-width: 740px) {
     :root[data-theme="dark"] .rank-table > .rank-head.rank-columns, :root[data-theme="dark"] .elo-list > .elo-head {
+        border: 0 !important;
         border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 0 !important;
         background: hsla(42, 42%, 17%, 1) !important;
+        box-shadow: none !important;
         color: hsla(42, 20%, 77%, 1) !important
+    }
+    :root[data-theme="dark"] .rank-table > .rank-row.rank-columns > span, :root[data-theme="dark"] .rank-table > .rank-row.rank-columns > .point-value {
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important
     }
     :root[data-theme="dark"] .rank-table > .rank-row.rank-columns > span {
         color: hsla(42, 20%, 87%, 1) !important
@@ -1319,6 +2496,12 @@
     :root[data-theme="dark"] .rank-table > .rank-row.rank-columns.top-3 > .point-value {
         color: hsla(25, 65%, 74%, 1) !important
     }
+    :root[data-theme="dark"] .elo-list > .elo-row > .elo-rating-value, :root[data-theme="dark"] .elo-list > .elo-row > .elo-row-meta > * {
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important
+    }
     :root[data-theme="dark"] .elo-list > .elo-row > .elo-rating-value > b {
         color: hsla(42, 20%, 95%, 1) !important
     }
@@ -1338,8 +2521,23 @@
         color: hsla(42, 20%, 87%, 1) !important
     }
 }
+:root[data-theme="dark"] .form-badge {
+    border-radius: 50%;
+    color: #fff
+}
+:root[data-theme="dark"] .form-win, :root[data-theme="dark"] .form-loss {
+    background: center / contain no-repeat;
+    color: transparent
+}
+:root[data-theme="dark"] .form-win {
+    background-image: url("/app-icons/form-win.png?v=form-icons-20261011")
+}
+:root[data-theme="dark"] .form-loss {
+    background-image: url("/app-icons/form-loss.png?v=form-icons-20261011")
+}
 :root[data-theme="dark"] .form-empty {
-    border: 1.5px dashed rgba(255, 255, 255, 0.12)
+    border: 1.5px dashed rgba(255, 255, 255, 0.12);
+    background: transparent
 }
 @media (min-width: 1024px) {
     :root[data-theme="dark"] .rank-table > .rank-row.rank-columns > .rank-elo {
@@ -1349,35 +2547,55 @@
 @media (max-width: 1023px) {
     :root[data-theme="dark"] .rank-table.rank-table-form .rank-elo-chip {
         border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
         background: hsla(42, 42%, 17%, 1);
         color: hsla(42, 20%, 79%, 1)
     }
 }
 :root[data-theme="dark"] .profile-form {
+    border: 1px solid rgba(184, 118, 14, 0.1);
+    border-radius: 16px;
     background: hsla(43, 42%, 17%, 0.92)
 }
 :root[data-theme="dark"] .profile-form > span {
     color: hsla(42, 20%, 71%, 1)
 }
 :root[data-theme="dark"] .history-list .history-detail-btn {
-    box-shadow: 0 5px 12px rgba(255, 170, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.066) !important
+    border: 1px solid #e9a800 !important;
+    border-radius: 10px !important;
+    background: linear-gradient(180deg, #ffd24d 0%, #ffb700 100%) !important;
+    box-shadow: 0 5px 12px rgba(255, 170, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.066) !important;
+    color: #1a1408 !important
 }
 :root[data-theme="dark"] .history-list .history-detail-btn:hover {
+    background: linear-gradient(180deg, #ffdc6b 0%, #ffc21a 100%) !important;
     box-shadow: 0 7px 16px rgba(255, 170, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.072) !important
+}
+:root[data-theme="dark"] .history-list .history-detail-btn:focus-visible {
+    outline: 3px solid rgba(255, 183, 0, 0.45) !important;
+    outline-offset: 2px !important
 }
 :root[data-theme="dark"] .history-detail-header {
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     background: hsla(42, 10%, 14%, 1)
 }
 :root[data-theme="dark"] .elo-guide-btn {
+    border: 1px solid rgba(233, 168, 0, 0.55) !important;
+    border-radius: 10px !important;
     background: hsla(40, 42%, 17%, 1) !important;
     color: hsla(42, 85%, 72%, 1) !important
 }
 :root[data-theme="dark"] .elo-guide-btn:hover {
+    border-color: #e9a800 !important;
     background: hsla(44, 42%, 17%, 1) !important;
     color: hsla(42, 85%, 72%, 1) !important
 }
+:root[data-theme="dark"] .elo-guide-btn:focus-visible {
+    outline: 3px solid rgba(255, 183, 0, 0.45) !important;
+    outline-offset: 2px !important
+}
 :root[data-theme="dark"] .elo-guide-modal {
+    border-radius: 20px;
     background: hsla(42, 10%, 14%, 1);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
     color: hsla(42, 20%, 91%, 1)
@@ -1399,14 +2617,19 @@
     color: hsla(42, 20%, 84%, 1) !important
 }
 :root[data-theme="dark"] .elo-guide-modal code {
+    border-radius: 8px;
     background: hsla(43, 42%, 17%, 1);
     color: hsla(42, 85%, 72%, 1)
 }
 :root[data-theme="dark"] .elo-guide-table {
-    border: 1px solid rgba(255, 255, 255, 0.12)
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px
 }
 :root[data-theme="dark"] .elo-guide-table > div {
     border-top: 1px solid rgba(255, 255, 255, 0.12)
+}
+:root[data-theme="dark"] .elo-guide-table > div:first-child {
+    border-top: 0
 }
 :root[data-theme="dark"] .elo-guide-table-head {
     background: hsla(42, 42%, 17%, 1);
@@ -1425,8 +2648,14 @@
     border-top: 1px solid rgba(255, 255, 255, 0.12);
     background: hsla(42, 10%, 14%, 1)
 }
+@media (max-width: 560px) {
+    :root[data-theme="dark"] .elo-guide-modal {
+        border-radius: 18px
+    }
+}
 :root[data-theme="dark"] .elo-guide-example {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
     background: hsla(43, 42%, 17%, 1)
 }
 :root[data-theme="dark"] .elo-guide-example .elo-guide-table {
@@ -1443,12 +2672,28 @@
 }
 :root[data-theme="dark"] .modal-close {
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 999px !important;
     background: hsla(41, 42%, 17%, 1) !important;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.19) !important;
     color: hsla(40, 53%, 72%, 1) !important
 }
+:root[data-theme="dark"] .modal-close::before, :root[data-theme="dark"] .modal-close::after {
+    border-radius: 2px;
+    background: currentColor
+}
+:root[data-theme="dark"] .modal-close:hover {
+    border-color: #e9a800 !important;
+    background: #ffe7a3 !important;
+    color: #000 !important
+}
+:root[data-theme="dark"] .modal-close:focus-visible {
+    outline: 3px solid rgba(255, 183, 0, 0.5) !important;
+    outline-offset: 2px !important
+}
 :root[data-theme="dark"] .profile-close {
+    border-color: rgba(184, 118, 14, 0.18) !important;
     background: hsla(43, 42%, 17%, 0.92) !important;
+    box-shadow: none !important;
     color: hsla(42, 20%, 87%, 1) !important
 }
 :root[data-theme="dark"] .photo-search span {
@@ -1456,11 +2701,26 @@
 }
 :root[data-theme="dark"] .photo-search input, :root[data-theme="dark"] .photo-folder-select, :root[data-theme="dark"] .photo-sort-select {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
     background: hsla(42, 10%, 14%, 1);
     color: hsla(42, 20%, 91%, 1)
 }
+:root[data-theme="dark"] .photo-upload-btn {
+    border-radius: 10px !important
+}
+:root[data-theme="dark"] .photo-search input:focus, :root[data-theme="dark"] .photo-folder-select:focus, :root[data-theme="dark"] .photo-sort-select:focus {
+    border-color: #e9a800;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 183, 0, 0.2)
+}
 :root[data-theme="dark"] .photo-tile {
+    border: 0;
+    border-radius: 12px;
     background: hsla(41, 40%, 17%, 1)
+}
+:root[data-theme="dark"] .photo-tile:focus-visible {
+    outline: 3px solid rgba(255, 183, 0, 0.6);
+    outline-offset: 2px
 }
 :root[data-theme="dark"] .photo-broken-text {
     color: hsla(42, 20%, 76%, 1)
@@ -1470,25 +2730,39 @@
 }
 :root[data-theme="dark"] .photo-size-select {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
     background: hsla(42, 10%, 14%, 1);
     color: hsla(42, 20%, 87%, 1)
+}
+:root[data-theme="dark"] .photo-size-select:focus {
+    border-color: #e9a800;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 183, 0, 0.18)
 }
 :root[data-theme="dark"] .photo-pagination-info {
     color: hsla(42, 20%, 78%, 1)
 }
 :root[data-theme="dark"] .photo-pagination-pages button {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
     background: hsla(42, 10%, 14%, 1);
     color: hsla(42, 20%, 87%, 1)
 }
 :root[data-theme="dark"] .photo-pagination-pages button:hover:not(:disabled):not(.active) {
+    border-color: #e9a800;
     background: hsla(40, 42%, 17%, 1)
+}
+:root[data-theme="dark"] .photo-pagination-pages button.active {
+    border-color: #e9a800;
+    background: linear-gradient(180deg, #ffd24d 0%, #ffb700 100%);
+    color: #1a1408
 }
 :root[data-theme="dark"] .photo-pagination-gap {
     color: hsla(42, 20%, 73%, 1)
 }
 :root[data-theme="dark"] .photo-state {
     border: 1px dashed rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
     background: hsla(43, 42%, 17%, 1)
 }
 :root[data-theme="dark"] .photo-state p {
@@ -1498,6 +2772,7 @@
     color: hsla(42, 20%, 95%, 1)
 }
 :root[data-theme="dark"] .photo-state-error {
+    border-color: rgba(194, 65, 59, 0.35);
     background: hsla(7, 42%, 17%, 1)
 }
 :root[data-theme="dark"] .photo-state-error p {
@@ -1505,25 +2780,50 @@
 }
 :root[data-theme="dark"] .photo-preview {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
     background: hsla(42, 10%, 14%, 1);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5)
 }
 :root[data-theme="dark"] .photo-preview-header {
     border-bottom: 1px solid rgba(255, 255, 255, 0.12)
 }
+:root[data-theme="dark"] .photo-preview-stage {
+    background: #14110d
+}
 :root[data-theme="dark"] .photo-preview-spinner {
-    border: 3px solid rgba(255, 255, 255, 0.14)
+    border: 3px solid rgba(255, 255, 255, 0.14);
+    border-top-color: #ffd24d;
+    border-radius: 999px
+}
+:root[data-theme="dark"] .photo-preview-broken {
+    color: rgba(255, 255, 255, 0.7)
+}
+:root[data-theme="dark"] .photo-preview-stage:fullscreen, :root[data-theme="dark"] .photo-preview-stage.is-fullscreen {
+    background: #000
 }
 :root[data-theme="dark"] .photo-fullscreen-btn {
-    border: 1px solid rgba(255, 255, 255, 0.14)
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    background: rgba(20, 17, 13, 0.55);
+    color: #fff
+}
+:root[data-theme="dark"] .photo-fullscreen-btn:hover {
+    background: rgba(20, 17, 13, 0.85)
 }
 :root[data-theme="dark"] .photo-nav {
-    border: 1px solid rgba(255, 255, 255, 0.14)
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    background: rgba(20, 17, 13, 0.55);
+    color: #fff
+}
+:root[data-theme="dark"] .photo-nav:hover:not(:disabled) {
+    background: rgba(20, 17, 13, 0.8)
 }
 :root[data-theme="dark"] .photo-preview-footer {
     border-top: 1px solid rgba(255, 255, 255, 0.12)
 }
 :root[data-theme="dark"] .photo-counter {
+    border-radius: 999px;
     background: hsla(41, 42%, 17%, 1);
     color: hsla(42, 20%, 87%, 1)
 }
@@ -1532,21 +2832,36 @@
 }
 :root[data-theme="dark"] .photo-action-btn {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 9px;
     background: hsla(42, 10%, 14%, 1);
     color: hsla(42, 20%, 87%, 1)
 }
 :root[data-theme="dark"] .photo-action-btn:hover:not(:disabled) {
+    border-color: #e9a800;
     background: hsla(40, 42%, 17%, 1)
 }
 :root[data-theme="dark"] .photo-action-danger {
+    border-color: rgba(194, 65, 59, 0.45);
     color: hsla(3, 53%, 84%, 1)
 }
 :root[data-theme="dark"] .photo-action-danger:hover:not(:disabled) {
+    border-color: #c2413b;
     background: hsla(4, 42%, 17%, 1);
     color: hsla(3, 59%, 74%, 1)
 }
+:root[data-theme="dark"] .photo-danger {
+    border-color: #c2413b !important;
+    background: linear-gradient(180deg, #e0584f 0%, #c2413b 100%) !important;
+    color: #fff !important
+}
+@media (max-width: 800px) {
+    :root[data-theme="dark"] .photo-preview {
+        border-radius: 16px
+    }
+}
 :root[data-theme="dark"] .photo-sheet {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
     background: hsla(42, 10%, 14%, 1);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
     color: hsla(42, 20%, 91%, 1)
@@ -1562,12 +2877,15 @@
 }
 :root[data-theme="dark"] .photo-field select, :root[data-theme="dark"] .photo-field input {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
     background: hsla(42, 10%, 14%, 1)
 }
 :root[data-theme="dark"] .photo-field small {
     color: hsla(42, 20%, 76%, 1)
 }
 :root[data-theme="dark"] .photo-dropzone {
+    border: 1.5px dashed rgba(233, 168, 0, 0.6);
+    border-radius: 14px;
     background: hsla(40, 42%, 17%, 1)
 }
 :root[data-theme="dark"] .photo-dropzone b {
@@ -1581,6 +2899,7 @@
 }
 :root[data-theme="dark"] .photo-upload-item {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
     background: hsla(42, 10%, 14%, 1)
 }
 :root[data-theme="dark"] .photo-upload-item small {
@@ -1598,13 +2917,24 @@
 :root[data-theme="dark"] .photo-upload-item.is-error .photo-upload-status {
     color: hsla(3, 53%, 84%, 1)
 }
+:root[data-theme="dark"] .photo-upload-bar {
+    background: #ffb700
+}
+@media (max-width: 800px) {
+    :root[data-theme="dark"] .photo-tile {
+        border-radius: 8px
+    }
+}
 :root[data-theme="dark"] .photo-diagnostics {
+    border: 1px solid rgba(233, 168, 0, 0.45);
+    border-radius: 12px;
     background: hsla(40, 42%, 17%, 1)
 }
 :root[data-theme="dark"] .photo-diagnostics b {
     color: hsla(42, 85%, 72%, 1)
 }
 :root[data-theme="dark"] .photo-diagnostics code {
+    border-radius: 6px;
     background: hsla(44, 42%, 17%, 1);
     color: hsla(44, 85%, 72%, 1)
 }
@@ -1613,26 +2943,46 @@
 }
 :root[data-theme="dark"] .photo-view-toggle {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
     background: hsla(42, 10%, 14%, 1)
 }
 :root[data-theme="dark"] .photo-view-toggle button {
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
     color: hsla(42, 20%, 75%, 1)
 }
 :root[data-theme="dark"] .photo-view-toggle button:hover:not(.active) {
     color: hsla(42, 20%, 87%, 1);
     background: hsla(40, 42%, 17%, 1)
 }
+:root[data-theme="dark"] .photo-view-toggle button.active {
+    background: linear-gradient(180deg, #ffd24d 0%, #ffb700 100%);
+    color: #1a1408
+}
+:root[data-theme="dark"] .photo-tile-caption {
+    background: linear-gradient(180deg, rgba(10, 8, 6, 0) 0%, rgba(10, 8, 6, 0.78) 100%);
+    color: #fff
+}
 :root[data-theme="dark"] .photo-list {
-    border: 1px solid rgba(255, 255, 255, 0.12)
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px
 }
 :root[data-theme="dark"] .photo-list-row {
     border-top: 1px solid rgba(255, 255, 255, 0.12)
 }
+:root[data-theme="dark"] .photo-list-row:first-child {
+    border-top: 0
+}
 :root[data-theme="dark"] .photo-list-thumb {
+    border: 0;
+    border-radius: 10px;
     background: hsla(41, 40%, 17%, 1);
     color: hsla(42, 20%, 73%, 1)
 }
 :root[data-theme="dark"] .photo-list-name {
+    border: 0;
+    background: none;
     color: hsla(42, 20%, 95%, 1)
 }
 :root[data-theme="dark"] .photo-list-name:hover {
@@ -1646,10 +2996,12 @@
 }
 :root[data-theme="dark"] .photo-rename-modal {
     border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
     background: hsla(42, 10%, 14%, 1);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5)
 }
 :root[data-theme="dark"] .photo-rename-thumb {
+    border-radius: 12px;
     background: hsla(41, 40%, 17%, 1);
     color: hsla(42, 20%, 73%, 1)
 }
@@ -1664,13 +3016,25 @@
 }
 :root[data-theme="dark"] .photo-rename-field input {
     border: 1px solid rgba(255, 255, 255, 0.12);
-    color: hsla(42, 20%, 95%, 1)
+    border-radius: 10px;
+    color: hsla(42, 20%, 95%, 1);
+    outline: none
+}
+:root[data-theme="dark"] .photo-rename-field input:focus {
+    border-color: #e9a800;
+    box-shadow: 0 0 0 3px rgba(255, 183, 0, 0.18)
 }
 :root[data-theme="dark"] .page-hero {
+    border: 1px solid rgba(255, 183, 0, 0.2) !important;
+    border-radius: 20px !important;
     background: radial-gradient(circle at 92% -10%, rgba(255, 183, 0, 0.22), transparent 32%),
     radial-gradient(circle at 0% 100%, rgba(255, 237, 182, 0.189), transparent 36%),
     linear-gradient(135deg, hsla(42, 10%, 14%, 0.98), hsla(41, 42%, 17%, 0.94)) !important;
     box-shadow: 0 10px 26px rgba(0, 0, 0, 0.14) !important
+}
+:root[data-theme="dark"] .page-hero::after {
+    border-radius: 50%;
+    background: rgba(255, 183, 0, 0.1)
 }
 :root[data-theme="dark"] .page-hero-eyebrow {
     color: hsla(39, 85%, 72%, 1) !important
@@ -1682,6 +3046,8 @@
     color: hsla(42, 20%, 79%, 1) !important
 }
 :root[data-theme="dark"] .page-hero-stats div {
+    border: 1px solid rgba(255, 183, 0, 0.3);
+    border-radius: 16px;
     background: hsla(42, 10%, 14%, 0.78);
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.102)
 }
@@ -1691,17 +3057,49 @@
 :root[data-theme="dark"] .page-hero-stats b {
     color: hsla(42, 20%, 95%, 1)
 }
+@media (max-width: 700px) {
+    :root[data-theme="dark"] .page-hero {
+        border-radius: 18px !important
+    }
+    :root[data-theme="dark"] .page-hero-stats div {
+        border-radius: 14px
+    }
+}
+@media (max-width: 800px), (max-height: 480px) and (max-width: 950px) {
+    :root[data-theme="dark"] .app-shell::after {
+        background: rgba(18, 16, 12, 0.42)
+    }
+}
+:root[data-theme="dark"] .member-table .member-person-btn {
+    border: 0;
+    background: none;
+    color: inherit
+}
 :root[data-theme="dark"] .member-table .member-person-btn:hover b {
     color: hsla(37, 85%, 73%, 1)
+}
+:root[data-theme="dark"] .member-table .member-person-btn:focus-visible {
+    border-radius: 10px;
+    outline: 2px solid rgba(255, 183, 0, 0.6);
+    outline-offset: 3px
 }
 :root[data-theme="dark"] .member-detail-modal .profile-username {
     color: hsla(42, 20%, 71%, 1) !important
 }
 :root[data-theme="dark"] .profile-logout {
+    border: 1px solid rgba(194, 65, 59, 0.42);
+    border-radius: 12px;
+    background: none;
     color: hsla(3, 53%, 84%, 1)
+}
+:root[data-theme="dark"] .profile-logout:hover {
+    background: rgba(194, 65, 59, 0.1)
 }
 :root[data-theme="dark"] .member-avatar-copy > b {
     color: hsla(40, 53%, 72%, 1)
+}
+:root[data-theme="dark"] .member-avatar-actions button {
+    border-radius: 10px
 }
 :root[data-theme="dark"] .member-avatar-actions .member-avatar-remove {
     color: hsla(3, 53%, 84%, 1) !important

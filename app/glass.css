@@ -64,7 +64,10 @@ body::before {
 
 .rank-table:not(#_) {
   border-color: transparent !important;
-  background: transparent !important;
+  background: var(--glass-block) !important;
+  box-shadow: var(--glass-lift) !important;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
 }
 
 .member-card:not(#_),
