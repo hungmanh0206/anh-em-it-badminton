@@ -277,7 +277,7 @@ const initialMembers: Member[] = [
   { name: "Phú", initials: "P", level: 2, color: "#3f9c59", present: false, username: "phu", password: "123456", responded: false },
 ];
 
-const avatarAssetVersion = "member-avatars-nobg-20260904";
+const avatarAssetVersion = "member-avatars-portrait-20261101";
 const avatarAssetUsernames = new Set(initialMembers.map((member) => member.username));
 const memberPalette = ["#6846e8", "#e56a4d", "#2ba98b", "#e3a63c", "#e05591", "#4175e8", "#2f9c9f", "#9c69e9", "#ef8b3d", "#3f9c59"];
 const memberInitials = (name: string) => name.trim().split(/\s+/).map((part) => part[0] ?? "").join("").slice(0, 2).toUpperCase() || "?";
