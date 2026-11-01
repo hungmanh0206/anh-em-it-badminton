@@ -106,7 +106,7 @@ async function loadAttendancesEnsuringRows(admin: SupabaseClient, sessionId: str
 
 async function loadSessionPayload(request: Request, reset: boolean) {
   const { admin, user, profile } = await requireUser(request);
-  if (reset && profile.role !== "admin") throw new ApiError(403, "Chỉ Admin được reset phiên Home.");
+  if (reset && profile.role !== "admin") throw new ApiError(403, "Chỉ Admin được reset phiên Trang chủ.");
 
   const now = vietnamNow();
   const shouldUseLiveSession = reset || isTestFlowEnabled() || isCheckinWindowOpenForDate(now);

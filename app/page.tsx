@@ -94,14 +94,14 @@ const attendeeCountFromAttendances = (attendances: HistorySessionRow["attendance
 };
 // Five sections; a section with several pages shows them as tabs under the page title.
 const navGroups: { key: string; label: string; icon: AppIconName; screens: { screen: Screen; label: string }[] }[] = [
-  { key: "home", label: "Home", icon: "home", screens: [{ screen: "home", label: "Home" }] },
+  { key: "home", label: "Trang chủ", icon: "home", screens: [{ screen: "home", label: "Trang chủ" }] },
   { key: "matches", label: "Thi đấu", icon: "schedule", screens: [{ screen: "schedules", label: "Lịch thi đấu" }, { screen: "history", label: "Kết quả & lịch sử" }] },
   { key: "standings", label: "Xếp hạng", icon: "ranking", screens: [{ screen: "ranking", label: "Bảng xếp hạng" }, { screen: "elo", label: "ELO" }] },
   { key: "library", label: "Thư viện", icon: "photos", screens: [{ screen: "photos", label: "Kho ảnh" }, { screen: "rules", label: "Thể lệ" }] },
   { key: "members", label: "Thành viên", icon: "members", screens: [{ screen: "members", label: "Thành viên" }] },
 ];
 const screenTitles: Record<Screen, string> = {
-  home: "Home",
+  home: "Trang chủ",
   members: "Quản lý thành viên",
   rules: "Thể lệ",
   schedules: "Lịch thi đấu",
@@ -1250,7 +1250,7 @@ export default function Home() {
   return <main className="app-shell">
     <div className="topbar">
       <div className="topbar-row">
-        <button type="button" className="topbar-brand" aria-label="Về trang Home" onClick={() => openScreen("home")}><span className="brand-mark" aria-hidden="true" /><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></button>
+        <button type="button" className="topbar-brand" aria-label="Về Trang chủ" onClick={() => openScreen("home")}><span className="brand-mark" aria-hidden="true" /><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></button>
         <ThemeToggle />
         <div className="topbar-profile">
           <button type="button" className="topbar-profile-btn" aria-label={`Tài khoản ${currentUser.name}`} aria-haspopup="dialog" aria-expanded={showProfileCard} onClick={() => setShowProfileCard((open) => !open)}><div className={avatarClassName("avatar small", currentUser)} style={avatarStyle(currentUser)}>{currentUser.initials}</div><div className="topbar-profile-text"><b>{currentUser.name}</b><small>{memberRoleLabel(currentUser.role)} · Level {currentUser.level}</small></div><svg className="topbar-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></button>
