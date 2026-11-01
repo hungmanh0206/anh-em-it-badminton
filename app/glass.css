@@ -300,6 +300,6 @@ body::before {
 /* The VS badge is pale gold on the light theme; the dark theme keeps its dark one. */
 :root:not([data-theme="dark"]) .schedule-match-card .teams strong:not(#_) {
   background: var(--brand-tile);
-  box-shadow: var(--brand-tile-shadow);
+  box-shadow: none;
   color: var(--brand-sub) !important;
 }
