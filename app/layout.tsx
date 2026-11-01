@@ -38,6 +38,8 @@ import "./photos.css";
 import "./page-hero.css";
 import "./motion.css";
 import "./touch-inputs.css";
+import "./member-profile.css";
+import "./champion-celebration.css";
 
 export const metadata: Metadata = {
   title: "Anh Em IT — Quản lý CLB Cầu lông",

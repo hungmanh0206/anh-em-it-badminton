@@ -1,0 +1,135 @@
+/* Member names in the list open the read-only detail modal. */
+.member-table .member-person-btn {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.member-table .member-person-btn:hover b {
+  color: #b8760e;
+}
+
+.member-table .member-person-btn:focus-visible {
+  border-radius: 10px;
+  outline: 2px solid rgba(255, 183, 0, 0.6);
+  outline-offset: 3px;
+}
+
+/* Detail modal: the profile card, centred on screen with the avatar above the details. */
+.member-profile-popover.member-detail-modal {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  left: auto !important;
+  width: min(392px, 100%) !important;
+  max-height: calc(100dvh - 40px) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  transform-origin: center;
+}
+
+.member-detail-modal .profile-hero-card {
+  flex-direction: column;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 28px 22px 14px !important;
+  text-align: center;
+}
+
+.member-detail-modal .profile-hero-card .profile-medal {
+  flex: 0 0 auto !important;
+  width: 112px !important;
+  height: 112px !important;
+}
+
+.member-profile-popover.member-detail-modal::before {
+  content: none;
+}
+
+.member-detail-modal .profile-identity {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+}
+
+.member-detail-modal .profile-elo-badge {
+  justify-content: center;
+}
+
+.member-detail-modal .profile-username {
+  color: #7b7368 !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+}
+
+/* Avatar control at the top of "Sửa thành viên". */
+.member-avatar-field {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.member-avatar-field .avatar {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+}
+
+.member-avatar-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.member-avatar-copy > b {
+  color: #1a1408;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.member-avatar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.member-avatar-actions button {
+  min-height: 34px;
+  padding: 0 12px !important;
+  border-radius: 10px;
+  font-size: 12.5px;
+}
+
+.member-avatar-actions .member-avatar-remove {
+  color: #c2413b !important;
+}
+
+/* Champion on the sidebar card. */
+.sidebar .club-top1 .club-top1-winner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.sidebar .club-top1 .club-top1-winner > div:last-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.sidebar .club-top1 .club-top1-winner .avatar.small {
+  flex: 0 0 auto;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  box-shadow: 0 0 0 2px rgba(255, 214, 109, 0.75), 0 6px 14px rgba(0, 0, 0, 0.28) !important;
+}

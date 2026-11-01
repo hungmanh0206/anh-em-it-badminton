@@ -1,0 +1,150 @@
+.champion-celebration {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: radial-gradient(circle at 50% 45%, rgba(58, 40, 8, 0.86), rgba(10, 8, 4, 0.94) 70%);
+  cursor: pointer;
+  animation: motionFadeIn 240ms ease-out backwards;
+}
+
+.presence-leaving > .champion-celebration {
+  animation: motionFadeOut 220ms ease-in both;
+}
+
+.champion-fireworks {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.champion-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fffaf0;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.champion-stage {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  max-width: 100%;
+  text-align: center;
+}
+
+.champion-avatar {
+  position: relative;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  animation: championAvatarIn 900ms cubic-bezier(0.2, 1.3, 0.4, 1) backwards, championGlow 2.4s ease-in-out 900ms infinite;
+}
+
+.champion-avatar .avatar:not(#_) {
+  width: clamp(150px, 42vmin, 220px);
+  height: clamp(150px, 42vmin, 220px);
+  box-shadow: 0 0 0 5px #ffd66d, 0 0 0 9px rgba(255, 214, 109, 0.28) !important;
+}
+
+.champion-avatar .app-icon {
+  position: absolute;
+  top: calc(clamp(150px, 42vmin, 220px) * -0.2);
+  left: 50%;
+  z-index: 1;
+  width: clamp(50px, 14vmin, 74px);
+  height: clamp(50px, 14vmin, 74px);
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+  transform: translateX(-50%) rotate(-8deg);
+  animation: championCrownIn 620ms cubic-bezier(0.2, 1.3, 0.4, 1) 760ms backwards;
+}
+
+.champion-stage p {
+  margin: 0;
+  color: #ffd66d;
+  font-size: clamp(15px, 4vmin, 20px);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  animation: championTextIn 520ms ease-out 620ms backwards;
+}
+
+.champion-stage h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #fffaf0;
+  font-size: clamp(38px, 12vmin, 64px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-shadow: 0 4px 22px rgba(255, 183, 0, 0.55);
+  animation: championTextIn 520ms ease-out 780ms backwards;
+}
+
+@keyframes championAvatarIn {
+  from {
+    opacity: 0;
+    transform: translateY(70vh) scale(0.3) rotate(-24deg);
+  }
+}
+
+@keyframes championCrownIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60px) rotate(-30deg) scale(0.5);
+  }
+}
+
+@keyframes championTextIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes championGlow {
+  50% {
+    filter: drop-shadow(0 0 26px rgba(255, 214, 109, 0.75));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .champion-celebration,
+  .champion-avatar,
+  .champion-avatar .app-icon,
+  .champion-stage p,
+  .champion-stage h2 {
+    animation: none;
+  }
+}
+
+/* The sidebar card that opens it. */
+.sidebar button.club-top1 {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease;
+}
+
+.sidebar button.club-top1:hover {
+  border-color: rgba(255, 214, 109, 0.7) !important;
+  transform: translateY(-1px);
+}
+
+.sidebar button.club-top1:focus-visible {
+  outline: 2px solid rgba(255, 214, 109, 0.8);
+  outline-offset: 2px;
+}
