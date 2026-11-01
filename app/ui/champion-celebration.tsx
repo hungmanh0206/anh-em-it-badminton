@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react";
 
 // Main colour and the second one used for the inner shell of a burst, per theme. Dark adds light on
 // a dark sky; light paints deep colours, since adding light on a pale page would make them vanish.
@@ -173,7 +173,20 @@ function Fireworks() {
 }
 
 // Centre-screen congratulations for the month's champion; a tap anywhere or Esc closes it.
-export function ChampionCelebration({ avatar, crown, name, onClose }: { avatar: ReactNode; crown: ReactNode; name: string; onClose: () => void }) {
+export function ChampionCelebration({ avatar, crown, crownOrigin, name, onClose }: { avatar: ReactNode; crown: ReactNode; crownOrigin: DOMRect | null; name: string; onClose: () => void }) {
+  const avatarRef = useRef<HTMLDivElement>(null);
+  // The crown starts over the one on the champion's card, then grows and lands on the head.
+  useLayoutEffect(() => {
+    const wrapper = avatarRef.current;
+    const icon = wrapper?.querySelector<HTMLElement>(".app-icon");
+    if (!wrapper || !icon || !crownOrigin) return;
+    const box = wrapper.getBoundingClientRect();
+    const dx = crownOrigin.left + crownOrigin.width / 2 - (box.left + icon.offsetLeft);
+    const dy = crownOrigin.top + crownOrigin.height / 2 - (box.top + icon.offsetTop + icon.offsetHeight / 2);
+    wrapper.style.setProperty("--crown-dx", `${dx}px`);
+    wrapper.style.setProperty("--crown-dy", `${dy}px`);
+    wrapper.style.setProperty("--crown-scale", String(crownOrigin.width / icon.offsetWidth));
+  }, [crownOrigin]);
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
     window.addEventListener("keydown", closeOnEscape);
@@ -183,7 +196,7 @@ export function ChampionCelebration({ avatar, crown, name, onClose }: { avatar: 
     <Fireworks />
     <button type="button" className="champion-close" aria-label="Đóng" onClick={onClose}>×</button>
     <div className="champion-stage">
-      <div className="champion-avatar">{crown}{avatar}</div>
+      <div ref={avatarRef} className="champion-avatar">{crown}{avatar}</div>
       <p>Chúc mừng nhà vô địch</p>
       <h2>{name}</h2>
     </div>

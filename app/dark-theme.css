@@ -46,6 +46,11 @@
   --gold-glass-shadow: 0 6px 16px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.42);
   --button-off: rgba(255, 255, 255, 0.08);
   --button-off-text: rgba(255, 250, 240, 0.6);
+  --button-soft: rgba(255, 255, 255, 0.12);
+  --button-soft-hover: rgba(255, 255, 255, 0.2);
+  --button-danger: linear-gradient(180deg, rgba(226, 84, 84, 0.86), rgba(190, 52, 52, 0.78));
+  --button-danger-hover: linear-gradient(180deg, rgb(226, 84, 84), rgb(190, 52, 52));
+  --button-danger-text: #ff978c;
   --pill-tray: rgba(20, 18, 14, 0.55);
   --pill: rgba(255, 255, 255, 0.08);
   --pill-hover: rgba(255, 255, 255, 0.15);
@@ -62,6 +67,10 @@
     radial-gradient(circle at 0% 34%, rgba(226, 88, 44, 0.16), transparent 48%),
     radial-gradient(circle at 70% 100%, rgba(58, 118, 226, 0.18), transparent 50%),
     rgba(30, 27, 21, 0.68);
+  --glass-modal-stacked:
+    radial-gradient(circle at 92% 0%, rgba(255, 170, 0, 0.16), transparent 46%),
+    radial-gradient(circle at 0% 34%, rgba(226, 88, 44, 0.12), transparent 48%),
+    rgba(30, 27, 21, 0.94);
   --modal-scrim: rgba(6, 5, 3, 0.56);
   --glass-line: rgba(255, 255, 255, 0.08);
   --glass-lift: 0 2px 6px rgba(0, 0, 0, 0.3), 0 18px 40px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.08);

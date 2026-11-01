@@ -14,6 +14,10 @@
     radial-gradient(circle at 70% 100%, rgba(110, 180, 255, 0.16), transparent 50%),
     rgba(255, 252, 245, 0.66);
   --glass-modal-blur: blur(26px) saturate(170%);
+  --glass-modal-stacked:
+    radial-gradient(circle at 92% 0%, rgba(255, 183, 0, 0.2), transparent 46%),
+    radial-gradient(circle at 0% 34%, rgba(255, 170, 120, 0.14), transparent 48%),
+    rgba(255, 252, 245, 0.92);
   --modal-scrim: rgba(92, 72, 38, 0.3);
   --modal-scrim-blur: blur(16px) saturate(130%);
   --glass-line: rgba(90, 70, 30, 0.1);
@@ -26,6 +30,11 @@
   --pill-text: #4a4133;
   --button-off: rgba(60, 48, 28, 0.08);
   --button-off-text: rgba(26, 20, 8, 0.52);
+  --button-soft: rgba(255, 255, 255, 0.74);
+  --button-soft-hover: rgba(255, 255, 255, 0.95);
+  --button-danger: linear-gradient(180deg, rgba(232, 84, 84, 0.92), rgba(206, 56, 56, 0.86));
+  --button-danger-hover: linear-gradient(180deg, rgb(232, 84, 84), rgb(206, 56, 56));
+  --button-danger-text: #c2413b;
   --gold-glass: linear-gradient(180deg, rgba(255, 220, 125, 0.76), rgba(255, 190, 30, 0.62));
   --gold-glass-hover: linear-gradient(180deg, rgba(255, 220, 125, 0.92), rgba(255, 190, 30, 0.8));
   --gold-glass-shadow: 0 6px 16px rgba(184, 118, 14, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.65);
@@ -334,18 +343,6 @@ body::before {
   background: var(--gold-glass-hover) !important;
 }
 
-/* Every disabled button looks the same: flat glass, muted text. */
-:is(.primary, .new-btn, .soft-btn, .secondary):disabled:not(#_):not(#_) {
-  border-color: transparent !important;
-  background: var(--button-off) !important;
-  box-shadow: none !important;
-  color: var(--button-off-text) !important;
-  opacity: 1 !important;
-}
-
-:is(.primary, .new-btn, .soft-btn, .secondary):disabled:not(#_):not(#_) * {
-  color: var(--button-off-text) !important;
-}
 
 /* No borders anywhere: blocks, buttons and fields stand out through their fill and shadow. The two ids
    beat the dark theme's border colours. Validation red, the focus ring and table row lines stay. */
@@ -441,10 +438,6 @@ body::before {
   font-weight: 800;
 }
 
-.schedule-filter button:disabled:not(#_):not(#_) {
-  opacity: 0.46;
-}
-
 @media (max-width: 800px) {
   .schedule-filter:not(#_):not(#_) {
     padding: 10px !important;
@@ -455,4 +448,91 @@ body::before {
     padding: 9px 2px;
     font-size: 11.5px;
   }
+}
+
+/* ---------- Buttons: one look per kind, in both themes ---------- */
+/* Secondary: white glass, plain text. */
+:is(.soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button):not(.history-detail-btn, .attendance-actions .soft-btn, .active, :disabled):not(#_):not(#_) {
+  border-color: transparent !important;
+  background: var(--button-soft) !important;
+  box-shadow: var(--glass-lift-card) !important;
+  color: var(--bar-text) !important;
+}
+
+:is(.soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button):not(.history-detail-btn, .attendance-actions .soft-btn, .active, :disabled):not(#_):not(#_):hover {
+  background: var(--button-soft-hover) !important;
+}
+
+/* Destructive secondary: the same button with red text. */
+:is(.result-clear-button, .member-avatar-remove, .photo-action-danger):not(:disabled):not(#_):not(#_):not(#_) {
+  color: var(--button-danger-text) !important;
+}
+
+/* Destructive confirm: red glass instead of gold. */
+.primary.photo-danger:not(:disabled):not(#_):not(#_) {
+  background: var(--button-danger) !important;
+  box-shadow: 0 6px 16px rgba(190, 50, 50, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  color: #fff !important;
+}
+
+.primary.photo-danger:not(:disabled):not(#_):not(#_):hover {
+  background: var(--button-danger-hover) !important;
+}
+
+/* Disabled: every kind looks the same, flat glass and muted text. */
+:is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button, .schedule-filter button):disabled:not(#_):not(#_):not(#_) {
+  border-color: transparent !important;
+  background: var(--button-off) !important;
+  box-shadow: none !important;
+  color: var(--button-off-text) !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+}
+
+:is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button, .schedule-filter button):disabled:not(#_):not(#_):not(#_) * {
+  color: var(--button-off-text) !important;
+}
+
+/* Saved match rows: an opaque lining keeps the button colours from mixing with the row's green and red. */
+.result-entry-panel :is(.result-a-wins, .result-b-wins) .result-actions .primary:not(:disabled):not(#_):not(#_):not(#_) {
+  background: var(--gold-glass), var(--glass-page) !important;
+}
+
+.result-entry-panel :is(.result-a-wins, .result-b-wins) .result-actions .soft-btn:not(:disabled):not(#_):not(#_):not(#_) {
+  background: linear-gradient(var(--button-soft), var(--button-soft)), var(--glass-page) !important;
+}
+
+@media (min-width: 561px) {
+  .result-entry-panel .result-actions button:not(#_):not(#_) {
+    min-height: 36px;
+  }
+}
+
+/* Modals opened on top of a photo: nearly solid, so the picture behind cannot muddy them. */
+.photo-confirm-backdrop > *:not(#_):not(#_) {
+  background: var(--glass-modal-stacked) !important;
+}
+
+.photo-rename-head h2:not(#_) {
+  color: var(--bar-text);
+}
+
+.photo-rename-head p:not(#_),
+.photo-rename-field span:not(#_) {
+  color: var(--bar-muted);
+}
+
+.photo-rename-field input:not(#_):not(#_) {
+  background: var(--button-soft) !important;
+  box-shadow: var(--glass-lift-card) !important;
+  color: var(--bar-text);
+}
+
+.photo-rename-field input:focus:not(#_):not(#_) {
+  box-shadow: 0 0 0 2px rgba(255, 183, 0, 0.55) !important;
+}
+
+.photo-rename-actions:not(#_) {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
 }
