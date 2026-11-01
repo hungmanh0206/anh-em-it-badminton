@@ -735,7 +735,7 @@ input.search:not(#_):not(#_) {
   width: 17px;
   height: 17px;
   margin-right: 6px;
-  background: url("/app-icons/plus.svg") center / contain no-repeat;
+  background: url("/app-icons/plus.svg?v=2") center / contain no-repeat;
   vertical-align: -4px;
 }
 
