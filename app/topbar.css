@@ -462,20 +462,20 @@
     height: 62px;
     padding-inline: 4px;
     border-radius: 16px;
-    background: var(--bar-bg);
-    box-shadow: 0 2px 12px rgba(26, 25, 22, 0.18);
+    /* Phones can show the page below the bottom edge CSS knows, and cut anything reaching past it into
+       a straight line. So nothing here extends past the 6px gap: the shadow only rises upwards. */
+    box-shadow: 0 -4px 14px -6px rgba(26, 25, 22, 0.28);
   }
 
-  /* Blocks are as wide as the bar, so page content fades into the page colour before reaching it and
-     no block corner shows at the bar's. Plain gradient and no blur here: browsers draw those alike. */
-  body::after {
+  .topbar-nav::before {
     content: "";
-    position: fixed;
-    inset: auto 0 0;
-    z-index: 14;
-    height: calc(var(--bottombar-height) + 30px);
-    background: linear-gradient(to top, var(--glass-page) calc(100% - 44px), transparent);
-    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--bar-bg);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    backdrop-filter: blur(18px) saturate(170%);
   }
 
   .topbar-nav button:not(#_) {
