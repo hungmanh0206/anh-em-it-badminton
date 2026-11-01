@@ -776,13 +776,25 @@ html:has(.modal-backdrop, .champion-celebration) body::after {
   transition-delay: 0s;
 }
 
-/* Past the document, and where Safari tints its own bars, the browser shows the page background: it takes the scrim too. */
-html:has(.modal-backdrop):not(#_) {
+/* Above the page, Safari paints the status bar in the body's own colour, so the body takes the scrim. The shell then
+   carries the page colour under the content, and the colour blobs lift over it, so the page looks the same as before. */
+html:has(.modal-backdrop):not(#_),
+html:has(.modal-backdrop) body:not(#_) {
   background: var(--scrim-page) !important;
 }
 
-html:has(.champion-celebration):not(#_) {
+html:has(.champion-celebration):not(#_),
+html:has(.champion-celebration) body:not(#_) {
   background: var(--celebrate-page) !important;
+}
+
+html:has(.modal-backdrop, .champion-celebration) .app-shell:not(#_) {
+  min-height: 100lvh;
+  background: var(--glass-page) !important;
+}
+
+html:has(.modal-backdrop, .champion-celebration) body::before {
+  z-index: 1;
 }
 
 html:has(.champion-celebration) body::after {
@@ -819,6 +831,15 @@ html:has(.profile-backdrop) body::after {
 
 html:has(.modal-backdrop:not(.profile-backdrop), .champion-celebration) :is(.topbar-brand, .topbar-theme, .topbar-profile, .topbar-nav):not(#_) {
   filter: var(--modal-scrim-blur);
+}
+
+/* The bars' glass melts into the blur too, or their outline would still show. */
+html:has(.modal-backdrop:not(.profile-backdrop), .champion-celebration) :is(.topbar, .topbar-nav):not(#_) {
+  box-shadow: none;
+}
+
+html:has(.modal-backdrop:not(.profile-backdrop), .champion-celebration) :is(.topbar, .topbar-nav):not(#_)::before {
+  filter: blur(16px);
 }
 
 .profile-backdrop:not(#_):not(#_) {

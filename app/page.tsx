@@ -505,6 +505,8 @@ export default function Home() {
     if (supabase) {
       const { error } = await supabase.auth.signInWithPassword({ email: `${normalized}@anhemit.club`, password });
       if (error) return setLoginError("Tên đăng nhập hoặc mật khẩu chưa đúng.");
+      // Every sign-in starts at home, whatever page the last session was on.
+      setScreen("home");
       const localUser = members.find((m) => m.username === normalized);
       if (localUser) {
         setActiveUser(localUser);
@@ -1254,6 +1256,7 @@ export default function Home() {
   const championMonthLabel = championRankingLabel.split(",")[0].toUpperCase();
   const activeGroup = navGroups.find((group) => group.screens.some((item) => item.screen === screen));
   const openScreen = (next: Screen) => {
+    window.scrollTo({ top: 0, behavior: "instant" });
     setScreen(next);
     if (next === "ranking") setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel);
   };
@@ -1271,7 +1274,7 @@ export default function Home() {
         {navGroups.filter((group) => group.key !== "members" || isAdmin).map((group) => <button key={group.key} className={group === activeGroup ? "active" : ""} aria-current={group === activeGroup ? "page" : undefined} onClick={() => { if (group !== activeGroup) openScreen(group.screens[0].screen); }}><AppIcon name={group.icon} /><span>{group.label}</span></button>)}
       </nav>
     </div>
-    <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setActiveUser(null); }} />}</Presence>
+    <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setScreen("home"); setActiveUser(null); }} />}</Presence>
     <section className="content">
       <header><div className="title-group"><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div></header>
       {activeGroup && activeGroup.screens.length > 1 && <div className="page-tabs" aria-label={activeGroup.label}>{activeGroup.screens.map((item) => <button key={item.screen} className={screen === item.screen ? "active" : ""} aria-current={screen === item.screen ? "page" : undefined} onClick={() => openScreen(item.screen)}>{item.label}</button>)}</div>}
