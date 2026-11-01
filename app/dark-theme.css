@@ -52,19 +52,31 @@
 }
 
 /* Number tiles of a match; on a saved match they stay frosted over its colours. */
+:root[data-theme="dark"]:not(#_) .schedule-match-card .slot-token {
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  box-shadow: none !important;
+}
+
+:root[data-theme="dark"]:not(#_) .schedule-match-card .slot-token b {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
 @media (min-width: 561px) {
-  :root[data-theme="dark"]:not(#_) .slot-token:not(.result-a-wins *, .result-b-wins *) {
+  :root[data-theme="dark"]:not(#_) .match-result-row .slot-token:not(.result-a-wins *, .result-b-wins *) {
     background: rgba(255, 255, 255, 0.07) !important;
   }
 }
 
-/* Phones draw only the round number. */
+/* In the score rows phones draw only the round number. */
 @media (max-width: 560px) {
-  :root[data-theme="dark"]:not(#_) .slot-token:not(.result-a-wins *, .result-b-wins *) {
+  :root[data-theme="dark"]:not(#_) .match-result-row .slot-token:not(.result-a-wins *, .result-b-wins *) {
     background: transparent !important;
   }
 
-  :root[data-theme="dark"]:not(#_) .slot-token:not(.result-a-wins *, .result-b-wins *) b {
+  :root[data-theme="dark"]:not(#_) .match-result-row .slot-token:not(.result-a-wins *, .result-b-wins *) b {
+    border-radius: 50%;
     background: rgba(255, 255, 255, 0.1) !important;
   }
 }
@@ -225,10 +237,13 @@
 }
 
 /* Dark glass boxes with light text. */
-:root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) :is(.slot-token, .match-score-controls input) {
-  border-color: transparent !important;
-  background: rgba(12, 10, 7, 0.42) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px rgba(0, 0, 0, 0.24) !important;
+@media (min-width: 561px) {
+  :root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .slot-token,
+  :root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .match-score-controls input {
+    border-color: transparent !important;
+    background: rgba(12, 10, 7, 0.42) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px rgba(0, 0, 0, 0.24) !important;
+  }
 }
 
 :root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .match-score-controls input {
@@ -252,11 +267,6 @@
 
 /* Phones: round number chips and one score pill instead of boxes. */
 @media (max-width: 560px) {
-  :root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .slot-token {
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-
   :root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .slot-token b {
     border-radius: 50%;
     background: rgba(12, 10, 7, 0.45) !important;
