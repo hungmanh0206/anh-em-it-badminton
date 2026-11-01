@@ -2233,7 +2233,7 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
           <div className="elo-head-actions"><button type="button" className="soft-btn elo-guide-btn" onClick={() => void downloadEloImage(rows)}>Lưu ảnh ELO</button><button type="button" className="soft-btn elo-guide-btn" onClick={() => setGuideOpen(true)}>Cách tính ELO</button></div>
         </div>
       </div>
-      {status && <div className={`elo-status elo-${status.source}`}>{status.message}</div>}
+      {status?.source === "unavailable" && <div className={`elo-status elo-${status.source}`}>{status.message}</div>}
       <div className="elo-list">
         {rows.length > 0 && <div className="elo-head" aria-hidden="true"><span>Hạng</span><span>Thành viên</span><span>ELO</span><span>Số trận</span><span>Level</span></div>}
         {rows.length ? rows.map((row, index) => {
