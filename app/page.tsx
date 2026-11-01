@@ -1257,7 +1257,7 @@ export default function Home() {
   return <main className="app-shell">
     <div className="topbar">
       <div className="topbar-row">
-        <div className="topbar-brand"><span className="brand-mark" aria-hidden="true" /><div><b>ANH EM IT</b><small><span className="topbar-brand-long">BADMINTON </span>CLUB</small></div></div>
+        <div className="topbar-brand"><span className="brand-mark" aria-hidden="true" /><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></div>
         <ThemeToggle />
         <div className="topbar-profile">
           <button type="button" className="topbar-profile-btn" aria-label={`Tài khoản ${currentUser.name}`} aria-haspopup="dialog" aria-expanded={showProfileCard} onClick={() => setShowProfileCard((open) => !open)}><div className={avatarClassName("avatar small", currentUser)} style={avatarStyle(currentUser)}>{currentUser.initials}</div><div className="topbar-profile-text"><b>{currentUser.name}</b><small>{memberRoleLabel(currentUser.role)} · Level {currentUser.level}</small></div><svg className="topbar-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></button>
