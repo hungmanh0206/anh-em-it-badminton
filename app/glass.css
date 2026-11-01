@@ -759,20 +759,20 @@ input.search:not(#_):not(#_) {
   }
 }
 
-:is(.screen-view, .schedule-library, .schedule-case-list, .elo-page, .photo-page, .rules-page):not(#_):not(#_) {
+:is(.screen-view, .schedule-library, .schedule-case-list, .elo-page, .photo-page, .rules-page, .ranking):not(#_):not(#_) {
   display: flex;
   flex-direction: column;
   gap: var(--block-gap);
 }
 
-:is(.screen-view, .schedule-library, .schedule-case-list, .elo-page, .photo-page, .rules-page) > *:not(#_):not(#_):not(#_) {
+:is(.screen-view, .schedule-library, .schedule-case-list, .elo-page, .photo-page, .rules-page, .ranking) > *:not(#_):not(#_):not(#_) {
   min-width: 0;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
 
-.page-tabs + *:not(#_):not(#_) {
-  margin-top: var(--block-gap) !important;
+.page-tabs:not(#_):not(#_) {
+  margin-bottom: var(--block-gap) !important;
 }
 
 .screen-view > .warning:not(#_):not(#_):not(#_) {
@@ -780,7 +780,7 @@ input.search:not(#_):not(#_) {
 }
 
 /* Spacing between the smaller blocks inside a big one: also one value per screen size. Table rows stay flush. */
-:is(.draw-list, .history-list, .member-grid, .page-hero-stats, .result-list, .rules-match-types, .rules-prizes, .rules-split, .rules-steps, .schedule-grid):not(#_):not(#_):not(#_) {
+:is(.draw-list, .history-list, .member-grid, .page-hero-stats, .result-list, .rules-match-types, .rules-prizes, .rules-split, .rules-steps, .rules-section, .schedule-grid, .ranking-toolbar, .ranking-filter-row, .history-filters, .photo-toolbar, .photo-grid):not(#_):not(#_):not(#_) {
   gap: var(--card-gap) !important;
 }
 
@@ -793,7 +793,7 @@ input.search:not(#_):not(#_) {
 }
 
 /* The side margin inside a big block: headings and content line up on one edge. */
-.panel:not(.page-hero) > :is(.panel-head, .panel-foot, .schedule-case-head, .member-grid, .schedule-grid, .result-list, .history-filters, .history-list):not(#_):not(#_):not(#_) {
+.panel:not(.page-hero) > :is(.panel-head, .panel-foot, .schedule-case-head, .member-grid, .schedule-grid, .result-list, .history-filters, .history-list, .photo-toolbar, .photo-grid, .photo-pagination):not(#_):not(#_):not(#_) {
   margin-inline: 0 !important;
   padding-inline: var(--block-inset) !important;
 }
