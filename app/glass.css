@@ -328,3 +328,51 @@ body::before {
   color: rgba(26, 20, 8, 0.56) !important;
   opacity: 1 !important;
 }
+
+/* No borders anywhere: blocks, buttons and fields stand out through their fill and shadow. The two ids
+   beat the dark theme's border colours. Validation red, the focus ring and table row lines stay. */
+:is(
+  button:not(.workflow button),
+  input:not([type="checkbox"], [type="radio"], [type="file"], .score-invalid),
+  select,
+  textarea,
+  .tag,
+  .level,
+  .rank-number,
+  .elo-rank,
+  .member-menu,
+  .member-role-badge,
+  .member-role-notice,
+  .match-score-controls,
+  .rules-member-list span,
+  .workflow button span,
+  .checkin-modal .eyebrow,
+  .draw-panel span,
+  .elo-guide-table,
+  .elo-guide-example,
+  .photo-state,
+  .photo-diagnostics,
+  .photo-dropzone,
+  .photo-list,
+  .photo-upload-item,
+  .photo-view-toggle,
+  .photo-rename-modal
+):not(#_):not(#_) {
+  border-color: transparent !important;
+}
+
+/* Search boxes, inputs and dropdowns. */
+:is(input:not([type="checkbox"], [type="radio"], [type="file"], .score-invalid), select, textarea):not(.match-score-controls input):not(:focus):not(#_) {
+  background-color: var(--glass-card) !important;
+  box-shadow: var(--glass-lift-card) !important;
+}
+
+/* White buttons and small floating blocks. */
+:is(.soft-btn, .secondary, .skip, .schedule-filter button):not(:disabled):not(#_),
+:is(.member-menu, .elo-guide-example, .photo-state, .photo-diagnostics, .photo-dropzone, .photo-list, .photo-upload-item, .photo-view-toggle):not(#_) {
+  box-shadow: var(--glass-lift-card) !important;
+}
+
+:is(.elo-guide-example, .photo-state, .photo-diagnostics, .photo-dropzone, .photo-list, .photo-upload-item):not(#_) {
+  background-color: var(--glass-card) !important;
+}

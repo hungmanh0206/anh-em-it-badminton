@@ -28,6 +28,7 @@
   --bar-muted: rgba(255, 250, 240, 0.74);
   --bar-accent: #ffc83d;
   --bar-track: rgba(255, 255, 255, 0.12);
+  --bar-active-glow: radial-gradient(90% 100% at 50% 100%, rgba(255, 200, 61, 0.34), rgba(255, 200, 61, 0.1) 52%, transparent 78%);
   --brand-title: #f5ecd9;
   --brand-sub: #e8a317;
   --brand-tile: linear-gradient(145deg, rgba(255, 200, 80, 0.12), rgba(255, 200, 80, 0.05));
