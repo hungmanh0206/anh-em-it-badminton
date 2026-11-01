@@ -13,7 +13,7 @@
   --bar-muted: #6f6657;
   --bar-accent: #a66c00;
   --bar-track: rgba(60, 48, 28, 0.12);
-  --bar-active-glow: radial-gradient(90% 100% at 50% 100%, rgba(255, 183, 0, 0.36), rgba(255, 183, 0, 0.1) 52%, transparent 78%);
+  --bar-active-glow: rgba(255, 183, 0, 0.5);
   --brand-title: #231a0e;
   --brand-sub: #9a6414;
   --brand-tile: linear-gradient(145deg, #fff8e6, #f6e3b4);
@@ -319,9 +319,24 @@
 }
 
 .topbar-nav button.active:not(#_) {
-  background: var(--bar-active-glow) !important;
+  isolation: isolate;
   color: var(--bar-accent) !important;
   font-weight: 800;
+}
+
+/* Light rising from the underline: a blurred patch of its own, so it has no edge to show. */
+.topbar-nav button.active:not(#_)::before {
+  content: "";
+  position: absolute;
+  right: 14%;
+  bottom: -14px;
+  left: 14%;
+  z-index: -1;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bar-active-glow);
+  filter: blur(11px);
+  pointer-events: none;
 }
 
 /* The line under the current section. */

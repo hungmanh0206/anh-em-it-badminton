@@ -356,7 +356,23 @@ body::before {
   .photo-list,
   .photo-upload-item,
   .photo-view-toggle,
-  .photo-rename-modal
+  .photo-rename-modal,
+  .month-close-card,
+  .history-match-row,
+  .schedule-case,
+  .schedule-case-badge,
+  .schedule-relaxed-note,
+  .attendance-mark,
+  .rank-match-count,
+  .point-value,
+  .icon-btn,
+  .text-btn,
+  .toggle,
+  .elo-row-meta > *,
+  .elo-rating-value,
+  .elo-list,
+  .rank-elo-chip,
+  .live-rank-table
 ):not(#_):not(#_) {
   border-color: transparent !important;
 }
@@ -369,10 +385,10 @@ body::before {
 
 /* White buttons and small floating blocks. */
 :is(.soft-btn, .secondary, .skip, .schedule-filter button):not(:disabled):not(#_),
-:is(.member-menu, .elo-guide-example, .photo-state, .photo-diagnostics, .photo-dropzone, .photo-list, .photo-upload-item, .photo-view-toggle):not(#_) {
+:is(.member-menu, .elo-guide-example, .month-close-card, .history-match-row, .schedule-relaxed-note, .photo-state, .photo-diagnostics, .photo-dropzone, .photo-list, .photo-upload-item, .photo-view-toggle):not(#_) {
   box-shadow: var(--glass-lift-card) !important;
 }
 
-:is(.elo-guide-example, .photo-state, .photo-diagnostics, .photo-dropzone, .photo-list, .photo-upload-item):not(#_) {
+:is(.elo-guide-example, .month-close-card, .history-match-row, .schedule-relaxed-note, .photo-state, .photo-diagnostics, .photo-dropzone, .photo-list, .photo-upload-item):not(#_) {
   background-color: var(--glass-card) !important;
 }
