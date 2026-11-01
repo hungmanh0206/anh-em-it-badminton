@@ -6,6 +6,7 @@ import { PhotoGallery } from "@/app/photo-gallery";
 import { PageHero } from "@/app/ui/page-hero";
 import { roundAvatarImage } from "@/app/ui/avatar-image";
 import { ChampionCelebration } from "@/app/ui/champion-celebration";
+import { ThemeToggle } from "@/app/ui/theme-toggle";
 import { Toast, useToast } from "@/app/ui/toast";
 import { supabase } from "@/lib/supabase";
 import { isCheckinWindowOpenForDate, sessionDatesOfMonth, sessionStateForDate, sessionWeekdayLabel, sessionWeekInMonth, targetSessionDateKey } from "@/lib/session-dates";
@@ -87,15 +88,13 @@ const attendeeCountFromAttendances = (attendances: HistorySessionRow["attendance
     ? rows.filter((row) => row.choice === "attending").length
     : rows[0]?.count || 0;
 };
-const navItems: { screen: Screen; icon: AppIconName; label: string; short: string }[] = [
-  { screen: "home", icon: "home", label: "Home", short: "Home" },
-  { screen: "members", icon: "members", label: "Thành viên", short: "T.viên" },
-  { screen: "schedules", icon: "schedule", label: "Lịch thi đấu", short: "Lịch đấu" },
-  { screen: "ranking", icon: "ranking", label: "Bảng xếp hạng", short: "BXH" },
-  { screen: "elo", icon: "target", label: "ELO", short: "ELO" },
-  { screen: "history", icon: "history", label: "Lịch sử thi đấu", short: "Lịch sử" },
-  { screen: "photos", icon: "photos", label: "Kho ảnh", short: "Kho ảnh" },
-  { screen: "rules", icon: "rules", label: "Thể lệ", short: "Thể lệ" },
+// Five sections; a section with several pages shows them as tabs under the page title.
+const navGroups: { key: string; label: string; icon: AppIconName; screens: { screen: Screen; label: string }[] }[] = [
+  { key: "home", label: "Home", icon: "home", screens: [{ screen: "home", label: "Home" }] },
+  { key: "members", label: "Thành viên", icon: "members", screens: [{ screen: "members", label: "Thành viên" }] },
+  { key: "matches", label: "Thi đấu", icon: "schedule", screens: [{ screen: "schedules", label: "Lịch thi đấu" }, { screen: "history", label: "Kết quả & lịch sử" }] },
+  { key: "standings", label: "Xếp hạng", icon: "ranking", screens: [{ screen: "ranking", label: "Bảng xếp hạng" }, { screen: "elo", label: "ELO" }] },
+  { key: "library", label: "Thư viện", icon: "photos", screens: [{ screen: "photos", label: "Kho ảnh" }, { screen: "rules", label: "Thể lệ" }] },
 ];
 const screenTitles: Record<Screen, string> = {
   home: "Home",
@@ -351,7 +350,6 @@ export default function Home() {
   const [loginError, setLoginError] = useState("");
   const [spinning, setSpinning] = useState(false);
   const [spinTarget, setSpinTarget] = useState<number | null>(null);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>("draft");
@@ -1213,8 +1211,6 @@ export default function Home() {
       const target = pointerDownTarget ?? event.target;
       pointerDownTarget = null;
       if (!(target instanceof Element)) return;
-      if (!target.closest(".topbar-profile, .member-profile-popover")) setShowProfileCard(false);
-      if (!target.closest(".topbar-profile")) setProfileMenuOpen(false);
       if (target.closest(".modal-backdrop") && !target.closest(".checkin-modal, .confirm-modal, .history-detail, .member-editor, .member-detail-modal, .elo-guide-modal, .photo-sheet, .photo-preview, .photo-confirm-backdrop")) {
         (document.querySelector(".presence:not(.presence-leaving) .modal-backdrop .modal-close") as HTMLButtonElement | null)?.click();
       }
@@ -1244,27 +1240,36 @@ export default function Home() {
   const profileElo = eloRows.find((row) => row.username === currentUser.username || row.name === currentUser.name) ?? null;
   const champion = championRankingRows[0];
   const championMonthLabel = championRankingLabel.split(",")[0].toUpperCase();
+  const activeGroup = navGroups.find((group) => group.screens.some((item) => item.screen === screen));
+  const openScreen = (next: Screen) => {
+    setScreen(next);
+    if (next === "ranking") setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel);
+  };
 
   return <main className="app-shell">
     <div className="topbar">
-      <div className="topbar-main">
-        <div className="topbar-brand"><span className="brand-mark" aria-hidden="true" /><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></div>
-        <nav className="topbar-nav" aria-label="Các trang">
-          {navItems.filter((item) => item.screen !== "members" || isAdmin).map((item) => <button key={item.screen} className={screen === item.screen ? "active" : ""} aria-current={screen === item.screen ? "page" : undefined} aria-label={item.label} onClick={() => { setScreen(item.screen); if (item.screen === "ranking") setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); }}><AppIcon name={item.icon} /><span className="topbar-nav-full">{item.label}</span><span className="topbar-nav-short">{item.short}</span></button>)}
-        </nav>
-      </div>
-      <div className="topbar-status">
-        <div className="topbar-progress"><AppIcon name="trophy" /><div className="topbar-progress-text"><b>{currentMonthLabel.replace(", ", "/")}</b><small>{progress.completed} / {progress.total} buổi hoàn thành</small></div><span className="topbar-percent">{progress.total ? Math.round((progress.completed / progress.total) * 100) : 0}%</span></div>
-        {champion ? <button type="button" className="topbar-champion" aria-label={`Chúc mừng nhà vô địch ${champion.name}`} onClick={() => setCelebrating(true)}><div className={avatarClassName("avatar small", champion)} style={avatarStyle(champion)}>{champion.initials}</div><div className="topbar-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b><AppIcon name="crown" /> {champion.name} · {champion.points} điểm</b></div></button> : <div className="topbar-champion"><div className="topbar-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b>Chưa ghi danh</b></div></div>}
+      <div className="topbar-row">
+        <div className="topbar-brand"><span className="brand-mark" aria-hidden="true" /><div><b>ANH EM IT</b><small><span className="topbar-brand-long">BADMINTON </span>CLUB</small></div></div>
+        <div className="topbar-progress">
+          <AppIcon name="schedule" className="topbar-progress-icon" />
+          <span className="topbar-progress-month">{currentMonthLabel.replace(", ", "/").toUpperCase()}</span>
+          <span className="topbar-progress-count"><b>{progress.completed} / {progress.total}</b><small>buổi<span className="topbar-progress-rest"> hoàn thành</span></small></span>
+          <span className="topbar-progress-bar"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></span>
+        </div>
+        {champion ? <button type="button" className="topbar-champion" aria-label={`Chúc mừng nhà vô địch ${champion.name}`} onClick={() => setCelebrating(true)}><AppIcon name="crown" className="topbar-champion-crown" /><div className={avatarClassName("avatar small", champion)} style={avatarStyle(champion)}>{champion.initials}</div><div className="topbar-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b><AppIcon name="crown" /> {champion.name}</b><span>{`${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số`}</span></div></button> : <div className="topbar-champion"><AppIcon name="crown" className="topbar-champion-crown" /><div className="topbar-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b>Chưa ghi danh</b></div></div>}
+        <ThemeToggle />
         <div className="topbar-profile">
-          <button type="button" className="topbar-profile-btn" aria-label={`Tài khoản ${currentUser.name}`} aria-haspopup="menu" aria-expanded={profileMenuOpen} onClick={() => setProfileMenuOpen((open) => !open)}><div className={avatarClassName("avatar small", currentUser)} style={avatarStyle(currentUser)}>{currentUser.initials}</div><div className="topbar-profile-text"><b>{currentUser.name}</b><small>{memberRoleLabel(currentUser.role)} · Level {currentUser.level}</small></div><svg className="topbar-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></button>
-          {profileMenuOpen && <div className="topbar-menu" role="menu"><button role="menuitem" onClick={() => { setProfileMenuOpen(false); setShowProfileCard(true); }}>Hồ sơ của tôi</button><button role="menuitem" className="topbar-menu-logout" onClick={() => { setProfileMenuOpen(false); setLogoutConfirmOpen(true); }}>Đăng xuất</button></div>}
+          <button type="button" className="topbar-profile-btn" aria-label={`Tài khoản ${currentUser.name}`} aria-haspopup="dialog" onClick={() => setShowProfileCard(true)}><div className={avatarClassName("avatar small", currentUser)} style={avatarStyle(currentUser)}>{currentUser.initials}</div><div className="topbar-profile-text"><b>{currentUser.name}</b><small>{memberRoleLabel(currentUser.role)} · Level {currentUser.level}</small></div><svg className="topbar-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></button>
         </div>
       </div>
+      <nav className="topbar-nav" aria-label="Các mục">
+        {navGroups.filter((group) => group.key !== "members" || isAdmin).map((group) => <button key={group.key} className={group === activeGroup ? "active" : ""} aria-current={group === activeGroup ? "page" : undefined} onClick={() => { if (group !== activeGroup) openScreen(group.screens[0].screen); }}><AppIcon name={group.icon} /><span>{group.label}</span></button>)}
+      </nav>
     </div>
     <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setActiveUser(null); }} />}</Presence>
     <section className="content">
       <header><div className="title-group"><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div></header>
+      {activeGroup && activeGroup.screens.length > 1 && <div className="page-tabs" aria-label={activeGroup.label}>{activeGroup.screens.map((item) => <button key={item.screen} className={screen === item.screen ? "active" : ""} aria-current={screen === item.screen ? "page" : undefined} onClick={() => openScreen(item.screen)}>{item.label}</button>)}</div>}
       <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} rankingRows={profileRows} rankingMonth={profileAchievementMonth} eloRows={eloRows} formByUsername={formByUsername} onAvatarUpdated={(username, avatarUrl) => { if (avatarUrl) memberAvatars.set(username, avatarUrl); else memberAvatars.delete(username); removeBrowserCache(memberAvatarsCacheKey); setAvatarRevision((revision) => revision + 1); }} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={formByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
         <section className="hero">
           <div className="hero-copy"><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div>
@@ -1282,7 +1287,7 @@ export default function Home() {
     <Presence show={Boolean(showCheckin)}>{showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}</Presence>
     <Presence show={Boolean(confirmation)}>{confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}</Presence>
     <Presence show={celebrating && Boolean(champion)}>{champion && <ChampionCelebration name={champion.name} crown={<AppIcon name="crown" />} avatar={<div className={avatarClassName("avatar", champion)} style={avatarStyle(champion)}>{champion.initials}</div>} onClose={closeCelebration} />}</Presence>
-    <Presence show={Boolean(showProfileCard)}>{showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} elo={profileElo} form={formByUsername[currentUser.username]} onClose={() => setShowProfileCard(false)} />}</Presence>
+    <Presence show={Boolean(showProfileCard)}>{showProfileCard && <div className="modal-backdrop"><ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} elo={profileElo} form={formByUsername[currentUser.username]} onClose={() => setShowProfileCard(false)} onLogout={() => { setShowProfileCard(false); setLogoutConfirmOpen(true); }} /></div>}</Presence>
   </main>;
 }
 
@@ -1297,7 +1302,7 @@ function FormBadges({ form, className = "" }: { form?: FormResult[]; className?:
   </div>;
 }
 
-function ProfilePopover({ detail = false, member, rank, achievement, achievementMonth, rankClass, hasRankingData, elo, form, onClose }: { detail?: boolean; member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; hasRankingData: boolean; elo: EloRankingRow | null; form?: FormResult[]; onClose: () => void }) {
+function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass, hasRankingData, elo, form, onClose, onLogout }: { member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; hasRankingData: boolean; elo: EloRankingRow | null; form?: FormResult[]; onClose: () => void; onLogout?: () => void }) {
   const isTopRank = hasRankingData && rank > 0 && rank <= 3;
   const pointDiff = achievement?.pointDiff;
   const pointDiffLabel = typeof pointDiff === "number" ? `${pointDiff > 0 ? "+" : ""}${pointDiff}` : "0";
@@ -1310,14 +1315,14 @@ function ProfilePopover({ detail = false, member, rank, achievement, achievement
   const roleLabel = memberRoleLabel(member.role);
   const eloDisplay = typeof elo?.eloRating === "number" ? elo.eloRating.toLocaleString("vi-VN", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "1.000,0";
   const eloRankDisplay = typeof elo?.rank === "number" ? `Top ${elo.rank} ELO` : "ELO hiện tại";
-  return <aside className={`member-profile-popover profile-${rankClass}${detail ? " member-detail-modal" : ""}`} role="dialog" aria-modal="true" aria-label={`Thông tin hồ sơ ${member.name}`}>
+  return <aside className={`member-profile-popover member-detail-modal profile-${rankClass}`} role="dialog" aria-modal="true" aria-label={`Thông tin hồ sơ ${member.name}`}>
     <button className="modal-close profile-close" onClick={onClose} aria-label="Đóng">×</button>
     <div className="profile-hero-card">
       <span className={avatarClassName("profile-medal", member)} style={avatarStyle(member)} aria-hidden="true">{isTopRank ? rank : member.initials}</span>
       <div className="profile-identity">
         <p>{hasRankingData && rank > 0 ? `${positionLabel} · ${achievementMonth}` : "Hồ sơ tháng hiện tại"}</p>
         <h2>{member.name}</h2>
-        {detail && <span className="profile-username">@{member.username}</span>}
+        <span className="profile-username">@{member.username}</span>
         <span className="profile-role-line">{roleLabel} · Level {member.level}</span>
         <span className="profile-elo-badge"><strong>ELO {eloDisplay}</strong><em>{eloRankDisplay}</em></span>
       </div>
@@ -1341,6 +1346,7 @@ function ProfilePopover({ detail = false, member, rank, achievement, achievement
       <div className={`profile-stat ${typeof pointDiff === "number" ? pointDiff >= 0 ? "positive" : "negative" : ""}`}><span>Hiệu số</span><b>{pointDiffLabel}</b></div>
       <div className="profile-stat"><span>Số trận</span><b>{matches}</b></div>
     </div>
+    {onLogout && <button type="button" className="profile-logout" onClick={onLogout}>Đăng xuất</button>}
   </aside>;
 }
 
@@ -2411,7 +2417,7 @@ function Members({ members, rankingRows, rankingMonth, eloRows, formByUsername, 
       const hasRankingData = Boolean(achievement && !achievement.placeholder && achievement.matches > 0);
       const rankClass = hasRankingData && rank <= 3 ? `rank-${rank}` : "rank-none";
       const elo = eloRows.find((row) => row.username === viewing.username || row.name === viewing.name) ?? null;
-      return <div className="modal-backdrop"><ProfilePopover detail member={viewing} rank={rank} achievement={achievement} achievementMonth={rankingMonth} rankClass={rankClass} hasRankingData={hasRankingData} elo={elo} form={formByUsername[viewing.username]} onClose={() => setViewing(null)} /></div>;
+      return <div className="modal-backdrop"><ProfilePopover member={viewing} rank={rank} achievement={achievement} achievementMonth={rankingMonth} rankClass={rankClass} hasRankingData={hasRankingData} elo={elo} form={formByUsername[viewing.username]} onClose={() => setViewing(null)} /></div>;
     })()}</Presence>
     <Presence show={adding}>{adding && <AddMemberModal onClose={() => setAdding(false)} onCreate={async (values) => {
       await adminPost("/api/member-create", values, "Không thể thêm thành viên.");

@@ -299,9 +299,10 @@ header {
   border: 1px solid rgba(255, 183, 0, 0.24);
   border-radius: var(--club-radius-xl) !important;
   background:
-    radial-gradient(circle at 100% 0%, rgba(255, 183, 0, 0.32), transparent 28%),
-    linear-gradient(135deg, var(--club-ink-900), #25231f) !important;
-  box-shadow: var(--club-shadow-lg) !important;
+    radial-gradient(circle at 92% -10%, rgba(255, 183, 0, 0.24), transparent 32%),
+    radial-gradient(circle at 0% 100%, rgba(255, 237, 182, 0.42), transparent 36%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 250, 239, 0.94)) !important;
+  box-shadow: var(--club-shadow-md) !important;
 }
 
 .hero::after {
@@ -317,14 +318,14 @@ header {
 
 .hero h2,
 .hero-stats b {
-  color: var(--club-white) !important;
+  color: var(--club-ink-900) !important;
 }
 
 .hero h2 span,
 .hero p,
 .hero-stats em,
 .hero-stats small {
-  color: rgba(255, 255, 255, 0.68) !important;
+  color: var(--club-ink-600) !important;
 }
 
 .hero-stats div {

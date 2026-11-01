@@ -1,0 +1,180 @@
+/* Dark theme, chosen with the switch in the top bar (html[data-theme="dark"]). */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --club-ink-50: #171612;
+  --club-ink-100: #24221d;
+  --club-ink-200: #3a372f;
+  --club-ink-300: #57534a;
+  --club-ink-500: #a39c8e;
+  --club-ink-600: #c4bdaf;
+  --club-ink-700: #dcd6ca;
+  --club-ink-800: #ebe6db;
+  --club-ink-900: #f6f2e9;
+  --club-ink-950: #fffaf0;
+  --club-white: #211f1a;
+  --club-gold-50: #2d2616;
+  --club-gold-100: #3a2f17;
+  --club-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --club-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.32);
+  --club-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.36);
+  --club-shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.42);
+  --bar-bg: radial-gradient(circle at 92% 0%, rgba(255, 183, 0, 0.12), transparent 34%), linear-gradient(180deg, #1f1e1a, #161512);
+  --bar-border: rgba(255, 200, 61, 0.34);
+  --bar-shadow: 0 8px 22px rgba(0, 0, 0, 0.36);
+  --bar-text: #fffaf0;
+  --bar-muted: rgba(255, 250, 240, 0.72);
+  --bar-accent: #ffc83d;
+  --bar-track: rgba(255, 255, 255, 0.14);
+  --bar-divider: rgba(255, 255, 255, 0.12);
+  --topbar-line: rgba(255, 200, 61, 0.26);
+}
+
+/* Colours written directly in the older stylesheets. The id beats their selectors. */
+:root[data-theme="dark"]:not(#_) body {
+  background: #171612 !important;
+}
+
+:root[data-theme="dark"]:not(#_) :is(.panel, .rank-table, .schedule-match-card, .member-card, .result-row:not(.result-a-wins, .result-b-wins), .history-detail, .login-card, .member-editor, .confirm-modal, .checkin-modal, .photo-sheet, .elo-guide-modal, .profile-stat, .profile-form, .profile-score-card, .rules-note, .rules-total) {
+  border-color: #3a372f !important;
+  background: #211f1a !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"]:not(#_) :is(.panel-head, .rank-head, .schedule-case-head, .page-hero, .photo-skeleton) {
+  border-color: #3a372f !important;
+  background: #2a2721 !important;
+}
+
+:root[data-theme="dark"]:not(#_) .member-profile-popover {
+  border-color: rgba(255, 200, 61, 0.28) !important;
+  background: linear-gradient(160deg, #26231c, #1b1a16) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55) !important;
+}
+
+/* The home hero's dark version. */
+:root[data-theme="dark"]:not(#_) .hero {
+  background:
+    radial-gradient(circle at 92% 0%, rgba(255, 183, 0, 0.16), transparent 36%),
+    #211f1a !important;
+  color: #fffaf0;
+}
+
+:root[data-theme="dark"]:not(#_) .hero :is(h2, b, p) {
+  color: #fffaf0;
+}
+
+/* Dark text stays on gold. */
+:root[data-theme="dark"]:not(#_) :is(.primary, .primary *) {
+  color: #1a1408 !important;
+}
+
+:root[data-theme="dark"]:not(#_) :is(.modal-close, .profile-close) {
+  border-color: #3a372f !important;
+  background: #2a2721 !important;
+  color: #fffaf0 !important;
+}
+
+:root[data-theme="dark"]:not(#_) .soft-btn {
+  border-color: #4a463c !important;
+  background: #2a2721 !important;
+  color: #ebe6db !important;
+}
+
+:root[data-theme="dark"]:not(#_) .member-avatar-copy > b {
+  color: #f6f2e9;
+}
+
+:root[data-theme="dark"]:not(#_) :is(.member-add-form label, .member-editor label, .ranking-export-full) {
+  color: #c4bdaf !important;
+}
+
+:root[data-theme="dark"]:not(#_) .screen-view :is(h2, h3, h4, strong, .rules-sub, .rules-section-title) {
+  color: #f6f2e9 !important;
+}
+
+:root[data-theme="dark"]:not(#_) .screen-view :is(p, li, small):not(.eyebrow) {
+  color: #c4bdaf !important;
+}
+
+:root[data-theme="dark"]:not(#_) :is(.rules-level-head b, .gold b, .silver b, .bronze b, .fourth b, .profile-stat b, .profile-identity h2, .workflow button.current) {
+  color: #f6f2e9 !important;
+}
+
+:root[data-theme="dark"]:not(#_) :is(.rank-head span, .profile-username, .profile-role-line, .profile-score-card small, .attendance-status.pending) {
+  color: #c4bdaf !important;
+}
+
+:root[data-theme="dark"]:not(#_) :is(.member-card, .member-card.readonly) {
+  border-color: #3a372f !important;
+  background: #211f1a !important;
+}
+
+:root[data-theme="dark"]:not(#_) .attendance-mark.waiting {
+  background: #2a2721 !important;
+}
+
+:root[data-theme="dark"]:not(#_) :is(.page-hero-stats > div, .rules-match-types > div, .rules-member-list > span, .schedule-filter > button:not(.active), .photo-state-error, .slot-token.level-open) {
+  border-color: #3a372f !important;
+  background: #2a2721 !important;
+  color: #ebe6db;
+}
+
+:root[data-theme="dark"]:not(#_) :is(.profile-identity > p, .profile-elo-badge) {
+  border-color: rgba(255, 200, 61, 0.3) !important;
+  background: rgba(255, 200, 61, 0.12) !important;
+  color: #ffd66d !important;
+}
+
+:root[data-theme="dark"]:not(#_) .profile-elo-badge :is(strong, em) {
+  color: #ffd66d !important;
+}
+
+/* Dark text stays on gold, after the text rules above. */
+:root[data-theme="dark"]:not(#_) :is(.primary, .primary *, .attendance-actions .soft-btn, .page-tabs button.active) {
+  color: #1a1408 !important;
+}
+
+:root[data-theme="dark"]:not(#_) .attendance-actions .soft-btn {
+  background: linear-gradient(180deg, #ffd36b, #ffb700) !important;
+}
+
+:root[data-theme="dark"]:not(#_) :is(.hero-stats b, .hero-stats em, .page-hero-stats b, .page-hero-stats strong) {
+  color: #fffaf0 !important;
+}
+
+:root[data-theme="dark"]:not(#_) .page-hero-stats :is(span, small) {
+  color: #c4bdaf !important;
+}
+
+:root[data-theme="dark"]:not(#_) .workflow button {
+  color: #a39c8e !important;
+}
+
+:root[data-theme="dark"]:not(#_) .workflow button.current {
+  color: #f6f2e9 !important;
+}
+
+:root[data-theme="dark"]:not(#_) .workflow button.current span {
+  color: #1a1408 !important;
+}
+
+:root[data-theme="dark"]:not(#_) .login-page {
+  background: #171612 !important;
+}
+
+/* Empty score boxes; on a saved match they stay frosted over its colours. */
+:root[data-theme="dark"]:not(#_) .result-row:not(.result-a-wins, .result-b-wins) .match-score-controls input {
+  border-color: #4a463c !important;
+  background: #2a2721 !important;
+  color: #fffaf0 !important;
+}
+
+:root[data-theme="dark"]:not(#_) .content h1 {
+  color: #f6f2e9 !important;
+}
+
+:root[data-theme="dark"]:not(#_) .schedule-case-head > :not(div, h3) {
+  border-color: #4a463c !important;
+  background: #2a2721 !important;
+  color: #ebe6db !important;
+}

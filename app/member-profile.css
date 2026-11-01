@@ -67,6 +67,26 @@
   font-weight: 600 !important;
 }
 
+.profile-logout {
+  display: block;
+  width: calc(100% - 44px);
+  min-height: 44px;
+  margin: 2px 22px 20px;
+  border: 1px solid rgba(194, 65, 59, 0.42);
+  border-radius: 12px;
+  background: none;
+  color: #c2413b;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.profile-logout:hover {
+  background: rgba(194, 65, 59, 0.1);
+}
+
 /* Avatar control at the top of "Sửa thành viên". */
 .member-avatar-field {
   display: flex;

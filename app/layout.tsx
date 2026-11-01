@@ -38,6 +38,7 @@ import "./touch-inputs.css";
 import "./member-profile.css";
 import "./champion-celebration.css";
 import "./topbar.css";
+import "./dark-theme.css";
 
 // Lets the fixed bars reach the screen edges; they pad themselves for the notch and home indicator.
 export const viewport: Viewport = { viewportFit: "cover" };
@@ -65,7 +66,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi">
+    <html lang="vi" suppressHydrationWarning>
+      <head>
+        {/* Before the first paint, so a dark choice never flashes white. */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem("aemit-theme")==="dark")document.documentElement.dataset.theme="dark"}catch{}` }} />
+      </head>
       <body className="antialiased">{children}</body>
     </html>
   );
