@@ -1,24 +1,17 @@
 /* One floating block fixed at the top: club, month, champion, theme and profile split by thin lines,
    then the sections. Phones and iPad mini float the sections in their own block at the bottom. */
 :root {
-  --topbar-height: 113px;
+  --topbar-height: 104px;
   --bottombar-height: 0px;
   --page-gutter: 52px;
-  --bar-bg: radial-gradient(circle at 92% 0%, rgba(255, 183, 0, 0.16), transparent 34%), linear-gradient(180deg, #ffffff, #fffaf0);
+  --topbar-inset: max(var(--page-gutter), calc((100% - 1280px) / 2 + var(--page-gutter)));
+  --bar-bg: radial-gradient(circle at 92% 0%, rgba(255, 183, 0, 0.16), transparent 34%), rgba(255, 255, 255, 0.58);
   --bar-border: rgba(214, 160, 40, 0.42);
   --bar-shadow: 0 8px 22px rgba(62, 47, 18, 0.12);
   --bar-text: #1a1408;
   --bar-muted: #6f6657;
   --bar-accent: #a66c00;
   --bar-track: rgba(60, 48, 28, 0.12);
-  --bar-divider: rgba(60, 48, 28, 0.12);
-  --topbar-line: rgba(180, 130, 30, 0.3);
-}
-
-/* Both bars line up with the content below them: same centred width, same side margin. */
-.topbar,
-.topbar-nav {
-  --topbar-inset: max(var(--page-gutter), calc((100% - 1280px) / 2 + var(--page-gutter)));
 }
 
 .topbar {
@@ -31,8 +24,19 @@
 .topbar {
   border: 1px solid var(--bar-border);
   border-radius: 16px;
-  background: var(--bar-bg);
   box-shadow: var(--bar-shadow);
+}
+
+/* Frosted on a layer of its own: blur on .topbar itself would pin the bottom bar inside it. */
+.topbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--bar-bg);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  backdrop-filter: blur(18px) saturate(170%);
 }
 
 /* Content scrolls under the fixed bars. The ids beat the older per-breakpoint sidebar offsets. */
@@ -60,20 +64,29 @@
   white-space: nowrap;
 }
 
+/* The profile card drops down under the profile button. */
+.member-profile-popover {
+  top: calc(var(--topbar-height) + 8px) !important;
+  right: var(--topbar-inset) !important;
+  left: auto !important;
+  width: min(372px, calc(100vw - 2 * var(--page-gutter))) !important;
+  max-height: calc(100dvh - var(--topbar-height) - var(--bottombar-height) - 16px) !important;
+  overflow-y: auto !important;
+  transform-origin: top right;
+}
+
 /* ---------- First bar ---------- */
 .topbar-row {
   display: flex;
   align-items: center;
-  height: 60px;
+  height: 52px;
   padding-inline: 14px;
 }
 
 .topbar-row > * + * {
   align-self: center;
   height: 40px;
-  margin-left: 16px;
-  padding-left: 16px;
-  border-left: 1px solid var(--topbar-line);
+  margin-left: 26px;
 }
 
 .topbar-brand {
@@ -113,177 +126,47 @@
   letter-spacing: 0.06em;
 }
 
-.topbar-progress {
-  display: grid;
-  flex: 1 1 200px;
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 10px;
-  align-content: center;
-  min-width: 0;
-}
-
-.topbar-progress-icon {
-  grid-row: 1 / 4;
-  align-self: center;
-  width: 28px;
-  height: 28px;
-}
-
-.topbar-progress-month {
-  color: var(--bar-accent);
-  font-size: 11.5px;
-  font-weight: 800;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-.topbar-progress-count {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  margin-top: 1px;
-  white-space: nowrap;
-}
-
-.topbar-progress-count b {
-  font-size: 13.5px;
-  font-weight: 800;
-  line-height: 1.2;
-}
-
-.topbar-progress-count small {
-  color: var(--bar-muted);
-  font-size: 12px;
-}
-
-.topbar-progress-bar {
-  display: block;
-  height: 4px;
-  margin-top: 3px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--bar-track);
-}
-
-.topbar-progress-bar i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #ffb700, #ffd66d);
-  transition: width 300ms ease;
-}
-
-.topbar-champion {
-  display: flex;
-  flex: 1 1 230px;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  border-width: 0 0 0 1px;
-  border-style: solid;
-  border-color: var(--topbar-line);
-  border-radius: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-}
-
-button.topbar-champion {
-  cursor: pointer;
-}
-
-button.topbar-champion:hover .topbar-champion-text b {
-  color: var(--bar-accent);
-}
-
-.topbar-champion .avatar.small {
-  flex: 0 0 auto;
-  width: 38px !important;
-  height: 38px !important;
-  min-width: 38px !important;
-  box-shadow: 0 0 0 2px rgba(255, 214, 109, 0.75) !important;
-}
-
-.topbar-champion-crown {
-  display: none;
-}
-
-.topbar-champion-text {
-  display: grid;
-  min-width: 0;
-}
-
-.topbar-champion-text small {
-  overflow: hidden;
-  color: var(--bar-accent);
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.topbar-champion-text b {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  overflow: hidden;
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 1.25;
-  white-space: nowrap;
-  transition: color 160ms ease;
-}
-
-.topbar-champion-text b .app-icon {
-  flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
-}
-
-.topbar-champion-text > span {
-  overflow: hidden;
-  color: var(--bar-muted);
-  font-size: 11px;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .topbar-theme {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 3px;
+  margin-left: auto !important;
 }
 
+/* The two pictures of the switch, one over the other, cross-fading. */
 .topbar-theme button {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
+  position: relative;
+  width: 76px;
+  height: 42px;
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: 999px;
   background: none;
-  color: var(--bar-muted);
   cursor: pointer;
-  transition: background-color 160ms ease, color 160ms ease;
 }
 
-.topbar-theme button:hover {
-  color: var(--bar-text);
+.topbar-theme span {
+  position: absolute;
+  inset: 0;
+  background: center / contain no-repeat;
+  transition: opacity 220ms ease;
 }
 
-.topbar-theme button[aria-pressed="true"] {
-  background: linear-gradient(180deg, #ffd66d, #ffb700);
-  color: #1a1408;
+.topbar-theme .topbar-theme-light {
+  background-image: url("/app-icons/theme-light.png?v=theme-switch-20261101");
 }
 
-.topbar-theme svg {
-  width: 17px;
-  height: 17px;
+.topbar-theme .topbar-theme-dark {
+  background-image: url("/app-icons/theme-dark.png?v=theme-switch-20261101");
+  opacity: 0;
+}
+
+.topbar-theme button[aria-checked="true"] .topbar-theme-light {
+  opacity: 0;
+}
+
+.topbar-theme button[aria-checked="true"] .topbar-theme-dark {
+  opacity: 1;
 }
 
 .topbar-profile {
@@ -307,8 +190,8 @@ button.topbar-champion:hover .topbar-champion-text b {
   cursor: pointer;
 }
 
-.topbar-profile-btn:hover .topbar-chevron {
-  transform: translateY(1px);
+.topbar-profile-btn[aria-expanded="true"] .topbar-chevron {
+  transform: rotate(180deg);
 }
 
 .topbar-profile-btn .avatar.small {
@@ -355,7 +238,6 @@ button.topbar-champion:hover .topbar-champion-text b {
   height: 42px;
   padding-inline: 6px;
   overflow: hidden;
-  border-top: 1px solid var(--topbar-line);
 }
 
 /* The ids beat the bare "nav button" rules of the old sidebar. */
@@ -402,16 +284,6 @@ button.topbar-champion:hover .topbar-champion-text b {
   height: 3px;
   border-radius: 999px 999px 0 0;
   background: #ffc83d;
-}
-
-.topbar-nav button + button::before {
-  content: "";
-  position: absolute;
-  top: 24%;
-  bottom: 24%;
-  left: 0;
-  width: 1px;
-  background: var(--bar-divider);
 }
 
 .topbar-nav button:not(#_) .app-icon {
@@ -465,7 +337,6 @@ button.topbar-champion:hover .topbar-champion-text b {
 }
 
 .topbar-nav button:focus-visible,
-.topbar-champion:focus-visible,
 .topbar-theme button:focus-visible,
 .topbar-profile-btn:focus-visible,
 .page-tabs button:focus-visible {
@@ -480,13 +351,8 @@ button.topbar-champion:hover .topbar-champion-text b {
 }
 
 @media (max-width: 1040px) {
-  .topbar-brand > div {
-    display: none;
-  }
-
   .topbar-row > * + * {
-    margin-left: 12px;
-    padding-left: 12px;
+    margin-left: 18px;
   }
 }
 
@@ -516,6 +382,8 @@ button.topbar-champion:hover .topbar-champion-text b {
     border-radius: 16px;
     background: var(--bar-bg);
     box-shadow: var(--bar-shadow);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    backdrop-filter: blur(18px) saturate(170%);
   }
 
   .topbar-nav button:not(#_) {
@@ -553,16 +421,11 @@ button.topbar-champion:hover .topbar-champion-text b {
 
   .topbar-row > * + * {
     height: 36px;
-    margin-left: 5px;
-    padding-left: 5px;
+    margin-left: 9px;
   }
 
   .topbar-brand {
     gap: 6px;
-  }
-
-  .topbar-brand > div {
-    display: block;
   }
 
   .topbar-brand .brand-mark {
@@ -581,54 +444,13 @@ button.topbar-champion:hover .topbar-champion-text b {
     font-size: 9px;
   }
 
-  .topbar-brand-long,
-  .topbar-progress-icon,
-  .topbar-progress-bar {
+  .topbar-brand-long {
     display: none;
-  }
-
-  .topbar-progress {
-    grid-template-columns: minmax(0, 1fr);
-    flex: 1 1 auto;
-  }
-
-  .topbar-progress-month {
-    font-size: 10px;
-  }
-
-  .topbar-progress-count b,
-  .topbar-progress-count small {
-    color: var(--bar-text);
-    font-size: 12.5px;
-    font-weight: 700;
-  }
-
-  .topbar-champion {
-    flex: 0 0 auto;
-  }
-
-  .topbar-champion > :not(.topbar-champion-crown) {
-    display: none;
-  }
-
-  .topbar-champion .topbar-champion-crown {
-    display: block;
-    width: 27px;
-    height: 27px;
-  }
-
-  .topbar-theme {
-    gap: 2px;
   }
 
   .topbar-theme button {
-    width: 25px;
-    height: 25px;
-  }
-
-  .topbar-theme svg {
-    width: 14px;
-    height: 14px;
+    width: 56px;
+    height: 31px;
   }
 
   .topbar-profile-btn {
@@ -646,23 +468,6 @@ button.topbar-champion:hover .topbar-champion-text b {
   }
 }
 
-@media (max-width: 460px) {
-  .topbar-progress-rest {
-    display: none;
-  }
-}
-
-/* Smaller phones drop the club name so the row still fits. */
-@media (max-width: 388px) {
-  .topbar-brand > div {
-    display: none;
-  }
-
-  .topbar-row {
-    padding-inline: 8px;
-  }
-}
-
 /* Phones held sideways: both bars as thin as they can be. */
 @media (max-height: 480px) and (max-width: 950px) {
   :root {
@@ -672,11 +477,6 @@ button.topbar-champion:hover .topbar-champion-text b {
 
   .topbar-row {
     height: 50px;
-  }
-
-  .topbar-progress-bar,
-  .topbar-champion-text > span {
-    display: none;
   }
 
   .topbar-nav {

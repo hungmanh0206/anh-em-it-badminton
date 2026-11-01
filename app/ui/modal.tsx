@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 // Dismisses on click (not pointerdown) so the tap is consumed by the backdrop instead of reaching
 // whatever sits under it once the modal closes; the tap must also start on the backdrop itself.
@@ -31,9 +32,10 @@ export function Presence({ show, children }: { show: boolean; children: ReactNod
     const timer = window.setTimeout(() => setLeaving(false), 400);
     return () => window.clearTimeout(timer);
   }, [leaving]);
-  if (!show && !leaving) return null;
-  return <div
+  if ((!show && !leaving) || typeof document === "undefined") return null;
+  // In <body>, because a blurred block around it would otherwise become its containing block.
+  return createPortal(<div
     className={leaving ? "presence presence-leaving" : "presence"}
     onAnimationEnd={(event) => { if (leaving && event.target === event.currentTarget.firstElementChild) setLeaving(false); }}
-  >{show ? children : lastChildren}</div>;
+  >{show ? children : lastChildren}</div>, document.body);
 }

@@ -1,0 +1,91 @@
+/* Glass look of the whole app: soft colour behind everything, frosted blocks and bars above it.
+   Modals are portalled to <body> (app/ui/modal.tsx), so a blurred block never traps them. */
+:root {
+  --glass-page: #f7f2e7;
+  --glass-blob-1: rgba(255, 183, 0, 0.3);
+  --glass-blob-2: rgba(255, 170, 120, 0.26);
+  --glass-blob-3: rgba(110, 180, 255, 0.2);
+  --glass-block: rgba(255, 255, 255, 0.56);
+  --glass-card: rgba(255, 255, 255, 0.52);
+  --glass-solid: rgba(255, 255, 255, 0.8);
+  --glass-edge: rgba(255, 255, 255, 0.75);
+  --glass-line: rgba(90, 70, 30, 0.12);
+  --glass-shadow: 0 10px 30px rgba(62, 47, 18, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --glass-blur: blur(18px) saturate(160%);
+}
+
+body:not(#_) {
+  background: var(--glass-page) !important;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(58vw 52vh at 88% 6%, var(--glass-blob-1), transparent 72%),
+    radial-gradient(52vw 56vh at 4% 34%, var(--glass-blob-2), transparent 72%),
+    radial-gradient(62vw 56vh at 66% 100%, var(--glass-blob-3), transparent 72%);
+  pointer-events: none;
+}
+
+.app-shell:not(#_) {
+  background: transparent !important;
+}
+
+/* ---------- Blocks ---------- */
+.panel:not(#_),
+.page-hero:not(#_),
+.hero:not(#_),
+.member-summary > div:not(#_) {
+  border-color: var(--glass-edge) !important;
+  background: var(--glass-block) !important;
+  box-shadow: var(--glass-shadow) !important;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+/* The heroes keep their gold corner over the glass. */
+.page-hero:not(#_),
+.hero:not(#_) {
+  background:
+    radial-gradient(circle at 92% -10%, rgba(255, 183, 0, 0.2), transparent 34%),
+    linear-gradient(var(--glass-block), var(--glass-block)) !important;
+}
+
+/* Inside a block everything lets the glass show through. */
+.panel-head:not(#_),
+.rank-head:not(#_),
+.rank-table:not(#_),
+.schedule-case-head:not(#_) {
+  border-color: var(--glass-line) !important;
+  background: transparent !important;
+}
+
+.member-card:not(#_),
+.schedule-match-card:not(#_),
+.result-row:not(.result-a-wins, .result-b-wins):not(#_),
+.rules-note:not(#_),
+.rules-total:not(#_),
+.profile-stat:not(#_),
+.profile-form:not(#_),
+.profile-score-card:not(#_) {
+  border-color: var(--glass-line) !important;
+  background: var(--glass-card) !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Modals: frosted, but solid enough to read ---------- */
+.member-editor:not(#_),
+.member-profile-popover:not(#_),
+.confirm-modal:not(#_),
+.checkin-modal:not(#_),
+.history-detail:not(#_),
+.elo-guide-modal:not(#_),
+.photo-sheet:not(#_) {
+  border-color: var(--glass-edge) !important;
+  background: var(--glass-solid) !important;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}

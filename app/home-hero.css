@@ -54,3 +54,156 @@
     font-size: 7px !important;
   }
 }
+
+/* Month progress and champion: the bottom row of the Home hero. */
+.hero:not(#_) {
+  flex-wrap: wrap;
+}
+
+.hero-status {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 1 0 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 40px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(180, 130, 30, 0.22);
+  color: var(--club-ink-900);
+}
+
+.hero-progress {
+  display: grid;
+  flex: 1 1 220px;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 12px;
+  align-content: center;
+  max-width: 340px;
+}
+
+.hero-progress-icon {
+  grid-row: 1 / 4;
+  align-self: center;
+  width: 34px;
+  height: 34px;
+}
+
+.hero-progress-month {
+  color: var(--bar-accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.hero-progress-count {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 1px;
+  white-space: nowrap;
+}
+
+.hero-progress-count b {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.hero-progress-count small {
+  color: var(--bar-muted);
+  font-size: 12.5px;
+}
+
+.hero-progress-bar {
+  display: block;
+  height: 5px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bar-track);
+}
+
+.hero-progress-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffb700, #ffd66d);
+  transition: width 300ms ease;
+}
+
+.hero-champion {
+  display: flex;
+  flex: 1 1 220px;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+button.hero-champion {
+  cursor: pointer;
+}
+
+button.hero-champion:hover .hero-champion-text b {
+  color: var(--bar-accent);
+}
+
+button.hero-champion:focus-visible {
+  border-radius: 12px;
+  outline: 2px solid rgba(255, 183, 0, 0.7);
+  outline-offset: 3px;
+}
+
+.hero-champion .avatar.small {
+  flex: 0 0 auto;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  box-shadow: 0 0 0 2px rgba(255, 200, 61, 0.8) !important;
+}
+
+.hero-champion-text {
+  display: grid;
+  min-width: 0;
+}
+
+.hero-champion-text small {
+  overflow: hidden;
+  color: var(--bar-accent);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hero-champion-text b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+  white-space: nowrap;
+  transition: color 160ms ease;
+}
+
+.hero-champion-text b .app-icon {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+
+.hero-champion-text > span {
+  overflow: hidden;
+  color: var(--bar-muted);
+  font-size: 11.5px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

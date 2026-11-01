@@ -1211,6 +1211,7 @@ export default function Home() {
       const target = pointerDownTarget ?? event.target;
       pointerDownTarget = null;
       if (!(target instanceof Element)) return;
+      if (!target.closest(".topbar-profile, .member-profile-popover")) setShowProfileCard(false);
       if (target.closest(".modal-backdrop") && !target.closest(".checkin-modal, .confirm-modal, .history-detail, .member-editor, .member-detail-modal, .elo-guide-modal, .photo-sheet, .photo-preview, .photo-confirm-backdrop")) {
         (document.querySelector(".presence:not(.presence-leaving) .modal-backdrop .modal-close") as HTMLButtonElement | null)?.click();
       }
@@ -1250,16 +1251,9 @@ export default function Home() {
     <div className="topbar">
       <div className="topbar-row">
         <div className="topbar-brand"><span className="brand-mark" aria-hidden="true" /><div><b>ANH EM IT</b><small><span className="topbar-brand-long">BADMINTON </span>CLUB</small></div></div>
-        <div className="topbar-progress">
-          <AppIcon name="schedule" className="topbar-progress-icon" />
-          <span className="topbar-progress-month">{currentMonthLabel.replace(", ", "/").toUpperCase()}</span>
-          <span className="topbar-progress-count"><b>{progress.completed} / {progress.total}</b><small>buổi<span className="topbar-progress-rest"> hoàn thành</span></small></span>
-          <span className="topbar-progress-bar"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></span>
-        </div>
-        {champion ? <button type="button" className="topbar-champion" aria-label={`Chúc mừng nhà vô địch ${champion.name}`} onClick={() => setCelebrating(true)}><AppIcon name="crown" className="topbar-champion-crown" /><div className={avatarClassName("avatar small", champion)} style={avatarStyle(champion)}>{champion.initials}</div><div className="topbar-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b><AppIcon name="crown" /> {champion.name}</b><span>{`${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số`}</span></div></button> : <div className="topbar-champion"><AppIcon name="crown" className="topbar-champion-crown" /><div className="topbar-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b>Chưa ghi danh</b></div></div>}
         <ThemeToggle />
         <div className="topbar-profile">
-          <button type="button" className="topbar-profile-btn" aria-label={`Tài khoản ${currentUser.name}`} aria-haspopup="dialog" onClick={() => setShowProfileCard(true)}><div className={avatarClassName("avatar small", currentUser)} style={avatarStyle(currentUser)}>{currentUser.initials}</div><div className="topbar-profile-text"><b>{currentUser.name}</b><small>{memberRoleLabel(currentUser.role)} · Level {currentUser.level}</small></div><svg className="topbar-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></button>
+          <button type="button" className="topbar-profile-btn" aria-label={`Tài khoản ${currentUser.name}`} aria-haspopup="dialog" aria-expanded={showProfileCard} onClick={() => setShowProfileCard((open) => !open)}><div className={avatarClassName("avatar small", currentUser)} style={avatarStyle(currentUser)}>{currentUser.initials}</div><div className="topbar-profile-text"><b>{currentUser.name}</b><small>{memberRoleLabel(currentUser.role)} · Level {currentUser.level}</small></div><svg className="topbar-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></button>
         </div>
       </div>
       <nav className="topbar-nav" aria-label="Các mục">
@@ -1273,8 +1267,16 @@ export default function Home() {
       <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} rankingRows={profileRows} rankingMonth={profileAchievementMonth} eloRows={eloRows} formByUsername={formByUsername} onAvatarUpdated={(username, avatarUrl) => { if (avatarUrl) memberAvatars.set(username, avatarUrl); else memberAvatars.delete(username); removeBrowserCache(memberAvatarsCacheKey); setAvatarRevision((revision) => revision + 1); }} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={formByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
         <section className="hero">
           <div className="hero-copy"><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div>
-          <img className="hero-logo" src="/club-logo.png?v=club-glass-logo" alt="" aria-hidden="true" />
           <div className="hero-stats"><div><b>{present.length}</b><small>THAM GIA</small></div><div><b>{notAttending.length}</b><small>KHÔNG THAM GIA</small></div><div><b>{String(step + 1).padStart(2, "0")}<em>/{String(steps.length).padStart(2, "0")}</em></b><small>BƯỚC HIỆN TẠI</small></div></div>
+          <div className="hero-status">
+          <div className="hero-progress">
+            <AppIcon name="schedule" className="hero-progress-icon" />
+            <span className="hero-progress-month">{currentMonthLabel.replace(", ", "/").toUpperCase()}</span>
+            <span className="hero-progress-count"><b>{progress.completed} / {progress.total}</b><small>buổi hoàn thành</small></span>
+            <span className="hero-progress-bar"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></span>
+          </div>
+          {champion ? <button type="button" className="hero-champion" aria-label={`Chúc mừng nhà vô địch ${champion.name}`} onClick={() => setCelebrating(true)}><div className={avatarClassName("avatar small", champion)} style={avatarStyle(champion)}>{champion.initials}</div><div className="hero-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b><AppIcon name="crown" /> {champion.name}</b><span>{`${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số`}</span></div></button> : <div className="hero-champion"><div className="hero-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b>Chưa ghi danh</b></div></div>}
+          </div>
         </section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : canGoStep(i) ? "" : "locked"} aria-disabled={i !== step && !canGoStep(i)} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
@@ -1287,7 +1289,7 @@ export default function Home() {
     <Presence show={Boolean(showCheckin)}>{showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}</Presence>
     <Presence show={Boolean(confirmation)}>{confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}</Presence>
     <Presence show={celebrating && Boolean(champion)}>{champion && <ChampionCelebration name={champion.name} crown={<AppIcon name="crown" />} avatar={<div className={avatarClassName("avatar", champion)} style={avatarStyle(champion)}>{champion.initials}</div>} onClose={closeCelebration} />}</Presence>
-    <Presence show={Boolean(showProfileCard)}>{showProfileCard && <div className="modal-backdrop"><ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} elo={profileElo} form={formByUsername[currentUser.username]} onClose={() => setShowProfileCard(false)} onLogout={() => { setShowProfileCard(false); setLogoutConfirmOpen(true); }} /></div>}</Presence>
+    <Presence show={Boolean(showProfileCard)}>{showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} elo={profileElo} form={formByUsername[currentUser.username]} onClose={() => setShowProfileCard(false)} onLogout={() => { setShowProfileCard(false); setLogoutConfirmOpen(true); }} />}</Presence>
   </main>;
 }
 
@@ -1302,7 +1304,7 @@ function FormBadges({ form, className = "" }: { form?: FormResult[]; className?:
   </div>;
 }
 
-function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass, hasRankingData, elo, form, onClose, onLogout }: { member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; hasRankingData: boolean; elo: EloRankingRow | null; form?: FormResult[]; onClose: () => void; onLogout?: () => void }) {
+function ProfilePopover({ detail = false, member, rank, achievement, achievementMonth, rankClass, hasRankingData, elo, form, onClose, onLogout }: { detail?: boolean; member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; hasRankingData: boolean; elo: EloRankingRow | null; form?: FormResult[]; onClose: () => void; onLogout?: () => void }) {
   const isTopRank = hasRankingData && rank > 0 && rank <= 3;
   const pointDiff = achievement?.pointDiff;
   const pointDiffLabel = typeof pointDiff === "number" ? `${pointDiff > 0 ? "+" : ""}${pointDiff}` : "0";
@@ -1315,14 +1317,14 @@ function ProfilePopover({ member, rank, achievement, achievementMonth, rankClass
   const roleLabel = memberRoleLabel(member.role);
   const eloDisplay = typeof elo?.eloRating === "number" ? elo.eloRating.toLocaleString("vi-VN", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "1.000,0";
   const eloRankDisplay = typeof elo?.rank === "number" ? `Top ${elo.rank} ELO` : "ELO hiện tại";
-  return <aside className={`member-profile-popover member-detail-modal profile-${rankClass}`} role="dialog" aria-modal="true" aria-label={`Thông tin hồ sơ ${member.name}`}>
+  return <aside className={`member-profile-popover profile-${rankClass}${detail ? " member-detail-modal" : ""}`} role="dialog" aria-modal="true" aria-label={`Thông tin hồ sơ ${member.name}`}>
     <button className="modal-close profile-close" onClick={onClose} aria-label="Đóng">×</button>
     <div className="profile-hero-card">
       <span className={avatarClassName("profile-medal", member)} style={avatarStyle(member)} aria-hidden="true">{isTopRank ? rank : member.initials}</span>
       <div className="profile-identity">
         <p>{hasRankingData && rank > 0 ? `${positionLabel} · ${achievementMonth}` : "Hồ sơ tháng hiện tại"}</p>
         <h2>{member.name}</h2>
-        <span className="profile-username">@{member.username}</span>
+        {detail && <span className="profile-username">@{member.username}</span>}
         <span className="profile-role-line">{roleLabel} · Level {member.level}</span>
         <span className="profile-elo-badge"><strong>ELO {eloDisplay}</strong><em>{eloRankDisplay}</em></span>
       </div>
@@ -2417,7 +2419,7 @@ function Members({ members, rankingRows, rankingMonth, eloRows, formByUsername, 
       const hasRankingData = Boolean(achievement && !achievement.placeholder && achievement.matches > 0);
       const rankClass = hasRankingData && rank <= 3 ? `rank-${rank}` : "rank-none";
       const elo = eloRows.find((row) => row.username === viewing.username || row.name === viewing.name) ?? null;
-      return <div className="modal-backdrop"><ProfilePopover member={viewing} rank={rank} achievement={achievement} achievementMonth={rankingMonth} rankClass={rankClass} hasRankingData={hasRankingData} elo={elo} form={formByUsername[viewing.username]} onClose={() => setViewing(null)} /></div>;
+      return <div className="modal-backdrop"><ProfilePopover detail member={viewing} rank={rank} achievement={achievement} achievementMonth={rankingMonth} rankClass={rankClass} hasRankingData={hasRankingData} elo={elo} form={formByUsername[viewing.username]} onClose={() => setViewing(null)} /></div>;
     })()}</Presence>
     <Presence show={adding}>{adding && <AddMemberModal onClose={() => setAdding(false)} onCreate={async (values) => {
       await adminPost("/api/member-create", values, "Không thể thêm thành viên.");
