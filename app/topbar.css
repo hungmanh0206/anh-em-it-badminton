@@ -1,4 +1,4 @@
-/* One floating bar fixed at the top: club, sections, theme and profile. Phones and iPad mini keep
+/* One floating bar fixed at the top: club, sections, theme and profile. Phones keep
    the sections in a second floating bar at the bottom. */
 :root {
   --topbar-height: 68px;
@@ -433,14 +433,38 @@
   }
 }
 
-@media (min-width: 901px) and (max-width: 980px) {
-  .topbar-brand > div {
+/* iPad mini: the logo alone beside the sections, with the labels a size smaller and each as wide as its own text. */
+@media (min-width: 701px) and (max-width: 980px) {
+  :root {
+    --page-gutter: 18px;
+  }
+
+  .topbar-brand > div,
+  .topbar-chevron {
     display: none;
+  }
+
+  .topbar-nav {
+    margin-inline: 6px;
+  }
+
+  .topbar-nav button:not(#_) {
+    flex: 1 1 auto;
+    gap: 4px;
+    min-width: 0;
+    padding-inline: 2px;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+
+  .topbar-nav button:not(#_) .app-icon {
+    width: 20px;
+    height: 20px;
   }
 }
 
-/* ---------- Phones and iPad mini: sections float at the bottom ---------- */
-@media (max-width: 900px), (max-height: 480px) and (max-width: 950px) {
+/* ---------- Phones: sections float at the bottom ---------- */
+@media (max-width: 700px), (max-height: 480px) and (max-width: 950px) {
   :root {
     --topbar-height: calc(68px + env(safe-area-inset-top));
     --bottombar-height: calc(74px + env(safe-area-inset-bottom));
@@ -633,10 +657,10 @@ button.topbar-brand {
   }
 }
 
-/* Phones and iPad mini, once scrolled: everything but the avatar fades, then the bar closes in around it from the left
+/* Phones, once scrolled: everything but the avatar fades, then the bar closes in around it from the left
    into a small circle. `left` and not a transform: a transform here would pin the bottom bar inside the top bar.
    Opening runs the other way round, so the content only comes back once there is room for it. */
-@media (max-width: 900px), (max-height: 480px) and (max-width: 950px) {
+@media (max-width: 700px), (max-height: 480px) and (max-width: 950px) {
   .topbar {
     --collapsed-bar: 50px;
     left: var(--page-gutter);
