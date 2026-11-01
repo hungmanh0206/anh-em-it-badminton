@@ -461,11 +461,22 @@
     z-index: 15;
     height: 62px;
     padding-inline: 4px;
+    overflow: visible;
     border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(26, 25, 22, 0.18);
+  }
+
+  /* Frosted on a layer of its own, cut to the corners: Safari can leave the blur square otherwise. */
+  .topbar-nav::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
     background: var(--bar-bg);
-    box-shadow: var(--bar-shadow);
     -webkit-backdrop-filter: blur(18px) saturate(170%);
     backdrop-filter: blur(18px) saturate(170%);
+    clip-path: inset(0 round 16px);
   }
 
   .topbar-nav button:not(#_) {
