@@ -6,7 +6,7 @@
   --icon-history: url("/app-icons/history.png?v=sidebar-icons-v2-nobg-20260904");
   --icon-rules: url("/app-icons/rules.png?v=sidebar-icons-v2-nobg-20260904");
   --icon-trophy: url("/app-icons/trophy.png?v=trophy-glass-nobg-v2-20260904");
-  --icon-crown: url("/app-icons/crown.png?v=sidebar-icons-v2-nobg-20260904");
+  --icon-crown: url("/app-icons/crown.png?v=gold-20261101");
   --icon-check: url("/app-icons/check.png?v=sidebar-icons-v2-nobg-20260904");
   --icon-success: url("/app-icons/success.png?v=sidebar-icons-v2-nobg-20260904");
   --icon-error: url("/app-icons/error.png?v=sidebar-icons-v2-nobg-20260904");
@@ -92,7 +92,7 @@
   background-size: 78% auto;
   box-shadow: 0 14px 30px rgba(255, 183, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
-
+
 .result-icon-button .result-action-icon {
   display: inline-block;
   width: 19px;
@@ -170,7 +170,7 @@
   justify-content: center;
   gap: 6px;
 }
-
+
 .welcome-member.rank-1 .welcome-rank::before,
 .welcome-member.rank-2 .welcome-rank::before,
 .welcome-member.rank-3 .welcome-rank::before {
