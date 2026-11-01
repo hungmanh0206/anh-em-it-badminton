@@ -461,37 +461,21 @@
     z-index: 15;
     height: 62px;
     padding-inline: 4px;
-    overflow: visible;
     border-radius: 16px;
+    background: var(--bar-bg);
     box-shadow: 0 2px 12px rgba(26, 25, 22, 0.18);
   }
 
-  /* Blocks are as wide as the bar: page content dissolves before it, so no block corner shows at the bar's. */
+  /* Blocks are as wide as the bar, so page content fades into the page colour before reaching it and
+     no block corner shows at the bar's. Plain gradient and no blur here: browsers draw those alike. */
   body::after {
     content: "";
     position: fixed;
     inset: auto 0 0;
     z-index: 14;
-    height: calc(var(--bottombar-height) + 26px);
-    background: linear-gradient(to top, var(--glass-page) 42%, transparent);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    -webkit-mask-image: linear-gradient(to top, #000 62%, transparent);
-    mask-image: linear-gradient(to top, #000 62%, transparent);
+    height: calc(var(--bottombar-height) + 30px);
+    background: linear-gradient(to top, var(--glass-page) calc(100% - 44px), transparent);
     pointer-events: none;
-  }
-
-  /* Frosted on a layer of its own, cut to the corners: Safari can leave the blur square otherwise. */
-  .topbar-nav::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    background: var(--bar-bg);
-    -webkit-backdrop-filter: blur(18px) saturate(170%);
-    backdrop-filter: blur(18px) saturate(170%);
-    clip-path: inset(0 round 16px);
   }
 
   .topbar-nav button:not(#_) {
