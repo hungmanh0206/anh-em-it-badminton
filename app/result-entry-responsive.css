@@ -4,7 +4,9 @@
 
 .result-entry-panel .match-result-row {
   display: grid;
-  grid-template-columns: 44px minmax(160px, 1fr) minmax(110px, auto) minmax(160px, 1fr) 86px !important;
+  --row-lead: 44px;
+  --row-tail: 86px;
+  grid-template-columns: var(--row-lead) minmax(160px, 1fr) minmax(110px, auto) minmax(160px, 1fr) var(--row-tail) !important;
   gap: 10px;
   align-items: center;
   min-width: 0 !important;
@@ -115,7 +117,9 @@
 
 @media (max-width: 1024px) {
   .result-entry-panel .match-result-row {
-    grid-template-columns: 40px minmax(132px, 1fr) 102px minmax(132px, 1fr) 72px !important;
+    --row-lead: 40px;
+    --row-tail: 72px;
+    grid-template-columns: var(--row-lead) minmax(132px, 1fr) 102px minmax(132px, 1fr) var(--row-tail) !important;
     gap: 8px;
   }
 
@@ -173,7 +177,9 @@
   }
 
   .result-entry-panel .match-result-row {
-    grid-template-columns: 14px minmax(0, 1fr) 66px minmax(0, 1fr) 28px !important;
+    --row-lead: 14px;
+    --row-tail: 28px;
+    grid-template-columns: var(--row-lead) minmax(0, 1fr) 66px minmax(0, 1fr) var(--row-tail) !important;
     grid-template-areas:
       "meta team-a score team-b action";
     gap: 5px;
@@ -362,7 +368,9 @@
   }
 
   .result-entry-panel .match-result-row {
-    grid-template-columns: 12px minmax(0, 1fr) 58px minmax(0, 1fr) 26px !important;
+    --row-lead: 12px;
+    --row-tail: 26px;
+    grid-template-columns: var(--row-lead) minmax(0, 1fr) 58px minmax(0, 1fr) var(--row-tail) !important;
     gap: 4px;
     padding: 9px 6px !important;
   }
