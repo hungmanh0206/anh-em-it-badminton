@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from "react";
+import { createContext, type CSSProperties, type Dispatch, type SetStateAction, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { backdropDismissProps, Presence } from "@/app/ui/modal";
 import { PhotoGallery } from "@/app/photo-gallery";
 import { PageHero } from "@/app/ui/page-hero";
@@ -1432,15 +1432,23 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, curren
 }
 function Schedule({ onEditingChange, scenario, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, rankingRows, rankingMonth, onSaved }: { onEditingChange: (rows: number[]) => void; scenario: ScheduleScenario | null; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: Dispatch<SetStateAction<Record<number, [string, string]>>>; confirmedMatches: Record<number, boolean>; setConfirmedMatches: Dispatch<SetStateAction<Record<number, boolean>>>; sessionId: string | null; canManageScores: boolean; rankingRows: RankingRow[]; rankingMonth: string; onSaved: (completed: boolean) => void }) {
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
+  const [focusSlot, setFocusSlot] = useState<number | null>(null);
+  // Touch screens: a tap anywhere else clears the highlight.
+  useEffect(() => {
+    if (focusSlot === null) return;
+    const clearOutside = (event: MouseEvent) => { if (!(event.target instanceof Element && event.target.closest(".slot-token"))) setFocusSlot(null); };
+    document.addEventListener("click", clearOutside);
+    return () => document.removeEventListener("click", clearOutside);
+  }, [focusSlot]);
   if (!scenario) return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Lịch chỉ được tạo khi có tối thiểu 5 thành viên và đúng tổ hợp trong thư viện lịch.</p></div></div><div className="empty-ranking">Chưa có lịch phù hợp cho danh sách điểm danh hiện tại.</div></section>;
-  return <>
+  return <SlotFocusContext.Provider value={{ slot: focusSlot, setSlot: setFocusSlot }}>
     <section className="panel combined-schedule-panel">
       <div className="panel-head"><div><h2>Lịch thi đấu & nhập điểm</h2></div><span className="count-pill schedule-count-pill">{scenario.matches.length} trận</span></div>
       <div className="schedule-grid">{scenario.matches.map((match, i) => <Match match={match} i={i} namesBySlot={namesBySlot} key={i} />)}</div>
     </section>
     <Results key={`${sessionId ?? "local"}-${scenario.id}`} onEditingChange={onEditingChange} matches={scenario.matches} drawn={drawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} onSaved={onSaved} />
     <LiveRankingSnapshot rows={rankingRows} month={rankingMonth} />
-  </>;
+  </SlotFocusContext.Provider>;
 }
 function Rules({ members }: { members: Member[] }) {
   // Grouped by the live level (top 4 ELO = Level 1), so the list never goes stale.
@@ -1587,7 +1595,19 @@ function ScheduleLibrary({ scenarios, members }: { scenarios: ScheduleScenario[]
     </div>
   </section>;
 }
-function SlotToken({ no, name, open }: { no: number; name?: string; open?: boolean }) { return <span className={`slot-token ${open ? "level-open" : `level-${slotLevel(no)}`}`}><b>{no}</b>{name && <small>{name}</small>}</span>; }
+// The number picked out on the schedule, to see every match of that player. Without a provider tokens are plain.
+const SlotFocusContext = createContext<{ slot: number | null; setSlot: Dispatch<SetStateAction<number | null>> } | null>(null);
+const canHover = () => window.matchMedia("(hover: hover)").matches;
+function SlotToken({ no, name, open }: { no: number; name?: string; open?: boolean }) {
+  const focus = useContext(SlotFocusContext);
+  const focusClass = !focus || focus.slot === null ? "" : focus.slot === no ? " slot-focused" : " slot-dimmed";
+  const focusEvents = focus ? {
+    onMouseEnter: () => { if (canHover()) focus.setSlot(no); },
+    onMouseLeave: () => { if (canHover()) focus.setSlot(null); },
+    onClick: () => { if (!canHover()) focus.setSlot((current) => (current === no ? null : no)); },
+  } : {};
+  return <span className={`slot-token ${open ? "level-open" : `level-${slotLevel(no)}`}${focusClass}`} {...focusEvents}><b>{no}</b>{name && <small>{name}</small>}</span>;
+}
 function TeamPair({ team, namesBySlot, open }: { team: readonly [number, number]; namesBySlot?: Record<number, string>; open?: boolean }) { return <span className="team-pair"><SlotToken no={team[0]} name={namesBySlot?.[team[0]]} open={open} /><i>+</i><SlotToken no={team[1]} name={namesBySlot?.[team[1]]} open={open} /></span>; }
 function Match({ match, i, namesBySlot }: { match: ScheduleMatch; i: number; namesBySlot?: Record<number, string> }) { const open = match.type === "MỞ"; return <article className="match schedule-match-card"><div className="match-top"><b>TRẬN {String(i + 1).padStart(2, "0")}</b></div><div className="teams"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={open} /><strong>VS</strong><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={open} /></div></article>; }
 function Results({ onEditingChange, matches, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, onSaved }: { onEditingChange: (rows: number[]) => void; matches: ScheduleMatch[]; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: Dispatch<SetStateAction<Record<number, [string, string]>>>; confirmedMatches: Record<number, boolean>; setConfirmedMatches: Dispatch<SetStateAction<Record<number, boolean>>>; sessionId: string | null; canManageScores: boolean; onSaved: (completed: boolean) => void }) {

@@ -119,11 +119,11 @@
 
 /* The racket on a pale gold glass tile, the same look as the theme switch. */
 .topbar-brand .brand-mark:not(#_) {
-  width: 44px !important;
-  min-width: 44px !important;
-  max-width: 44px !important;
-  height: 44px !important;
-  flex: 0 0 44px;
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  height: 40px !important;
+  flex: 0 0 40px;
   padding: 0 !important;
   border: 0 !important;
   border-radius: 9px !important;
@@ -134,7 +134,7 @@
 .topbar-brand b {
   display: block;
   color: var(--brand-title);
-  font-size: 19px;
+  font-size: 15.5px;
   font-weight: 800;
   letter-spacing: -0.01em;
   line-height: 1.1;
@@ -145,9 +145,9 @@
   display: block;
   margin-top: 3px;
   color: var(--brand-sub);
-  font-size: 11px;
+  font-size: 9.5px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   white-space: nowrap;
 }
 
@@ -506,20 +506,20 @@
   }
 
   .topbar-brand .brand-mark:not(#_) {
-    width: 40px !important;
-    min-width: 40px !important;
-    max-width: 40px !important;
-    height: 40px !important;
-    flex-basis: 40px;
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    height: 38px !important;
+    flex-basis: 38px;
   }
 
   .topbar-brand b {
-    font-size: 16px;
+    font-size: 14.5px;
   }
 
   .topbar-brand small {
     margin-top: 2px;
-    font-size: 9.5px;
+    font-size: 9px;
   }
 
   .topbar-brand-long {

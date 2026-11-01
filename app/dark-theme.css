@@ -81,25 +81,10 @@
   color: #6ee7a7 !important;
 }
 
-:root[data-theme="dark"]:not(#_) .result-a-wins .slot-token b,
-:root[data-theme="dark"]:not(#_) .result-b-wins .slot-token b,
-:root[data-theme="dark"]:not(#_) .result-a-wins .slot-token small,
-:root[data-theme="dark"]:not(#_) .result-b-wins .slot-token small {
-  color: #14110a !important;
-}
-
 :root[data-theme="dark"]:not(#_) :is(.rules-list li, .rules-level-head small) {
   color: #cfc8ba !important;
 }
 
-
-/* Phones draw the number as a round chip; on a saved match it stays pale behind dark text. */
-@media (max-width: 560px) {
-  :root[data-theme="dark"]:not(#_) .result-a-wins .slot-token b,
-  :root[data-theme="dark"]:not(#_) .result-b-wins .slot-token b {
-    background: rgba(255, 255, 255, 0.88) !important;
-  }
-}
 
 :root[data-theme="dark"]:not(#_) .match-score-controls em {
   color: #cfc8ba !important;
@@ -200,12 +185,90 @@
   color: #ffd66d !important;
 }
 
-/* Saved matches keep the frosted boxes of the light theme, so their text stays dark too. */
-:root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .match-score-controls input {
-  color: #14110a !important;
-  -webkit-text-fill-color: #14110a;
+
+/* Player highlight on the schedule: a soft gold fill suits the dark tiles better than a bright ring. */
+:root[data-theme="dark"]:not(#_) .slot-focused:not(.result-a-wins *, .result-b-wins *) {
+  background: rgba(255, 200, 61, 0.2) !important;
+  box-shadow: 0 0 0 1.5px rgba(255, 200, 61, 0.9), 0 0 16px rgba(255, 180, 30, 0.32) !important;
 }
 
-:root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .match-score-controls em {
-  color: #14110a !important;
+:root[data-theme="dark"]:not(#_) .slot-focused:not(.result-a-wins *, .result-b-wins *) small {
+  color: #ffe9b0 !important;
+}
+
+:root[data-theme="dark"]:not(#_) .slot-dimmed {
+  opacity: 0.5;
+}
+
+:root[data-theme="dark"]:not(#_) .schedule-match-card:has(.slot-focused),
+:root[data-theme="dark"]:not(#_) .result-row:not(.result-a-wins, .result-b-wins):has(.slot-focused) {
+  background: rgba(255, 200, 61, 0.08) !important;
+  box-shadow: 0 0 0 1px rgba(255, 200, 61, 0.5), var(--glass-lift-card) !important;
+}
+
+@media (max-width: 560px) {
+  :root[data-theme="dark"]:not(#_) .match-result-row .slot-focused {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Saved matches: the light theme's green and red, deep and fading out towards the middle. */
+:root[data-theme="dark"]:not(#_) .match-result-row.result-a-wins {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.6) 0%, rgba(34, 197, 94, 0.3) 28%, rgba(255, 255, 255, 0.05) 50%, rgba(247, 85, 85, 0.3) 72%, rgba(247, 85, 85, 0.6) 100%) border-box !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), -12px 10px 24px -16px rgba(34, 197, 94, 0.6), 12px 10px 24px -16px rgba(247, 85, 85, 0.6) !important;
+}
+
+:root[data-theme="dark"]:not(#_) .match-result-row.result-b-wins {
+  background: linear-gradient(90deg, rgba(247, 85, 85, 0.6) 0%, rgba(247, 85, 85, 0.3) 28%, rgba(255, 255, 255, 0.05) 50%, rgba(34, 197, 94, 0.3) 72%, rgba(34, 197, 94, 0.6) 100%) border-box !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), -12px 10px 24px -16px rgba(247, 85, 85, 0.6), 12px 10px 24px -16px rgba(34, 197, 94, 0.6) !important;
+}
+
+/* Dark glass boxes with light text. */
+:root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) :is(.slot-token, .match-score-controls input) {
+  border-color: transparent !important;
+  background: rgba(12, 10, 7, 0.42) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px rgba(0, 0, 0, 0.24) !important;
+}
+
+:root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .match-score-controls input {
+  color: #fffaf0 !important;
+  -webkit-text-fill-color: #fffaf0;
+}
+
+:root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) :is(.slot-token b, .match-score-controls em) {
+  color: #fffaf0 !important;
+}
+
+:root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .slot-token small {
+  color: #eee8dc !important;
+}
+
+:root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .result-actions .soft-btn {
+  border-color: transparent !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #fffaf0 !important;
+}
+
+/* Phones: round number chips and one score pill instead of boxes. */
+@media (max-width: 560px) {
+  :root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .slot-token {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  :root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .slot-token b {
+    border-radius: 50%;
+    background: rgba(12, 10, 7, 0.45) !important;
+  }
+
+  :root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .match-score-controls {
+    border-color: transparent !important;
+    background: rgba(12, 10, 7, 0.45) !important;
+  }
+
+  :root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .match-score-controls input {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
 }

@@ -251,3 +251,37 @@ body::before {
 .confirm-modal .modal-icon.app-icon-logout:not(#_) {
   background: var(--icon-logout) center / 70% auto no-repeat, var(--brand-tile) !important;
 }
+
+/* Schedule: pick a player's number to see all of their matches. */
+.combined-schedule-panel .slot-token,
+.result-entry-panel .slot-token {
+  cursor: pointer;
+  transition: opacity 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+.slot-focused:not(#_) {
+  box-shadow: 0 0 0 2px #ffc83d, 0 0 14px rgba(255, 190, 40, 0.65) !important;
+  transform: scale(1.08);
+}
+
+.slot-dimmed:not(#_) {
+  opacity: 0.4;
+}
+
+.schedule-match-card:has(.slot-focused):not(#_),
+.result-row:not(.result-a-wins, .result-b-wins):has(.slot-focused):not(#_) {
+  box-shadow: 0 0 0 1.5px rgba(255, 200, 61, 0.75), var(--glass-lift-card) !important;
+}
+
+/* In the score rows phones draw only the round number. */
+@media (max-width: 560px) {
+  .match-result-row .slot-focused:not(#_) {
+    box-shadow: none !important;
+    transform: none;
+  }
+
+  .match-result-row .slot-focused:not(#_) b {
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px #ffc83d, 0 0 10px rgba(255, 190, 40, 0.65) !important;
+  }
+}
