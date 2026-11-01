@@ -28,8 +28,8 @@
   --pill: rgba(60, 48, 28, 0.07);
   --pill-hover: rgba(60, 48, 28, 0.13);
   --pill-text: #4a4133;
-  --mark-waiting: linear-gradient(145deg, rgba(255, 255, 255, 0.5), transparent 58%), rgba(196, 150, 62, 0.52);
-  --mark-waiting-lift: 0 3px 9px rgba(120, 88, 28, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --mark-waiting: linear-gradient(145deg, rgba(255, 255, 255, 0.45), transparent 58%), rgba(196, 150, 62, 0.24);
+  --mark-waiting-lift: 0 2px 6px rgba(120, 88, 28, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   --button-off: rgba(60, 48, 28, 0.08);
   --button-off-text: rgba(26, 20, 8, 0.52);
   --button-soft: rgba(255, 255, 255, 0.74);

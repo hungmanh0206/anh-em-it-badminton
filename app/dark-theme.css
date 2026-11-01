@@ -44,8 +44,8 @@
   --gold-glass: linear-gradient(180deg, rgba(255, 216, 115, 0.86), rgba(255, 183, 0, 0.72));
   --gold-glass-hover: linear-gradient(180deg, rgba(255, 216, 115, 0.96), rgba(255, 183, 0, 0.86));
   --gold-glass-shadow: 0 6px 16px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.42);
-  --mark-waiting: linear-gradient(145deg, rgba(255, 255, 255, 0.24), transparent 58%), rgba(255, 214, 130, 0.2);
-  --mark-waiting-lift: 0 3px 10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  --mark-waiting: linear-gradient(145deg, rgba(255, 255, 255, 0.12), transparent 58%), rgba(255, 214, 130, 0.1);
+  --mark-waiting-lift: 0 2px 6px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   --button-off: rgba(255, 255, 255, 0.08);
   --button-off-text: rgba(255, 250, 240, 0.6);
   --button-soft: rgba(255, 255, 255, 0.12);
