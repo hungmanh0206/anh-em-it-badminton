@@ -6,6 +6,7 @@ import { PhotoGallery } from "@/app/photo-gallery";
 import { PageHero } from "@/app/ui/page-hero";
 import { roundAvatarImage } from "@/app/ui/avatar-image";
 import { ChampionCelebration } from "@/app/ui/champion-celebration";
+import { useCollapsingTopbar } from "@/app/ui/use-collapsing-topbar";
 import { unlockFireworkSound } from "@/app/ui/firework-sound";
 import { DRAW_SPIN_MS, DrawWheel } from "@/app/ui/draw-wheel";
 import { GlassSelect } from "@/app/ui/glass-select";
@@ -376,6 +377,7 @@ export default function Home() {
   const [confirmation, setConfirmation] = useState<{ title: string; message: string; action: () => void | Promise<void> } | null>(null);
   const [attendanceChangeNotice, setAttendanceChangeNotice] = useState<string | null>(null);
   const [showProfileCard, setShowProfileCard] = useState(false);
+  const topbarCollapsed = useCollapsingTopbar(screen);
   const [authRestoring, setAuthRestoring] = useState(Boolean(supabase));
   const [now, setNow] = useState(() => new Date());
   const [attendanceSynced, setAttendanceSynced] = useState(!supabase);
@@ -1255,7 +1257,7 @@ export default function Home() {
   };
 
   return <main className="app-shell">
-    <div className="topbar">
+    <div className={"topbar" + (topbarCollapsed ? " is-collapsed" : "")}>
       <div className="topbar-row">
         <button type="button" className="topbar-brand" aria-label="Về Trang chủ" onClick={() => openScreen("home")}><span className="brand-mark" aria-hidden="true" /><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></button>
         <ThemeToggle />

@@ -789,6 +789,55 @@ html:has(.champion-celebration) body::after {
   background: var(--celebrate-edge);
 }
 
+/* Safari paints its own colour behind the status bar and the address bar, taken from a fixed block touching the screen
+   edge, or else from the page. Without one, the fixed blur ends in a hard line there. These two strips give it the
+   scrim as a solid colour to take, and fade up into the blur so no edge shows even if Safari takes something else. */
+html::before,
+html::after {
+  --edge-strip: 44px;
+  content: "";
+  position: fixed;
+  right: 0;
+  left: 0;
+  z-index: 21;
+  display: none;
+  height: var(--edge-strip);
+  background-color: var(--scrim-page);
+  pointer-events: none;
+}
+
+html::before {
+  top: 0;
+  -webkit-mask: linear-gradient(to bottom, #000 2px, transparent);
+  mask: linear-gradient(to bottom, #000 2px, transparent);
+}
+
+html::after {
+  bottom: 0;
+  -webkit-mask: linear-gradient(to top, #000 2px, transparent);
+  mask: linear-gradient(to top, #000 2px, transparent);
+}
+
+@media (max-width: 1100px) {
+  html:has(.modal-backdrop)::before,
+  html:has(.modal-backdrop)::after,
+  html:has(.champion-celebration)::before,
+  html:has(.champion-celebration)::after {
+    display: block;
+  }
+}
+
+html:has(.champion-celebration)::before,
+html:has(.champion-celebration)::after {
+  z-index: 121;
+  background-color: var(--celebrate-page);
+}
+
+html:has(.profile-backdrop)::before,
+html:has(.profile-backdrop)::after {
+  z-index: 14;
+}
+
 /* The profile card drops from the bars, so they stay sharp: its blur and colour sit under them (z-index 15). */
 html:has(.profile-backdrop) body::after {
   z-index: 14;
