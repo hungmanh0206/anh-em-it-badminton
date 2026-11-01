@@ -364,7 +364,6 @@ export default function Home() {
   const [championRankingRows, setChampionRankingRows] = useState<RankingRow[]>([]);
   const [, setAvatarRevision] = useState(0);
   const [celebrating, setCelebrating] = useState(false);
-  const [crownOrigin, setCrownOrigin] = useState<DOMRect | null>(null);
   const closeCelebration = useCallback(() => setCelebrating(false), []);
   const [eloRows, setEloRows] = useState<EloRankingRow[]>([]);
   const [eloStatus, setEloStatus] = useState<EloStatus | null>(null);
@@ -1283,7 +1282,7 @@ export default function Home() {
             <span className="hero-progress-count"><b>{progress.completed} / {progress.total}</b><small>buổi<span className="hero-progress-rest"> hoàn thành</span></small></span>
             <span className="hero-progress-bar"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></span>
           </div>
-          {champion ? <button type="button" className="hero-champion" aria-label={`Chúc mừng nhà vô địch ${champion.name}`} onClick={(event) => { unlockFireworkSound(); setCrownOrigin(event.currentTarget.querySelector(".app-icon")?.getBoundingClientRect() ?? null); setCelebrating(true); }}><div className={avatarClassName("avatar small", champion)} style={avatarStyle(champion)}>{champion.initials}</div><div className="hero-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b><AppIcon name="crown" /> {champion.name}</b><span>{`${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số`}</span></div></button> : <div className="hero-champion"><div className="hero-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b>Chưa ghi danh</b></div></div>}
+          {champion ? <button type="button" className="hero-champion" aria-label={`Chúc mừng nhà vô địch ${champion.name}`} onClick={() => { unlockFireworkSound(); setCelebrating(true); }}><div className={avatarClassName("avatar small", champion)} style={avatarStyle(champion)}>{champion.initials}</div><div className="hero-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b><AppIcon name="crown" /> {champion.name}</b><span>{`${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số`}</span></div></button> : <div className="hero-champion"><div className="hero-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b>Chưa ghi danh</b></div></div>}
           </div>
         </section>
         <section className="workflow">{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : canGoStep(i) ? "" : "locked"} aria-disabled={i !== step && !canGoStep(i)} onClick={() => goStep(i)}><span>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
@@ -1296,7 +1295,7 @@ export default function Home() {
     </section>
     <Presence show={Boolean(showCheckin)}>{showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}</Presence>
     <Presence show={Boolean(confirmation)}>{confirmation && <ConfirmActionModal title={confirmation.title} message={confirmation.message} onCancel={() => setConfirmation(null)} onConfirm={async () => { await confirmation.action(); setConfirmation(null); }} />}</Presence>
-    <Presence show={celebrating && Boolean(champion)}>{champion && <ChampionCelebration name={champion.name} crownOrigin={crownOrigin} crown={<AppIcon name="crown" />} avatar={<div className={avatarClassName("avatar", champion)} style={avatarStyle(champion)}>{champion.initials}</div>} onClose={closeCelebration} />}</Presence>
+    <Presence show={celebrating && Boolean(champion)}>{champion && <ChampionCelebration name={champion.name} crown={<AppIcon name="crown" />} avatar={<div className={avatarClassName("avatar", champion)} style={avatarStyle(champion)}>{champion.initials}</div>} onClose={closeCelebration} />}</Presence>
     <Presence show={Boolean(showProfileCard)}>{showProfileCard && <ProfilePopover member={currentUser} rank={profileRank} achievement={profileAchievement} achievementMonth={profileAchievementMonth} rankClass={profileRankClass} hasRankingData={profileHasRankingData} elo={profileElo} form={formByUsername[currentUser.username]} onClose={() => setShowProfileCard(false)} onLogout={() => { setShowProfileCard(false); setLogoutConfirmOpen(true); }} />}</Presence>
   </main>;
 }

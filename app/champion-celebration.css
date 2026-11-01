@@ -57,9 +57,10 @@
 .champion-avatar {
   --avatar-size: clamp(150px, 42vmin, 220px);
   --crown-size: clamp(50px, 14vmin, 74px);
-  /* From the crown's place on the head: down to the avatar's centre, and the radius of the loop around it. */
+  /* From the crown's place on the head: down to the avatar's centre, and the radius of the loop around it,
+     wide of the avatar but still inside a phone screen. */
   --orbit-y: calc(var(--avatar-size) * 0.7 - var(--crown-size) / 2);
-  --orbit-r: calc(var(--avatar-size) / 2 + 36px);
+  --orbit-r: min(calc(var(--avatar-size) / 2 + 84px), calc(50vw - var(--crown-size) * 0.75));
   position: relative;
   margin-bottom: 18px;
   border-radius: 50%;
@@ -84,7 +85,7 @@
   height: var(--crown-size);
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
   transform: translateX(-50%) rotate(-8deg);
-  animation: championCrownFly 2800ms ease-in-out 120ms backwards;
+  animation: championCrownFly 2400ms 900ms backwards, championCrownShow 260ms ease-out 900ms backwards;
 }
 
 .champion-stage p {
@@ -93,7 +94,7 @@
   font-size: clamp(15px, 4vmin, 20px);
   font-weight: 800;
   letter-spacing: 0.02em;
-  animation: championTextIn 520ms ease-out 2420ms backwards;
+  animation: championTextIn 520ms ease-out 2950ms backwards;
 }
 
 .champion-stage h2 {
@@ -105,7 +106,7 @@
   letter-spacing: -0.03em;
   line-height: 1.1;
   text-shadow: 0 4px 22px var(--celebrate-glow);
-  animation: championTextIn 520ms ease-out 2580ms backwards;
+  animation: championTextIn 520ms ease-out 3110ms backwards;
 }
 
 @keyframes championAvatarIn {
@@ -115,28 +116,32 @@
   }
 }
 
-/* From the card up over the head, one full loop around the avatar, then down onto the head.
+/* Starts once the avatar has zoomed in: from its left, under it to the right, up and over, then down onto the head.
    Every step lists the same functions, so the rotation angle itself is what animates: a true circle. */
 @keyframes championCrownFly {
   0% {
-    transform: translate(calc(-50% + var(--crown-dx, 0px)), var(--crown-dy, -60px)) translateY(0) rotate(0deg) translateY(0) rotate(0deg) rotate(0deg) scale(var(--crown-scale, 0.5));
+    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotate(-90deg) translateY(calc(var(--orbit-r) * -1)) rotate(90deg) rotate(8deg) scale(0.8);
+    animation-timing-function: cubic-bezier(0.3, 0, 0.55, 1);
   }
 
-  24% {
-    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotate(0deg) translateY(calc(var(--orbit-r) * -1)) rotate(0deg) rotate(8deg) scale(1.5);
-    animation-timing-function: linear;
-  }
-
-  70% {
-    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotate(360deg) translateY(calc(var(--orbit-r) * -1)) rotate(-360deg) rotate(8deg) scale(1.5);
+  72% {
+    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotate(-360deg) translateY(calc(var(--orbit-r) * -1)) rotate(360deg) rotate(8deg) scale(1.2);
+    animation-timing-function: ease-in;
   }
 
   90% {
-    transform: translate(-50%, 7px) translateY(var(--orbit-y)) rotate(360deg) translateY(calc(var(--orbit-y) * -1)) rotate(-360deg) rotate(-8deg) scale(0.94);
+    transform: translate(-50%, 7px) translateY(var(--orbit-y)) rotate(-360deg) translateY(calc(var(--orbit-y) * -1)) rotate(360deg) rotate(-8deg) scale(0.94);
+    animation-timing-function: ease-out;
   }
 
   100% {
-    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotate(360deg) translateY(calc(var(--orbit-y) * -1)) rotate(-360deg) rotate(-8deg) scale(1);
+    transform: translate(-50%, 0) translateY(var(--orbit-y)) rotate(-360deg) translateY(calc(var(--orbit-y) * -1)) rotate(360deg) rotate(-8deg) scale(1);
+  }
+}
+
+@keyframes championCrownShow {
+  from {
+    opacity: 0;
   }
 }
 
