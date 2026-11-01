@@ -414,13 +414,13 @@
   }
 }
 /* A saved match: the whole block goes green on the winner's side, red on the loser's, blended in the middle. */
-.result-entry-panel .match-result-row.result-a-wins,
-.result-entry-panel .match-result-row.result-b-wins {
+.result-entry-panel .match-result-row.result-a-wins:not(#_),
+.result-entry-panel .match-result-row.result-b-wins:not(#_) {
   --result-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.36) 0%, rgba(255, 255, 255, 0.1) 44%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.12) 100%);
   border-color: transparent !important;
 }
 
-.result-entry-panel .match-result-row.result-a-wins {
+.result-entry-panel .match-result-row.result-a-wins:not(#_) {
   background:
     var(--result-sheen) border-box,
     linear-gradient(90deg, rgba(34, 197, 94, 0.94) 0%, rgba(111, 224, 143, 0.9) 30%, rgba(246, 233, 200, 0.88) 50%, rgba(255, 154, 140, 0.9) 70%, rgba(247, 85, 85, 0.94) 100%) border-box !important;
@@ -431,7 +431,7 @@
     12px 10px 22px -14px rgba(247, 85, 85, 0.75) !important;
 }
 
-.result-entry-panel .match-result-row.result-b-wins {
+.result-entry-panel .match-result-row.result-b-wins:not(#_) {
   background:
     var(--result-sheen) border-box,
     linear-gradient(90deg, rgba(247, 85, 85, 0.94) 0%, rgba(255, 154, 140, 0.9) 30%, rgba(246, 233, 200, 0.88) 50%, rgba(111, 224, 143, 0.9) 70%, rgba(34, 197, 94, 0.94) 100%) border-box !important;
@@ -444,10 +444,10 @@
 
 /* Frosted tiles on the colour; phones draw the score pill and round numbers instead. */
 @media (min-width: 561px) {
-  .result-entry-panel .match-result-row.result-a-wins .slot-token,
-  .result-entry-panel .match-result-row.result-b-wins .slot-token,
-  .result-entry-panel .match-result-row.result-a-wins .match-score-controls input,
-  .result-entry-panel .match-result-row.result-b-wins .match-score-controls input {
+  .result-entry-panel .match-result-row.result-a-wins:not(#_) .slot-token,
+  .result-entry-panel .match-result-row.result-b-wins:not(#_) .slot-token,
+  .result-entry-panel .match-result-row.result-a-wins:not(#_) .match-score-controls input,
+  .result-entry-panel .match-result-row.result-b-wins:not(#_) .match-score-controls input {
     border-color: rgba(255, 255, 255, 0.72) !important;
     background: rgba(255, 255, 255, 0.72) !important;
     box-shadow: 0 6px 14px rgba(42, 34, 18, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
@@ -457,8 +457,8 @@
 }
 
 @media (max-width: 560px) {
-  .result-entry-panel .match-result-row.result-a-wins .match-score-controls,
-  .result-entry-panel .match-result-row.result-b-wins .match-score-controls {
+  .result-entry-panel .match-result-row.result-a-wins:not(#_) .match-score-controls,
+  .result-entry-panel .match-result-row.result-b-wins:not(#_) .match-score-controls {
     border-color: rgba(255, 255, 255, 0.72);
     background: rgba(255, 255, 255, 0.72);
     -webkit-backdrop-filter: blur(8px) saturate(140%);
@@ -466,20 +466,20 @@
   }
 }
 
-.result-entry-panel .match-result-row.result-a-wins .match-result-meta b,
-.result-entry-panel .match-result-row.result-b-wins .match-result-meta b {
+.result-entry-panel .match-result-row.result-a-wins:not(#_) .match-result-meta b,
+.result-entry-panel .match-result-row.result-b-wins:not(#_) .match-result-meta b {
   color: #fff !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 /* Names and "+" on the strong colours (phones show them directly on the row). */
-.result-entry-panel .match-result-row.result-a-wins .slot-token small,
-.result-entry-panel .match-result-row.result-b-wins .slot-token small {
+.result-entry-panel .match-result-row.result-a-wins:not(#_) .slot-token small,
+.result-entry-panel .match-result-row.result-b-wins:not(#_) .slot-token small {
   color: #14110a !important;
 }
 
-.result-entry-panel .match-result-row.result-a-wins .team-pair > i,
-.result-entry-panel .match-result-row.result-b-wins .team-pair > i {
+.result-entry-panel .match-result-row.result-a-wins:not(#_) .team-pair > i,
+.result-entry-panel .match-result-row.result-b-wins:not(#_) .team-pair > i {
   color: #fff !important;
 }
 

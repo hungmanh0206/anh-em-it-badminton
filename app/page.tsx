@@ -124,7 +124,7 @@ const drawSlotsForLevel = (level: 1 | 2, level1Count: number, level2Count: numbe
   return Array.from({ length: count }, (_, index) => start + index);
 };
 const wheelGradient = (count: number) => {
-  const colors = ["#fff8df", "#ffffff", "#ffe39a", "#fffaf0"];
+  const colors = ["var(--wheel-1)", "var(--wheel-2)", "var(--wheel-3)", "var(--wheel-4)"];
   const safeCount = Math.max(1, count);
   return `conic-gradient(${Array.from({ length: safeCount }, (_, index) => {
     const start = (index * 360) / safeCount;
