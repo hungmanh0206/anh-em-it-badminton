@@ -21,10 +21,9 @@
   --modal-scrim: rgba(92, 72, 38, 0.3);
   --modal-scrim-blur: blur(16px) saturate(130%);
   --glass-line: rgba(90, 70, 30, 0.1);
-  --glass-lift: 0 2px 6px rgba(62, 47, 18, 0.05), 0 16px 38px rgba(62, 47, 18, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  --glass-lift-card: 0 1px 2px rgba(62, 47, 18, 0.05), 0 6px 16px rgba(62, 47, 18, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --glass-lift: 0 2px 6px rgba(62, 47, 18, 0.05), 0 16px 38px rgba(62, 47, 18, 0.12);
+  --glass-lift-card: 0 1px 2px rgba(62, 47, 18, 0.05), 0 6px 16px rgba(62, 47, 18, 0.07);
   --glass-blur: blur(18px) saturate(160%);
-  --pill-tray: rgba(255, 255, 255, 0.5);
   --pill: rgba(60, 48, 28, 0.07);
   --pill-hover: rgba(60, 48, 28, 0.13);
   --pill-text: #4a4133;
@@ -82,6 +81,7 @@ body::before {
 .member-summary > div:not(#_) {
   border-color: transparent !important;
   background: var(--glass-block) !important;
+  background-origin: border-box !important;
   box-shadow: var(--glass-lift) !important;
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
@@ -425,9 +425,9 @@ body::before {
 .schedule-filter:not(#_):not(#_) {
   gap: 8px !important;
   padding: 12px 14px !important;
-  border-radius: 18px;
-  background: var(--pill-tray);
-  box-shadow: var(--glass-lift-card);
+  border-radius: 16px;
+  background: var(--glass-block) !important;
+  box-shadow: var(--glass-lift) !important;
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
 }
@@ -733,4 +733,9 @@ input.search:not(#_):not(#_) {
   margin-right: 6px;
   background: url("/app-icons/plus.svg") center / contain no-repeat;
   vertical-align: -4px;
+}
+
+/* The profile card drops from the bars, so they stay sharp: this blur sits under them (z-index 15). */
+.profile-backdrop:not(#_):not(#_) {
+  z-index: 14 !important;
 }
