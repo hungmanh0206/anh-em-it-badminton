@@ -31,6 +31,8 @@
   --mark-well-sink: inset 0 2px 5px rgba(90, 65, 20, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.5), 0 1px 0 rgba(255, 255, 255, 0.9);
   --avatar-dome: radial-gradient(circle at 33% 22%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 42%), radial-gradient(circle, transparent 66%, rgba(40, 28, 8, 0.2) 100%);
   --block-gap: 18px;
+  --card-gap: 12px;
+  --block-inset: 26px;
   --row-tint: 74%;
   --tile-1: rgba(59, 130, 246, 0.17);
   --tile-2: rgba(34, 197, 94, 0.17);
@@ -745,12 +747,15 @@ input.search:not(#_):not(#_) {
 @media (max-width: 1024px) {
   :root {
     --block-gap: 16px;
+    --block-inset: 22px;
   }
 }
 
 @media (max-width: 560px) {
   :root {
     --block-gap: 14px;
+    --card-gap: 10px;
+    --block-inset: 14px;
   }
 }
 
@@ -772,4 +777,40 @@ input.search:not(#_):not(#_) {
 
 .screen-view > .warning:not(#_):not(#_):not(#_) {
   margin-inline: 0 !important;
+}
+
+/* Spacing between the smaller blocks inside a big one: also one value per screen size. Table rows stay flush. */
+:is(.draw-list, .history-list, .member-grid, .page-hero-stats, .result-list, .rules-match-types, .rules-prizes, .rules-split, .rules-steps, .schedule-grid):not(#_):not(#_):not(#_) {
+  gap: var(--card-gap) !important;
+}
+
+:is(.draw-list, .history-list, .member-grid, .page-hero-stats, .result-list, .rules-match-types, .rules-prizes, .rules-split, .rules-steps, .schedule-grid) > *:not(#_):not(#_):not(#_) {
+  margin-block: 0 !important;
+}
+
+.member-summary:not(#_):not(#_):not(#_) {
+  gap: var(--block-gap) !important;
+}
+
+/* The side margin inside a big block: headings and content line up on one edge. */
+.panel:not(.page-hero) > :is(.panel-head, .panel-foot, .schedule-case-head, .member-grid, .schedule-grid, .result-list, .history-filters, .history-list):not(#_):not(#_):not(#_) {
+  margin-inline: 0 !important;
+  padding-inline: var(--block-inset) !important;
+}
+
+.panel:not(.page-hero) > :is(.draw-body, .draw-list, .rank-table, .elo-list):not(#_):not(#_):not(#_) {
+  margin-inline: var(--block-inset) !important;
+}
+
+.elo-ranking-panel:not(#_):not(#_):not(#_) {
+  padding-inline: 0 !important;
+}
+
+:is(.hero, .page-hero):not(#_):not(#_):not(#_) {
+  padding-inline: var(--block-inset) !important;
+}
+
+.panel > .rank-table:not(#_):not(#_):not(#_) {
+  width: auto !important;
+  max-width: none !important;
 }
