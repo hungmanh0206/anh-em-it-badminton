@@ -30,7 +30,11 @@
   --pill-text: #4a4133;
   --mark-well: rgba(120, 92, 40, 0.13);
   --mark-well-sink: inset 0 2px 5px rgba(90, 65, 20, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.5), 0 1px 0 rgba(255, 255, 255, 0.9);
-  --row-tint: 66%;
+  --row-tint: 74%;
+  --tile-1: rgba(59, 130, 246, 0.17);
+  --tile-2: rgba(34, 197, 94, 0.17);
+  --tile-open: rgba(255, 183, 0, 0.22);
+  --score-well: rgba(120, 92, 40, 0.09);
   --row-tint-mid: rgba(255, 255, 255, 0.4);
   --button-off: rgba(60, 48, 28, 0.08);
   --button-off-text: rgba(26, 20, 8, 0.52);
@@ -302,7 +306,8 @@ body::before {
 }
 
 .slot-focused:not(#_) {
-  box-shadow: 0 0 0 2px #ffc83d, 0 0 14px rgba(255, 190, 40, 0.65) !important;
+  background: rgba(255, 200, 61, 0.32) !important;
+  box-shadow: 0 0 16px 2px rgba(255, 190, 40, 0.8) !important;
   transform: scale(1.08);
 }
 
@@ -311,7 +316,8 @@ body::before {
 }
 
 .schedule-match-card:has(.slot-focused):not(#_) {
-  box-shadow: 0 0 0 1.5px rgba(255, 200, 61, 0.75), var(--glass-lift-card) !important;
+  background: rgba(255, 200, 61, 0.14) !important;
+  box-shadow: var(--glass-lift-card) !important;
 }
 
 /* Score pill in the history modal: the same gold glass tile as the logo, following the theme. */
@@ -589,13 +595,14 @@ body::before {
 .result-entry-panel .match-result-row:not(#_):not(#_) {
   position: relative;
   isolation: isolate;
-  transition: --row-sweep 640ms cubic-bezier(0.4, 0, 0.2, 1), --row-start 0s linear 640ms, --row-end 0s linear 640ms, box-shadow 420ms ease;
+  transition: --row-sweep 640ms cubic-bezier(0.4, 0, 0.2, 1), --row-start 0s linear 640ms, --row-end 0s linear 640ms, box-shadow 420ms ease, background-color 420ms ease;
 }
 
 .result-entry-panel .match-result-row.result-a-wins:not(#_):not(#_) {
   --row-sweep: 112%;
   --row-start: rgb(34, 197, 94);
   --row-end: rgb(247, 85, 85);
+  background-color: transparent !important;
   transition-delay: 0s;
 }
 
@@ -603,6 +610,7 @@ body::before {
   --row-sweep: 112%;
   --row-start: rgb(247, 85, 85);
   --row-end: rgb(34, 197, 94);
+  background-color: transparent !important;
   transition-delay: 0s;
 }
 
@@ -618,4 +626,69 @@ body::before {
   pointer-events: none;
   -webkit-mask: var(--row-edge) left / 50.5% 100% no-repeat, var(--row-edge-end) right / 50.5% 100% no-repeat;
   mask: var(--row-edge) left / 50.5% 100% no-repeat, var(--row-edge-end) right / 50.5% 100% no-repeat;
+}
+
+/* Tiles and score boxes keep a transparent border for their size, so their fill has to start under it:
+   otherwise a gradient repeats inside it and shows as a pale band along the edge. */
+.slot-token:not(#_):not(#_):not(#_),
+.match-score-controls input:not(#_):not(#_):not(#_) {
+  background-origin: border-box !important;
+}
+
+/* Empty score boxes are a flat tint; focus and errors glow instead of drawing a ring. */
+.result-entry-panel .match-score-controls input:not(#_):not(#_) {
+  border-color: transparent !important;
+}
+
+.result-entry-panel .match-result-row:not(.result-a-wins, .result-b-wins) .match-score-controls input:not(:focus, .score-invalid):not(#_):not(#_) {
+  background: var(--score-well) !important;
+  box-shadow: none !important;
+}
+
+/* Phones join both boxes into one flat pill. */
+@media (max-width: 560px) {
+  .result-entry-panel .match-result-row:not(.result-a-wins, .result-b-wins) .match-score-controls:not(#_):not(#_) {
+    background: var(--score-well) !important;
+    box-shadow: none !important;
+  }
+
+  .result-entry-panel .match-result-row:not(.result-a-wins, .result-b-wins) .match-score-controls input:not(:focus, .score-invalid):not(#_):not(#_) {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+}
+
+.result-entry-panel .match-score-controls input:focus:not(#_):not(#_):not(#_) {
+  outline: none;
+  background: rgba(255, 183, 0, 0.22) !important;
+  box-shadow: 0 0 14px rgba(255, 183, 0, 0.6) !important;
+}
+
+.result-entry-panel .match-score-controls input.score-invalid:not(#_):not(#_):not(#_) {
+  background: rgba(214, 69, 69, 0.2) !important;
+  box-shadow: 0 0 14px rgba(214, 69, 69, 0.6) !important;
+}
+
+/* Player tiles: a plain tint, deep enough to read as a tile against the white cards. Phones draw round chips in the
+   score rows instead, and saved rows have their own frosted tile. */
+:is(.slot-token.level-1, .slot-token.level-2, .slot-token.level-open):not(.result-entry-panel *, .slot-focused):not(#_):not(#_) {
+  background: var(--slot-tile) !important;
+}
+
+@media (min-width: 561px) {
+  .result-entry-panel .match-result-row:not(.result-a-wins, .result-b-wins) :is(.slot-token.level-1, .slot-token.level-2, .slot-token.level-open):not(#_):not(#_) {
+    background: var(--slot-tile) !important;
+  }
+}
+
+.slot-token.level-1 {
+  --slot-tile: var(--tile-1);
+}
+
+.slot-token.level-2 {
+  --slot-tile: var(--tile-2);
+}
+
+.slot-token.level-open {
+  --slot-tile: var(--tile-open);
 }

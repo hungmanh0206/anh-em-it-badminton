@@ -46,7 +46,11 @@
   --gold-glass-shadow: 0 6px 16px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.42);
   --mark-well: rgba(0, 0, 0, 0.34);
   --mark-well-sink: inset 0 2px 5px rgba(0, 0, 0, 0.62), 0 1px 0 rgba(255, 255, 255, 0.1);
-  --row-tint: 60%;
+  --row-tint: 68%;
+  --tile-1: rgba(96, 165, 250, 0.24);
+  --tile-2: rgba(74, 222, 128, 0.2);
+  --tile-open: rgba(255, 200, 61, 0.22);
+  --score-well: rgba(255, 255, 255, 0.1);
   --row-tint-mid: rgba(255, 255, 255, 0.05);
   --button-off: rgba(255, 255, 255, 0.08);
   --button-off-text: rgba(255, 250, 240, 0.6);
@@ -210,7 +214,7 @@
 /* Player highlight on the schedule: a soft gold fill suits the dark tiles better than a bright ring. */
 :root[data-theme="dark"]:not(#_) .slot-focused:not(.result-a-wins *, .result-b-wins *) {
   background: rgba(255, 200, 61, 0.2) !important;
-  box-shadow: 0 0 0 1.5px rgba(255, 200, 61, 0.9), 0 0 16px rgba(255, 180, 30, 0.32) !important;
+  box-shadow: 0 0 18px 2px rgba(255, 180, 30, 0.5) !important;
 }
 
 :root[data-theme="dark"]:not(#_) .slot-focused:not(.result-a-wins *, .result-b-wins *) small {
@@ -223,17 +227,17 @@
 
 :root[data-theme="dark"]:not(#_) .schedule-match-card:has(.slot-focused) {
   background: rgba(255, 200, 61, 0.08) !important;
-  box-shadow: 0 0 0 1px rgba(255, 200, 61, 0.5), var(--glass-lift-card) !important;
+  box-shadow: var(--glass-lift-card) !important;
 }
 
 
 /* Saved matches: the light theme's green and red, deep and fading out towards the middle. */
 :root[data-theme="dark"]:not(#_) .match-result-row.result-a-wins {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), -12px 10px 24px -16px rgba(34, 197, 94, 0.6), 12px 10px 24px -16px rgba(247, 85, 85, 0.6) !important;
+  box-shadow: -6px 6px 16px -10px rgba(34, 197, 94, 0.32), 6px 6px 16px -10px rgba(247, 85, 85, 0.32) !important;
 }
 
 :root[data-theme="dark"]:not(#_) .match-result-row.result-b-wins {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), -12px 10px 24px -16px rgba(247, 85, 85, 0.6), 12px 10px 24px -16px rgba(34, 197, 94, 0.6) !important;
+  box-shadow: -6px 6px 16px -10px rgba(247, 85, 85, 0.32), 6px 6px 16px -10px rgba(34, 197, 94, 0.32) !important;
 }
 
 /* Dark glass boxes with light text. */
@@ -242,7 +246,7 @@
   :root[data-theme="dark"]:not(#_) :is(.result-a-wins, .result-b-wins) .match-score-controls input {
     border-color: transparent !important;
     background: rgba(12, 10, 7, 0.42) !important;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px rgba(0, 0, 0, 0.24) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.24) !important;
   }
 }
 

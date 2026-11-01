@@ -1695,11 +1695,10 @@
         box-shadow: none
     }
     :root[data-theme="dark"] .result-entry-panel .match-score-controls {
-        border: 1px solid rgba(230, 204, 151, 0.78);
+        border: 0;
         border-radius: 999px;
         background: hsla(48, 42%, 17%, 1);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.19),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.102)
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.24)
     }
     :root[data-theme="dark"] .result-entry-panel .match-score-controls input {
         border: 0 !important;
@@ -1708,8 +1707,7 @@
         box-shadow: none !important
     }
     :root[data-theme="dark"] .result-entry-panel .match-score-controls input:focus {
-        outline: 2px solid rgba(255, 183, 0, 0.45);
-        outline-offset: 0
+        outline: none
     }
     :root[data-theme="dark"] .result-entry-panel .result-actions .primary, :root[data-theme="dark"] .result-entry-panel .result-actions .soft-btn {
         border-radius: 999px;
