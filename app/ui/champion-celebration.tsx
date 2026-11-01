@@ -2,20 +2,27 @@
 
 import { type ReactNode, useEffect, useRef } from "react";
 
-const FIREWORK_COLORS = ["#ffd66d", "#ff6b6b", "#5eead4", "#7dd3fc", "#f9a8d4", "#ffffff"];
-const SHOW_DURATION_MS = 7000;
-const BURST_EVERY_MS = 420;
-const SPARKS_PER_BURST = 64;
+// Main colour and the paler one used for the inner shell of a burst.
+const PALETTES = [["#ffc83d", "#fff3c4"], ["#ff4d6d", "#ffd1d8"], ["#34d399", "#d1fae5"], ["#4f9dff", "#dbeafe"], ["#f472b6", "#fce7f3"], ["#b57bff", "#f3e8ff"], ["#22d3ee", "#cffafe"]];
+const GOLD = ["#ffc83d", "#ffe9a8"];
+const FRAME_MS = 1000 / 60;
+const ROCKET_GRAVITY = 0.12;
+const MAX_SPARKS = 2600;
 
-type Spark = { x: number; y: number; vx: number; vy: number; life: number; fade: number; color: string };
+type Rocket = { x: number; y: number; px: number; py: number; vx: number; vy: number; palette: string[] };
+type Spark = { x: number; y: number; px: number; py: number; vx: number; vy: number; life: number; fade: number; drag: number; gravity: number; color: string; width: number };
+type Flash = { x: number; y: number; life: number; color: string };
 
-// Bursts of sparks that slow down, fall and fade, leaving short trails.
+const between = (min: number, max: number) => min + Math.random() * (max - min);
+
+// Rockets climb from the bottom edge and burst into peonies, rings and gold willows, each spark
+// drawn as a streak on a slowly fading canvas. Speeds are per 60fps frame, scaled by the real frame time.
 function Fireworks() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!canvas || !ctx) return;
     let width = 0;
     let height = 0;
     const resize = () => {
@@ -29,51 +36,117 @@ function Fireworks() {
     resize();
     window.addEventListener("resize", resize);
 
+    const rockets: Rocket[] = [];
     const sparks: Spark[] = [];
-    const burst = () => {
-      const x = width * (0.12 + Math.random() * 0.76);
-      const y = height * (0.1 + Math.random() * 0.5);
-      const color = FIREWORK_COLORS[Math.floor(Math.random() * FIREWORK_COLORS.length)];
-      const reach = Math.min(width, height) / 120 + 2;
-      for (let index = 0; index < SPARKS_PER_BURST; index += 1) {
-        const angle = (index / SPARKS_PER_BURST) * Math.PI * 2;
-        const speed = reach * (0.45 + Math.random() * 0.55);
-        sparks.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 1, fade: 0.012 + Math.random() * 0.012, color: Math.random() < 0.8 ? color : "#ffffff" });
+    const flashes: Flash[] = [];
+    const launch = () => {
+      const x = width * between(0.1, 0.9);
+      const y = height + 8;
+      const climb = y - height * between(0.1, 0.46);
+      rockets.push({ x, y, px: x, py: y, vx: between(-0.7, 0.7), vy: -Math.sqrt(2 * ROCKET_GRAVITY * climb), palette: PALETTES[Math.floor(Math.random() * PALETTES.length)] });
+    };
+    const addSpark = (x: number, y: number, angle: number, speed: number, color: string, options: Partial<Spark> = {}) => {
+      if (sparks.length < MAX_SPARKS) sparks.push({ x, y, px: x, py: y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 1, fade: between(0.012, 0.02), drag: 0.965, gravity: 0.035, color, width: 2, ...options });
+    };
+    const explode = (x: number, y: number, palette: string[]) => {
+      const reach = Math.max(4.2, Math.min(7.5, Math.min(width, height) / 110));
+      const kind = Math.random();
+      if (kind < 0.3) {
+        // Gold willow: long drooping strands.
+        for (let index = 0; index < 110; index += 1) addSpark(x, y, between(0, Math.PI * 2), reach * between(0.25, 0.8), GOLD[index % 2], { fade: between(0.006, 0.0095), drag: 0.975, gravity: 0.05, width: 1.6 });
+        flashes.push({ x, y, life: 1, color: GOLD[0] });
+        return;
       }
+      if (kind < 0.6) {
+        // Clean ring around a small pale core.
+        for (let index = 0; index < 64; index += 1) addSpark(x, y, (index / 64) * Math.PI * 2, reach * 0.95, palette[0], { fade: 0.015 });
+        for (let index = 0; index < 30; index += 1) addSpark(x, y, between(0, Math.PI * 2), reach * between(0.1, 0.42), palette[1], { fade: 0.022 });
+      } else {
+        // Peony: a full sphere with an inner shell of the paler colour.
+        for (let index = 0; index < 96; index += 1) addSpark(x, y, between(0, Math.PI * 2), reach * Math.sqrt(between(0.2, 1)), palette[0]);
+        for (let index = 0; index < 44; index += 1) addSpark(x, y, between(0, Math.PI * 2), reach * between(0.15, 0.5), palette[1], { fade: 0.024 });
+      }
+      flashes.push({ x, y, life: 1, color: palette[0] });
     };
 
-    const startedAt = performance.now();
-    let lastBurst = 0;
+    let last = performance.now();
+    let nextLaunch = last;
     let frame = requestAnimationFrame(function draw(now) {
-      const elapsed = now - startedAt;
-      if (elapsed < SHOW_DURATION_MS && now - lastBurst > BURST_EVERY_MS) {
-        burst();
-        lastBurst = now;
+      const step = Math.min((now - last) / FRAME_MS, 3);
+      last = now;
+      if (now >= nextLaunch) {
+        const volley = rockets.length === 0 && sparks.length === 0 ? 3 : Math.random() < 0.3 ? 2 : 1;
+        for (let index = 0; index < volley; index += 1) launch();
+        nextLaunch = now + between(380, 720);
       }
+
       // Fades what was drawn before, which is what leaves the trails.
       ctx.globalCompositeOperation = "destination-out";
-      ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = `rgba(0, 0, 0, ${1 - 0.8 ** step})`;
       ctx.fillRect(0, 0, width, height);
       ctx.globalCompositeOperation = "lighter";
+      ctx.lineCap = "round";
+
+      for (let index = rockets.length - 1; index >= 0; index -= 1) {
+        const rocket = rockets[index];
+        rocket.px = rocket.x;
+        rocket.py = rocket.y;
+        rocket.x += rocket.vx * step;
+        rocket.y += rocket.vy * step;
+        rocket.vy += ROCKET_GRAVITY * step;
+        addSpark(rocket.x, rocket.y, between(0, Math.PI * 2), between(0.1, 0.5), GOLD[1], { fade: 0.06, width: 1.2 });
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = "#fff6d8";
+        ctx.lineWidth = 2.6;
+        ctx.beginPath();
+        ctx.moveTo(rocket.px, rocket.py);
+        ctx.lineTo(rocket.x, rocket.y);
+        ctx.stroke();
+        if (rocket.vy >= -0.5) {
+          explode(rocket.x, rocket.y, rocket.palette);
+          rockets.splice(index, 1);
+        }
+      }
+
+      for (let index = flashes.length - 1; index >= 0; index -= 1) {
+        const flash = flashes[index];
+        const radius = 110;
+        const glow = ctx.createRadialGradient(flash.x, flash.y, 0, flash.x, flash.y, radius);
+        glow.addColorStop(0, flash.color);
+        glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.globalAlpha = flash.life * 0.3;
+        ctx.fillStyle = glow;
+        ctx.fillRect(flash.x - radius, flash.y - radius, radius * 2, radius * 2);
+        flash.life -= 0.14 * step;
+        if (flash.life <= 0) flashes.splice(index, 1);
+      }
+
       for (let index = sparks.length - 1; index >= 0; index -= 1) {
         const spark = sparks[index];
-        spark.x += spark.vx;
-        spark.y += spark.vy;
-        spark.vx *= 0.97;
-        spark.vy = spark.vy * 0.97 + 0.045;
-        spark.life -= spark.fade;
+        spark.px = spark.x;
+        spark.py = spark.y;
+        spark.x += spark.vx * step;
+        spark.y += spark.vy * step;
+        const drag = spark.drag ** step;
+        spark.vx *= drag;
+        spark.vy = spark.vy * drag + spark.gravity * step;
+        spark.life -= spark.fade * step;
         if (spark.life <= 0) {
           sparks.splice(index, 1);
           continue;
         }
-        ctx.globalAlpha = spark.life;
-        ctx.fillStyle = spark.color;
+        // Sparks glitter as they die out.
+        ctx.globalAlpha = spark.life < 0.35 ? spark.life * between(0.6, 2.4) : spark.life;
+        ctx.strokeStyle = spark.color;
+        ctx.lineWidth = spark.width;
         ctx.beginPath();
-        ctx.arc(spark.x, spark.y, 2, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(spark.px, spark.py);
+        ctx.lineTo(spark.x, spark.y);
+        ctx.stroke();
       }
       ctx.globalAlpha = 1;
-      if (elapsed < SHOW_DURATION_MS || sparks.length) frame = requestAnimationFrame(draw);
+      frame = requestAnimationFrame(draw);
     });
     return () => {
       cancelAnimationFrame(frame);

@@ -5,7 +5,7 @@
   display: grid;
   place-items: center;
   padding: 24px;
-  background: radial-gradient(circle at 50% 45%, rgba(58, 40, 8, 0.86), rgba(10, 8, 4, 0.94) 70%);
+  background: radial-gradient(circle at 50% 45%, rgba(46, 32, 8, 0.96), rgba(8, 6, 3, 0.985) 70%);
   cursor: pointer;
   animation: motionFadeIn 240ms ease-out backwards;
 }
@@ -116,16 +116,6 @@
 @keyframes championGlow {
   50% {
     filter: drop-shadow(0 0 26px rgba(255, 214, 109, 0.75));
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .champion-celebration,
-  .champion-avatar,
-  .champion-avatar .app-icon,
-  .champion-stage p,
-  .champion-stage h2 {
-    animation: none;
   }
 }
 

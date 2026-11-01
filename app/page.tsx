@@ -279,13 +279,11 @@ const initialMembers: Member[] = [
   { name: "Phú", initials: "P", level: 2, color: "#3f9c59", present: false, username: "phu", password: "123456", responded: false },
 ];
 
-const avatarAssetVersion = "member-avatars-portrait-20261101";
-const avatarAssetUsernames = new Set(initialMembers.map((member) => member.username));
 const memberPalette = ["#6846e8", "#e56a4d", "#2ba98b", "#e3a63c", "#e05591", "#4175e8", "#2f9c9f", "#9c69e9", "#ef8b3d", "#3f9c59"];
 const memberInitials = (name: string) => name.trim().split(/\s+/).map((part) => part[0] ?? "").join("").slice(0, 2).toUpperCase() || "?";
 const memberColorFor = (username: string) => memberPalette[[...username].reduce((sum, char) => sum + char.charCodeAt(0), 0) % memberPalette.length];
-// The member list is built from active profiles: the founding ten keep their colours and avatar art,
-// members added later get a palette colour and start with a blank avatar.
+// The member list is built from active profiles: the founding ten keep their colours,
+// members added later get a palette colour.
 const memberFromProfile = (profile: SupabaseProfile, base?: Member): Member => {
   const username = String(profile.username || base?.username || "");
   const known = base ?? initialMembers.find((member) => member.username === username);
@@ -308,10 +306,11 @@ const memberOrderIndex = (username: string) => {
 };
 const sortMembers = (members: Member[]) => [...members].sort((a, b) => memberOrderIndex(a.username) - memberOrderIndex(b.username) || a.name.localeCompare(b.name, "vi"));
 const avatarUsername = (username?: string | null) => String(username || "").trim().toLowerCase();
-// Avatars uploaded from "Sửa thành viên" (profiles.avatar_url); they take over from the bundled art.
-const uploadedAvatars = new Map<string, string>();
-const bundledAvatarUrl = (username?: string | null) => avatarAssetUsernames.has(avatarUsername(username)) ? `/app-avatars/${avatarUsername(username)}.png?v=${avatarAssetVersion}` : null;
-const avatarImageUrl = (username?: string | null) => uploadedAvatars.get(avatarUsername(username)) ?? bundledAvatarUrl(username);
+// profiles.avatar_url by username (Cloudinary); a member without one shows a blank avatar.
+const memberAvatars = new Map<string, string>();
+const memberAvatarsCacheKey = "aemit-member-avatars";
+type MemberAvatarsCache = { avatars: [string, string][]; storedAt?: number };
+const avatarImageUrl = (username?: string | null) => memberAvatars.get(avatarUsername(username)) ?? null;
 const hasAvatarArt = (username?: string | null) => Boolean(avatarImageUrl(username));
 const avatarStyle = (person: { color?: string | null; username?: string | null }) => {
   const url = avatarImageUrl(person.username);
@@ -630,11 +629,19 @@ export default function Home() {
   useEffect(() => {
     if (!supabase || !activeUsername) return;
     let cancelled = false;
+    const showAvatars = (avatars: [string, string][]) => {
+      memberAvatars.clear();
+      avatars.forEach(([username, url]) => memberAvatars.set(username, url));
+      setAvatarRevision((revision) => revision + 1);
+    };
+    // The last known list first, so avatars do not flash blank on every load.
+    const cached = readBrowserCache<MemberAvatarsCache>(memberAvatarsCacheKey, instantCacheTtlMs);
+    if (cached) window.queueMicrotask(() => { if (!cancelled) showAvatars(cached.avatars); });
     void supabase.from("profiles").select("username, avatar_url").not("avatar_url", "is", null).then(({ data }) => {
       if (cancelled || !data) return;
-      uploadedAvatars.clear();
-      data.forEach((profile) => uploadedAvatars.set(avatarUsername(profile.username), profile.avatar_url));
-      setAvatarRevision((revision) => revision + 1);
+      const avatars = data.map((profile): [string, string] => [avatarUsername(profile.username), profile.avatar_url]);
+      showAvatars(avatars);
+      writeBrowserCache<MemberAvatarsCache>(memberAvatarsCacheKey, { avatars });
     });
     return () => { cancelled = true; };
   }, [activeUsername]);
@@ -1253,7 +1260,7 @@ export default function Home() {
     <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setActiveUser(null); }} />}</Presence>
     <section className="content">
       <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className={avatarClassName("welcome-avatar", currentUser)} style={avatarStyle(currentUser)} aria-hidden="true">{welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
-      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} rankingRows={profileRows} rankingMonth={profileAchievementMonth} eloRows={eloRows} formByUsername={formByUsername} onAvatarUpdated={(username, avatarUrl) => { if (avatarUrl) uploadedAvatars.set(username, avatarUrl); else uploadedAvatars.delete(username); setAvatarRevision((revision) => revision + 1); }} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={formByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
+      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} rankingRows={profileRows} rankingMonth={profileAchievementMonth} eloRows={eloRows} formByUsername={formByUsername} onAvatarUpdated={(username, avatarUrl) => { if (avatarUrl) memberAvatars.set(username, avatarUrl); else memberAvatars.delete(username); removeBrowserCache(memberAvatarsCacheKey); setAvatarRevision((revision) => revision + 1); }} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={formByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
         <section className="hero">
           <div className="hero-copy"><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div>
           <img className="hero-logo" src="/club-logo.png?v=club-glass-logo" alt="" aria-hidden="true" />
@@ -2390,9 +2397,9 @@ function Members({ members, rankingRows, rankingMonth, eloRows, formByUsername, 
       }) : <div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div>}</div>
     </section>
     <Presence show={Boolean(editing)}>{editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={closeEditor}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><div className="member-avatar-field">{(() => {
-        const shownUrl = newAvatar?.preview ?? (avatarRemoved ? bundledAvatarUrl(editing.username) : avatarImageUrl(editing.username));
+        const shownUrl = newAvatar?.preview ?? (avatarRemoved ? null : avatarImageUrl(editing.username));
         return <div className={`avatar${shownUrl ? " avatar-art" : ""}`} style={{ "--avatar-image": shownUrl ? `url("${shownUrl}")` : "none" } as CSSProperties}>{editing.initials}</div>;
-      })()}<div className="member-avatar-copy"><b>Ảnh đại diện</b><div className="member-avatar-actions"><button type="button" className="soft-btn" onClick={() => avatarInput.current?.click()}>Đổi ảnh</button>{(newAvatar || (uploadedAvatars.has(editing.username) && !avatarRemoved)) && <button type="button" className="soft-btn member-avatar-remove" onClick={() => { setNewAvatar(null); setAvatarRemoved(uploadedAvatars.has(editing.username)); }}>Xóa ảnh</button>}</div>{avatarError ? <small className="member-editor-error">{avatarError}</small> : <small className="member-editor-hint">Ảnh được cắt tròn và chỉ áp dụng khi bấm Lưu.</small>}</div><input ref={avatarInput} type="file" accept="image/*" hidden onChange={(event) => { void pickAvatar(event.target.files?.[0]); event.target.value = ""; }} /></div><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <select className="member-role-select member-role-editor-select" value={editRole} disabled={roleSaving === editing.username} onChange={(event) => setEditRole(event.target.value as "member" | "sub-admin")}><option value="member">Thành viên</option><option value="sub-admin">Sub-admin</option></select>}<small>{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? "Mạnh luôn là Admin, không thể đổi quyền." : editRole === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label><label className="member-password-field">Mật khẩu mới<PasswordField value={editPassword} onChange={setEditPassword} placeholder="Để trống nếu giữ nguyên" /><small className="member-editor-hint">Mật khẩu hiện tại được mã hoá nên không hiển thị được; nhập mật khẩu mới nếu muốn đổi.</small></label><div className="editor-actions"><button className="soft-btn" onClick={closeEditor}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></section></div>}</Presence>
+      })()}<div className="member-avatar-copy"><b>Ảnh đại diện</b><div className="member-avatar-actions"><button type="button" className="soft-btn" onClick={() => avatarInput.current?.click()}>Đổi ảnh</button>{(newAvatar || (memberAvatars.has(editing.username) && !avatarRemoved)) && <button type="button" className="soft-btn member-avatar-remove" onClick={() => { setNewAvatar(null); setAvatarRemoved(memberAvatars.has(editing.username)); }}>Xóa ảnh</button>}</div>{avatarError ? <small className="member-editor-error">{avatarError}</small> : <small className="member-editor-hint">Ảnh được cắt tròn và chỉ áp dụng khi bấm Lưu.</small>}</div><input ref={avatarInput} type="file" accept="image/*" hidden onChange={(event) => { void pickAvatar(event.target.files?.[0]); event.target.value = ""; }} /></div><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <select className="member-role-select member-role-editor-select" value={editRole} disabled={roleSaving === editing.username} onChange={(event) => setEditRole(event.target.value as "member" | "sub-admin")}><option value="member">Thành viên</option><option value="sub-admin">Sub-admin</option></select>}<small>{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? "Mạnh luôn là Admin, không thể đổi quyền." : editRole === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label><label className="member-password-field">Mật khẩu mới<PasswordField value={editPassword} onChange={setEditPassword} placeholder="Để trống nếu giữ nguyên" /><small className="member-editor-hint">Mật khẩu hiện tại được mã hoá nên không hiển thị được; nhập mật khẩu mới nếu muốn đổi.</small></label><div className="editor-actions"><button className="soft-btn" onClick={closeEditor}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></section></div>}</Presence>
     <Presence show={Boolean(viewing)}>{viewing && (() => {
       const rank = rankingRows.findIndex((row) => row.username === viewing.username || row.name === viewing.name) + 1;
       const achievement = rank > 0 ? rankingRows[rank - 1] : null;
