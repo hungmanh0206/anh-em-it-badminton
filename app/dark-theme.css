@@ -40,6 +40,9 @@
   --wheel-2: #2a2520;
   --wheel-3: #5a4720;
   --wheel-4: #332c20;
+  --gold-glass: linear-gradient(180deg, rgba(255, 216, 115, 0.86), rgba(255, 183, 0, 0.72));
+  --gold-glass-hover: linear-gradient(180deg, rgba(255, 216, 115, 0.96), rgba(255, 183, 0, 0.86));
+  --gold-glass-shadow: 0 6px 16px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.42);
   --glass-page: #15120d;
   --glass-blob-1: rgba(255, 170, 0, 0.34);
   --glass-blob-2: rgba(226, 88, 44, 0.3);
@@ -281,4 +284,16 @@
     background: transparent !important;
     box-shadow: none !important;
   }
+}
+
+/* Gold buttons keep their frosted gold over the generic dark button colours. */
+:root[data-theme="dark"]:not(#_) :is(.primary, .new-btn, .attendance-actions .soft-btn, .history-list .history-detail-btn, .schedule-filter button.active, .photo-pagination-pages button.active, .photo-view-toggle button.active):not(:disabled) {
+  border-color: transparent !important;
+  background: var(--gold-glass) !important;
+  box-shadow: var(--gold-glass-shadow) !important;
+  color: #1a1408 !important;
+}
+
+:root[data-theme="dark"]:not(#_) :is(.primary, .new-btn, .attendance-actions .soft-btn, .history-list .history-detail-btn, .schedule-filter button.active, .photo-pagination-pages button.active, .photo-view-toggle button.active):not(:disabled):hover {
+  background: var(--gold-glass-hover) !important;
 }
