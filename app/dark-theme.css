@@ -80,7 +80,7 @@
     radial-gradient(circle at 0% 34%, rgba(226, 88, 44, 0.12), transparent 48%),
     rgba(30, 27, 21, 0.94);
   --modal-scrim: rgba(6, 5, 3, 0.56);
-  --page-behind-modal: blur(16px) brightness(0.62);
+  --celebrate-edge: rgba(8, 6, 3, 0.985);
   --glass-line: rgba(255, 255, 255, 0.08);
   --glass-lift: 0 2px 6px rgba(0, 0, 0, 0.3), 0 18px 40px rgba(0, 0, 0, 0.42);
   --glass-lift-card: 0 2px 10px rgba(0, 0, 0, 0.28);

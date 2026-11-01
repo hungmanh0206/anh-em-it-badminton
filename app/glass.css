@@ -19,7 +19,8 @@
     radial-gradient(circle at 0% 34%, rgba(255, 170, 120, 0.14), transparent 48%),
     rgba(255, 252, 245, 0.92);
   --modal-scrim: rgba(92, 72, 38, 0.3);
-  --page-behind-modal: blur(16px) brightness(0.9);
+  --scrim-layer: 16;
+  --celebrate-edge: rgba(255, 232, 178, 0.93);
   --modal-scrim-blur: blur(16px) saturate(130%);
   --glass-line: rgba(90, 70, 30, 0.1);
   --glass-lift: 0 2px 6px rgba(62, 47, 18, 0.05), 0 16px 38px rgba(62, 47, 18, 0.12);
@@ -739,14 +740,53 @@ input.search:not(#_):not(#_) {
 }
 
 /* Safari on iPhone and iPad shows the page past the layout viewport, under the status bar and the floating address
-   bar, where a fixed backdrop stops short. So the page content itself blurs and dims behind a modal; a modal that
-   lives inside the content keeps only its backdrop, or it would blur with the page. */
+   bar, where a fixed backdrop stops short. So the page content blurs itself, and the scrim's colour is one layer over
+   the whole document, so it is the same inside and outside that edge. A first modal's backdrop then only adds the
+   blur over the bars; a modal stacked on another keeps its own scrim to dim the one below. */
 .content:not(#_) {
   transition: filter 220ms ease;
 }
 
 html:has(.modal-backdrop, .champion-celebration) .content:not(:has(.modal-backdrop)):not(#_) {
-  filter: var(--page-behind-modal);
+  filter: var(--modal-scrim-blur);
+}
+
+body:not(#_) {
+  position: relative;
+}
+
+body::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--scrim-layer);
+  min-height: 100lvh;
+  background: var(--modal-scrim);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 220ms ease, visibility 0s linear 220ms;
+}
+
+html:has(.modal-backdrop, .champion-celebration) body::after {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+html:has(.champion-celebration) body::after {
+  background: var(--celebrate-edge);
+}
+
+/* The profile card drops from the bars, so they stay sharp: its blur and colour sit under them (z-index 15). */
+html:has(.profile-backdrop) body::after {
+  z-index: 14;
+}
+
+.modal-backdrop:not(.photo-confirm-backdrop, .presence ~ .presence > *):not(#_):not(#_) {
+  background: transparent !important;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
 }
 
 .profile-backdrop:not(#_):not(#_) {
