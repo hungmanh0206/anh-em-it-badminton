@@ -720,8 +720,7 @@
   .photo-grid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; padding: 0 16px; }
   .photo-tile { border-radius: 8px; }
   .photo-state { margin: 0 16px; }
-  .photo-pagination { justify-content: center; padding: 14px 16px 0; }
-  .photo-pagination-meta { width: 100%; justify-content: space-between; }
+  .photo-pagination { padding: 14px 16px 0; }
   .photo-pagination-pages button { min-width: 34px; height: 34px; }
   .photo-panel-head { flex-wrap: nowrap; }
 }
@@ -1046,4 +1045,10 @@
 
 .photo-rename-actions button {
   min-width: 88px;
+}
+
+/* Phones have no room for the page buttons beside the count, so they take a row of their own. */
+@media (max-width: 600px) {
+  .photo-pagination { justify-content: center; }
+  .photo-pagination-meta { width: 100%; justify-content: space-between; }
 }
