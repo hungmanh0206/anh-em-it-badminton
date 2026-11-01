@@ -3,12 +3,12 @@
 import { type CSSProperties, type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-type SelectOption = string | { value: string; label: string };
+type SelectOption = string | { value: string; label: string; plus?: boolean };
 type GlassSelectProps = { value: string; options: SelectOption[]; onChange: (value: string) => void; ariaLabel?: string; className?: string; disabled?: boolean };
 
 const GAP = 6;
 const MAX_LIST_HEIGHT = 300;
-const toOption = (option: SelectOption) => (typeof option === "string" ? { value: option, label: option } : option);
+const toOption = (option: SelectOption) => (typeof option === "string" ? { value: option, label: option, plus: false } : option);
 
 // The app's dropdown: browsers do not let a native <select> list be styled. The list is portalled to
 // <body> so panels with overflow hidden and modals cannot clip it.
@@ -100,11 +100,11 @@ export function GlassSelect({ value, options, onChange, ariaLabel, className = "
       onClick={() => (open ? setOpen(false) : openList())}
       onKeyDown={(event) => { if (event.key === "ArrowDown" || event.key === "ArrowUp") { event.preventDefault(); openList(); } }}
     >
-      <span>{items[selectedIndex]?.label ?? value}</span>
+      <span>{items[selectedIndex]?.plus && <i className="plus-icon" aria-hidden="true" />}{items[selectedIndex]?.label ?? value}</span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
     </button>
     {open && createPortal(<ul ref={listRef} id={listId} className="glass-select-list" role="listbox" aria-label={ariaLabel} aria-activedescendant={`${listId}-${activeIndex}`} tabIndex={-1} style={position} onKeyDown={onListKey}>
-      {items.map((item, index) => <li key={item.value} id={`${listId}-${index}`} role="option" aria-selected={item.value === value} className={index === activeIndex ? "is-active" : undefined} onPointerEnter={() => setActiveIndex(index)} onClick={() => choose(item.value)}>{item.label}</li>)}
+      {items.map((item, index) => <li key={item.value} id={`${listId}-${index}`} role="option" aria-selected={item.value === value} className={index === activeIndex ? "is-active" : undefined} onPointerEnter={() => setActiveIndex(index)} onClick={() => choose(item.value)}>{item.plus && <i className="plus-icon" aria-hidden="true" />}{item.label}</li>)}
     </ul>, document.body)}
   </>;
 }

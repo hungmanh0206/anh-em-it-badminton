@@ -710,7 +710,7 @@ function PhotoUploadModal({ folders, defaultFolder, onClose, onUploaded }: { fol
       </header>
       <div className="photo-sheet-body">
         <label className="photo-field">Danh mục
-          <GlassSelect value={folderChoice} options={[...folders.map((folder) => ({ value: folder.folder, label: `${folder.label} (${folder.folder || "thư mục gốc"})` })), { value: NEW_FOLDER, label: "+ Danh mục mới…" }]} onChange={setFolderChoice} disabled={busy} ariaLabel="Danh mục" />
+          <GlassSelect value={folderChoice} options={[...folders.map((folder) => ({ value: folder.folder, label: `${folder.label} (${folder.folder || "thư mục gốc"})` })), { value: NEW_FOLDER, label: "Danh mục mới…", plus: true }]} onChange={setFolderChoice} disabled={busy} ariaLabel="Danh mục" />
         </label>
         {folderChoice === NEW_FOLDER && <label className="photo-field">Tên thư mục mới
           <input value={newFolder} onChange={(event) => setNewFolder(event.target.value)} placeholder="ví dụ 2026/week-05" disabled={busy} />

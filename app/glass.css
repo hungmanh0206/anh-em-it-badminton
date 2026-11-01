@@ -20,6 +20,8 @@
     rgba(255, 252, 245, 0.92);
   --modal-scrim: rgba(92, 72, 38, 0.3);
   --scrim-layer: 16;
+  --scrim-page: color-mix(in srgb, rgb(92 72 38) 30%, var(--glass-page));
+  --celebrate-page: #ffe9b8;
   --celebrate-edge: rgba(255, 232, 178, 0.93);
   --modal-scrim-blur: blur(16px) saturate(130%);
   --glass-line: rgba(90, 70, 30, 0.1);
@@ -774,6 +776,15 @@ html:has(.modal-backdrop, .champion-celebration) body::after {
   transition-delay: 0s;
 }
 
+/* Past the document, and where Safari tints its own bars, the browser shows the page background: it takes the scrim too. */
+html:has(.modal-backdrop):not(#_) {
+  background: var(--scrim-page) !important;
+}
+
+html:has(.champion-celebration):not(#_) {
+  background: var(--celebrate-page) !important;
+}
+
 html:has(.champion-celebration) body::after {
   background: var(--celebrate-edge);
 }
@@ -864,4 +875,9 @@ html:has(.profile-backdrop) body::after {
 .panel > .rank-table:not(#_):not(#_):not(#_) {
   width: auto !important;
   max-width: none !important;
+}
+
+/* The dark plus would vanish on a dark dropdown. */
+:root[data-theme="dark"] :is(.glass-select, .glass-select-list) .plus-icon {
+  filter: invert(1) brightness(1.2);
 }
