@@ -137,7 +137,7 @@
   margin-top: 14px;
 }
 
-/* No card: a silver or bronze glowing ring, popping out together, just after the champion's name. */
+/* No card: a silver or bronze glowing ring, popping out together as the champion's avatar arrives, ahead of the crown. */
 .champion-runner {
   --runner-avatar: clamp(60px, 18vmin, 78px);
   --runner-ring: #c3cde0;
@@ -148,7 +148,7 @@
   gap: 8px;
   width: clamp(110px, 32vw, 140px);
   min-width: 0;
-  animation: championRunnerIn 640ms cubic-bezier(0.2, 1.5, 0.4, 1) 3260ms backwards;
+  animation: championRunnerIn 640ms cubic-bezier(0.2, 1.5, 0.4, 1) 800ms backwards;
 }
 
 .champion-runner.rank-3 {
@@ -161,7 +161,7 @@
   height: var(--runner-avatar);
   box-shadow: 0 0 0 3px var(--runner-ring), 0 0 20px 3px var(--runner-glow) !important;
   font-size: 22px;
-  animation: championRunnerGlow 2.4s ease-in-out 4100ms infinite;
+  animation: championRunnerGlow 2.4s ease-in-out 1500ms infinite;
 }
 
 /* The medal sits on the avatar's lower edge. */
