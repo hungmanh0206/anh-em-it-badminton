@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react";
+import { startFireworkSound } from "./firework-sound";
 
 // Main colour and the second one used for the inner shell of a burst, per theme. Dark adds light on
 // a dark sky; light paints deep colours, since adding light on a pale page would make them vanish.
@@ -52,6 +53,8 @@ function Fireworks() {
     resize();
     window.addEventListener("resize", resize);
 
+    const sound = startFireworkSound();
+    const panOf = (x: number) => (x / width) * 1.2 - 0.6;
     const rockets: Rocket[] = [];
     const sparks: Spark[] = [];
     const flashes: Flash[] = [];
@@ -59,7 +62,9 @@ function Fireworks() {
       const x = width * between(0.1, 0.9);
       const y = height + 8;
       const climb = y - height * between(0.1, 0.46);
-      rockets.push({ x, y, px: x, py: y, vx: between(-0.7, 0.7), vy: -Math.sqrt(2 * ROCKET_GRAVITY * climb), palette: PALETTES[Math.floor(Math.random() * PALETTES.length)] });
+      const speed = Math.sqrt(2 * ROCKET_GRAVITY * climb);
+      rockets.push({ x, y, px: x, py: y, vx: between(-0.7, 0.7), vy: -speed, palette: PALETTES[Math.floor(Math.random() * PALETTES.length)] });
+      sound?.launch(panOf(x), ((speed / ROCKET_GRAVITY) * FRAME_MS) / 1000);
     };
     const addSpark = (x: number, y: number, angle: number, speed: number, color: string, options: Partial<Spark> = {}) => {
       if (sparks.length < MAX_SPARKS) sparks.push({ x, y, px: x, py: y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 1, fade: between(0.012, 0.02), drag: 0.965, gravity: 0.035, color, width: 2, ...options });
@@ -67,6 +72,7 @@ function Fireworks() {
     const explode = (x: number, y: number, palette: readonly string[]) => {
       const reach = Math.max(4.2, Math.min(7.5, Math.min(width, height) / 110));
       const kind = Math.random();
+      sound?.burst(panOf(x), kind < 0.3 ? 34 : 14);
       if (kind < 0.3) {
         // Gold willow: long drooping strands.
         for (let index = 0; index < 110; index += 1) addSpark(x, y, between(0, Math.PI * 2), reach * between(0.25, 0.8), GOLD[index % 2], { fade: between(0.006, 0.0095), drag: 0.975, gravity: 0.05, width: 1.6 });
@@ -167,6 +173,7 @@ function Fireworks() {
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", resize);
+      sound?.stop();
     };
   }, []);
   return <canvas ref={canvasRef} className="champion-fireworks" aria-hidden="true" />;

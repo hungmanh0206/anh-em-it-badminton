@@ -524,9 +524,24 @@
   inset: -8px -2px;
 }
 
-.result-actions-edit svg {
-  width: 17px;
-  height: 17px;
+.score-action-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin: 0 auto;
+  background: center / contain no-repeat;
+}
+
+.score-action-save {
+  background-image: url("/app-icons/score-save.png");
+}
+
+.score-action-clear {
+  background-image: url("/app-icons/score-clear.png");
+}
+
+button:disabled .score-action-icon {
+  opacity: 0.45;
 }
 
 .result-entry-panel .result-actions .soft-btn.result-clear-button {

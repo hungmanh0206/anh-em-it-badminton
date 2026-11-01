@@ -292,3 +292,8 @@
 :root[data-theme="dark"]:not(#_) :is(.primary, .new-btn, .attendance-actions .soft-btn, .history-list .history-detail-btn, .schedule-filter button.active, .photo-pagination-pages button.active, .photo-view-toggle button.active):not(:disabled):hover {
   background: var(--gold-glass-hover) !important;
 }
+
+/* The black check would vanish on a disabled button here. */
+:root[data-theme="dark"] button:disabled .score-action-save {
+  filter: invert(1);
+}

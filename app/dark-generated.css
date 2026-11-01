@@ -1763,6 +1763,15 @@
     color: hsla(42, 20%, 95%, 1) !important;
     -webkit-text-fill-color: hsla(42, 20%, 95%, 1)
 }
+:root[data-theme="dark"] .score-action-icon {
+    background: center / contain no-repeat
+}
+:root[data-theme="dark"] .score-action-save {
+    background-image: url("/app-icons/score-save.png")
+}
+:root[data-theme="dark"] .score-action-clear {
+    background-image: url("/app-icons/score-clear.png")
+}
 :root[data-theme="dark"] .result-entry-panel .result-actions .soft-btn.result-clear-button {
     border-color: rgba(255, 255, 255, 0.14) !important;
     background: hsla(42, 10%, 14%, 0.76) !important;
