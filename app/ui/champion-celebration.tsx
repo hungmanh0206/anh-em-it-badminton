@@ -2,14 +2,27 @@
 
 import { type ReactNode, useEffect, useRef } from "react";
 
-// Main colour and the paler one used for the inner shell of a burst.
-const PALETTES = [["#ffc83d", "#fff3c4"], ["#ff4d6d", "#ffd1d8"], ["#34d399", "#d1fae5"], ["#4f9dff", "#dbeafe"], ["#f472b6", "#fce7f3"], ["#b57bff", "#f3e8ff"], ["#22d3ee", "#cffafe"]];
-const GOLD = ["#ffc83d", "#ffe9a8"];
+// Main colour and the second one used for the inner shell of a burst, per theme. Dark adds light on
+// a dark sky; light paints deep colours, since adding light on a pale page would make them vanish.
+const THEMES = {
+  dark: {
+    palettes: [["#ffc83d", "#fff3c4"], ["#ff4d6d", "#ffd1d8"], ["#34d399", "#d1fae5"], ["#4f9dff", "#dbeafe"], ["#f472b6", "#fce7f3"], ["#b57bff", "#f3e8ff"], ["#22d3ee", "#cffafe"]],
+    gold: ["#ffc83d", "#ffe9a8"],
+    rocket: "#fff6d8",
+    blend: "lighter",
+  },
+  light: {
+    palettes: [["#e08a00", "#f5b301"], ["#e11d48", "#fb7185"], ["#059669", "#34d399"], ["#2563eb", "#60a5fa"], ["#db2777", "#f472b6"], ["#7c3aed", "#a78bfa"], ["#0891b2", "#22d3ee"]],
+    gold: ["#d97706", "#f59e0b"],
+    rocket: "#b45309",
+    blend: "source-over",
+  },
+} as const;
 const FRAME_MS = 1000 / 60;
 const ROCKET_GRAVITY = 0.12;
 const MAX_SPARKS = 2600;
 
-type Rocket = { x: number; y: number; px: number; py: number; vx: number; vy: number; palette: string[] };
+type Rocket = { x: number; y: number; px: number; py: number; vx: number; vy: number; palette: readonly string[] };
 type Spark = { x: number; y: number; px: number; py: number; vx: number; vy: number; life: number; fade: number; drag: number; gravity: number; color: string; width: number };
 type Flash = { x: number; y: number; life: number; color: string };
 
@@ -23,6 +36,9 @@ function Fireworks() {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
+    const theme = THEMES[document.documentElement.dataset.theme === "dark" ? "dark" : "light"];
+    const PALETTES = theme.palettes;
+    const GOLD = theme.gold;
     let width = 0;
     let height = 0;
     const resize = () => {
@@ -48,7 +64,7 @@ function Fireworks() {
     const addSpark = (x: number, y: number, angle: number, speed: number, color: string, options: Partial<Spark> = {}) => {
       if (sparks.length < MAX_SPARKS) sparks.push({ x, y, px: x, py: y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 1, fade: between(0.012, 0.02), drag: 0.965, gravity: 0.035, color, width: 2, ...options });
     };
-    const explode = (x: number, y: number, palette: string[]) => {
+    const explode = (x: number, y: number, palette: readonly string[]) => {
       const reach = Math.max(4.2, Math.min(7.5, Math.min(width, height) / 110));
       const kind = Math.random();
       if (kind < 0.3) {
@@ -85,7 +101,7 @@ function Fireworks() {
       ctx.globalAlpha = 1;
       ctx.fillStyle = `rgba(0, 0, 0, ${1 - 0.8 ** step})`;
       ctx.fillRect(0, 0, width, height);
-      ctx.globalCompositeOperation = "lighter";
+      ctx.globalCompositeOperation = theme.blend;
       ctx.lineCap = "round";
 
       for (let index = rockets.length - 1; index >= 0; index -= 1) {
@@ -97,7 +113,7 @@ function Fireworks() {
         rocket.vy += ROCKET_GRAVITY * step;
         addSpark(rocket.x, rocket.y, between(0, Math.PI * 2), between(0.1, 0.5), GOLD[1], { fade: 0.06, width: 1.2 });
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = "#fff6d8";
+        ctx.strokeStyle = theme.rocket;
         ctx.lineWidth = 2.6;
         ctx.beginPath();
         ctx.moveTo(rocket.px, rocket.py);
@@ -114,7 +130,7 @@ function Fireworks() {
         const radius = 110;
         const glow = ctx.createRadialGradient(flash.x, flash.y, 0, flash.x, flash.y, radius);
         glow.addColorStop(0, flash.color);
-        glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+        glow.addColorStop(1, `${flash.color}00`);
         ctx.globalAlpha = flash.life * 0.3;
         ctx.fillStyle = glow;
         ctx.fillRect(flash.x - radius, flash.y - radius, radius * 2, radius * 2);

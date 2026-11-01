@@ -1,11 +1,19 @@
 .champion-celebration {
+  --celebrate-bg: radial-gradient(circle at 50% 45%, rgba(255, 252, 240, 0.9), rgba(255, 232, 178, 0.93) 72%);
+  --celebrate-title: #231a0e;
+  --celebrate-sub: #9a6414;
+  --celebrate-glow: rgba(255, 183, 0, 0.42);
+  --celebrate-close-bg: rgba(255, 255, 255, 0.62);
+  --celebrate-close: #3d3528;
   position: fixed;
   inset: 0;
   z-index: 120;
   display: grid;
   place-items: center;
   padding: 24px;
-  background: radial-gradient(circle at 50% 45%, rgba(46, 32, 8, 0.96), rgba(8, 6, 3, 0.985) 70%);
+  background: var(--celebrate-bg);
+  -webkit-backdrop-filter: var(--modal-scrim-blur);
+  backdrop-filter: var(--modal-scrim-blur);
   cursor: pointer;
   animation: motionFadeIn 240ms ease-out backwards;
 }
@@ -28,10 +36,10 @@
   right: 16px;
   width: 40px;
   height: 40px;
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  border: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fffaf0;
+  background: var(--celebrate-close-bg);
+  color: var(--celebrate-close);
   font-size: 24px;
   line-height: 1;
   cursor: pointer;
@@ -73,7 +81,7 @@
 
 .champion-stage p {
   margin: 0;
-  color: #ffd66d;
+  color: var(--celebrate-sub);
   font-size: clamp(15px, 4vmin, 20px);
   font-weight: 800;
   letter-spacing: 0.02em;
@@ -83,12 +91,12 @@
 .champion-stage h2 {
   margin: 0;
   overflow-wrap: anywhere;
-  color: #fffaf0;
+  color: var(--celebrate-title);
   font-size: clamp(38px, 12vmin, 64px);
   font-weight: 900;
   letter-spacing: -0.03em;
   line-height: 1.1;
-  text-shadow: 0 4px 22px rgba(255, 183, 0, 0.55);
+  text-shadow: 0 4px 22px var(--celebrate-glow);
   animation: championTextIn 520ms ease-out 780ms backwards;
 }
 
@@ -117,4 +125,13 @@
   50% {
     filter: drop-shadow(0 0 26px rgba(255, 214, 109, 0.75));
   }
+}
+
+:root[data-theme="dark"] .champion-celebration {
+  --celebrate-bg: radial-gradient(circle at 50% 45%, rgba(46, 32, 8, 0.96), rgba(8, 6, 3, 0.985) 70%);
+  --celebrate-title: #fffaf0;
+  --celebrate-sub: #ffd66d;
+  --celebrate-glow: rgba(255, 183, 0, 0.55);
+  --celebrate-close-bg: rgba(255, 255, 255, 0.1);
+  --celebrate-close: #fffaf0;
 }
