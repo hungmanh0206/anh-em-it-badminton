@@ -28,8 +28,8 @@
   --pill: rgba(60, 48, 28, 0.07);
   --pill-hover: rgba(60, 48, 28, 0.13);
   --pill-text: #4a4133;
-  --mark-waiting: linear-gradient(145deg, rgba(255, 255, 255, 0.45), transparent 58%), rgba(196, 150, 62, 0.24);
-  --mark-waiting-lift: 0 2px 6px rgba(120, 88, 28, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --mark-well: rgba(120, 92, 40, 0.13);
+  --mark-well-sink: inset 0 2px 5px rgba(90, 65, 20, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.5), 0 1px 0 rgba(255, 255, 255, 0.9);
   --button-off: rgba(60, 48, 28, 0.08);
   --button-off-text: rgba(26, 20, 8, 0.52);
   --button-soft: rgba(255, 255, 255, 0.74);
@@ -539,9 +539,27 @@ body::before {
   grid-template-columns: 1fr 1fr;
 }
 
-/* Attendance marker before a member answers: an empty glass disc, standing out from the card. */
-.attendance-mark.waiting:not(#_):not(#_):not(#_) {
-  background: var(--mark-waiting) !important;
+/* Attendance marker: an empty well sunk into the card, which fills from its centre once the member answers.
+   A transition rather than an animation, so it only plays on a real change, not on every page load. */
+.attendance-mark:not(#_):not(#_):not(#_) {
+  background-color: var(--mark-well) !important;
+  background-image: radial-gradient(circle closest-side, var(--mark-fill, transparent) 97%, transparent) !important;
   background-origin: border-box !important;
-  box-shadow: var(--mark-waiting-lift) !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 0 0 !important;
+  box-shadow: var(--mark-well-sink) !important;
+  transition: background-size 460ms cubic-bezier(0.3, 1.2, 0.5, 1), box-shadow 300ms ease 160ms, color 200ms ease 240ms !important;
+}
+
+.attendance-mark.yes:not(#_):not(#_):not(#_) {
+  --mark-fill: #16a46f;
+  background-size: 100% 100% !important;
+  box-shadow: 0 6px 14px rgba(22, 164, 111, 0.26) !important;
+}
+
+.attendance-mark.no:not(#_):not(#_):not(#_) {
+  --mark-fill: #e24b5e;
+  background-size: 100% 100% !important;
+  box-shadow: 0 6px 14px rgba(226, 75, 94, 0.24) !important;
 }
