@@ -28,7 +28,9 @@ export function GlassSelect({ value, options, onChange, ariaLabel, className = "
     const below = window.innerHeight - rect.bottom - GAP * 2;
     const above = rect.top - GAP * 2;
     const dropUp = below < Math.min(MAX_LIST_HEIGHT, items.length * 40 + 12) && above > below;
-    const width = Math.min(Math.max(rect.width, 180), window.innerWidth - 16);
+    // Wide enough for the longest label, even when the field itself is narrow.
+    const longest = Math.max(...items.map((item) => item.label.length));
+    const width = Math.min(Math.max(rect.width, longest * 8 + 40), window.innerWidth - 16);
     setPosition({
       left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)),
       width,

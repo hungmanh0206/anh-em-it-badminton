@@ -57,6 +57,39 @@
   min-width: 180px;
 }
 
+/* Phones and iPad mini: month and week side by side. */
+@media (max-width: 900px) {
+  .history-filters:not(#_):not(#_) {
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  .history-filters label:not(#_):not(#_) {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .history-filters .glass-select:not(#_):not(#_) {
+    padding-inline: 11px 9px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 345px) {
+  .history-filters .glass-select:not(#_):not(#_) {
+    gap: 2px;
+    padding-inline: 8px 4px;
+    font-size: 12px;
+  }
+
+  .history-filters .glass-select > svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
 .glass-select-list {
   position: fixed;
   z-index: 300;
@@ -140,7 +173,26 @@
   white-space: nowrap;
 }
 
-@media (max-width: 800px) {
+/* iPad mini: every control stays on the iPad Pro row, the dropdowns a little narrower. */
+@media (min-width: 601px) and (max-width: 900px) {
+  .photo-toolbar:not(#_) {
+    flex-wrap: nowrap;
+  }
+
+  .photo-search:not(#_) {
+    flex: 1 1 0;
+  }
+
+  .photo-folder-select.glass-select:not(#_):not(#_) {
+    flex-basis: 206px;
+  }
+
+  .photo-sort-select.glass-select:not(#_):not(#_) {
+    flex-basis: 136px;
+  }
+}
+
+@media (max-width: 600px) {
   .photo-folder-select.glass-select:not(#_):not(#_) {
     flex: 1 1 100%;
   }
