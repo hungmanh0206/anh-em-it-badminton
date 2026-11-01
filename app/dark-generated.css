@@ -3092,13 +3092,18 @@
     color: hsla(42, 20%, 71%, 1) !important
 }
 :root[data-theme="dark"] .profile-logout {
-    border: 1px solid rgba(194, 65, 59, 0.42);
+    border: 0;
     border-radius: 12px;
-    background: none;
-    color: hsla(3, 53%, 84%, 1)
+    background: var(--glass-card);
+    box-shadow: var(--glass-lift-card);
+    color: var(--bar-text)
 }
 :root[data-theme="dark"] .profile-logout:hover {
-    background: rgba(194, 65, 59, 0.1)
+    background: var(--bar-track)
+}
+:root[data-theme="dark"] .profile-logout:focus-visible {
+    outline: 2px solid rgba(255, 183, 0, 0.7);
+    outline-offset: 2px
 }
 :root[data-theme="dark"] .member-avatar-copy > b {
     color: hsla(40, 53%, 72%, 1)

@@ -1353,7 +1353,7 @@ function ProfilePopover({ detail = false, member, rank, achievement, achievement
       <div className={`profile-stat ${typeof pointDiff === "number" ? pointDiff >= 0 ? "positive" : "negative" : ""}`}><span>Hiệu số</span><b>{pointDiffLabel}</b></div>
       <div className="profile-stat"><span>Số trận</span><b>{matches}</b></div>
     </div>
-    {onLogout && <button type="button" className="profile-logout" onClick={onLogout}>Đăng xuất</button>}
+    {onLogout && <button type="button" className="profile-logout" onClick={onLogout}><AppIcon name="logout" />Đăng xuất</button>}
   </aside>;
 }
 
