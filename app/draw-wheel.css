@@ -362,22 +362,6 @@
   transform: scale(0.6);
 }
 
-/* TEMPORARY: admin wheel preview, remove with DRAW_PREVIEW in app/page.tsx. */
-.draw-preview-note {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin: 0 0 12px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: var(--pill);
-  color: var(--bar-text);
-  font-size: 13px;
-  font-weight: 700;
-}
-
 /* The wheel's block: gold light behind the wheel instead of a flat fill. */
 :root {
   --roster-card: rgba(255, 255, 255, 0.8);

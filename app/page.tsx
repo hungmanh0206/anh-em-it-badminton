@@ -93,8 +93,6 @@ const attendeeCountFromAttendances = (attendances: HistorySessionRow["attendance
     : rows[0]?.count || 0;
 };
 // Five sections; a section with several pages shows them as tabs under the page title.
-// TEMPORARY: lets an admin try the wheel on a locked tab 2 with local sample numbers; nothing is saved.
-const DRAW_PREVIEW = true;
 const navGroups: { key: string; label: string; icon: AppIconName; screens: { screen: Screen; label: string }[] }[] = [
   { key: "home", label: "Home", icon: "home", screens: [{ screen: "home", label: "Home" }] },
   { key: "matches", label: "Thi đấu", icon: "schedule", screens: [{ screen: "schedules", label: "Lịch thi đấu" }, { screen: "history", label: "Kết quả & lịch sử" }] },
@@ -348,9 +346,6 @@ export default function Home() {
   const [loginError, setLoginError] = useState("");
   const [spinning, setSpinning] = useState(false);
   const [spinTarget, setSpinTarget] = useState<number | null>(null);
-  const [drawPreview, setDrawPreview] = useState(false);
-  const [previewDrawn, setPreviewDrawn] = useState<Record<string, number>>({});
-  const previewTimers = useRef<number[]>([]);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>("draft");
@@ -433,44 +428,9 @@ export default function Home() {
   const drawOpen = ["checked_in", "drawn", "scheduled", "completed"].includes(sessionStatus);
   const scheduleOpen = ["scheduled", "completed"].includes(sessionStatus);
   const steps = ["Điểm danh", "Chọn số", "Lịch thi đấu"];
-  const canPreviewDraw = DRAW_PREVIEW && activeUser?.role === "admin" && !drawOpen;
-  const previewMembers = members.map((member) => ({ ...member, present: true, responded: true }));
-  const resetDrawPreview = () => {
-    previewTimers.current.forEach((timer) => window.clearTimeout(timer));
-    previewTimers.current = [];
-    setPreviewDrawn({});
-    setSpinning(false);
-    setSpinTarget(null);
-  };
-  const spinDrawPreview = () => {
-    const self = previewMembers.find((member) => member.username === activeUser?.username);
-    if (!self) return;
-    const level1 = previewMembers.filter((member) => member.level === 1).length;
-    const slotsFor = (level: 1 | 2) => drawSlotsForLevel(level, level1, previewMembers.length - level1, previewMembers.length);
-    const taken = new Set(Object.values(previewDrawn));
-    const free = slotsFor(self.level).filter((slot) => !taken.has(slot));
-    if (!free.length) return;
-    const selected = free[Math.floor(Math.random() * free.length)];
-    taken.add(selected);
-    setSpinning(true);
-    setSpinTarget(selected);
-    previewTimers.current.push(window.setTimeout(() => {
-      setPreviewDrawn((current) => ({ ...current, [self.name]: selected }));
-      setSpinning(false);
-      setSpinTarget(null);
-    }, DRAW_SPIN_MS));
-    // Everyone else draws one after the other, to show the numbers arriving on the cards.
-    previewMembers.filter((member) => member.name !== self.name && !previewDrawn[member.name]).forEach((member, index) => {
-      const slot = slotsFor(member.level).find((candidate) => !taken.has(candidate));
-      if (slot === undefined) return;
-      taken.add(slot);
-      previewTimers.current.push(window.setTimeout(() => setPreviewDrawn((current) => ({ ...current, [member.name]: slot })), DRAW_SPIN_MS + 700 + index * 450));
-    });
-  };
   // Whether the workflow tab `next` can be opened right now (mirrors the checks in goStep).
   const canGoStep = (next: number) => {
     if (next === 0) return true;
-    if (next === 1 && canPreviewDraw) return true;
     const isManager = isScoreManagerRole(activeUser?.role);
     if (!isManager && !signedInMemberPresent) return false;
     if (next > step && !isManager) return next === 1 ? drawOpen : next === 2 ? scheduleOpen && Boolean(currentScheduleScenario) : false;
@@ -483,14 +443,6 @@ export default function Home() {
     if (next === 0) {
       setLoginError("");
       setStep(0);
-      setDrawPreview(false);
-      resetDrawPreview();
-      return;
-    }
-    if (next === 1 && canPreviewDraw) {
-      setLoginError("");
-      setDrawPreview(true);
-      setStep(1);
       return;
     }
     if (!isScoreManagerRole(activeUser?.role) && !signedInMemberPresent) {
@@ -1107,7 +1059,6 @@ export default function Home() {
   }, [sessionId]);
   const drawSelf = async () => {
     if (!activeUser || spinning) return;
-    if (drawPreview) return spinDrawPreview();
     const self = members.find((member) => member.username === activeUser.username) ?? activeUser;
     if (!self.present) return setLoginError("Bạn cần điểm danh tham gia trước khi chọn số.");
     if (validDrawn[self.name]) return;
@@ -1236,7 +1187,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (!activeUser || screen !== "home" || drawPreview) return;
+    if (!activeUser || screen !== "home") return;
     const isScoreManager = isScoreManagerRole(activeUser.role);
     if (!isScoreManager && !signedInMemberPresent) {
       setStep(0);
@@ -1251,7 +1202,7 @@ export default function Home() {
       return;
     }
     setStep((current) => current > 0 ? 0 : current);
-  }, [activeUser, allAttendanceDone, allDrawn, canSchedule, currentScheduleScenario, drawOpen, drawPreview, screen, sessionStatus, signedInMemberPresent]);
+  }, [activeUser, allAttendanceDone, allDrawn, canSchedule, currentScheduleScenario, drawOpen, screen, sessionStatus, signedInMemberPresent]);
 
   useEffect(() => {
     let pointerDownTarget: EventTarget | null = null;
@@ -1330,8 +1281,7 @@ export default function Home() {
         {loginError && <div className="warning">{loginError}</div>}
         {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
-        {step === 1 && drawPreview && <><p className="draw-preview-note">Chế độ thử vòng quay: số chỉ hiện trên máy bạn, không lưu.<button className="soft-btn" onClick={resetDrawPreview}>Quay lại từ đầu</button></p><Draw members={previewMembers} drawn={previewDrawn} allDrawn={false} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={{ ...currentUser, present: true }} canManageSession={false} onContinue={() => undefined} /></>}
-        {step === 1 && !drawPreview && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
+        {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
         {step === 2 && <Schedule onEditingChange={(rows) => { editingScoreRows.current = new Set(rows); }} scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { setSessionStatus(completed ? "completed" : "scheduled"); if (completed) setHistoryRefreshTick((tick) => tick + 1); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}</div>
     </section>
