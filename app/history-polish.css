@@ -98,3 +98,51 @@
     padding: 14px 16px 18px;
   }
 }
+
+/* Phones and iPad mini: the button sits beside the text, so each session card stays short and the
+   list needs less scrolling. */
+@media (max-width: 900px) {
+  .history-list article:not(#_) {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+  }
+
+  .history-list article:not(#_) > div {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .history-list article:not(#_) h3 {
+    margin: 3px 0 2px;
+    font-size: 13.5px;
+    line-height: 1.25;
+  }
+
+  .history-list article:not(#_) p {
+    margin: 0;
+  }
+
+  .history-list .history-detail-btn:not(#_) {
+    flex: 0 0 auto;
+    align-self: center !important;
+    width: auto;
+    min-width: 0;
+    min-height: 34px;
+    padding: 0 11px !important;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+}
+
+/* The week line repeats the date in the title. */
+@media (max-width: 600px) {
+  .history-list article:not(#_) > div > span {
+    display: none;
+  }
+
+  .history-list article:not(#_) h3 {
+    margin-top: 0;
+  }
+}
