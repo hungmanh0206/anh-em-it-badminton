@@ -1226,7 +1226,7 @@ export default function Home() {
   useEffect(() => {
     if (activeUser && activeUser.role !== "admin" && screen === "members") setScreen("home");
   }, [activeUser, screen]);
-  if (!activeUser && authRestoring) return <main className="login-page"><div className="login-card"><p>Đang khôi phục phiên đăng nhập...</p></div></main>;
+  if (!activeUser && authRestoring) return <main className="login-page"><div className="login-card login-restoring"><div className="login-brand"><span aria-hidden="true" /><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></div><i className="login-spinner" aria-hidden="true" /><p role="status">Đang khôi phục phiên đăng nhập...</p></div></main>;
   if (!activeUser) return <Login onLogin={signIn} error={loginError} />;
   const currentUser = members.find((member) => member.username === activeUser.username) ?? activeUser;
   const isAdmin = currentUser.role === "admin";

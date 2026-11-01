@@ -225,3 +225,59 @@ button.hero-champion:focus-visible {
     flex: 0 1 200px;
   }
 }
+
+/* Phones: the champion sits under the date as one wide line, the month progress last. */
+@media (max-width: 600px) {
+  .hero:not(#_) {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px !important;
+  }
+
+  .hero-status {
+    display: contents;
+  }
+
+  .hero-champion {
+    order: 2;
+    flex: none;
+    width: 100%;
+  }
+
+  .hero-champion .avatar.small {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+  }
+
+  .hero-champion-text {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 8px;
+    width: 100%;
+  }
+
+  .hero-champion-text small {
+    grid-column: 1 / -1;
+  }
+
+  .hero-champion-text > span {
+    font-size: 11px;
+  }
+
+  .hero-stats:not(#_) {
+    order: 3;
+    align-self: flex-start;
+    justify-content: start;
+    margin: 0;
+  }
+
+  .hero-progress {
+    position: relative;
+    z-index: 2;
+    order: 4;
+    flex: none;
+    width: 100%;
+  }
+}

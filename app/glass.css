@@ -138,3 +138,94 @@ body::before {
 .confirm-modal:not(#_)::after {
   content: none !important;
 }
+
+/* ---------- Sign-in and session restore ---------- */
+.login-page:not(#_) {
+  background: transparent !important;
+}
+
+.login-card:not(#_) {
+  border-color: transparent !important;
+  border-radius: 20px !important;
+  background: var(--glass-solid) !important;
+  box-shadow: var(--glass-lift) !important;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+.login-card:not(#_)::before,
+.login-card:not(#_)::after {
+  content: none !important;
+}
+
+/* Same brand as the top bar. */
+.login-brand:not(#_) {
+  gap: 12px !important;
+}
+
+.login-brand:not(#_) > span {
+  width: 46px !important;
+  min-width: 46px !important;
+  max-width: 46px !important;
+  height: 46px !important;
+  flex: 0 0 46px;
+  padding: 0 !important;
+  border: 1px solid var(--brand-tile-edge) !important;
+  border-radius: 10px !important;
+  background: var(--club-mark-image) center / 76% auto no-repeat, var(--brand-tile) !important;
+  box-shadow: var(--brand-tile-shadow) !important;
+}
+
+.login-brand:not(#_) b {
+  color: var(--brand-title) !important;
+  font-size: 19px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.1 !important;
+}
+
+.login-brand:not(#_) small {
+  margin-top: 3px;
+  color: var(--brand-sub) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.16em !important;
+}
+
+.login-card:not(#_) input {
+  background: var(--glass-card) !important;
+}
+
+.login-restoring:not(#_) {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding: 32px 34px !important;
+  text-align: center;
+}
+
+.login-restoring .login-brand:not(#_) {
+  margin-bottom: 4px !important;
+  text-align: left;
+}
+
+.login-restoring p {
+  margin: 0;
+  color: var(--club-ink-600);
+  font-size: 14px;
+}
+
+.login-spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid rgba(255, 183, 0, 0.22);
+  border-top-color: #ffb700;
+  border-radius: 50%;
+  animation: login-spin 800ms linear infinite;
+}
+
+@keyframes login-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
