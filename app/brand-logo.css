@@ -1,6 +1,6 @@
 :root {
-  --club-logo-image: url("/club-logo.png?v=club-glass-logo");
-  --club-mark-image: url("/club-mark.png?v=club-glass-logo");
+  --club-logo-image: url("/club-logo.png?v=club-glass-logo-v3");
+  --club-mark-image: url("/club-mark.png?v=club-glass-logo-v3");
 }
 
 .brand-mark,
