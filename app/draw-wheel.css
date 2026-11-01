@@ -325,9 +325,19 @@
 .draw-roster > div:not(#_):not(#_) {
   position: relative;
   border: 0 !important;
-  box-shadow: var(--glass-lift-card) !important;
+  background: var(--roster-card) !important;
+  box-shadow: var(--roster-lift) !important;
+  opacity: 1 !important;
   isolation: isolate;
   overflow: hidden;
+}
+
+.draw-roster > div > span:not(#_):not(#_) {
+  color: var(--roster-name) !important;
+}
+
+.draw-roster > div > small:not(#_):not(#_) {
+  color: var(--roster-level) !important;
 }
 
 .draw-roster > div::before {
@@ -374,6 +384,20 @@
 }
 
 /* The wheel's block: gold light behind the wheel instead of a flat fill. */
+:root {
+  --roster-card: rgba(255, 255, 255, 0.8);
+  --roster-lift: 0 2px 4px rgba(62, 47, 18, 0.06), 0 8px 18px rgba(62, 47, 18, 0.1);
+  --roster-name: #1f1a10;
+  --roster-level: #6f6757;
+}
+
+:root[data-theme="dark"] {
+  --roster-card: rgba(255, 255, 255, 0.11);
+  --roster-lift: 0 2px 4px rgba(0, 0, 0, 0.3), 0 10px 22px rgba(0, 0, 0, 0.42);
+  --roster-name: #fffaf0;
+  --roster-level: #cfc6b4;
+}
+
 .draw-panel .draw-body:not(#_):not(#_) {
   background: var(--draw-glow), var(--draw-glow-end), var(--glass-card) !important;
   box-shadow: var(--glass-lift-card) !important;
