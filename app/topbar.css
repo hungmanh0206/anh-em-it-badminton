@@ -667,41 +667,50 @@ button.topbar-brand {
   }
 }
 
-/* Phones, once scrolled: everything but the avatar fades, then the bar closes in around it from the left
-   into a small circle. `left` and not a transform: a transform here would pin the bottom bar inside the top bar.
-   Opening runs the other way round, so the content only comes back once there is room for it. */
+/* Phones, once scrolled: everything but the avatar fades while the bar closes in around it from the left into a small
+   circle, all on one curve. `left` and not a transform: a transform here would pin the bottom bar inside the top bar. */
 @media (max-width: 700px), (max-height: 480px) and (max-width: 950px) {
   .topbar {
     --collapsed-bar: 50px;
+    --bar-ease: cubic-bezier(0.32, 0.72, 0, 1);
     left: var(--page-gutter);
-    transition: left 320ms cubic-bezier(0.4, 0, 0.2, 1), border-radius 320ms ease;
+    transition: left 460ms var(--bar-ease), border-radius 460ms var(--bar-ease);
   }
 
   .topbar-row {
-    transition: height 320ms cubic-bezier(0.4, 0, 0.2, 1), padding 320ms cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    border-radius: inherit;
+    transition: height 460ms var(--bar-ease), padding 460ms var(--bar-ease);
   }
 
   :is(.topbar-brand, .topbar-theme) {
-    transition: opacity 180ms ease 220ms, visibility 0s linear 220ms;
+    transition: opacity 260ms ease 120ms, transform 460ms var(--bar-ease);
   }
 
   .topbar.is-collapsed {
     left: calc(100% - var(--page-gutter) - var(--collapsed-bar));
     border-radius: calc(var(--collapsed-bar) / 2);
-    transition-delay: 110ms;
   }
 
   .topbar.is-collapsed .topbar-row {
-    overflow: hidden;
     height: var(--collapsed-bar);
     padding-inline: 0 8px;
-    transition-delay: 110ms;
   }
 
   .topbar.is-collapsed :is(.topbar-brand, .topbar-theme) {
     opacity: 0;
-    visibility: hidden;
-    transition: opacity 140ms ease, visibility 0s linear 140ms;
+    pointer-events: none;
+    transform: translateX(24px) scale(0.92);
+    transition: opacity 160ms ease, transform 460ms var(--bar-ease);
+  }
+
+  .topbar.is-collapsed .topbar-brand {
+    margin-right: 0;
+  }
+
+  .topbar.is-collapsed :is(.topbar-brand, .topbar-theme) {
+    flex-shrink: 1;
+    min-width: 0;
   }
 
   .topbar.is-collapsed .topbar-chevron {
@@ -710,17 +719,11 @@ button.topbar-brand {
 
   .topbar.is-collapsed .topbar-profile {
     flex: none;
-    margin-left: 0;
+    margin-left: auto;
   }
 
   .topbar.is-collapsed .topbar-profile-btn {
     padding: 0;
-  }
-
-  .topbar.is-collapsed .topbar-profile-btn .avatar.small:not(#_):not(#_) {
-    width: 34px !important;
-    min-width: 34px !important;
-    height: 34px !important;
   }
 }
 
