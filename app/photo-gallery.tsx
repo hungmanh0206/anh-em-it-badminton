@@ -202,12 +202,12 @@ export function PhotoGallery() {
     <section className="panel photo-panel" ref={panel}>
     <div className="panel-head photo-panel-head">
       <h2>Những khoảnh khắc cùng anh em</h2>
-      {canManage && <button type="button" className="primary photo-upload-btn" onClick={() => setUploadOpen(true)}>+ Tải ảnh</button>}
+      {canManage && <button type="button" className="primary photo-upload-btn" onClick={() => setUploadOpen(true)}><span className="plus-icon" aria-hidden="true" />Tải ảnh</button>}
     </div>
 
     {(allCount > 0 || query || canManage) && <div className="photo-toolbar">
       <label className="photo-search">
-        <span aria-hidden="true">⌕</span>
+        <span className="search-glyph" aria-hidden="true" />
         <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm theo tên ảnh…" aria-label="Tìm theo tên ảnh" maxLength={100} />
       </label>
       <GlassSelect className="photo-folder-select" value={activeFolder ?? ALL_FOLDERS} options={[{ value: ALL_FOLDERS, label: `Tất cả danh mục (${allCount})` }, ...folders.map((folder) => ({ value: folder.folder, label: `${folder.label} (${folder.count})` }))]} onChange={(next) => selectFolder(next === ALL_FOLDERS ? null : next)} ariaLabel="Lọc theo danh mục" />
@@ -233,7 +233,7 @@ export function PhotoGallery() {
 
     {state === "ready" && photos.length === 0 && <div className="photo-state">
       <p className="photo-state-title">{query ? `Không tìm thấy ảnh nào có tên chứa “${query}”.` : `Chưa có ảnh nào${activeFolder !== null ? " trong danh mục này" : ""}.`}</p>
-      {!query && <p>{canManage ? "Bấm “+ Tải ảnh” hoặc tải trực tiếp lên Cloudinary để bắt đầu." : "Ảnh sẽ xuất hiện ở đây khi Admin tải lên."}</p>}
+      {!query && <p>{canManage ? "Bấm “Tải ảnh” hoặc tải trực tiếp lên Cloudinary để bắt đầu." : "Ảnh sẽ xuất hiện ở đây khi Admin tải lên."}</p>}
       {diagnostics && <div className="photo-diagnostics">
         <b>Kiểm tra Cloudinary (chỉ Admin thấy)</b>
         {diagnostics.hint && <p className="photo-diagnostics-hint">{diagnostics.hint}</p>}

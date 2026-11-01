@@ -82,7 +82,7 @@
 .champion-avatar .avatar:not(#_):not(#_):not(#_):not(#_) {
   width: var(--avatar-size);
   height: var(--avatar-size);
-  box-shadow: 0 0 34px 8px rgba(255, 205, 90, 0.72), 0 12px 24px rgba(0, 0, 0, 0.28) !important;
+  box-shadow: 0 0 26px 4px rgba(255, 205, 90, 0.55) !important;
 }
 
 /* Gold medal in the same spot as the runners' medals, scaled to this avatar; it pops in as the crown lands. */
@@ -162,7 +162,7 @@
 .champion-runner .avatar:not(#_):not(#_):not(#_):not(#_) {
   width: var(--runner-avatar);
   height: var(--runner-avatar);
-  box-shadow: 0 0 22px 5px var(--runner-glow), 0 6px 14px rgba(0, 0, 0, 0.26) !important;
+  box-shadow: 0 0 16px 2px var(--runner-glow) !important;
   font-size: 22px;
   animation: championRunnerGlow 2.4s ease-in-out 1500ms infinite;
 }

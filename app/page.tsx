@@ -2518,8 +2518,8 @@ function Members({ members, rankingRows, rankingMonth, eloRows, formByUsername, 
       <div className="panel-head member-panel-head">
         <div><h2>Danh sách thành viên</h2><p>Quản lý thông tin các thành viên CLB.</p></div>
         <div className="member-head-actions">
-          <input className="search" placeholder="⌕  Tìm tên, username, quyền..." value={searchTerm} onChange={(event) => { setSearchTerm(event.target.value); setOpenMenu(null); }} />
-          <button type="button" className="primary member-add-btn" onClick={() => setAdding(true)}>+ <span className="member-add-full">Thêm thành viên</span><span className="member-add-short">Thêm</span></button>
+          <input className="search" placeholder="Tìm tên, username, quyền..." value={searchTerm} onChange={(event) => { setSearchTerm(event.target.value); setOpenMenu(null); }} />
+          <button type="button" className="primary member-add-btn" onClick={() => setAdding(true)}><span className="plus-icon" aria-hidden="true" /><span className="member-add-full">Thêm thành viên</span><span className="member-add-short">Thêm</span></button>
         </div>
       </div>
       {roleNotice && <div className="member-role-notice">{roleNotice}</div>}
