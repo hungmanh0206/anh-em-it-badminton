@@ -19,6 +19,10 @@
   --glass-lift: 0 2px 6px rgba(62, 47, 18, 0.05), 0 16px 38px rgba(62, 47, 18, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.85);
   --glass-lift-card: 0 1px 2px rgba(62, 47, 18, 0.05), 0 6px 16px rgba(62, 47, 18, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --glass-blur: blur(18px) saturate(160%);
+  --pill-tray: rgba(255, 255, 255, 0.5);
+  --pill: rgba(60, 48, 28, 0.07);
+  --pill-hover: rgba(60, 48, 28, 0.13);
+  --pill-text: #4a4133;
   --button-off: rgba(60, 48, 28, 0.08);
   --button-off-text: rgba(26, 20, 8, 0.52);
   --gold-glass: linear-gradient(180deg, rgba(255, 220, 125, 0.76), rgba(255, 190, 30, 0.62));
@@ -397,11 +401,57 @@ body::before {
 }
 
 /* White buttons and small floating blocks. */
-:is(.soft-btn, .secondary, .skip, .schedule-filter button):not(:disabled):not(#_),
+:is(.soft-btn, .secondary, .skip):not(:disabled):not(#_),
 :is(.member-menu, .elo-guide-example, .month-close-card, .history-match-row, .schedule-relaxed-note, .photo-state, .photo-diagnostics, .photo-dropzone, .photo-list, .photo-upload-item, .photo-view-toggle):not(#_) {
   box-shadow: var(--glass-lift-card) !important;
 }
 
 :is(.elo-guide-example, .month-close-card, .history-match-row, .schedule-relaxed-note, .photo-state, .photo-diagnostics, .photo-dropzone, .photo-list, .photo-upload-item):not(#_) {
   background-color: var(--glass-card) !important;
+}
+
+/* Schedule library: glass pills on one tray. */
+.schedule-filter:not(#_):not(#_) {
+  gap: 8px !important;
+  padding: 12px 14px !important;
+  border-radius: 18px;
+  background: var(--pill-tray);
+  box-shadow: var(--glass-lift-card);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+.schedule-filter button:not(.active):not(#_):not(#_) {
+  background: var(--pill) !important;
+  box-shadow: none !important;
+  color: var(--pill-text) !important;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.schedule-filter button:not(.active):not(:disabled):not(#_):not(#_):hover {
+  background: var(--pill-hover) !important;
+  transform: translateY(-1px);
+}
+
+.schedule-filter button:not(#_):not(#_) {
+  min-width: 84px;
+  padding-block: 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.schedule-filter button:disabled:not(#_):not(#_) {
+  opacity: 0.46;
+}
+
+@media (max-width: 800px) {
+  .schedule-filter:not(#_):not(#_) {
+    padding: 10px !important;
+  }
+
+  .schedule-filter button:not(#_):not(#_) {
+    min-width: 0;
+    padding: 9px 2px;
+    font-size: 11.5px;
+  }
 }
