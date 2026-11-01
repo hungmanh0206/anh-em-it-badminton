@@ -1,0 +1,130 @@
+/* Home's three steps: a horizontal stepper in its own glass block. */
+.workflow {
+  --step-idle: rgba(60, 48, 28, 0.1);
+  --step-idle-text: rgba(26, 20, 8, 0.62);
+  --step-track: rgba(60, 48, 28, 0.12);
+  --step-size: 34px;
+}
+
+:root[data-theme="dark"] .workflow {
+  --step-idle: rgba(255, 255, 255, 0.11);
+  --step-idle-text: rgba(255, 250, 240, 0.7);
+  --step-track: rgba(255, 255, 255, 0.13);
+}
+
+.workflow:not(#_):not(#_) {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  padding: 16px 12px 14px;
+  border: 0 !important;
+  border-radius: 16px;
+  background: var(--glass-block) !important;
+  box-shadow: var(--glass-lift) !important;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+.workflow button:not(#_):not(#_) {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0;
+  background: none !important;
+  box-shadow: none !important;
+  color: var(--step-idle-text);
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.workflow button span:not(#_):not(#_) {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: var(--step-size);
+  height: var(--step-size);
+  margin: 0;
+  border: 0 !important;
+  border-radius: 50%;
+  background: var(--step-idle) !important;
+  box-shadow: none !important;
+  color: var(--step-idle-text);
+  font-size: 14px;
+  font-weight: 900;
+  transition: transform 260ms ease, box-shadow 260ms ease, background 260ms ease;
+}
+
+.workflow button:is(.current, .done):not(#_):not(#_) {
+  color: var(--bar-text);
+}
+
+.workflow button:is(.current, .done) span:not(#_):not(#_) {
+  background: var(--gold-glass) !important;
+  color: #3d2500;
+}
+
+.workflow button.current span:not(#_):not(#_) {
+  box-shadow: 0 0 14px rgba(255, 183, 0, 0.5) !important;
+  transform: scale(1.1);
+}
+
+.workflow button.locked:not(#_):not(#_) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.workflow button:not(.locked, .current):hover span:not(#_):not(#_) {
+  transform: scale(1.08);
+}
+
+/* The link into a step: a track, then a gold fill that runs along it once the step before is done. */
+.workflow button + button::before,
+.workflow button + button::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--step-size) / 2 - 1.5px);
+  right: calc(50% + var(--step-size) / 2 + 10px);
+  left: calc(-50% + var(--step-size) / 2 + 10px);
+  height: 3px;
+  border-radius: 3px;
+  background: var(--step-track);
+}
+
+.workflow button + button::after {
+  background: linear-gradient(90deg, #f7b92e, #ffd566);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 520ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.workflow button.done + button::after {
+  transform: scaleX(1);
+}
+
+@media (max-width: 560px) {
+  .workflow {
+    --step-size: 30px;
+  }
+
+  .workflow:not(#_):not(#_) {
+    padding: 13px 6px 11px;
+  }
+
+  .workflow button:not(#_):not(#_) {
+    gap: 6px;
+    font-size: 12.5px;
+  }
+
+  .workflow button span:not(#_):not(#_) {
+    font-size: 13px;
+  }
+}
