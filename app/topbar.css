@@ -102,8 +102,11 @@
 
 /* The ids beat the bare "nav button" rules of the old sidebar. */
 .topbar-nav button:not(#_) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   width: auto;
-  padding: 8px 9px;
+  padding: 8px 7px;
   border: 0;
   border-radius: 9px;
   background: none;
@@ -142,7 +145,12 @@
   outline-offset: 2px;
 }
 
-.topbar-nav button:not(#_) .app-icon,
+.topbar-nav button:not(#_) .app-icon {
+  flex: 0 0 auto;
+  width: 19px;
+  height: 19px;
+}
+
 .topbar-nav button:not(#_) .topbar-nav-short {
   display: none;
 }
@@ -375,6 +383,35 @@ button.topbar-champion:hover {
   }
 }
 
+/* Keeping icons and names of all eight pages on one row on narrower screens. */
+@media (max-width: 1140px) {
+  .topbar-nav button:not(#_) {
+    gap: 4px;
+    padding: 8px 5px;
+    font-size: 13px;
+  }
+
+  .topbar-nav button:not(#_) .app-icon {
+    width: 17px;
+    height: 17px;
+  }
+}
+
+@media (max-width: 1040px) {
+  .topbar-brand b,
+  .topbar-brand small {
+    display: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .topbar-nav button:not(#_) {
+    gap: 3px;
+    padding: 8px 3px;
+    font-size: 12.5px;
+  }
+}
+
 /* ---------- Phones and iPad mini: pages in a bottom bar ---------- */
 @media (max-width: 900px), (max-height: 480px) and (max-width: 950px) {
   :root {
@@ -428,6 +465,7 @@ button.topbar-champion:hover {
   .topbar-nav button:not(#_) {
     display: grid;
     flex: 1 1 0;
+    align-content: center;
     justify-items: center;
     gap: 3px;
     min-width: 0;
