@@ -179,8 +179,8 @@ function Fireworks() {
   return <canvas ref={canvasRef} className="champion-fireworks" aria-hidden="true" />;
 }
 
-// Centre-screen congratulations for the month's champion; a tap anywhere or Esc closes it.
-export function ChampionCelebration({ avatar, crown, name, onClose }: { avatar: ReactNode; crown: ReactNode; name: string; onClose: () => void }) {
+// Centre-screen congratulations for the month's champion, with second and third place smaller below; a tap anywhere or Esc closes it.
+export function ChampionCelebration({ avatar, crown, name, runnersUp, onClose }: { avatar: ReactNode; crown: ReactNode; name: string; runnersUp: { rank: number; name: string; avatar: ReactNode }[]; onClose: () => void }) {
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
     window.addEventListener("keydown", closeOnEscape);
@@ -193,6 +193,10 @@ export function ChampionCelebration({ avatar, crown, name, onClose }: { avatar: 
       <div className="champion-avatar">{crown}{avatar}</div>
       <p>Chúc mừng nhà vô địch</p>
       <h2>{name}</h2>
+      {runnersUp.length > 0 && <div className="champion-runners">{runnersUp.map((runner) => <div className={`champion-runner rank-${runner.rank}`} key={runner.rank}>
+        {runner.avatar}
+        <div><small>{runner.rank === 2 ? "Giải nhì" : "Giải ba"}</small><b>{runner.name}</b></div>
+      </div>)}</div>}
     </div>
   </div>;
 }

@@ -5,6 +5,7 @@
   --celebrate-glow: rgba(255, 183, 0, 0.42);
   --celebrate-close-bg: rgba(255, 255, 255, 0.62);
   --celebrate-close: #3d3528;
+  --celebrate-runner: rgba(255, 255, 255, 0.56);
   position: fixed;
   inset: 0;
   z-index: 120;
@@ -114,6 +115,77 @@
   animation: championTextIn 520ms ease-out 3220ms backwards;
 }
 
+.champion-runners {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  width: min(420px, calc(100vw - 48px));
+  margin-top: 10px;
+}
+
+.champion-runner {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 205px;
+  padding: 9px 14px 9px 9px;
+  border-radius: 18px;
+  background: var(--celebrate-runner);
+  box-shadow: var(--glass-lift-card);
+  text-align: left;
+  animation: championTextIn 520ms ease-out 3420ms backwards;
+}
+
+.champion-runner + .champion-runner {
+  animation-delay: 3560ms;
+}
+
+.champion-runner .avatar:not(#_) {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  font-size: 15px;
+}
+
+/* The medal sits on the avatar's lower edge. */
+.champion-runner::before {
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  left: 37px;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  background: var(--rank-medal-2) center / contain no-repeat;
+}
+
+.champion-runner.rank-3::before {
+  background-image: var(--rank-medal-3);
+}
+
+.champion-runner > div:last-child {
+  display: grid;
+  min-width: 0;
+}
+
+.champion-runner small {
+  color: var(--celebrate-sub);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.champion-runner b {
+  overflow: hidden;
+  color: var(--celebrate-title);
+  font-size: 16px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @keyframes championAvatarIn {
   from {
     opacity: 0;
@@ -181,4 +253,5 @@
   --celebrate-glow: rgba(255, 183, 0, 0.55);
   --celebrate-close-bg: rgba(255, 255, 255, 0.1);
   --celebrate-close: #fffaf0;
+  --celebrate-runner: rgba(255, 255, 255, 0.09);
 }
