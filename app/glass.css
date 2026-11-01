@@ -30,6 +30,7 @@
   --mark-well: rgba(120, 92, 40, 0.13);
   --mark-well-sink: inset 0 2px 5px rgba(90, 65, 20, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.5), 0 1px 0 rgba(255, 255, 255, 0.9);
   --avatar-dome: radial-gradient(circle at 33% 22%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 42%), radial-gradient(circle, transparent 66%, rgba(40, 28, 8, 0.2) 100%);
+  --block-gap: 18px;
   --row-tint: 74%;
   --tile-1: rgba(59, 130, 246, 0.17);
   --tile-2: rgba(34, 197, 94, 0.17);
@@ -737,4 +738,38 @@ input.search:not(#_):not(#_) {
 /* The profile card drops from the bars, so they stay sharp: this blur sits under them (z-index 15). */
 .profile-backdrop:not(#_):not(#_) {
   z-index: 14 !important;
+}
+
+/* Spacing between big blocks: one value per screen size, set here and nowhere else. Every page's column of blocks
+   is a stack using it, so a block never brings its own outer margin. */
+@media (max-width: 1024px) {
+  :root {
+    --block-gap: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  :root {
+    --block-gap: 14px;
+  }
+}
+
+:is(.screen-view, .schedule-library, .schedule-case-list, .elo-page, .photo-page, .rules-page):not(#_):not(#_) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--block-gap);
+}
+
+:is(.screen-view, .schedule-library, .schedule-case-list, .elo-page, .photo-page, .rules-page) > *:not(#_):not(#_):not(#_) {
+  min-width: 0;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.page-tabs + *:not(#_):not(#_) {
+  margin-top: var(--block-gap) !important;
+}
+
+.screen-view > .warning:not(#_):not(#_):not(#_) {
+  margin-inline: 0 !important;
 }
