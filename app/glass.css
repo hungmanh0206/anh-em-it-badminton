@@ -7,7 +7,7 @@
   --glass-blob-3: rgba(110, 180, 255, 0.2);
   --glass-block: rgba(255, 255, 255, 0.56);
   --glass-card: rgba(255, 255, 255, 0.66);
-  --glass-solid: rgba(255, 255, 255, 0.82);
+  --glass-solid: rgba(255, 255, 255, 0.93);
   --glass-line: rgba(90, 70, 30, 0.1);
   --glass-lift: 0 2px 6px rgba(62, 47, 18, 0.05), 0 16px 38px rgba(62, 47, 18, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.85);
   --glass-lift-card: 0 1px 2px rgba(62, 47, 18, 0.05), 0 6px 16px rgba(62, 47, 18, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -106,10 +106,32 @@ body::before {
 .checkin-modal:not(#_),
 .history-detail:not(#_),
 .elo-guide-modal:not(#_),
-.photo-sheet:not(#_) {
+.photo-sheet:not(#_),
+.photo-preview:not(#_),
+.photo-confirm-backdrop > *:not(#_) {
   border-color: transparent !important;
   background: var(--glass-solid) !important;
   box-shadow: var(--glass-lift) !important;
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
+}
+
+/* Every modal is one colour: its header, footer and decorations add none of their own. */
+.history-detail-header:not(#_),
+.elo-guide-header:not(#_),
+.photo-sheet-header:not(#_),
+.photo-sheet-footer:not(#_),
+.photo-preview-header:not(#_),
+.profile-hero-card:not(#_) {
+  border-color: var(--glass-line) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.member-profile-popover:not(#_)::before,
+.member-profile-popover:not(#_)::after,
+.checkin-modal:not(#_)::before,
+.checkin-modal:not(#_)::after,
+.confirm-modal:not(#_)::after {
+  content: none !important;
 }

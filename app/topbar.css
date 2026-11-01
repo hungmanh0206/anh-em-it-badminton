@@ -11,6 +11,7 @@
   --bar-muted: #6f6657;
   --bar-accent: #a66c00;
   --bar-track: rgba(60, 48, 28, 0.12);
+  --bar-thumb: rgba(255, 255, 255, 0.95);
 }
 
 .topbar {
@@ -144,39 +145,59 @@
   align-items: center;
 }
 
-/* The two pictures of the switch, one over the other, cross-fading. */
+/* Glass pill with the sun and moon; the round thumb slides under the active one. */
 .topbar-theme button {
   position: relative;
-  width: 76px;
-  height: 42px;
+  display: flex;
+  align-items: center;
+  width: 72px;
+  height: 38px;
   padding: 0;
   border: 0;
   border-radius: 999px;
-  background: none;
+  background: var(--bar-track);
+  box-shadow: inset 0 1px 3px rgba(26, 25, 22, 0.16);
   cursor: pointer;
 }
 
-.topbar-theme span {
+.topbar-theme-thumb {
   position: absolute;
-  inset: 0;
+  top: 3px;
+  left: 3px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bar-thumb);
+  box-shadow: 0 2px 6px rgba(26, 25, 22, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: transform 240ms cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+
+.topbar-theme button[aria-checked="true"] .topbar-theme-thumb {
+  transform: translateX(34px);
+}
+
+.topbar-theme span {
+  position: relative;
+  flex: 1 1 0;
+  height: 22px;
   background: center / contain no-repeat;
   transition: opacity 220ms ease;
 }
 
-.topbar-theme .topbar-theme-light {
-  background-image: url("/app-icons/theme-light.png?v=theme-switch-20261101");
+.topbar-theme .topbar-theme-sun {
+  background-image: url("/app-icons/sun.png?v=theme-icons-20261101");
 }
 
-.topbar-theme .topbar-theme-dark {
-  background-image: url("/app-icons/theme-dark.png?v=theme-switch-20261101");
-  opacity: 0;
+.topbar-theme .topbar-theme-moon {
+  background-image: url("/app-icons/moon.png?v=theme-icons-20261101");
+  opacity: 0.55;
 }
 
-.topbar-theme button[aria-checked="true"] .topbar-theme-light {
-  opacity: 0;
+.topbar-theme button[aria-checked="true"] .topbar-theme-sun {
+  opacity: 0.55;
 }
 
-.topbar-theme button[aria-checked="true"] .topbar-theme-dark {
+.topbar-theme button[aria-checked="true"] .topbar-theme-moon {
   opacity: 1;
 }
 
@@ -497,8 +518,21 @@
   }
 
   .topbar-theme button {
-    width: 56px;
-    height: 31px;
+    width: 62px;
+    height: 34px;
+  }
+
+  .topbar-theme-thumb {
+    width: 28px;
+    height: 28px;
+  }
+
+  .topbar-theme button[aria-checked="true"] .topbar-theme-thumb {
+    transform: translateX(28px);
+  }
+
+  .topbar-theme span {
+    height: 20px;
   }
 
   .topbar-profile-btn {

@@ -19,6 +19,6 @@ export function ThemeToggle() {
   };
   const dark = theme === "dark";
   return <div className="topbar-theme">
-    <button type="button" role="switch" aria-checked={dark} aria-label="Giao diện tối" title={dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"} onClick={() => choose(dark ? "light" : "dark")}><span className="topbar-theme-light" /><span className="topbar-theme-dark" /></button>
+    <button type="button" role="switch" aria-checked={dark} aria-label="Giao diện tối" title={dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"} onClick={() => choose(dark ? "light" : "dark")}><i className="topbar-theme-thumb" /><span className="topbar-theme-sun" /><span className="topbar-theme-moon" /></button>
   </div>;
 }

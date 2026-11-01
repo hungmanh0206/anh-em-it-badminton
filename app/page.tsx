@@ -1476,13 +1476,12 @@ function Rules({ members }: { members: Member[] }) {
     <section className="rules-section" aria-labelledby="rules-schedule-title">
       <h2 className="rules-section-title" id="rules-schedule-title">Cấu trúc lịch đấu hằng tuần</h2>
       <div className="rules-pane rules-schedule">
-        <p className="rules-lead">Lịch chỉ được tạo khi có từ 5 thành viên tham gia. Với buổi 5 người, hệ thống dùng lịch riêng không phân Level; từ 6 người trở lên sẽ chọn thư viện lịch phù hợp theo tổng số người và số lượng Level 1 / Level 2 của buổi đó.</p>
+        <p className="rules-lead">Lịch chỉ được tạo khi có từ 5 thành viên tham gia. Với buổi 5 người, hệ thống dùng lịch riêng không phân Level; từ 6 người trở lên sẽ chọn thư viện lịch phù hợp theo tổng số người và số lượng Level 1 / Level 2 của buổi đó. Nếu một trường hợp không thể áp dụng đủ mọi quy tắc, lịch sẽ ưu tiên các điều kiện khả thi theo thứ tự: đủ 4 trận mỗi người, hạn chế lặp đồng đội, rồi mới đến cân bằng tuyệt đối theo level.</p>
         <div className="rules-match-types">
           <div><b><span className="level-one">Level 1</span> + <span className="level-one">Level 1</span></b><span className="rules-vs">VS</span><b><span className="level-one">Level 1</span> + <span className="level-one">Level 1</span></b></div>
           <div><b><span className="level-one">Level 1</span> + <span className="level-two">Level 2</span></b><span className="rules-vs">VS</span><b><span className="level-one">Level 1</span> + <span className="level-two">Level 2</span></b></div>
           <div><b><span className="level-two">Level 2</span> + <span className="level-two">Level 2</span></b><span className="rules-vs">VS</span><b><span className="level-two">Level 2</span> + <span className="level-two">Level 2</span></b></div>
         </div>
-        <p className="rules-note">Nếu một trường hợp không thể áp dụng đủ mọi quy tắc, lịch sẽ ưu tiên các điều kiện khả thi theo thứ tự: đủ 4 trận mỗi người, hạn chế lặp đồng đội, rồi mới đến cân bằng tuyệt đối theo level.</p>
       </div>
     </section>
 
