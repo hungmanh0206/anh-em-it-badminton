@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { PHOTO_FORMATS, PHOTO_MAX_BYTES } from "@/lib/photos/assets";
 import { folderLabel, sanitizeFolderInput } from "@/lib/photos/folders";
 import { backdropDismissProps, Presence } from "@/app/ui/modal";
+import { GlassSelect } from "@/app/ui/glass-select";
 import { PageHero } from "@/app/ui/page-hero";
 
 type Photo = {
@@ -209,13 +210,8 @@ export function PhotoGallery() {
         <span aria-hidden="true">⌕</span>
         <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm theo tên ảnh…" aria-label="Tìm theo tên ảnh" maxLength={100} />
       </label>
-      <select className="photo-folder-select" value={activeFolder ?? ALL_FOLDERS} onChange={(event) => selectFolder(event.target.value === ALL_FOLDERS ? null : event.target.value)} aria-label="Lọc theo danh mục">
-        <option value={ALL_FOLDERS}>Tất cả danh mục ({allCount})</option>
-        {folders.map((folder) => <option key={folder.folder} value={folder.folder}>{folder.label} ({folder.count})</option>)}
-      </select>
-      <select className="photo-sort-select" value={sort} onChange={(event) => selectSort(event.target.value as PhotoSort)} aria-label="Sắp xếp ảnh">
-        {SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-      </select>
+      <GlassSelect className="photo-folder-select" value={activeFolder ?? ALL_FOLDERS} options={[{ value: ALL_FOLDERS, label: `Tất cả danh mục (${allCount})` }, ...folders.map((folder) => ({ value: folder.folder, label: `${folder.label} (${folder.count})` }))]} onChange={(next) => selectFolder(next === ALL_FOLDERS ? null : next)} ariaLabel="Lọc theo danh mục" />
+      <GlassSelect className="photo-sort-select" value={sort} options={SORT_OPTIONS} onChange={(next) => selectSort(next as PhotoSort)} ariaLabel="Sắp xếp ảnh" />
       <div className="photo-view-toggle" role="group" aria-label="Chế độ xem">
         <button type="button" className={view === "grid" ? "active" : ""} aria-pressed={view === "grid"} onClick={() => selectView("grid")} title="Dạng lưới" aria-label="Dạng lưới">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2" /><rect x="13" y="3" width="8" height="8" rx="2" /><rect x="3" y="13" width="8" height="8" rx="2" /><rect x="13" y="13" width="8" height="8" rx="2" /></svg>
@@ -305,9 +301,7 @@ function PhotoPagination({ page, pageCount, from, to, total, disabled, onPage, s
   return <div className="photo-pagination" role="navigation" aria-label="Phân trang kho ảnh">
     <div className="photo-pagination-meta">
       <span className="photo-pagination-info">{from}–{to} / {total} ảnh</span>
-      <select className="photo-size-select" value={String(size)} onChange={(event) => onSize(event.target.value === "all" ? "all" : Number(event.target.value))} disabled={disabled} aria-label="Số ảnh mỗi trang">
-        {sizeOptions.map((option) => <option key={option} value={String(option)}>{option === "all" ? "Tất cả" : `${option} / trang`}</option>)}
-      </select>
+      <GlassSelect className="photo-size-select" value={String(size)} options={sizeOptions.map((option) => ({ value: String(option), label: option === "all" ? "Tất cả" : `${option} / trang` }))} onChange={(next) => onSize(next === "all" ? "all" : Number(next))} disabled={disabled} ariaLabel="Số ảnh mỗi trang" />
     </div>
     {pageCount > 1 && <div className="photo-pagination-pages">
       <button type="button" onClick={() => onPage(page - 1)} disabled={disabled || page <= 1} aria-label="Trang trước">‹</button>
@@ -716,10 +710,7 @@ function PhotoUploadModal({ folders, defaultFolder, onClose, onUploaded }: { fol
       </header>
       <div className="photo-sheet-body">
         <label className="photo-field">Danh mục
-          <select value={folderChoice} onChange={(event) => setFolderChoice(event.target.value)} disabled={busy}>
-            {folders.map((folder) => <option key={folder.folder} value={folder.folder}>{folder.label} ({folder.folder || "thư mục gốc"})</option>)}
-            <option value={NEW_FOLDER}>+ Danh mục mới…</option>
-          </select>
+          <GlassSelect value={folderChoice} options={[...folders.map((folder) => ({ value: folder.folder, label: `${folder.label} (${folder.folder || "thư mục gốc"})` })), { value: NEW_FOLDER, label: "+ Danh mục mới…" }]} onChange={setFolderChoice} disabled={busy} ariaLabel="Danh mục" />
         </label>
         {folderChoice === NEW_FOLDER && <label className="photo-field">Tên thư mục mới
           <input value={newFolder} onChange={(event) => setNewFolder(event.target.value)} placeholder="ví dụ 2026/week-05" disabled={busy} />

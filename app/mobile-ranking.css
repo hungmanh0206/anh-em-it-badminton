@@ -319,7 +319,7 @@
     width: 148px;
   }
 
-  .ranking-toolbar .ranking-filter-row select {
+  .ranking-toolbar .ranking-filter-row .glass-select {
     width: 100% !important;
     min-width: 0 !important;
     min-height: 38px;
@@ -539,7 +539,7 @@
     width: 136px;
   }
 
-  .ranking-toolbar .ranking-filter-row select {
+  .ranking-toolbar .ranking-filter-row .glass-select {
     padding-inline: 9px 26px;
   }
 
@@ -900,7 +900,7 @@
   align-items: center !important;
 }
 
-.ranking-toolbar .ranking-filter-row select,
+.ranking-toolbar .ranking-filter-row .glass-select,
 .ranking-toolbar .ranking-export-btn {
   box-sizing: border-box;
   height: 40px !important;
@@ -909,7 +909,7 @@
   font-size: 13px !important;
 }
 
-.ranking-toolbar .ranking-filter-row select {
+.ranking-toolbar .ranking-filter-row .glass-select {
   padding: 0 10px !important;
   font-weight: 700;
 }

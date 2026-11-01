@@ -1410,7 +1410,7 @@
         color: hsla(24, 67%, 78%, 1) !important
     }
 }
-:root[data-theme="dark"] .ranking-toolbar .ranking-filter-row select, :root[data-theme="dark"] .ranking-toolbar .ranking-export-btn {
+:root[data-theme="dark"] .ranking-toolbar .ranking-filter-row .glass-select, :root[data-theme="dark"] .ranking-toolbar .ranking-export-btn {
     border-radius: 12px !important
 }
 :root[data-theme="dark"] .attendance-count-pill b {

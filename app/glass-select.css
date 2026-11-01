@@ -1,0 +1,107 @@
+/* The app's dropdown (app/ui/glass-select.tsx): a glass field and a frosted list, in both themes. */
+.glass-select:not(#_) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 12px 0 14px;
+  border-radius: 12px;
+  background: var(--glass-card);
+  box-shadow: var(--glass-lift-card);
+  color: var(--bar-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow 160ms ease, opacity 160ms ease;
+}
+
+.glass-select:not(#_):hover:not(:disabled) {
+  box-shadow: var(--glass-lift-card), 0 0 0 2px rgba(255, 183, 0, 0.26);
+}
+
+.glass-select:not(#_):focus-visible,
+.glass-select[aria-expanded="true"]:not(#_) {
+  outline: 0;
+  box-shadow: var(--glass-lift-card), 0 0 0 2px rgba(255, 183, 0, 0.55);
+}
+
+.glass-select:not(#_):disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.glass-select > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.glass-select > svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: var(--bar-accent);
+  transition: transform 160ms ease;
+}
+
+.glass-select[aria-expanded="true"] > svg {
+  transform: rotate(180deg);
+}
+
+.history-filters label {
+  min-width: 180px;
+}
+
+.glass-select-list {
+  position: fixed;
+  z-index: 300;
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 14px;
+  outline: 0;
+  background: var(--glass-modal);
+  box-shadow: var(--glass-lift);
+  list-style: none;
+  -webkit-backdrop-filter: var(--glass-modal-blur);
+  backdrop-filter: var(--glass-modal-blur);
+  animation: glass-select-in 140ms ease-out;
+}
+
+.glass-select-list li {
+  overflow: hidden;
+  padding: 10px 12px;
+  border-radius: 9px;
+  color: var(--bar-text);
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.glass-select-list li.is-active {
+  background: var(--bar-track);
+}
+
+.glass-select-list li[aria-selected="true"] {
+  background: rgba(255, 190, 40, 0.2);
+  color: var(--bar-accent);
+  font-weight: 800;
+}
+
+@keyframes glass-select-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
