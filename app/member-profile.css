@@ -109,27 +109,3 @@
 .member-avatar-actions .member-avatar-remove {
   color: #c2413b !important;
 }
-
-/* Champion on the sidebar card. */
-.sidebar .club-top1 .club-top1-winner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-width: 0;
-}
-
-.sidebar .club-top1 .club-top1-winner > div:last-child {
-  display: grid;
-  gap: 3px;
-  min-width: 0;
-}
-
-.sidebar .club-top1 .club-top1-winner .avatar.small {
-  flex: 0 0 auto;
-  width: 38px !important;
-  height: 38px !important;
-  min-width: 38px !important;
-  box-shadow: 0 0 0 2px rgba(255, 214, 109, 0.75), 0 6px 14px rgba(0, 0, 0, 0.28) !important;
-}

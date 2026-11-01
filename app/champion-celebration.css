@@ -118,23 +118,3 @@
     filter: drop-shadow(0 0 26px rgba(255, 214, 109, 0.75));
   }
 }
-
-/* The sidebar card that opens it. */
-.sidebar button.club-top1 {
-  width: 100%;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: transform 160ms ease, border-color 160ms ease;
-}
-
-.sidebar button.club-top1:hover {
-  border-color: rgba(255, 214, 109, 0.7) !important;
-  transform: translateY(-1px);
-}
-
-.sidebar button.club-top1:focus-visible {
-  outline: 2px solid rgba(255, 214, 109, 0.8);
-  outline-offset: 2px;
-}

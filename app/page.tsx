@@ -87,6 +87,16 @@ const attendeeCountFromAttendances = (attendances: HistorySessionRow["attendance
     ? rows.filter((row) => row.choice === "attending").length
     : rows[0]?.count || 0;
 };
+const navItems: { screen: Screen; icon: AppIconName; label: string; short: string }[] = [
+  { screen: "home", icon: "home", label: "Home", short: "Home" },
+  { screen: "members", icon: "members", label: "Thành viên", short: "T.viên" },
+  { screen: "schedules", icon: "schedule", label: "Lịch thi đấu", short: "Lịch đấu" },
+  { screen: "ranking", icon: "ranking", label: "Bảng xếp hạng", short: "BXH" },
+  { screen: "elo", icon: "target", label: "ELO", short: "ELO" },
+  { screen: "history", icon: "history", label: "Lịch sử thi đấu", short: "Lịch sử" },
+  { screen: "photos", icon: "photos", label: "Kho ảnh", short: "Kho ảnh" },
+  { screen: "rules", icon: "rules", label: "Thể lệ", short: "Thể lệ" },
+];
 const screenTitles: Record<Screen, string> = {
   home: "Home",
   members: "Quản lý thành viên",
@@ -341,7 +351,7 @@ export default function Home() {
   const [loginError, setLoginError] = useState("");
   const [spinning, setSpinning] = useState(false);
   const [spinTarget, setSpinTarget] = useState<number | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>("draft");
@@ -1197,25 +1207,21 @@ export default function Home() {
   }, [activeUser, allAttendanceDone, allDrawn, canSchedule, currentScheduleScenario, drawOpen, screen, sessionStatus, signedInMemberPresent]);
 
   useEffect(() => {
-    const trigger = document.querySelector(".welcome-member");
-    const toggleProfile = () => setShowProfileCard((open) => !open);
     let pointerDownTarget: EventTarget | null = null;
     const rememberPointerDown = (event: PointerEvent) => { pointerDownTarget = event.target; };
     const closeOutside = (event: MouseEvent) => {
       const target = pointerDownTarget ?? event.target;
       pointerDownTarget = null;
       if (!(target instanceof Element)) return;
-      if (!target.closest(".welcome-member, .member-profile-popover")) setShowProfileCard(false);
-      if (!target.closest(".sidebar, .mobile-menu")) setSidebarOpen(false);
+      if (!target.closest(".topbar-profile, .member-profile-popover")) setShowProfileCard(false);
+      if (!target.closest(".topbar-profile")) setProfileMenuOpen(false);
       if (target.closest(".modal-backdrop") && !target.closest(".checkin-modal, .confirm-modal, .history-detail, .member-editor, .member-detail-modal, .elo-guide-modal, .photo-sheet, .photo-preview, .photo-confirm-backdrop")) {
         (document.querySelector(".presence:not(.presence-leaving) .modal-backdrop .modal-close") as HTMLButtonElement | null)?.click();
       }
     };
-    trigger?.addEventListener("click", toggleProfile);
     document.addEventListener("pointerdown", rememberPointerDown);
     document.addEventListener("click", closeOutside);
     return () => {
-      trigger?.removeEventListener("click", toggleProfile);
       document.removeEventListener("pointerdown", rememberPointerDown);
       document.removeEventListener("click", closeOutside);
     };
@@ -1229,9 +1235,6 @@ export default function Home() {
   const isAdmin = currentUser.role === "admin";
   const canManageSession = isScoreManagerRole(currentUser.role);
   const canManageScores = canManageSession;
-  const welcomeRows = championRankingRows.length ? championRankingRows : previousRankingRows.length ? previousRankingRows : rankingRows;
-  const welcomeRank = welcomeRows.findIndex((row) => row.name === currentUser.name) + 1;
-  const welcomeRankClass = welcomeRank > 0 && welcomeRank <= 3 ? `rank-${welcomeRank}` : "rank-none";
   const profileRows = ENABLE_TEST_FLOW ? (liveRankingRows.length ? liveRankingRows : currentRankingRows) : (currentRankingRows.length ? currentRankingRows : rankingRows);
   const profileAchievementMonth = ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel;
   const profileRank = profileRows.findIndex((row) => row.name === currentUser.name) + 1;
@@ -1240,26 +1243,28 @@ export default function Home() {
   const profileRankClass = profileHasRankingData && profileRank > 0 && profileRank <= 3 ? `rank-${profileRank}` : "rank-none";
   const profileElo = eloRows.find((row) => row.username === currentUser.username || row.name === currentUser.name) ?? null;
   const champion = championRankingRows[0];
+  const championMonthLabel = championRankingLabel.split(",")[0].toUpperCase();
 
-  return <main className={"app-shell " + (sidebarOpen ? "sidebar-open" : "")}>
-    <aside className="sidebar">
-      <div className="brand"><span className="brand-mark" aria-hidden="true" /><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></div>
-      <nav onClick={() => setSidebarOpen(false)}>
-        <button className={screen === "home" ? "active" : ""} onClick={() => setScreen("home")}><AppIcon name="home" className="nav-app-icon" /> Home</button>
-        {isAdmin && <button className={screen === "members" ? "active" : ""} onClick={() => setScreen("members")}><AppIcon name="members" className="nav-app-icon" /> Thành viên</button>}
-        <button className={screen === "schedules" ? "active" : ""} onClick={() => setScreen("schedules")}><AppIcon name="schedule" className="nav-app-icon" /> Lịch thi đấu</button>
-        <button className={screen === "ranking" ? "active" : ""} onClick={() => { setScreen("ranking"); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); }}><AppIcon name="ranking" className="nav-app-icon" /> Bảng xếp hạng</button>
-        <button className={screen === "elo" ? "active" : ""} onClick={() => setScreen("elo")}><AppIcon name="target" className="nav-app-icon" /> ELO</button>
-        <button className={screen === "history" ? "active" : ""} onClick={() => setScreen("history")}><AppIcon name="history" className="nav-app-icon" /> Lịch sử thi đấu</button>
-        <button className={screen === "photos" ? "active" : ""} onClick={() => setScreen("photos")}><AppIcon name="photos" className="nav-app-icon" /> Kho ảnh</button>
-        <button className={screen === "rules" ? "active" : ""} onClick={() => setScreen("rules")}><AppIcon name="rules" className="nav-app-icon" /> Thể lệ</button>
-      </nav>
-      <div className="club-card"><AppIcon name="trophy" className="club-card-icon" /><b>{currentMonthLabel}</b><small>{progress.completed} / {progress.total} buổi đã hoàn thành</small><div className="progress"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></div>{champion ? <button type="button" className="club-top1" aria-label={`Chúc mừng nhà vô địch ${champion.name}`} onClick={() => { setSidebarOpen(false); setCelebrating(true); }}><small>NHÀ VÔ ĐỊCH {championRankingLabel.toUpperCase()}</small><div className="club-top1-winner"><div className={avatarClassName("avatar small", champion)} style={avatarStyle(champion)}>{champion.initials}</div><div><b><AppIcon name="crown" className="inline-app-icon" /> {champion.name}</b><span>{`${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số`}</span></div></div></button> : <div className="club-top1 empty"><small>NHÀ VÔ ĐỊCH {championRankingLabel.toUpperCase()}</small><b>Chưa ghi danh</b><span>{`Chưa có dữ liệu BXH ${championRankingLabel}.`}</span></div>}</div>
-      <div className="profile"><div className={avatarClassName("avatar small", currentUser)} style={avatarStyle(currentUser)}>{currentUser.initials}</div><div><b>{currentUser.name}</b><small>{memberRoleLabel(currentUser.role)}</small></div><button className="logout" aria-label="Đăng xuất" title="Đăng xuất" onClick={() => { setSidebarOpen(false); setLogoutConfirmOpen(true); }}>Đăng xuất</button></div>
-    </aside>
+  return <main className="app-shell">
+    <div className="topbar">
+      <div className="topbar-main">
+        <div className="topbar-brand"><span className="brand-mark" aria-hidden="true" /><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></div>
+        <nav className="topbar-nav" aria-label="Các trang">
+          {navItems.filter((item) => item.screen !== "members" || isAdmin).map((item) => <button key={item.screen} className={screen === item.screen ? "active" : ""} aria-current={screen === item.screen ? "page" : undefined} aria-label={item.label} onClick={() => { setScreen(item.screen); if (item.screen === "ranking") setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); }}><AppIcon name={item.icon} /><span className="topbar-nav-full">{item.label}</span><span className="topbar-nav-short">{item.short}</span></button>)}
+        </nav>
+      </div>
+      <div className="topbar-status">
+        <div className="topbar-progress"><AppIcon name="trophy" /><div className="topbar-progress-text"><b>{currentMonthLabel.replace(", ", "/")}</b><small>{progress.completed} / {progress.total} buổi hoàn thành</small></div><span className="topbar-percent">{progress.total ? Math.round((progress.completed / progress.total) * 100) : 0}%</span></div>
+        {champion ? <button type="button" className="topbar-champion" aria-label={`Chúc mừng nhà vô địch ${champion.name}`} onClick={() => setCelebrating(true)}><div className={avatarClassName("avatar small", champion)} style={avatarStyle(champion)}>{champion.initials}</div><div className="topbar-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b><AppIcon name="crown" /> {champion.name} · {champion.points} điểm</b></div></button> : <div className="topbar-champion"><div className="topbar-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b>Chưa ghi danh</b></div></div>}
+        <div className="topbar-profile">
+          <button type="button" className="topbar-profile-btn" aria-label={`Tài khoản ${currentUser.name}`} aria-haspopup="menu" aria-expanded={profileMenuOpen} onClick={() => setProfileMenuOpen((open) => !open)}><div className={avatarClassName("avatar small", currentUser)} style={avatarStyle(currentUser)}>{currentUser.initials}</div><div className="topbar-profile-text"><b>{currentUser.name}</b><small>{memberRoleLabel(currentUser.role)} · Level {currentUser.level}</small></div><svg className="topbar-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></button>
+          {profileMenuOpen && <div className="topbar-menu" role="menu"><button role="menuitem" onClick={() => { setProfileMenuOpen(false); setShowProfileCard(true); }}>Hồ sơ của tôi</button><button role="menuitem" className="topbar-menu-logout" onClick={() => { setProfileMenuOpen(false); setLogoutConfirmOpen(true); }}>Đăng xuất</button></div>}
+        </div>
+      </div>
+    </div>
     <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setActiveUser(null); }} />}</Presence>
     <section className="content">
-      <header><div className="title-group"><button className="mobile-menu" aria-label="Mở menu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}><span /><span /><span /></button><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div><p className={`welcome-member ${welcomeRankClass}`} aria-label={`Xin chào ${currentUser.name}, Level ${currentUser.level}`}><span className={avatarClassName("welcome-avatar", currentUser)} style={avatarStyle(currentUser)} aria-hidden="true">{welcomeRank > 0 && welcomeRank <= 3 ? welcomeRank : currentUser.initials}</span><span className="welcome-text"><span className="welcome-line"><span className="welcome-copy">Xin chào!</span><b>{currentUser.name}</b></span><span className="welcome-level">Level {currentUser.level}</span></span></p></header>
+      <header><div className="title-group"><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div></header>
       <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} rankingRows={profileRows} rankingMonth={profileAchievementMonth} eloRows={eloRows} formByUsername={formByUsername} onAvatarUpdated={(username, avatarUrl) => { if (avatarUrl) memberAvatars.set(username, avatarUrl); else memberAvatars.delete(username); removeBrowserCache(memberAvatarsCacheKey); setAvatarRevision((revision) => revision + 1); }} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={formByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
         <section className="hero">
           <div className="hero-copy"><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div>

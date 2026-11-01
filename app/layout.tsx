@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./overrides.css";
 import "./member-actions.css";
@@ -6,7 +6,6 @@ import "./responsive-overlays.css";
 import "./welcome-banner.css";
 import "./club-design-system.css";
 import "./schedule-library.css";
-import "./sidebar-polish.css";
 import "./mobile-ranking.css";
 import "./checkin-polish.css";
 import "./ranking-podium.css";
@@ -22,11 +21,9 @@ import "./member-role.css";
 import "./brand-logo.css";
 import "./app-icons.css";
 import "./attendance-mark-classic.css";
-import "./sidebar-profile-compact.css";
 import "./ranking-table-fix.css";
 import "./ranking-spacing-16.css";
 import "./elo-ranking.css";
-import "./welcome-chip-polish.css";
 import "./checkin-modal-clean.css";
 import "./ranking-medal-icons.css";
 import "./ranking-single-card.css";
@@ -40,6 +37,10 @@ import "./motion.css";
 import "./touch-inputs.css";
 import "./member-profile.css";
 import "./champion-celebration.css";
+import "./topbar.css";
+
+// Lets the fixed bars reach the screen edges; they pad themselves for the notch and home indicator.
+export const viewport: Viewport = { viewportFit: "cover" };
 
 export const metadata: Metadata = {
   title: "Anh Em IT — Quản lý CLB Cầu lông",
