@@ -42,11 +42,6 @@
 :root[data-theme="dark"] .point-value {
     color: hsla(251, 56%, 84%, 1) !important
 }
-:root[data-theme="dark"] .wheel:after {
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-top: 18px solid rgba(255, 255, 255, 0.12)
-}
 :root[data-theme="dark"] .member-card.readonly em {
     background: hsla(253, 42%, 17%, 1);
     color: hsla(251, 57%, 87%, 1);
@@ -92,11 +87,6 @@
 }
 :root[data-theme="dark"] .point-value {
     color: hsla(251, 56%, 84%, 1) !important
-}
-:root[data-theme="dark"] .wheel:after {
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-top: 18px solid rgba(255, 255, 255, 0.12)
 }
 :root[data-theme="dark"] .member-card.readonly em {
     background: hsla(253, 42%, 17%, 1);
@@ -351,19 +341,6 @@
 :root[data-theme="dark"] .draw-body {
     background: hsla(252, 42%, 17%, 1);
     border-radius: 10px
-}
-:root[data-theme="dark"] .wheel {
-    border-radius: 50%;
-    background: conic-gradient(#f1bc55 0 45deg,#6f56d9 45deg 90deg,#ed7872 90deg 135deg,#57b695 135deg 180deg,#e89848 180deg 225deg,#537ce8 225deg 270deg,#ae74e5 270deg 315deg,#e661a1 315deg);
-    box-shadow: 0 5px 15px #5944a733
-}
-:root[data-theme="dark"] .wheel-inner {
-    background: hsla(42, 10%, 14%, 1);
-    border-radius: 50%;
-    color: hsla(250, 63%, 89%, 1)
-}
-:root[data-theme="dark"] .wheel-inner small {
-    color: #8c8699
 }
 :root[data-theme="dark"] .tag {
     color: hsla(250, 63%, 89%, 1)
@@ -764,119 +741,6 @@
     linear-gradient(135deg, hsla(42, 10%, 14%, 0.92), rgba(255, 247, 220, 0.189)),
     var(--club-ink-50) !important;
     border-radius: var(--club-radius-lg) !important
-}
-:root[data-theme="dark"] .wheel {
-    border: 10px solid #fff8e7;
-    background: var(--wheel-gradient, conic-gradient(var(--club-gold-500), var(--club-ink-900))) !important;
-    box-shadow: 0 22px 42px rgba(0, 0, 0, 0.48),
-    0 0 0 1px rgba(0, 0, 0, 0.29),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.074) !important
-}
-:root[data-theme="dark"] .wheel::before {
-    border-radius: 999px;
-    border: 1px dashed rgba(255, 255, 255, 0.14);
-    box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0.014),
-    inset 0 0 24px rgba(0, 0, 0, 0.24)
-}
-:root[data-theme="dark"] .wheel::after {
-    border-left-width: 13px !important;
-    border-right-width: 13px !important;
-    border-top-width: 24px !important;
-    border-top-color: var(--club-ink-900) !important
-}
-:root[data-theme="dark"] .wheel-inner {
-    border: 6px solid rgba(255, 183, 0, 0.22);
-    background: radial-gradient(circle at 34% 22%, hsla(42, 10%, 14%, 1), hsla(45, 42%, 17%, 1) 56%, hsla(45, 42%, 17%, 1));
-    color: var(--club-ink-900) !important;
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.38),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.098)
-}
-:root[data-theme="dark"] .wheel-inner b {
-    color: var(--club-ink-900)
-}
-:root[data-theme="dark"] .wheel-inner small {
-    color: var(--club-gold-700) !important
-}
-:root[data-theme="dark"] .wheel-numbers {
-    border-radius: 999px
-}
-:root[data-theme="dark"] .wheel-numbers span {
-    border-radius: 999px;
-    border: 3px solid rgba(255, 255, 255, 0.14);
-    background: hsla(48, 42%, 17%, 1);
-    color: var(--club-ink-900);
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.38),
-    inset 0 0 0 1px rgba(255, 183, 0, 0.22)
-}
-:root[data-theme="dark"] .level-wheel-1 .wheel-numbers span {
-    border-color: rgba(191, 228, 255, 0.9);
-    color: hsla(213, 85%, 75%, 1);
-    box-shadow: 0 8px 18px rgba(29, 127, 242, 0.18),
-    inset 0 0 0 1px rgba(29, 127, 242, 0.22)
-}
-:root[data-theme="dark"] .level-wheel-2 .wheel-numbers span {
-    border-color: rgba(185, 245, 208, 0.9);
-    color: hsla(159, 85%, 72%, 1);
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.43),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.5)
-}
-@media (max-width: 560px) {
-    :root[data-theme="dark"] .wheel {
-        border-width: 8px
-    }
-    :root[data-theme="dark"] .wheel-inner {
-        border-width: 5px
-    }
-}
-:root[data-theme="dark"] .wheel {
-    border: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important
-}
-:root[data-theme="dark"] .wheel-pointer {
-    border-left: 13px solid transparent;
-    border-right: 13px solid transparent;
-    border-top: 25px solid var(--club-ink-900)
-}
-:root[data-theme="dark"] .wheel-disc {
-    border: 10px solid #fff8e7;
-    border-radius: 999px;
-    background: var(--wheel-gradient, conic-gradient(hsla(47, 42%, 17%, 1), hsla(42, 10%, 14%, 1), #ffe39a, hsla(40, 42%, 17%, 1))) !important;
-    box-shadow: 0 22px 42px rgba(0, 0, 0, 0.48),
-    0 0 0 1px rgba(0, 0, 0, 0.29),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.074)
-}
-:root[data-theme="dark"] .wheel-disc::before {
-    border-radius: 999px;
-    border: 1px dashed rgba(184, 118, 14, 0.28);
-    box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0.022),
-    inset 0 0 24px rgba(0, 0, 0, 0.24)
-}
-:root[data-theme="dark"] .wheel .wheel-inner {
-    border-radius: 999px
-}
-:root[data-theme="dark"] .wheel-number.level-1 {
-    border-color: rgba(191, 228, 255, 0.95) !important;
-    color: hsla(213, 85%, 75%, 1) !important;
-    box-shadow: 0 8px 18px rgba(29, 127, 242, 0.18),
-    inset 0 0 0 1px rgba(29, 127, 242, 0.22) !important
-}
-:root[data-theme="dark"] .wheel-number.level-2 {
-    border-color: rgba(185, 245, 208, 0.95) !important;
-    color: hsla(159, 85%, 72%, 1) !important;
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.43),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.5) !important
-}
-:root[data-theme="dark"] .wheel-number.level-open {
-    border-color: rgba(255, 183, 0, 0.55) !important;
-    color: var(--club-gold-700) !important;
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.43),
-    inset 0 0 0 1px rgba(255, 183, 0, 0.28) !important
-}
-@media (max-width: 560px) {
-    :root[data-theme="dark"] .wheel-disc {
-        border-width: 8px
-    }
 }
 :root[data-theme="dark"] .draw-roster small {
     color: var(--club-ink-500)
@@ -1797,29 +1661,7 @@
 :root[data-theme="dark"] .draw-panel .draw-roster span {
     color: var(--club-ink-900)
 }
-@media (max-width: 900px) {
-    :root[data-theme="dark"] .draw-panel .wheel-disc {
-        border-width: 8px
-    }
-    :root[data-theme="dark"] .draw-panel .wheel-inner {
-        border-width: 5px
-    }
-}
 @media (max-width: 560px) {
-    :root[data-theme="dark"] .draw-panel .wheel-pointer {
-        border-left-width: 10px;
-        border-right-width: 10px;
-        border-top-width: 20px
-    }
-    :root[data-theme="dark"] .draw-panel .wheel-disc {
-        border-width: 7px
-    }
-    :root[data-theme="dark"] .draw-panel .wheel-inner {
-        border-width: 4px
-    }
-    :root[data-theme="dark"] .draw-panel .wheel-numbers span {
-        border-width: 2px
-    }
     :root[data-theme="dark"] .draw-panel .draw-copy .primary {
         border-radius: 12px
     }
@@ -1840,57 +1682,12 @@
     color: hsla(38, 85%, 72%, 1) !important;
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.34) !important
 }
-:root[data-theme="dark"] .draw-panel .wheel-disc {
-    border-width: 12px !important
-}
-:root[data-theme="dark"] .draw-panel .wheel-numbers span, :root[data-theme="dark"] .draw-panel .wheel-number {
-    border-width: 3px !important;
-    background: radial-gradient(circle at 34% 20%, hsla(42, 10%, 14%, 1) 0 28%, hsla(49, 42%, 17%, 1) 58%, hsla(47, 42%, 17%, 1) 100%) !important
-}
-:root[data-theme="dark"] .draw-panel .wheel-number.level-1 {
-    background: radial-gradient(circle at 34% 20%, hsla(42, 10%, 14%, 1) 0 28%, hsla(210, 42%, 17%, 1) 58%, hsla(207, 42%, 17%, 1) 100%) !important
-}
-:root[data-theme="dark"] .draw-panel .wheel-number.level-2 {
-    background: radial-gradient(circle at 34% 20%, hsla(42, 10%, 14%, 1) 0 28%, hsla(146, 42%, 17%, 1) 58%, hsla(145, 42%, 17%, 1) 100%) !important
-}
-:root[data-theme="dark"] .draw-panel .wheel-number.level-open {
-    background: radial-gradient(circle at 34% 20%, hsla(42, 10%, 14%, 1) 0 28%, hsla(40, 42%, 17%, 1) 58%, #ffe6a3 100%) !important
-}
-:root[data-theme="dark"] .draw-panel .wheel-inner b {
-    color: var(--club-ink-900) !important
-}
-:root[data-theme="dark"] .draw-panel .wheel-inner small {
-    border-radius: 999px;
-    background: rgba(255, 183, 0, 0.14);
-    color: hsla(38, 85%, 72%, 1) !important
-}
 :root[data-theme="dark"] .draw-panel .draw-copy .draw-range-tag {
     border: 1px solid rgba(255, 183, 0, 0.42);
     border-radius: 999px;
     background: hsla(42, 42%, 17%, 0.88);
     color: hsla(38, 85%, 72%, 1) !important;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24)
-}
-@media (max-width: 900px) {
-    :root[data-theme="dark"] .draw-panel .wheel-disc {
-        border-width: 9px !important
-    }
-}
-@media (max-width: 560px) {
-    :root[data-theme="dark"] .draw-panel .wheel-pointer {
-        border-left-width: 11px !important;
-        border-right-width: 11px !important;
-        border-top-width: 22px !important
-    }
-    :root[data-theme="dark"] .draw-panel .wheel-disc {
-        border-width: 8px !important
-    }
-    :root[data-theme="dark"] .draw-panel .wheel-numbers span, :root[data-theme="dark"] .draw-panel .wheel-number {
-        border-width: 2.5px !important
-    }
-    :root[data-theme="dark"] .draw-panel .wheel-inner {
-        border-width: 4px !important
-    }
 }
 :root[data-theme="dark"] .draw-panel .draw-roster span {
     color: hsla(42, 20%, 95%, 1) !important

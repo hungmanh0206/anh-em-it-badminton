@@ -7,6 +7,7 @@ import { PageHero } from "@/app/ui/page-hero";
 import { roundAvatarImage } from "@/app/ui/avatar-image";
 import { ChampionCelebration } from "@/app/ui/champion-celebration";
 import { unlockFireworkSound } from "@/app/ui/firework-sound";
+import { DRAW_SPIN_MS, DrawWheel } from "@/app/ui/draw-wheel";
 import { GlassSelect } from "@/app/ui/glass-select";
 import { ThemeToggle } from "@/app/ui/theme-toggle";
 import { Toast, useToast } from "@/app/ui/toast";
@@ -92,6 +93,8 @@ const attendeeCountFromAttendances = (attendances: HistorySessionRow["attendance
     : rows[0]?.count || 0;
 };
 // Five sections; a section with several pages shows them as tabs under the page title.
+// TEMPORARY: lets an admin try the wheel on a locked tab 2 with local sample numbers; nothing is saved.
+const DRAW_PREVIEW = true;
 const navGroups: { key: string; label: string; icon: AppIconName; screens: { screen: Screen; label: string }[] }[] = [
   { key: "home", label: "Home", icon: "home", screens: [{ screen: "home", label: "Home" }] },
   { key: "matches", label: "Thi đấu", icon: "schedule", screens: [{ screen: "schedules", label: "Lịch thi đấu" }, { screen: "history", label: "Kết quả & lịch sử" }] },
@@ -126,15 +129,6 @@ const drawSlotsForLevel = (level: 1 | 2, level1Count: number, level2Count: numbe
   const count = Math.max(0, level === 1 ? level1Count : level2Count);
   const start = level === 1 ? 1 : 5;
   return Array.from({ length: count }, (_, index) => start + index);
-};
-const wheelGradient = (count: number) => {
-  const colors = ["var(--wheel-1)", "var(--wheel-2)", "var(--wheel-3)", "var(--wheel-4)"];
-  const safeCount = Math.max(1, count);
-  return `conic-gradient(${Array.from({ length: safeCount }, (_, index) => {
-    const start = (index * 360) / safeCount;
-    const end = ((index + 1) * 360) / safeCount;
-    return `${colors[index % colors.length]} ${start}deg ${end}deg`;
-  }).join(", ")})`;
 };
 const drawSlotRangeLabel = (level: 1 | 2, level1Count: number, level2Count: number, participantCount = level1Count + level2Count) => {
   const slots = drawSlotsForLevel(level, level1Count, level2Count, participantCount);
@@ -354,6 +348,9 @@ export default function Home() {
   const [loginError, setLoginError] = useState("");
   const [spinning, setSpinning] = useState(false);
   const [spinTarget, setSpinTarget] = useState<number | null>(null);
+  const [drawPreview, setDrawPreview] = useState(false);
+  const [previewDrawn, setPreviewDrawn] = useState<Record<string, number>>({});
+  const previewTimers = useRef<number[]>([]);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>("draft");
@@ -436,9 +433,44 @@ export default function Home() {
   const drawOpen = ["checked_in", "drawn", "scheduled", "completed"].includes(sessionStatus);
   const scheduleOpen = ["scheduled", "completed"].includes(sessionStatus);
   const steps = ["Điểm danh", "Chọn số", "Lịch thi đấu"];
+  const canPreviewDraw = DRAW_PREVIEW && activeUser?.role === "admin" && !drawOpen;
+  const previewMembers = members.map((member) => ({ ...member, present: true, responded: true }));
+  const resetDrawPreview = () => {
+    previewTimers.current.forEach((timer) => window.clearTimeout(timer));
+    previewTimers.current = [];
+    setPreviewDrawn({});
+    setSpinning(false);
+    setSpinTarget(null);
+  };
+  const spinDrawPreview = () => {
+    const self = previewMembers.find((member) => member.username === activeUser?.username);
+    if (!self) return;
+    const level1 = previewMembers.filter((member) => member.level === 1).length;
+    const slotsFor = (level: 1 | 2) => drawSlotsForLevel(level, level1, previewMembers.length - level1, previewMembers.length);
+    const taken = new Set(Object.values(previewDrawn));
+    const free = slotsFor(self.level).filter((slot) => !taken.has(slot));
+    if (!free.length) return;
+    const selected = free[Math.floor(Math.random() * free.length)];
+    taken.add(selected);
+    setSpinning(true);
+    setSpinTarget(selected);
+    previewTimers.current.push(window.setTimeout(() => {
+      setPreviewDrawn((current) => ({ ...current, [self.name]: selected }));
+      setSpinning(false);
+      setSpinTarget(null);
+    }, DRAW_SPIN_MS));
+    // Everyone else draws one after the other, to show the numbers arriving on the cards.
+    previewMembers.filter((member) => member.name !== self.name && !previewDrawn[member.name]).forEach((member, index) => {
+      const slot = slotsFor(member.level).find((candidate) => !taken.has(candidate));
+      if (slot === undefined) return;
+      taken.add(slot);
+      previewTimers.current.push(window.setTimeout(() => setPreviewDrawn((current) => ({ ...current, [member.name]: slot })), DRAW_SPIN_MS + 700 + index * 450));
+    });
+  };
   // Whether the workflow tab `next` can be opened right now (mirrors the checks in goStep).
   const canGoStep = (next: number) => {
     if (next === 0) return true;
+    if (next === 1 && canPreviewDraw) return true;
     const isManager = isScoreManagerRole(activeUser?.role);
     if (!isManager && !signedInMemberPresent) return false;
     if (next > step && !isManager) return next === 1 ? drawOpen : next === 2 ? scheduleOpen && Boolean(currentScheduleScenario) : false;
@@ -451,6 +483,14 @@ export default function Home() {
     if (next === 0) {
       setLoginError("");
       setStep(0);
+      setDrawPreview(false);
+      resetDrawPreview();
+      return;
+    }
+    if (next === 1 && canPreviewDraw) {
+      setLoginError("");
+      setDrawPreview(true);
+      setStep(1);
       return;
     }
     if (!isScoreManagerRole(activeUser?.role) && !signedInMemberPresent) {
@@ -1067,6 +1107,7 @@ export default function Home() {
   }, [sessionId]);
   const drawSelf = async () => {
     if (!activeUser || spinning) return;
+    if (drawPreview) return spinDrawPreview();
     const self = members.find((member) => member.username === activeUser.username) ?? activeUser;
     if (!self.present) return setLoginError("Bạn cần điểm danh tham gia trước khi chọn số.");
     if (validDrawn[self.name]) return;
@@ -1092,7 +1133,7 @@ export default function Home() {
         applySelectedSlot(selected);
         setSpinning(false);
         setSpinTarget(null);
-      }, 3900);
+      }, DRAW_SPIN_MS);
     };
     try {
       if (supabase && sessionId) {
@@ -1195,7 +1236,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (!activeUser || screen !== "home") return;
+    if (!activeUser || screen !== "home" || drawPreview) return;
     const isScoreManager = isScoreManagerRole(activeUser.role);
     if (!isScoreManager && !signedInMemberPresent) {
       setStep(0);
@@ -1210,7 +1251,7 @@ export default function Home() {
       return;
     }
     setStep((current) => current > 0 ? 0 : current);
-  }, [activeUser, allAttendanceDone, allDrawn, canSchedule, currentScheduleScenario, drawOpen, screen, sessionStatus, signedInMemberPresent]);
+  }, [activeUser, allAttendanceDone, allDrawn, canSchedule, currentScheduleScenario, drawOpen, drawPreview, screen, sessionStatus, signedInMemberPresent]);
 
   useEffect(() => {
     let pointerDownTarget: EventTarget | null = null;
@@ -1258,7 +1299,7 @@ export default function Home() {
   return <main className="app-shell">
     <div className="topbar">
       <div className="topbar-row">
-        <div className="topbar-brand"><span className="brand-mark" aria-hidden="true" /><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></div>
+        <button type="button" className="topbar-brand" aria-label="Về trang Home" onClick={() => openScreen("home")}><span className="brand-mark" aria-hidden="true" /><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></button>
         <ThemeToggle />
         <div className="topbar-profile">
           <button type="button" className="topbar-profile-btn" aria-label={`Tài khoản ${currentUser.name}`} aria-haspopup="dialog" aria-expanded={showProfileCard} onClick={() => setShowProfileCard((open) => !open)}><div className={avatarClassName("avatar small", currentUser)} style={avatarStyle(currentUser)}>{currentUser.initials}</div><div className="topbar-profile-text"><b>{currentUser.name}</b><small>{memberRoleLabel(currentUser.role)} · Level {currentUser.level}</small></div><svg className="topbar-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></button>
@@ -1289,7 +1330,8 @@ export default function Home() {
         {loginError && <div className="warning">{loginError}</div>}
         {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
         {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
-        {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
+        {step === 1 && drawPreview && <><p className="draw-preview-note">Chế độ thử vòng quay: số chỉ hiện trên máy bạn, không lưu.<button className="soft-btn" onClick={resetDrawPreview}>Quay lại từ đầu</button></p><Draw members={previewMembers} drawn={previewDrawn} allDrawn={false} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={{ ...currentUser, present: true }} canManageSession={false} onContinue={() => undefined} /></>}
+        {step === 1 && !drawPreview && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
         {step === 2 && <Schedule onEditingChange={(rows) => { editingScoreRows.current = new Set(rows); }} scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { setSessionStatus(completed ? "completed" : "scheduled"); if (completed) setHistoryRefreshTick((tick) => tick + 1); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}</div>
     </section>
@@ -1382,30 +1424,19 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, curren
   const drawnForWheel = Object.entries(drawn).filter(([name]) => !(spinning && name === currentUser.name));
   const usedSlots = new Set(drawnForWheel.map(([, slot]) => slot).filter((slot) => pool.includes(slot)));
   const availableSlots = pool.filter((slot) => !usedSlots.has(slot));
-  const wheelSlots = availableSlots.length ? availableSlots : pool;
-  const targetIndex = typeof spinTarget === "number" ? wheelSlots.indexOf(spinTarget) : -1;
-  const targetAngle = targetIndex >= 0 && wheelSlots.length > 1 ? (targetIndex + 0.5) * (360 / wheelSlots.length) : 0;
+  const wheelSlots = mine || !availableSlots.length ? pool : availableSlots;
   const isWheelSpinning = spinning && typeof spinTarget === "number";
   const isHoldingSlot = spinning && typeof spinTarget !== "number";
-  const spinDeg = 1440 - targetAngle;
   const isOpenFive = participantCount === 5;
   const modeLabel = isOpenFive ? "Số 1–5" : `Level ${currentUser.level}`;
   const autoLastSlot = !mine && currentUser.present && availableSlots.length === 1 ? availableSlots[0] : null;
   const entries = members.map((member) => ({ member, no: spinning && member.name === currentUser.name ? undefined : drawn[member.name] }));
-  const wheelStyle = { "--spin-duration": "3.9s", "--spin-deg": `${spinDeg}deg`, "--wheel-gradient": wheelGradient(wheelSlots.length || 1) } as CSSProperties;
+  const hubValue = isWheelSpinning || isHoldingSlot ? undefined : mine ?? autoLastSlot ?? undefined;
+  const hubLabel = isWheelSpinning ? "Đang quay" : isHoldingSlot ? "Đang giữ số" : mine ? "Số của bạn" : autoLastSlot ? "Số cuối" : undefined;
   return <section className="panel draw-panel">
     <div className="panel-head draw-panel-head"><div><h2>Chọn số ngẫu nhiên</h2></div><span className="mode draw-mode-pill">{modeLabel}</span></div>
     <div className="draw-body">
-      <div className={"wheel level-wheel level-wheel-" + (isOpenFive ? "open" : currentUser.level)} style={wheelStyle}>
-        <span className="wheel-pointer" aria-hidden="true" />
-        <div className={"wheel-disc" + (isWheelSpinning ? " spinning" : "")}>
-          <div className="wheel-numbers">{wheelSlots.map((slot, index) => {
-            const angle = wheelSlots.length === 1 ? 0 : (index + 0.5) * (360 / wheelSlots.length);
-            return <span className={`wheel-number ${drawNumberClass(slot, participantCount)}`} key={slot} style={{ "--slot-angle": `${angle}deg`, "--slot-angle-inverse": `${-angle}deg` } as CSSProperties}>{slot}</span>;
-          })}</div>
-        </div>
-        <div className="wheel-inner">{isWheelSpinning || isHoldingSlot ? <b>…<small>{isHoldingSlot ? "Đang giữ số" : "Đang quay"}</small></b> : mine ? <b>{mine}<small>Số của bạn</small></b> : autoLastSlot ? <b>{autoLastSlot}<small>Số cuối</small></b> : <b>?</b>}</div>
-      </div>
+      <DrawWheel slots={wheelSlots} slotClass={(slot) => drawNumberClass(slot, participantCount)} spinTarget={spinTarget} holding={isHoldingSlot} picked={mine} value={hubValue} label={hubLabel} />
       <div className="draw-copy"><span className="tag draw-range-tag">Chọn số · {rangeLabel}</span><h2>{isWheelSpinning ? "Vòng quay đang chọn số…" : isHoldingSlot ? "Đang giữ số hợp lệ…" : mine ? "Bạn đã chọn xong" : currentUser.present ? (autoLastSlot ? "Bạn là người cuối trong dải số này" : "Đến lượt bạn chọn số") : "Bạn chưa điểm danh tham gia"}</h2><button className="primary" disabled={spinning || !currentUser.present || Boolean(mine)} onClick={drawSelf}>{spinning ? "Đang xử lý…" : mine ? "Đã có số" : autoLastSlot ? "Nhận số cuối cùng" : "Chọn số của tôi"} <span>↻</span></button></div>
     </div>
     <div className="draw-list draw-roster">{entries.map(({ member, no }) => <div className={no ? "drawn" : "pending"} key={member.username}><span>{member.name}</span><b>{no ?? "—"}</b><small>Level {member.level}</small></div>)}</div>

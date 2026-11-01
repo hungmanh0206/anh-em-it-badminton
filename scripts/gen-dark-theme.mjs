@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import postcss from "postcss";
 
-const SKIP_FILES = new Set(["topbar.css", "glass.css", "glass-select.css", "dark-theme.css", "dark-generated.css", "champion-celebration.css"]);
+const SKIP_FILES = new Set(["topbar.css", "glass.css", "glass-select.css", "dark-theme.css", "dark-generated.css", "champion-celebration.css", "draw-wheel.css"]);
 // Parts that look the same in both themes, or no longer exist.
 const SKIP_SELECTOR = /topbar|champion-|result-a-wins|result-b-wins|medal|\.sidebar|club-top1|club-card|welcome-|mobile-menu|\.logout|app-toast|:root/;
 const COLOR = /#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)/g;

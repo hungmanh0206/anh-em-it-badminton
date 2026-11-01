@@ -89,13 +89,6 @@
   padding: 26px !important;
 }
 
-.draw-panel .wheel {
-  width: 210px !important;
-  height: 210px !important;
-  margin: 0 !important;
-  flex: 0 0 auto;
-}
-
 .draw-panel .draw-copy {
   display: grid;
   justify-items: start;
@@ -145,41 +138,6 @@
     gap: 18px;
     margin: 0 18px;
     padding: 18px !important;
-  }
-
-  .draw-panel .wheel {
-    width: 160px !important;
-    height: 160px !important;
-  }
-
-  .draw-panel .wheel-disc {
-    border-width: 8px;
-  }
-
-  .draw-panel .wheel-disc::before {
-    inset: 14px;
-  }
-
-  .draw-panel .wheel-inner {
-    width: 78px;
-    height: 78px;
-    border-width: 5px;
-  }
-
-  .draw-panel .wheel-inner b {
-    font-size: 36px !important;
-  }
-
-  .draw-panel .wheel-inner small {
-    font-size: 6.8px !important;
-  }
-
-  .draw-panel .wheel-numbers span {
-    width: 30px;
-    height: 30px;
-    margin: -15px;
-    font-size: 14px;
-    transform: rotate(var(--slot-angle)) translateY(-62px) rotate(var(--slot-angle-inverse));
   }
 
   .draw-panel .draw-copy {
@@ -232,51 +190,6 @@
     margin: 0 12px;
     padding: 14px !important;
     text-align: left;
-  }
-
-  .draw-panel .wheel {
-    width: 126px !important;
-    height: 126px !important;
-  }
-
-  .draw-panel .wheel-pointer {
-    top: -8px;
-    border-left-width: 10px;
-    border-right-width: 10px;
-    border-top-width: 20px;
-  }
-
-  .draw-panel .wheel-disc {
-    border-width: 7px;
-  }
-
-  .draw-panel .wheel-disc::before {
-    inset: 12px;
-  }
-
-  .draw-panel .wheel-inner {
-    width: 68px;
-    height: 68px;
-    border-width: 4px;
-  }
-
-  .draw-panel .wheel-inner b {
-    font-size: 31px !important;
-  }
-
-  .draw-panel .wheel-inner small {
-    margin-top: 2px;
-    font-size: 5.8px !important;
-    letter-spacing: 0.6px;
-  }
-
-  .draw-panel .wheel-numbers span {
-    width: 25px;
-    height: 25px;
-    margin: -12.5px;
-    border-width: 2px;
-    font-size: 12px;
-    transform: rotate(var(--slot-angle)) translateY(-47px) rotate(var(--slot-angle-inverse));
   }
 
   .draw-panel .draw-copy {
@@ -332,28 +245,6 @@
     grid-template-columns: 114px minmax(0, 1fr);
     gap: 10px;
     padding: 12px !important;
-  }
-
-  .draw-panel .wheel {
-    width: 112px !important;
-    height: 112px !important;
-  }
-
-  .draw-panel .wheel-inner {
-    width: 60px;
-    height: 60px;
-  }
-
-  .draw-panel .wheel-inner b {
-    font-size: 27px !important;
-  }
-
-  .draw-panel .wheel-numbers span {
-    width: 22px;
-    height: 22px;
-    margin: -11px;
-    font-size: 11px;
-    transform: rotate(var(--slot-angle)) translateY(-41px) rotate(var(--slot-angle-inverse));
   }
 
   .draw-panel .draw-copy h2 {

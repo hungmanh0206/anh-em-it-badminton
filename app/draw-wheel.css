@@ -1,0 +1,391 @@
+/* Draw wheel (app/ui/draw-wheel.tsx). Everything is sized from --wheel-size; colours are tokens for each theme. */
+.prize-wheel {
+  --wheel-size: clamp(148px, 38vw, 252px);
+  --rim: conic-gradient(from 24deg, #b97a12, #ffe9a3 9%, #e9a824 21%, #fff1b8 34%, #c98a17 48%, #ffe08a 62%, #b97a12 76%, #ffefb0 90%, #b97a12);
+  --rim-shadow: 0 14px 30px rgba(150, 100, 10, 0.3);
+  --disc-shade: radial-gradient(circle, transparent 52%, rgba(150, 100, 10, 0.16) 100%);
+  --disc-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.5), transparent 46%);
+  --disc-dash: rgba(170, 115, 15, 0.42);
+  --hub-face: radial-gradient(circle at 38% 28%, #fffdf6, #fdf0cf 70%, #f7dfa8);
+  --hub-text: #4a2a05;
+  --hub-stroke: #f0b429;
+  --hub-pill: linear-gradient(180deg, #ffd566, #f7b92e);
+  --hub-pill-text: #5a3704;
+  --badge-face: radial-gradient(circle at 36% 26%, #ffffff, #eef4ff 78%);
+  --badge-shadow: 0 3px 8px rgba(40, 60, 120, 0.3);
+  position: relative;
+  flex: none;
+  width: var(--wheel-size);
+  height: var(--wheel-size);
+  margin: 0 auto;
+}
+
+:root[data-theme="dark"] .prize-wheel {
+  --rim: conic-gradient(from 24deg, #8a5a0c, #f2cf73 9%, #c48a1c 21%, #ffe08a 34%, #9c6c12 48%, #e9b949 62%, #8a5a0c 76%, #f6d680 90%, #8a5a0c);
+  --rim-shadow: 0 14px 32px rgba(0, 0, 0, 0.55), 0 0 26px rgba(255, 183, 0, 0.14);
+  --disc-shade: radial-gradient(circle, transparent 52%, rgba(0, 0, 0, 0.34) 100%);
+  --disc-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 46%);
+  --disc-dash: rgba(255, 214, 110, 0.32);
+  --hub-face: radial-gradient(circle at 38% 28%, #4a3a1a, #2c2312 72%, #1e180c);
+  --hub-text: #ffe08a;
+  --hub-stroke: transparent;
+  --hub-pill-text: #3d2500;
+  --badge-face: radial-gradient(circle at 36% 26%, #3d3a44, #24222c 80%);
+  --badge-shadow: 0 3px 8px rgba(0, 0, 0, 0.55);
+}
+
+/* ---------- Gold rim and bulbs ---------- */
+.prize-rim {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--rim);
+  box-shadow: var(--rim-shadow);
+}
+
+.prize-rim i {
+  --bulb-size: calc(var(--wheel-size) * 0.026);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--bulb-size);
+  height: var(--bulb-size);
+  margin: calc(var(--bulb-size) / -2);
+  border-radius: 50%;
+  background: #fffbe6;
+  box-shadow: 0 0 calc(var(--wheel-size) * 0.03) 1px rgba(255, 236, 160, 0.95);
+  transform: rotate(calc(var(--bulb) * 30deg)) translateY(calc(var(--wheel-size) * -0.463));
+  animation: prizeBulb 2.4s ease-in-out calc(var(--bulb) * 200ms) infinite;
+}
+
+.is-spinning .prize-rim i,
+.is-holding .prize-rim i {
+  animation-duration: 480ms;
+  animation-delay: calc(var(--bulb) * 40ms);
+}
+
+/* ---------- Pointer ---------- */
+.prize-pointer {
+  --pointer-size: calc(var(--wheel-size) * 0.1);
+  position: absolute;
+  top: calc(var(--pointer-size) * -0.3);
+  left: 50%;
+  z-index: 3;
+  width: var(--pointer-size);
+  height: calc(var(--pointer-size) * 1.1);
+  margin-left: calc(var(--pointer-size) / -2);
+  background: linear-gradient(180deg, #fff1b8, #e9a824 62%, #b97a12);
+  clip-path: polygon(0 0, 100% 0, 100% 34%, 50% 100%, 0 34%);
+  filter: drop-shadow(0 2px 3px rgba(90, 55, 0, 0.5));
+}
+
+/* ---------- Turning disc ---------- */
+.prize-disc {
+  position: absolute;
+  inset: 8.5%;
+  border-radius: 50%;
+  background: var(--disc-sheen), var(--disc-shade), var(--wheel-segments);
+  animation: prizeDiscIn 260ms ease-out;
+}
+
+/* The dashed track the numbers ride on. */
+.prize-disc::after {
+  content: "";
+  position: absolute;
+  inset: 14.5%;
+  border: 1.5px dashed var(--disc-dash);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.is-spinning .prize-disc {
+  animation: prizeSpin var(--spin-ms) both;
+}
+
+.prize-slot {
+  --badge-size: calc(var(--wheel-size) * 0.185);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: var(--badge-size);
+  height: var(--badge-size);
+  margin: calc(var(--badge-size) / -2);
+  transform: rotate(var(--slot-angle)) translateY(calc(var(--wheel-size) * -0.3)) rotate(calc(var(--slot-angle) * -1));
+}
+
+.prize-badge {
+  --badge-glow: rgba(70, 140, 255, 0.75);
+  --badge-text: #1668e3;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--badge-face);
+  box-shadow: var(--badge-shadow), 0 0 calc(var(--wheel-size) * 0.03) var(--badge-glow);
+  color: var(--badge-text);
+  font-size: calc(var(--wheel-size) * 0.1);
+  font-weight: 1000;
+  line-height: 1;
+}
+
+.prize-badge.level-2 {
+  --badge-glow: rgba(40, 190, 120, 0.75);
+  --badge-text: #0f9a5c;
+}
+
+.prize-badge.level-open {
+  --badge-glow: rgba(255, 183, 0, 0.8);
+  --badge-text: #b8760e;
+}
+
+:root[data-theme="dark"] .prize-badge {
+  --badge-text: #8fc2ff;
+}
+
+:root[data-theme="dark"] .prize-badge.level-2 {
+  --badge-text: #6ee7a8;
+}
+
+:root[data-theme="dark"] .prize-badge.level-open {
+  --badge-text: #ffd566;
+}
+
+.is-spinning .prize-badge {
+  animation: prizeSpinBack var(--spin-ms) both;
+}
+
+/* The winner lights up as the wheel settles. */
+.is-spinning .prize-badge.is-target {
+  animation: prizeSpinBack var(--spin-ms) both, prizeBadgeWin 620ms ease-out calc(var(--spin-ms) - 620ms) both;
+}
+
+.prize-badge.is-picked {
+  box-shadow: var(--badge-shadow), 0 0 calc(var(--wheel-size) * 0.07) 2px var(--badge-glow);
+  animation: prizeBadgeWin 900ms ease-out;
+}
+
+/* ---------- Hub ---------- */
+.prize-hub {
+  position: absolute;
+  inset: 26.5%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--rim);
+  box-shadow: 0 calc(var(--wheel-size) * 0.02) calc(var(--wheel-size) * 0.05) rgba(90, 55, 0, 0.42);
+}
+
+.prize-hub-face {
+  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: calc(var(--wheel-size) * 0.012);
+  width: 88%;
+  height: 88%;
+  border-radius: 50%;
+  background: var(--hub-face);
+  box-shadow: inset 0 2px 6px rgba(120, 80, 10, 0.26);
+}
+
+.prize-hub-face b {
+  color: var(--hub-text);
+  font-size: calc(var(--wheel-size) * 0.19);
+  font-weight: 1000;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  -webkit-text-stroke: 1.5px var(--hub-stroke);
+  paint-order: stroke fill;
+}
+
+.prize-hub-face small:not(#_):not(#_):not(#_) {
+  padding: calc(var(--wheel-size) * 0.008) calc(var(--wheel-size) * 0.028);
+  border-radius: 999px;
+  background: var(--hub-pill);
+  color: var(--hub-pill-text) !important;
+  font-size: max(8px, calc(var(--wheel-size) * 0.046));
+  font-weight: 900;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.prize-hub-face.has-value b {
+  animation: prizeReveal 620ms cubic-bezier(0.2, 1.7, 0.4, 1);
+}
+
+/* A ring of light bursts out from the hub with the number. */
+.prize-hub-face.has-value::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 calc(var(--wheel-size) * 0.08) calc(var(--wheel-size) * 0.03) rgba(255, 214, 110, 0.9);
+  opacity: 0;
+  pointer-events: none;
+  animation: prizeBurst 760ms ease-out;
+}
+
+.is-spinning .prize-hub-face b,
+.is-holding .prize-hub-face b {
+  animation: prizeWait 900ms ease-in-out infinite;
+}
+
+/* ---------- Motion ---------- */
+/* A short wind-up, a long slowing spin that runs just past the number, then a settle back onto it. */
+@keyframes prizeSpin {
+  0% {
+    transform: rotate(0deg);
+    animation-timing-function: ease-in-out;
+  }
+
+  9% {
+    transform: rotate(-16deg);
+    animation-timing-function: cubic-bezier(0.2, 0.62, 0.14, 1);
+  }
+
+  91% {
+    transform: rotate(calc(var(--spin-end) + 5deg));
+    animation-timing-function: ease-in-out;
+  }
+
+  100% {
+    transform: rotate(var(--spin-end));
+  }
+}
+
+/* The same curve mirrored, so the numbers stay upright all the way round. */
+@keyframes prizeSpinBack {
+  0% {
+    transform: rotate(0deg);
+    animation-timing-function: ease-in-out;
+  }
+
+  9% {
+    transform: rotate(16deg);
+    animation-timing-function: cubic-bezier(0.2, 0.62, 0.14, 1);
+  }
+
+  91% {
+    transform: rotate(calc((var(--spin-end) + 5deg) * -1));
+    animation-timing-function: ease-in-out;
+  }
+
+  100% {
+    transform: rotate(calc(var(--spin-end) * -1));
+  }
+}
+
+@keyframes prizeBadgeWin {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+
+  45% {
+    filter: brightness(1.28) drop-shadow(0 0 10px var(--badge-glow));
+  }
+}
+
+@keyframes prizeBulb {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.38;
+  }
+}
+
+@keyframes prizeDiscIn {
+  from {
+    opacity: 0.4;
+  }
+}
+
+@keyframes prizeReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+}
+
+@keyframes prizeBurst {
+  from {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes prizeWait {
+  50% {
+    opacity: 0.45;
+    transform: scale(0.86);
+  }
+}
+
+/* ---------- Roster: a number pops onto a member's card when they get it ---------- */
+/* Transitions, so they play when a number arrives and not on every page load. */
+.draw-roster > div:not(#_):not(#_) {
+  position: relative;
+  border-color: transparent !important;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.draw-roster > div::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  z-index: -1;
+  width: 240%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(255, 183, 0, 0.14);
+  transform: translate(50%, -50%) scale(0);
+  transition: transform 640ms cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+
+.draw-roster > .drawn::before {
+  transform: translate(50%, -50%) scale(1);
+}
+
+.draw-roster > div > b:not(#_):not(#_) {
+  transition: transform 560ms cubic-bezier(0.2, 2, 0.4, 1) 120ms, opacity 200ms ease 120ms;
+}
+
+.draw-roster > .pending > b:not(#_):not(#_) {
+  opacity: 0.4;
+  transform: scale(0.6);
+}
+
+/* TEMPORARY: admin wheel preview, remove with DRAW_PREVIEW in app/page.tsx. */
+.draw-preview-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--pill);
+  color: var(--bar-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* The wheel's block: gold light behind the wheel instead of a flat fill. */
+.draw-panel .draw-body:not(#_):not(#_) {
+  background: var(--draw-glow), var(--draw-glow-end), var(--glass-card) !important;
+  box-shadow: var(--glass-lift-card) !important;
+}

@@ -610,3 +610,14 @@
     height: 20px;
   }
 }
+
+/* The logo is the way home: a plain button that looks like the logo. */
+button.topbar-brand {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}

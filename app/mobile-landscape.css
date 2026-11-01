@@ -238,11 +238,6 @@
     padding: 16px !important;
   }
 
-  .draw-panel .wheel {
-    width: 148px !important;
-    height: 148px !important;
-  }
-
   .draw-panel .draw-roster {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     margin: 14px 18px !important;

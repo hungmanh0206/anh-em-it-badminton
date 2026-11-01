@@ -46,10 +46,12 @@
   --gold-glass: linear-gradient(180deg, rgba(255, 220, 125, 0.76), rgba(255, 190, 30, 0.62));
   --gold-glass-hover: linear-gradient(180deg, rgba(255, 220, 125, 0.92), rgba(255, 190, 30, 0.8));
   --gold-glass-shadow: 0 6px 16px rgba(184, 118, 14, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.65);
-  --wheel-1: #fff8df;
-  --wheel-2: #ffffff;
-  --wheel-3: #ffe39a;
-  --wheel-4: #fffaf0;
+  --draw-glow: radial-gradient(circle at 24% 50%, rgba(255, 200, 61, 0.42), transparent 56%);
+  --draw-glow-end: radial-gradient(circle at 96% 0%, rgba(255, 150, 90, 0.2), transparent 48%);
+  --wheel-1: #ffdf85;
+  --wheel-2: #fdf3dc;
+  --wheel-3: #ffc940;
+  --wheel-4: #fdf1d6;
 }
 
 body:not(#_) {
