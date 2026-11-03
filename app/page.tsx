@@ -1308,7 +1308,7 @@ export default function Home() {
         </section>
         </div>
         <div className="home-champion">
-        <HomeChampionCard champion={champion} monthLabel={championRankingLabel} onCelebrate={() => { unlockFireworkSound(); setCelebrating(true); }} onOpenHall={() => openScreen("hall")} />
+        <HomeChampionCard champion={champion} monthLabel={championRankingLabel} onCelebrate={() => { unlockFireworkSound(); setCelebrating(true); }} />
         </div>
         </div>
         <section className={"workflow" + (stepDirection ? ` step-${stepDirection}` : "")}>{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : canGoStep(i) ? "" : "locked"} aria-disabled={i !== step && !canGoStep(i)} onClick={() => goStep(i)}><span key={i < step ? "done" : "number"}>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
@@ -1721,13 +1721,11 @@ function Results({ onEditingChange, matches, drawn, scores, setScores, confirmed
     <Presence show={clearing !== null}>{clearing !== null && <ConfirmActionModal title={`Xóa điểm trận ${clearing + 1}?`} message={`Kết quả ${savedBeforeEdit[clearing]?.join("–") ?? ""} sẽ bị xóa, trận trở về chưa có điểm. BXH, ELO và Phong độ được tính lại ngay.`} confirmLabel="Xóa điểm" cancelLabel="Hủy" onCancel={() => setClearing(null)} onConfirm={async () => { const index = clearing; setClearing(null); await clearMatch(index); }} />}</Presence>
   </section>;
 }
-// Home: the latest month's champion, under the next session and above the steps. The card replays the celebration;
-// its side link leads to the full Hall of Fame.
-function HomeChampionCard({ champion, monthLabel: label, onCelebrate, onOpenHall }: { champion?: RankingRow; monthLabel: string; onCelebrate: () => void; onOpenHall: () => void }) {
+// Home: the latest month's champion, beside or under the next session. The card replays the celebration.
+function HomeChampionCard({ champion, monthLabel: label, onCelebrate }: { champion?: RankingRow; monthLabel: string; onCelebrate: () => void }) {
   const month = label.replace(", ", "/").replace("Tháng ", "THÁNG ");
   if (!champion) return <section className="champion-card is-empty">
     <div className="champion-card-main"><span className="champion-card-trophy"><AppIcon name="trophy" /></span><span className="champion-card-text"><small>NHÀ VÔ ĐỊCH THÁNG</small><b>Chưa có nhà vô địch</b><span>Nhà vô địch được vinh danh khi tháng đầu tiên khép lại.</span></span></div>
-    <button type="button" className="champion-card-link" aria-label="Xem Bảng vàng" onClick={onOpenHall}><span className="champion-card-link-text">Bảng vàng</span><span aria-hidden="true"> →</span></button>
   </section>;
   const diff = `${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff}`;
   return <section className="champion-card">
@@ -1749,7 +1747,6 @@ function HomeChampionCard({ champion, monthLabel: label, onCelebrate, onOpenHall
         </span>
       </span>
     </button>
-    <button type="button" className="champion-card-link" aria-label="Xem Bảng vàng" onClick={onOpenHall}><span className="champion-card-link-text">Bảng vàng</span><span aria-hidden="true"> →</span></button>
   </section>;
 }
 

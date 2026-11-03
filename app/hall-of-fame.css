@@ -237,32 +237,6 @@
   text-transform: uppercase;
 }
 
-.champion-card-link {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 4;
-  padding: 6px 12px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--cc-tile);
-  color: var(--cc-ink);
-  font: inherit;
-  font-size: 12px;
-  font-weight: 800;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.champion-card-link:hover {
-  background: var(--cc-ink);
-  color: #fff7dc;
-}
-
-:root[data-theme="dark"] .champion-card-link:hover {
-  color: #2b1d06;
-}
-
 /* Empty: no champion yet. */
 .champion-card.is-empty .champion-card-main {
   cursor: default;
@@ -388,31 +362,6 @@
     font-size: 8.5px;
   }
 
-  .champion-card-link {
-    top: 10px;
-    right: 10px;
-    padding: 5px 10px;
-    font-size: 11px;
-  }
-
-  /* A round arrow on the right edge, clear of the text, which keeps room for it. */
-  .champion-card-main {
-    padding-right: 42px;
-  }
-
-  .champion-card-link {
-    top: 50%;
-    right: 12px;
-    display: grid;
-    place-items: center;
-    width: 34px;
-    height: 34px;
-    padding: 0;
-    font-size: 15px;
-    translate: 0 -50%;
-  }
-
-  .champion-card-link-text,
   .champion-card-ribbon-lead {
     display: none;
   }
