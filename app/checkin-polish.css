@@ -151,29 +151,3 @@
     width: 100%;
   }
 }
-
-/* Self check-in: the button stays, greyed out until Wednesday, with the opening day as a note under it. */
-.checkin-self {
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-}
-
-.checkin-note {
-  color: var(--bar-muted);
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
-@media (max-width: 560px) {
-  .checkin-self {
-    justify-items: stretch;
-    width: 100%;
-    text-align: center;
-  }
-}
-
-/* The buttons line up along their tops, so the note hangs below without pushing the other button down. */
-.checkin-actions-foot .attendance-actions:not(#_) {
-  align-items: flex-start !important;
-}

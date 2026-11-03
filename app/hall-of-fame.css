@@ -392,12 +392,12 @@
 
 .hall-month:not(#_) {
   display: grid;
-  gap: 14px;
-  padding: 16px var(--block-inset) 18px !important;
+  align-content: start;
+  gap: 12px;
+  padding: 14px var(--block-inset) 16px !important;
 }
 
 .hall-month.is-latest:not(#_):not(#_) {
-  grid-column: 1 / -1;
   background: var(--hall-gold-wash), var(--glass-block) !important;
 }
 
@@ -445,40 +445,28 @@
 }
 
 .hall-champion-avatar .avatar:not(#_):not(#_) {
-  width: 72px;
-  height: 72px;
-  font-size: 24px;
+  width: 60px;
+  height: 60px;
+  font-size: 21px;
   box-shadow: var(--hall-ring) !important;
 }
 
-.is-latest .hall-champion-avatar .avatar:not(#_):not(#_) {
-  width: 92px;
-  height: 92px;
-  font-size: 30px;
-}
 
 .hall-crown {
   position: absolute;
-  top: -20px;
+  top: -17px;
   left: 50%;
   translate: -38% 0;
   rotate: 14deg;
 }
 
 .hall-crown .app-icon {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
 }
 
-.is-latest .hall-crown {
-  top: -26px;
-}
 
-.is-latest .hall-crown .app-icon {
-  width: 42px;
-  height: 42px;
-}
 
 .hall-champion-text {
   display: grid;
@@ -495,7 +483,7 @@
 .hall-champion-text b {
   overflow: hidden;
   color: var(--hall-title);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 900;
   letter-spacing: -0.02em;
   line-height: 1.15;
@@ -503,9 +491,6 @@
   white-space: nowrap;
 }
 
-.is-latest .hall-champion-text b {
-  font-size: 30px;
-}
 
 .hall-champion-text > span {
   color: var(--hall-muted);
@@ -527,7 +512,7 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
-  padding: 8px 10px;
+  padding: 7px 10px;
   border-radius: 14px;
   background: var(--glass-card);
   box-shadow: var(--glass-lift-card);
@@ -621,18 +606,11 @@
     height: 60px;
   }
 
-  .is-latest .hall-champion-avatar .avatar:not(#_):not(#_) {
-    width: 72px;
-    height: 72px;
-  }
 
   .hall-champion-text b {
     font-size: 19px;
   }
 
-  .is-latest .hall-champion-text b {
-    font-size: 23px;
-  }
 
   .hall-champion-text > span {
     font-size: 12px;

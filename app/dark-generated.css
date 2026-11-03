@@ -1266,9 +1266,6 @@
         border-radius: 999px !important
     }
 }
-:root[data-theme="dark"] .checkin-note {
-    color: var(--bar-muted)
-}
 @media (min-width: 801px) {
     :root[data-theme="dark"] .rank-table .rank-row.rank-columns.top-rank {
         border-left: 0 !important

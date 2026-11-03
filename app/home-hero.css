@@ -395,7 +395,7 @@ button.hero-champion:focus-visible {
 /* Home: today's date on the title's row, at the right. */
 .title-group:not(#_):not(#_):has(.title-date) {
   display: flex !important;
-  align-items: baseline;
+  align-items: last baseline !important;
   justify-content: space-between;
   gap: 12px;
 }
