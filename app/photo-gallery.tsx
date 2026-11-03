@@ -202,7 +202,7 @@ export function PhotoGallery() {
     <section className="panel photo-panel" ref={panel}>
     <div className="panel-head photo-panel-head">
       <h2>Những khoảnh khắc cùng anh em</h2>
-      {canManage && <button type="button" className="primary photo-upload-btn" onClick={() => setUploadOpen(true)}><span className="plus-icon" aria-hidden="true" />Tải ảnh</button>}
+      {canManage && <button type="button" className="primary photo-upload-btn" onClick={() => setUploadOpen(true)}><span className="plus-icon" aria-hidden="true" />Tải ảnh lên</button>}
     </div>
 
     {(allCount > 0 || query || canManage) && <div className="photo-toolbar">
@@ -233,7 +233,7 @@ export function PhotoGallery() {
 
     {state === "ready" && photos.length === 0 && <div className="photo-state">
       <p className="photo-state-title">{query ? `Không tìm thấy ảnh nào có tên chứa “${query}”.` : `Chưa có ảnh nào${activeFolder !== null ? " trong danh mục này" : ""}.`}</p>
-      {!query && <p>{canManage ? "Bấm “Tải ảnh” hoặc tải trực tiếp lên Cloudinary để bắt đầu." : "Ảnh sẽ xuất hiện ở đây khi Admin tải lên."}</p>}
+      {!query && <p>{canManage ? "Bấm “Tải ảnh lên” hoặc tải trực tiếp lên Cloudinary để bắt đầu." : "Ảnh sẽ xuất hiện ở đây khi Admin tải lên."}</p>}
       {diagnostics && <div className="photo-diagnostics">
         <b>Kiểm tra Cloudinary (chỉ Admin thấy)</b>
         {diagnostics.hint && <p className="photo-diagnostics-hint">{diagnostics.hint}</p>}
