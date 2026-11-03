@@ -333,7 +333,7 @@ button.hero-champion:focus-visible {
   }
 }
 
-/* Home: "Trận đấu tiếp theo" on the left and today's date on the right, just above the session card. */
+/* Home: a label row above each top card; on the session card it holds only today's date, on the right. */
 .next-session {
   display: grid;
   gap: var(--card-gap);
@@ -471,4 +471,8 @@ button.hero-champion:focus-visible {
   .home-champion .champion-card-link {
     align-self: center;
   }
+}
+
+.next-session-label span:only-child {
+  margin-left: auto;
 }
