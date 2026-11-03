@@ -1749,20 +1749,11 @@ function HallOfFame({ entries, onOpenMonth }: { entries: HallOfFameEntry[]; onOp
     titles.set(key, (titles.get(key) ?? 0) + 1);
     titleNumber.set(entry.month, titles.get(key) ?? 1);
   });
-  const best = [...titles.entries()].sort((a, b) => b[1] - a[1])[0];
-  const bestName = best ? entries.find((entry) => (entry.rows[0]?.username || entry.rows[0]?.name) === best[0])?.rows[0]?.name : undefined;
-  const nameOf = (key: string) => entries.find((entry) => (entry.rows[0]?.username || entry.rows[0]?.name) === key)?.rows[0]?.name ?? key;
-  const tied = best ? [...titles.entries()].filter(([, count]) => count === best[1]) : [];
   return <section className="hall-page">
     <PageHero
       eyebrow="HALL OF FAME"
       title="Bảng vàng thành tích"
       description="Nhà vô địch của từng tháng, lấy từ bảng xếp hạng đã khép lại nên không mất khi sang tháng mới. Bấm vào một tháng để xem lại bảng xếp hạng đầy đủ."
-      statsLabel="Tóm tắt bảng vàng"
-      stats={[
-        { label: "Tháng đã trao", value: entries.length },
-        { label: tied.length > 1 ? "Nhiều lần nhất" : "Vô địch nhiều nhất", value: best ? `${tied.length > 1 ? tied.map(([key]) => nameOf(key)).join(", ") : bestName} · ${best[1]} lần` : "—" },
-      ]}
     />
     {entries.length === 0 ? <section className="panel hall-empty"><AppIcon name="trophy" /><b>Bảng vàng còn trống</b><p>Nhà vô địch đầu tiên sẽ có tên ở đây khi tháng đầu tiên khép lại.</p></section> : <div className="hall-list">
       {entries.map((entry, index) => {

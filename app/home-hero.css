@@ -336,7 +336,7 @@ button.hero-champion:focus-visible {
 /* Home: "Trận đấu tiếp theo" on the left and today's date on the right, just above the session card. */
 .next-session {
   display: grid;
-  gap: 10px;
+  gap: var(--card-gap);
   min-width: 0;
 }
 
