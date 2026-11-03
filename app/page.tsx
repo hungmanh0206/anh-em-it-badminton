@@ -2230,7 +2230,11 @@ async function downloadEloImage(rows: EloRankingRow[]) {
 function Ranking({ month, rows, form, elo, onMonthChange, monthOptions, isAdmin, closeStatus, closeNotice, closingMonth, onCloseMonth }: { month: string; rows: RankingRow[]; form: FormByUsername; elo: Record<string, number>; onMonthChange: (month: string) => void; monthOptions: string[]; isAdmin: boolean; closeStatus: MonthCloseStatus | null; closeNotice: string; closingMonth: boolean; onCloseMonth: () => void }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
   return <section className="ranking">
-    <div className="ranking-toolbar"><div className="ranking-filter-row"><GlassSelect value={month} options={monthOptions} onChange={onMonthChange} ariaLabel="Tháng" /><button type="button" className="soft-btn ranking-export-btn" onClick={() => void downloadRankingImage(month, rows, form, elo)}><span className="ranking-export-full">Lưu ảnh BXH</span><span className="ranking-export-short">Lưu ảnh</span></button></div>{closeStatus?.closed && <p className="ranking-note">BXH tháng này đã chốt.</p>}</div>
+    <PageHero
+      eyebrow="BẢNG XẾP HẠNG"
+      title="Bảng xếp hạng tháng"
+      description="Cuộc đua điểm thưởng của các thành viên trong tháng. Người đứng đầu khi tháng khép lại là nhà vô địch."
+    />
     {isAdmin && closeStatus && <div className={"month-close-card " + (closeStatus.closed ? "closed" : closeStatus.eligible ? "ready" : "waiting")}>
       <div>
         <span>{closeStatus.closed ? "ĐÃ CHỐT THÁNG" : closeStatus.eligible ? "SẴN SÀNG CHỐT" : "CHỜ ĐỦ ĐIỀU KIỆN"}</span>
@@ -2240,10 +2244,16 @@ function Ranking({ month, rows, form, elo, onMonthChange, monthOptions, isAdmin,
       </div>
       {!closeStatus.closed && <button className="primary" disabled={!closeStatus.eligible || closingMonth} onClick={onCloseMonth}>{closingMonth ? "Đang chốt..." : `Chốt BXH ${closeStatus.monthLabel}`}</button>}
     </div>}
+    <section className="panel ranking-panel">
+      <div className="panel-head elo-panel-head ranking-panel-head">
+        <div><h2>Thứ hạng {month}</h2><p>{closeStatus?.closed ? "BXH tháng này đã chốt." : "Cập nhật sau mỗi trận đã lưu."}</p></div>
+        <div className="elo-head-actions ranking-head-actions"><GlassSelect value={month} options={monthOptions} onChange={onMonthChange} ariaLabel="Tháng" /><button type="button" className="soft-btn elo-guide-btn ranking-export-btn" onClick={() => void downloadRankingImage(month, rows, form, elo)}><span className="ranking-export-full">Lưu ảnh BXH</span><span className="ranking-export-short">Lưu ảnh</span></button></div>
+      </div>
     <div className="rank-table rank-table-form"><div className="rank-head rank-columns"><span>Vị trí</span><span>Thành viên</span><span>Điểm</span><span>Điểm thắng</span><span>Điểm thua</span><span>Hiệu số</span><span>Số trận</span><span>ELO</span><span>Phong độ</span></div>{rows.length ? rows.map((row, i) => {
       const isTopRank = hasRankingData && i < 3;
       return <div className={"rank-row rank-columns " + (isTopRank ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={isTopRank ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</div><b>{row.name}</b><span className="level">L{row.level}</span><span className="rank-elo-chip">ELO {formatElo(row.username ? elo[row.username] : undefined)}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span><div className="rank-elo">{formatElo(row.username ? elo[row.username] : undefined)}</div><FormBadges form={row.username ? form[row.username] : undefined} className="rank-form" /><div className="rank-mobile-stats" aria-hidden="true"><span><em>Thắng</em><b>{row.pointsWon}</b></span><span><em>Thua</em><b>{row.pointsLost}</b></span><span><em>Hiệu</em><b className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</b></span><span><em>Trận</em><b>{row.matches}</b></span><span className="rank-mobile-elo"><em>ELO</em><b>{formatElo(row.username ? elo[row.username] : undefined)}</b></span></div></div>;
     }) : <div className="empty-ranking">Chưa có thành viên hoạt động để hiển thị BXH {month}.</div>}</div>
+    </section>
   </section>;
 }
 function EloGuideModal({ onClose }: { onClose: () => void }) {
@@ -2343,7 +2353,7 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
           const isTopRank = index < 3;
           return <article className={`elo-row ${isTopRank ? `top-rank top-${index + 1}` : ""}`} key={row.memberId}>
             <div className={isTopRank ? `elo-rank medal m${index}` : "elo-rank"} aria-label={`Hạng ${row.rank}`}>{isTopRank ? "" : row.rank}</div>
-            <div className="person elo-person"><div className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</div><div><b>{row.name}</b><small>@{row.username}</small></div></div>
+            <div className="person elo-person"><div className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</div><div><b>{row.name}</b></div></div>
             <div className="elo-rating-value"><span>ELO</span><b>{row.eloRating.toLocaleString("vi-VN", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</b></div>
             <div className="elo-row-meta"><span className="elo-matches">{row.matches}<small>{"\u00a0"}trận</small></span><b>{row.level === 1 ? "Level 1" : "Level 2"}</b></div>
           </article>;
@@ -2696,10 +2706,16 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
     }
   }});
   return <>
-    <section className="member-summary">
-      <div><b>{members.length}</b><span>Tổng thành viên</span></div>
-      <div><b>{visibleMembers.length}</b><span>{normalizedSearch ? "Kết quả tìm kiếm" : "Đang hoạt động"}</span></div>
-    </section>
+    <PageHero
+      eyebrow="THÀNH VIÊN CLB"
+      title="Anh em Anh Em IT"
+      description="Những người cùng ra sân mỗi thứ Bảy, cùng tranh tài và cùng vui."
+      statsLabel="Tóm tắt thành viên"
+      stats={[
+        { label: "Tổng thành viên", value: members.length },
+        { label: normalizedSearch ? "Kết quả tìm kiếm" : "Đang hoạt động", value: visibleMembers.length },
+      ]}
+    />
     <section className="panel">
       <div className="panel-head member-panel-head">
         <div><h2>Danh sách thành viên</h2><p>{canManage ? "Quản lý thông tin các thành viên CLB." : "Các thành viên đang sinh hoạt cùng CLB."}</p></div>
@@ -2770,7 +2786,7 @@ function Login({ onLogin, error }: { onLogin: (username: string, password: strin
 }
 
 function CheckinModal({ member, onAnswer, onSkip }: { member: Member; onAnswer: (attending: boolean) => void; onSkip: () => void }) {
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Điểm danh buổi chơi" {...backdropDismissProps(onSkip)}><section className="checkin-modal"><button className="modal-close" onClick={onSkip} aria-label="Đóng">×</button><p className="eyebrow">BUỔI CHƠI THỨ BẢY</p><h2>Chào {member.name}, bạn có tham gia không?</h2><p>Bạn vẫn có thể đổi lại sau ở Trang chủ.</p><div className="modal-actions"><button className="primary" onClick={() => onAnswer(true)}>Tôi tham gia</button><button className="secondary" onClick={() => onAnswer(false)}>Tôi không tham gia</button></div><button className="skip" onClick={onSkip}>Để sau</button></section></div>;
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Điểm danh buổi chơi" {...backdropDismissProps(onSkip)}><section className="checkin-modal"><button className="modal-close" onClick={onSkip} aria-label="Đóng">×</button><p className="eyebrow">BUỔI CHƠI THỨ BẢY</p><h2>Chào {member.name}, bạn có tham gia không?</h2><p>Chưa quyết định? Bấm × để điểm danh sau ở Trang chủ.</p><div className="modal-actions"><button className="primary" onClick={() => onAnswer(true)}>Tôi tham gia</button><button className="secondary" onClick={() => onAnswer(false)}>Tôi không tham gia</button></div></section></div>;
 }
 function ConfirmActionModal({ title, message, onCancel, onConfirm, icon = "confirm", confirmLabel = "Có, xác nhận", cancelLabel = "Không" }: { title: string; message: string; onCancel: () => void; onConfirm: () => void | Promise<void>; icon?: AppIconName; confirmLabel?: string; cancelLabel?: string }) {
   return <div className="modal-backdrop" role="dialog" aria-modal="true" {...backdropDismissProps(onCancel)}><section className={`confirm-modal confirm-modal-${icon}`}><span className={`modal-icon app-icon app-icon-${icon}`} aria-hidden="true" /><h2>{title}</h2><p>{message}</p><div className="modal-actions confirm-actions"><button className="secondary" onClick={onCancel}>{cancelLabel}</button><button className="primary" onClick={() => void onConfirm()}>{confirmLabel}</button></div></section></div>;

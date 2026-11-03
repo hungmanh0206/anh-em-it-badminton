@@ -1,0 +1,70 @@
+/* Xếp hạng › Bảng xếp hạng and ELO: the same page shape (hero, then one block headed by its title and tools) and the
+   same table look, whatever columns each one has. */
+
+/* The month table sits flat in its block, like the ELO list. */
+.ranking-panel > .rank-table:not(#_):not(#_):not(#_) {
+  margin: 0 var(--block-inset) var(--block-inset) !important;
+  background: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Tools on one line beside the title: the month filter, then the export. */
+.ranking-head-actions:not(#_):not(#_) {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.ranking-head-actions .glass-select:not(#_) {
+  width: 170px;
+}
+
+.elo-panel-head > div:first-child h2:not(#_) {
+  white-space: nowrap;
+}
+
+/* Phones: the title on its own line, the tools sharing the line under it. */
+@media (max-width: 700px) {
+  .elo-panel-head:not(#_):not(#_):not(#_) {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .elo-panel-head > .elo-head-actions:not(#_):not(#_) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+
+  .elo-panel-head > .elo-head-actions > .elo-head-actions:not(#_) {
+    display: contents;
+  }
+
+  .elo-panel-head .elo-head-actions :is(button, .glass-select):not(#_):not(#_) {
+    width: 100%;
+  }
+
+  .ranking-head-actions:not(#_):not(#_) {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  /* The rating gets room to show in full, with its label above it like the month table's points. */
+  .elo-row:not(#_):not(#_) {
+    grid-template-columns: 30px minmax(0, 1fr) auto !important;
+  }
+
+  .elo-rating-value:not(#_):not(#_) {
+    display: grid;
+    justify-items: end;
+    min-width: 76px;
+  }
+
+  .elo-rating-value b:not(#_):not(#_) {
+    font-size: 17px;
+    white-space: nowrap;
+  }
+}
