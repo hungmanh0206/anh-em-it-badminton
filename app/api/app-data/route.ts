@@ -408,13 +408,11 @@ export async function GET(request: Request) {
     const selectedFinalSaturdayKey = dateKey(finalSaturdayOfMonth(selectedMonthDate));
     const championMonthDates = recentMonthStarts(monthStartFromKey(currentMonthKey), 12);
     const championMonthKeys = championMonthDates.map(dateKey);
-    const championFinalSessionKeys = championMonthDates.map((date) => dateKey(finalSaturdayOfMonth(date)));
     const requestedRankingMonths = [...new Set([month, currentMonthKey, sessionMonthKey, previousMonthKey, ...championMonthKeys])];
     const rankingSelect = "month, total_points, points_for, points_against, point_diff, matches_played, level_next_month, created_at, profiles!monthly_results_member_id_fkey(id, username, full_name, level)";
 
     const [
       { data: allRankingData, error: rankingError },
-      { data: championFinalSessions, error: championSessionError },
       { data: activeProfiles, error: profileError },
       { data: finalSession, error: finalSessionError },
       { count: nextMonthRows, error: nextMonthError },
@@ -424,7 +422,6 @@ export async function GET(request: Request) {
       { data: hallRankingData, error: hallError },
     ] = await Promise.all([
       admin.from("monthly_results").select(rankingSelect).in("month", requestedRankingMonths),
-      admin.from("play_sessions").select("session_date, status").in("session_date", championFinalSessionKeys),
       admin.from("profiles").select("id, username, full_name, level, description").eq("is_active", true).order("full_name"),
       admin.from("play_sessions").select("status").eq("session_date", selectedFinalSaturdayKey).maybeSingle(),
       admin.from("monthly_results").select("id", { count: "exact", head: true }).eq("month", selectedNextMonthKey),
@@ -434,7 +431,7 @@ export async function GET(request: Request) {
       admin.from("monthly_results").select(rankingSelect).gte("month", HALL_OF_FAME_FROM),
     ]);
 
-    const queryError = rankingError || championSessionError || profileError || finalSessionError || nextMonthError || historyError || formError || hallError;
+    const queryError = rankingError || profileError || finalSessionError || nextMonthError || historyError || formError || hallError;
     if (queryError) throw queryError;
 
     // Celebration pictures changed from "Sửa thành viên": the current upload, or null once removed. Members not
@@ -471,16 +468,17 @@ export async function GET(request: Request) {
 
     let championRankingRows: RankingRow[] = [];
     let championRankingLabel = monthLabel(monthStartFromKey(previousMonthKey));
-    const completedFinalSessionDates = new Set(((championFinalSessions || []) as { session_date: string; status: string | null }[])
-      .filter((sessionRow) => sessionRow.status === "completed")
-      .map((sessionRow) => sessionRow.session_date));
+    // A month crowns its champion once it is over or the admin has closed it ("Chốt BXH" opens the next month's
+    // ranking, so its rows exist). The Home card and the Hall of Fame use this same rule.
+    const monthsWithRows = new Set([
+      ...((allRankingData || []) as MonthlyResultRow[]).map((row) => row.month),
+      ...((hallRankingData || []) as MonthlyResultRow[]).map((row) => row.month),
+    ].filter(Boolean) as string[]);
+    const isCrownedMonth = (monthKey: string) => monthKey < currentMonthKey || monthsWithRows.has(nextMonthStart(monthKey));
     const latestChampionMonth = championMonthDates.find((date) => {
       const championMonthKey = dateKey(date);
       const monthRows = rankingRowsByMonth.get(championMonthKey) ?? [];
-      const hasRealRanking = monthRows.some((row) => row.matches_played > 0);
-      const isPastMonth = championMonthKey < currentMonthKey;
-      const finalSessionCompleted = completedFinalSessionDates.has(dateKey(finalSaturdayOfMonth(date)));
-      return hasRealRanking && (isPastMonth || finalSessionCompleted);
+      return monthRows.some((row) => row.matches_played > 0) && isCrownedMonth(championMonthKey);
     });
     if (latestChampionMonth) {
       const championMonthKey = dateKey(latestChampionMonth);
@@ -496,8 +494,7 @@ export async function GET(request: Request) {
       hallRowsByMonth.set(row.month, [...(hallRowsByMonth.get(row.month) ?? []), row]);
     });
     const hallOfFame = [...hallRowsByMonth.entries()]
-      .filter(([monthKey, rows]) => rows.some((row) => row.matches_played > 0)
-        && (monthKey < currentMonthKey || (monthKey === currentMonthKey && completedFinalSessionDates.has(dateKey(finalSaturdayOfMonth(monthStartFromKey(monthKey)))))))
+      .filter(([monthKey, rows]) => rows.some((row) => row.matches_played > 0) && isCrownedMonth(monthKey))
       .sort(([a], [b]) => b.localeCompare(a))
       .map(([monthKey, rows]) => ({
         month: monthKey,

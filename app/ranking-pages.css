@@ -188,14 +188,34 @@
 }
 
 @media (max-width: 700px) {
-  /* With the admin's close button, the month gets its own line and the two buttons share the next. */
-  .ranking-head-actions:has(.ranking-close-btn):not(#_):not(#_):not(#_) {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    grid-auto-flow: row;
+  /* One compact row: the month takes the room left by the two short buttons. */
+  .ranking-head-actions:not(#_):not(#_):not(#_) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
+    grid-auto-flow: column;
+    gap: 6px !important;
   }
 
-  .ranking-head-actions:has(.ranking-close-btn) > .glass-select:not(#_):not(#_) {
-    grid-column: 1 / -1;
+  .ranking-head-actions > :is(.glass-select, button):not(#_):not(#_):not(#_) {
+    grid-column: auto !important;
+    width: auto !important;
+    min-width: 0;
+  }
+
+  .ranking-head-actions > button:not(.glass-select):not(#_):not(#_):not(#_) {
+    height: 38px;
+    min-height: 0;
+    padding: 0 11px !important;
+    font-size: 12.5px !important;
+  }
+
+  .ranking-head-actions > .glass-select:not(#_):not(#_):not(#_) {
+    height: 38px;
+    min-height: 0;
+    justify-content: space-between;
+    padding-inline: 12px !important;
+    font-size: 12.5px !important;
+    text-align: left;
   }
 }
 
@@ -208,4 +228,37 @@
 .elo-list > .elo-head:not(#_):not(#_):not(#_) {
   background: transparent !important;
   border-bottom: 1px solid var(--glass-line) !important;
+}
+
+.ranking-close-short {
+  display: none;
+}
+
+/* The narrowest phones: shorter labels and padding, so the month stays readable. */
+@media (max-width: 360px) {
+  .ranking-head-actions:not(#_):not(#_):not(#_) {
+    gap: 5px !important;
+  }
+
+  .ranking-head-actions > button:not(.glass-select):not(#_):not(#_):not(#_) {
+    padding: 0 9px !important;
+  }
+
+  .ranking-head-actions > .glass-select:not(#_):not(#_):not(#_) {
+    gap: 4px;
+    padding-inline: 9px !important;
+    font-size: 11.5px !important;
+  }
+
+  .ranking-head-actions > button:not(.glass-select):not(#_):not(#_):not(#_) {
+    font-size: 11.5px !important;
+  }
+
+  .ranking-close-full:not(#_):not(#_) {
+    display: none !important;
+  }
+
+  .ranking-close-btn .ranking-close-short:not(#_) {
+    display: inline;
+  }
 }
