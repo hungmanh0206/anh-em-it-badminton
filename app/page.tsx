@@ -2324,7 +2324,7 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
     <PageHero
       eyebrow="ELO RATING"
       title="Bảng ELO thành viên"
-      description="Top 4 ELO hiện tại là Level 1, còn lại là Level 2. Sau mỗi trận đã lưu, ELO và level sẽ cập nhật để tuần sau xếp lịch đúng trình độ mới."
+      description="ELO là điểm đánh giá trình độ của mỗi thành viên: thắng thì tăng, thua thì giảm, thắng đối thủ mạnh hơn được cộng nhiều hơn. Điểm càng cao, phong độ càng tốt."
     />
 
     <section className="panel elo-ranking-panel">
