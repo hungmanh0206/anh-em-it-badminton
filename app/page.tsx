@@ -1787,7 +1787,7 @@ function HallOfFame({ entries, onOpenMonth }: { entries: HallOfFameEntry[]; onOp
         if (!winner) return null;
         const title = titleNumber.get(entry.month) ?? 1;
         return <article className={"panel hall-month" + (index === 0 ? " is-latest" : "")} key={entry.month}>
-          <div className="hall-month-head"><span className="hall-month-label">{entry.label}</span>{index === 0 && <span className="hall-month-badge">Nhà vô địch hiện tại</span>}<button type="button" className="soft-btn hall-month-open" onClick={() => onOpenMonth(entry.label)}>Xem BXH<span aria-hidden="true"> →</span></button></div>
+          <div className="hall-month-head"><span className="hall-month-label">{entry.label}</span>{index === 0 && <span className="hall-month-badge">Nhà vô địch hiện tại</span>}<button type="button" className="soft-btn hall-month-open" onClick={() => onOpenMonth(entry.label)}>Xem BXH</button></div>
           <div className="hall-champion">
             <span className="hall-champion-avatar"><span className={avatarClassName("avatar", winner)} style={avatarStyle(winner)}>{winner.initials}</span><span className="hall-crown"><AppIcon name="crown" /></span></span>
             <span className="hall-champion-text"><small>Nhà vô địch{title > 1 ? ` · lần thứ ${title}` : ""}</small><b>{winner.name}</b><span>{winner.points} điểm · {winner.pointDiff > 0 ? "+" : ""}{winner.pointDiff} hiệu số · {winner.matches} trận</span></span>
