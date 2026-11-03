@@ -27,27 +27,26 @@
   to { opacity: 0; }
 }
 
-/* Liquid: glass condenses out of a blur, swelling just past its size before it settles, and melts back on the way out. */
+/* Liquid: glass swells just past its size before it settles, and shrinks back on the way out. Only opacity and
+   transform move: a blur here would make the browser redraw the frosted modal on every frame. */
 @keyframes motionDialogIn {
-  0% { opacity: 0; translate: 0 18px; scale: 0.9; filter: blur(14px); }
-  55% { opacity: 1; filter: blur(0); }
-  100% { opacity: 1; translate: 0 0; scale: 1; filter: blur(0); }
+  from { opacity: 0; translate: 0 16px; scale: 0.92; }
+  to { opacity: 1; translate: 0 0; scale: 1; }
 }
 
 @keyframes motionDialogOut {
-  from { opacity: 1; translate: 0 0; scale: 1; filter: blur(0); }
-  to { opacity: 0; translate: 0 8px; scale: 0.95; filter: blur(10px); }
+  from { opacity: 1; translate: 0 0; scale: 1; }
+  to { opacity: 0; translate: 0 8px; scale: 0.96; }
 }
 
 @keyframes motionPopIn {
-  0% { opacity: 0; translate: 0 -10px; scale: 0.88; filter: blur(12px); }
-  55% { opacity: 1; filter: blur(0); }
-  100% { opacity: 1; translate: 0 0; scale: 1; filter: blur(0); }
+  from { opacity: 0; translate: 0 -8px; scale: 0.92; }
+  to { opacity: 1; translate: 0 0; scale: 1; }
 }
 
 @keyframes motionPopOut {
-  from { opacity: 1; translate: 0 0; scale: 1; filter: blur(0); }
-  to { opacity: 0; translate: 0 -6px; scale: 0.94; filter: blur(10px); }
+  from { opacity: 1; translate: 0 0; scale: 1; }
+  to { opacity: 0; translate: 0 -6px; scale: 0.95; }
 }
 
 @keyframes motionRowIn {
@@ -79,7 +78,7 @@
 .modal-backdrop > .history-detail,
 .modal-backdrop > .member-editor,
 .modal-backdrop > section {
-  animation: motionDialogIn 520ms var(--motion-ease-spring) backwards;
+  animation: motionDialogIn 420ms var(--motion-ease-spring) backwards;
   animation-delay: 30ms;
 }
 
@@ -93,17 +92,17 @@
 }
 
 .presence-leaving > .modal-backdrop > * {
-  animation: motionDialogOut 220ms var(--motion-ease-in) both !important;
+  animation: motionDialogOut 180ms var(--motion-ease-in) both !important;
 }
 
 /* ---------- Profile popover ---------- */
 .member-profile-popover {
   transform-origin: top right;
-  animation: motionPopIn 420ms var(--motion-ease-spring) backwards;
+  animation: motionPopIn 340ms var(--motion-ease-spring) backwards;
 }
 
 .presence-leaving > .member-profile-popover {
-  animation: motionPopOut 220ms var(--motion-ease-in) both;
+  animation: motionPopOut 180ms var(--motion-ease-in) both;
 }
 
 /* ---------- Mobile / tablet sidebar drawer ---------- */

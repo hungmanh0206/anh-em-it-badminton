@@ -1,102 +1,139 @@
-/* Liquid transitions between pages (view transitions, started through liquidTransition in app/ui/liquid.ts).
-   The page fades out as the next one rises in, and the section and tab markers glide across on one easing curve.
-   Only opacity and transform move, so phones keep up; the bars hold still. */
-/* Named only while a transition runs: a named element shuts the glass inside it off from what lies behind, which
-   would leave the bars and blocks barely frosted. liquidTransition puts .vt-active on <html> for the duration. */
-html.vt-active .content {
-  view-transition-name: page;
+/* Liquid motion, kept to opacity and transform so phones keep up with the frosted glass: a new page rises in, and the
+   section line, the tab pill and the gold filter pill glide to their new place on one curve. Each marker is a single
+   element whose box comes from useSlidingIndicator (app/ui/use-sliding-indicator.ts). */
+:root {
+  --glide: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-html.vt-active .topbar {
-  view-transition-name: topbar;
-}
-
-html.vt-active .nav-indicator {
-  view-transition-name: nav-indicator;
-}
-
-/* The tab pill only slides when the tab changes; arriving in a section it just comes with the page. */
-html.vt-tab .tab-indicator {
-  view-transition-name: tab-indicator;
-}
-
-html.vt-filter .schedule-filter button.active {
-  view-transition-name: filter-pill;
-}
-
-/* Everything else (the backdrop) does not move: the new view simply replaces the old one. */
-::view-transition-old(root),
-::view-transition-old(topbar) {
-  display: none;
-}
-
-::view-transition-new(root),
-::view-transition-new(topbar),
-::view-transition-group(topbar) {
-  animation: none;
-}
-
-::view-transition-group(page) {
-  animation-duration: 420ms;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-::view-transition-old(page) {
-  animation: liquidPageOut 200ms cubic-bezier(0.4, 0, 1, 1) both;
-}
-
-::view-transition-new(page) {
-  animation: liquidPageIn 420ms cubic-bezier(0.22, 1, 0.36, 1) 60ms both;
-}
-
-::view-transition-group(nav-indicator),
-::view-transition-group(tab-indicator),
-::view-transition-group(filter-pill) {
-  animation-duration: 380ms;
-  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-@keyframes liquidPageOut {
-  to {
-    opacity: 0;
-    transform: scale(0.985);
-  }
+.screen-view {
+  animation: liquidPageIn 360ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 @keyframes liquidPageIn {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(1.01);
+    translate: 0 10px;
   }
 }
 
-/* Browsers without view transitions still get the condense-in on the new page. */
-@supports not (view-transition-name: none) {
-  .screen-view {
-    animation: liquidPageIn 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+/* ---------- Sliding markers ---------- */
+:is(.page-tabs, .schedule-filter):not(#_) {
+  position: relative;
+  isolation: isolate;
+}
+
+.slide-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+[data-ind-on] > .slide-indicator {
+  opacity: 1;
+}
+
+[data-ind-ready] > .slide-indicator {
+  transition: transform 380ms var(--glide), width 380ms var(--glide), height 380ms var(--glide);
+}
+
+/* The section line, with light rising from it. */
+.topbar-nav > .slide-indicator {
+  width: calc(var(--ind-w) * 0.8);
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  background: #ffc83d;
+  transform: translate(calc(var(--ind-x) + var(--ind-w) * 0.1), calc(var(--ind-y) + var(--ind-h) - 3px));
+}
+
+.topbar-nav > .slide-indicator::before {
+  content: "";
+  position: absolute;
+  right: 5%;
+  bottom: -14px;
+  left: 5%;
+  z-index: -1;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bar-active-glow);
+  filter: blur(11px);
+}
+
+/* The pills sit under the labels. */
+:is(.page-tabs, .schedule-filter) > .slide-indicator {
+  z-index: -1;
+  width: var(--ind-w);
+  height: var(--ind-h);
+  transform: translate(var(--ind-x), var(--ind-y));
+}
+
+.page-tabs > .slide-indicator {
+  border-radius: 10px;
+  background: var(--bar-thumb);
+  box-shadow: var(--bar-thumb-shadow);
+}
+
+.schedule-filter > .slide-indicator {
+  border-radius: 999px;
+  background: var(--gold-glass);
+  box-shadow: var(--gold-glass-shadow);
+}
+
+.schedule-filter button.active:not(#_):not(#_):not(#_):not(#_) {
+  background: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* The schedules for a new count rise in one after another. */
+.schedule-case-list > .schedule-case {
+  animation: caseRiseIn 360ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.schedule-case-list > .schedule-case:nth-child(2) { animation-delay: 40ms; }
+.schedule-case-list > .schedule-case:nth-child(3) { animation-delay: 80ms; }
+.schedule-case-list > .schedule-case:nth-child(n + 4) { animation-delay: 120ms; }
+
+@keyframes caseRiseIn {
+  from {
+    opacity: 0;
+    translate: 0 14px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .screen-view,
+  .schedule-case-list > .schedule-case,
+  [data-ind-ready] > .slide-indicator {
+    animation: none !important;
+    transition: none !important;
+  }
+
   ::view-transition-group(*),
   ::view-transition-old(*),
-  ::view-transition-new(*),
-  ::view-transition-image-pair(*) {
+  ::view-transition-new(*) {
     animation: none !important;
   }
 }
 
+/* While the theme changes, nothing but the switch is captured on its own. */
+::view-transition-old(root) {
+  display: none;
+}
+
+::view-transition-new(root) {
+  animation: none;
+}
+
 /* ---------- Switching theme ---------- */
-/* The whole screen changes at once, so for this one the page and the bars are not pulled out on their own. The new
-   theme spreads from the switch with a soft edge, like spilt colour, and comes into focus as it goes. */
+/* The one change still run as a view transition, since it is rare: the new theme spreads from the switch with a soft
+   edge, like spilt colour. */
 @property --theme-reveal {
   syntax: "<length>";
   inherits: false;
   initial-value: 0px;
-}
-
-html.theme-switching :is(.content, .topbar, .nav-indicator, .tab-indicator, .schedule-filter button.active) {
-  view-transition-name: none;
 }
 
 html.theme-switching::view-transition-old(root) {
@@ -120,32 +157,6 @@ html.theme-switching::view-transition-new(root) {
 @keyframes themeFocus {
   from {
     opacity: 0.6;
-  }
-}
-
-/* ---------- Tabs and filters inside a page ---------- */
-/* Lighter than changing section: the page only fades across while the pill slides over. */
-html:is(.vt-tab, .vt-filter)::view-transition-old(page) {
-  animation: tabFadeOut 140ms ease-in both;
-}
-
-html:is(.vt-tab, .vt-filter)::view-transition-new(page) {
-  animation: tabFadeIn 220ms ease-out 60ms both;
-}
-
-html:is(.vt-tab, .vt-filter)::view-transition-group(page) {
-  animation-duration: 220ms;
-}
-
-@keyframes tabFadeOut {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes tabFadeIn {
-  from {
-    opacity: 0;
   }
 }
 

@@ -281,6 +281,7 @@
 
 /* ---------- Sections ---------- */
 .topbar-nav {
+  position: relative;
   display: flex;
   flex: 1 1 0;
   align-items: stretch;
@@ -323,32 +324,6 @@
   isolation: isolate;
   color: var(--bar-accent) !important;
   font-weight: 800;
-}
-
-/* The line under the current section, a real element so it can flow from one section to the next (liquid-motion.css). */
-.nav-indicator {
-  position: absolute;
-  right: 10%;
-  bottom: 0;
-  left: 10%;
-  height: 3px;
-  border-radius: 999px 999px 0 0;
-  background: #ffc83d;
-  pointer-events: none;
-}
-
-/* Light rising from the line: a blurred patch of its own, so it has no edge to show. */
-.nav-indicator::before {
-  content: "";
-  position: absolute;
-  right: 5%;
-  bottom: -14px;
-  left: 5%;
-  z-index: -1;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--bar-active-glow);
-  filter: blur(11px);
 }
 
 .topbar-nav button:not(#_) .app-icon {
@@ -396,24 +371,8 @@
   color: var(--bar-text);
 }
 
-.page-tabs button {
-  position: relative;
-  isolation: isolate;
-}
-
 .page-tabs button.active {
   color: var(--bar-accent);
-}
-
-/* The pill behind the current tab, a real element so it can slide to the next tab (liquid-motion.css). */
-.tab-indicator {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: var(--bar-thumb);
-  box-shadow: var(--bar-thumb-shadow);
-  pointer-events: none;
 }
 
 .topbar-nav button:focus-visible,

@@ -6,9 +6,9 @@ import { PhotoGallery } from "@/app/photo-gallery";
 import { PageHero } from "@/app/ui/page-hero";
 import { roundAvatarImage } from "@/app/ui/avatar-image";
 import { ChampionCelebration } from "@/app/ui/champion-celebration";
-import { liquidTransition } from "@/app/ui/liquid";
 import { useCollapsingTopbar } from "@/app/ui/use-collapsing-topbar";
 import { useModalScrollLock } from "@/app/ui/use-modal-scroll-lock";
+import { useSlidingIndicator } from "@/app/ui/use-sliding-indicator";
 import { unlockFireworkSound } from "@/app/ui/firework-sound";
 import { DRAW_SPIN_MS, DrawWheel } from "@/app/ui/draw-wheel";
 import { GlassSelect } from "@/app/ui/glass-select";
@@ -381,6 +381,8 @@ export default function Home() {
   const [showProfileCard, setShowProfileCard] = useState(false);
   const topbarCollapsed = useCollapsingTopbar(screen);
   useModalScrollLock();
+  const navRef = useSlidingIndicator<HTMLElement>(screen);
+  const tabsRef = useSlidingIndicator<HTMLDivElement>(screen);
   const [authRestoring, setAuthRestoring] = useState(Boolean(supabase));
   const [now, setNow] = useState(() => new Date());
   const [attendanceSynced, setAttendanceSynced] = useState(!supabase);
@@ -1256,12 +1258,11 @@ export default function Home() {
   const champion = championRankingRows[0];
   const championMonthLabel = championRankingLabel.split(",")[0].toUpperCase();
   const activeGroup = navGroups.find((group) => group.screens.some((item) => item.screen === screen));
-  // A new section melts in and its marker flows across; a tab within a section only slides its pill (liquid-motion.css).
-  const openScreen = (next: Screen, kind?: "vt-tab") => liquidTransition(() => {
+  const openScreen = (next: Screen) => {
     window.scrollTo({ top: 0, behavior: "instant" });
     setScreen(next);
     if (next === "ranking") setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel);
-  }, kind);
+  };
 
   return <main className="app-shell">
     <div className={"topbar" + (topbarCollapsed ? " is-collapsed" : "")}>
@@ -1272,14 +1273,15 @@ export default function Home() {
           <button type="button" className="topbar-profile-btn" aria-label={`Tài khoản ${currentUser.name}`} aria-haspopup="dialog" aria-expanded={showProfileCard} onClick={() => setShowProfileCard((open) => !open)}><div className={avatarClassName("avatar small", currentUser)} style={avatarStyle(currentUser)}>{currentUser.initials}</div><div className="topbar-profile-text"><b>{currentUser.name}</b><small>{memberRoleLabel(currentUser.role)} · Level {currentUser.level}</small></div><svg className="topbar-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></button>
         </div>
       </div>
-      <nav className="topbar-nav" aria-label="Các mục">
-        {navGroups.filter((group) => group.key !== "members" || isAdmin).map((group) => <button key={group.key} className={group === activeGroup ? "active" : ""} aria-current={group === activeGroup ? "page" : undefined} onClick={() => { if (group !== activeGroup) openScreen(group.screens[0].screen); }}><AppIcon name={group.icon} /><span>{group.label}</span>{group === activeGroup && <i className="nav-indicator" aria-hidden="true" />}</button>)}
+      <nav ref={navRef} className="topbar-nav" aria-label="Các mục">
+        {navGroups.filter((group) => group.key !== "members" || isAdmin).map((group) => <button key={group.key} className={group === activeGroup ? "active" : ""} aria-current={group === activeGroup ? "page" : undefined} onClick={() => { if (group !== activeGroup) openScreen(group.screens[0].screen); }}><AppIcon name={group.icon} /><span>{group.label}</span></button>)}
+        <i className="slide-indicator" aria-hidden="true" />
       </nav>
     </div>
     <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setScreen("home"); setActiveUser(null); }} />}</Presence>
     <section className="content">
       <header><div className="title-group"><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div></header>
-      {activeGroup && activeGroup.screens.length > 1 && <div className="page-tabs" aria-label={activeGroup.label}>{activeGroup.screens.map((item) => <button key={item.screen} className={screen === item.screen ? "active" : ""} aria-current={screen === item.screen ? "page" : undefined} onClick={() => openScreen(item.screen, "vt-tab")}>{screen === item.screen && <i className="tab-indicator" aria-hidden="true" />}{item.label}</button>)}</div>}
+      {activeGroup && activeGroup.screens.length > 1 && <div ref={tabsRef} key={activeGroup.key} className="page-tabs" aria-label={activeGroup.label}>{activeGroup.screens.map((item) => <button key={item.screen} className={screen === item.screen ? "active" : ""} aria-current={screen === item.screen ? "page" : undefined} onClick={() => openScreen(item.screen)}>{item.label}</button>)}<i className="slide-indicator" aria-hidden="true" /></div>}
       <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} rankingRows={profileRows} rankingMonth={profileAchievementMonth} eloRows={eloRows} formByUsername={formByUsername} onAvatarUpdated={(username, avatarUrl) => { if (avatarUrl) memberAvatars.set(username, avatarUrl); else memberAvatars.delete(username); removeBrowserCache(memberAvatarsCacheKey); setAvatarRevision((revision) => revision + 1); }} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={rankingFormByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
         <section className="hero">
           <div className="hero-copy"><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div>
@@ -1539,6 +1541,7 @@ function Rules({ members }: { members: Member[] }) {
 
 function ScheduleLibrary({ scenarios, members }: { scenarios: ScheduleScenario[]; members: Member[] }) {
   const [participantFilter, setParticipantFilter] = useState<ParticipantCount>(5);
+  const filterRef = useSlidingIndicator<HTMLDivElement>(participantFilter);
   // A mix is possible only with enough members of each Level (Level 1 = top 4 ELO, the rest Level 2).
   const clubLevel1 = members.filter((member) => member.level === 1).length;
   const clubLevel2 = members.length - clubLevel1;
@@ -1557,10 +1560,11 @@ function ScheduleLibrary({ scenarios, members }: { scenarios: ScheduleScenario[]
       statsLabel="Tóm tắt thư viện lịch"
       stats={[{ label: "Người tham gia", value: participantFilter }, { label: "Trường hợp", value: visibleScenarios.length }]}
     />
-    <div className="schedule-filter" role="group" aria-label="Lọc lịch theo số lượng thành viên">
-      {scheduleParticipants.map((count) => <button key={count} type="button" className={participantFilter === count ? "active" : ""} disabled={!countEnabled(count)} title={countEnabled(count) ? undefined : `Mở khi CLB có từ ${count} thành viên`} onClick={() => liquidTransition(() => setParticipantFilter(count), "vt-filter")}>{count} người</button>)}
+    <div ref={filterRef} className="schedule-filter" role="group" aria-label="Lọc lịch theo số lượng thành viên">
+      {scheduleParticipants.map((count) => <button key={count} type="button" className={participantFilter === count ? "active" : ""} disabled={!countEnabled(count)} title={countEnabled(count) ? undefined : `Mở khi CLB có từ ${count} thành viên`} onClick={() => setParticipantFilter(count)}>{count} người</button>)}
+      <i className="slide-indicator" aria-hidden="true" />
     </div>
-    <div className="schedule-case-list">
+    <div className="schedule-case-list" key={participantFilter}>
       {visibleScenarios.map((scenario) => <article className="panel schedule-case" key={scenario.id}>
         <div className="schedule-case-head">
           <div>
