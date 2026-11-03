@@ -1364,6 +1364,7 @@ function ProfilePopover({ detail = false, showUsername = false, member, rank, ac
   const eloRankDisplay = typeof elo?.rank === "number" ? `Top ${elo.rank} ELO` : "ELO hiện tại";
   return <aside className={`member-profile-popover profile-${rankClass}${detail ? " member-detail-modal" : ""}`} role="dialog" aria-modal="true" aria-label={`Thông tin hồ sơ ${member.name}`}>
     <button className="modal-close profile-close" onClick={onClose} aria-label="Đóng">×</button>
+    {detail && <div className="profile-modal-head"><p className="eyebrow">HỒ SƠ THÀNH VIÊN</p><h2>Thành tích & phong độ</h2></div>}
     <div className={"profile-hero-card" + (detail && cardArtUrl(member.username) ? " has-art" : "")}>
       {detail && cardArtUrl(member.username) && <img className="profile-art" src={cardArtUrl(member.username) ?? undefined} alt="" aria-hidden="true" decoding="async" onError={(event) => { event.currentTarget.parentElement?.classList.remove("has-art"); event.currentTarget.remove(); }} />}
       <span className={avatarClassName("profile-medal", member)} style={avatarStyle(member)} aria-hidden="true">{isTopRank ? rank : member.initials}</span>

@@ -1,24 +1,31 @@
 /* Modals on iPad and desktop (wider than a phone): laid out across instead of one tall column. Phones keep the
    stacked layout from the other stylesheets. */
 @media (min-width: 701px) {
-  /* ---------- Thêm / Sửa thành viên: a pictures pane on the left, the title and fields on the right ---------- */
+  /* ---------- Thêm / Sửa thành viên: a header across the top (title and close), then the pictures pane and the
+     fields side by side, ending on the same line ---------- */
   .member-editor:not(#_):not(#_):not(#_) {
     display: grid !important;
     grid-template-columns: 232px minmax(0, 1fr);
     grid-template-rows: auto 1fr;
     grid-template-areas:
-      "media head"
+      "head head"
       "media main";
-    gap: 18px 26px;
+    gap: 20px 26px;
     width: min(100% - 48px, 720px) !important;
     max-height: calc(100dvh - 48px);
     overflow-y: auto;
-    padding: 22px 26px 24px 22px !important;
+    padding: 24px 26px !important;
   }
 
   .member-editor-head:not(#_) {
     grid-area: head;
-    padding: 6px 44px 0 0;
+    padding-right: 52px;
+  }
+
+  /* The close button sits on the header's line. */
+  .member-editor > .modal-close:not(#_):not(#_):not(#_) {
+    top: 24px !important;
+    right: 24px !important;
   }
 
   .member-editor-head > *:not(#_):not(#_) {
@@ -86,15 +93,38 @@
   /* ---------- Hồ sơ thành viên: a picture pane on the left, the month's numbers on the right ---------- */
   .member-profile-popover.member-detail-modal:not(#_):not(#_) {
     display: grid !important;
-    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-columns: 250px minmax(0, 1fr);
     grid-template-areas:
+      "head head"
       "hero score"
       "hero form"
       "hero stats";
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto auto auto 1fr;
     gap: 12px 22px;
     width: min(100% - 48px, 760px) !important;
-    padding: 18px 22px 18px 18px !important;
+    padding: 24px 26px !important;
+  }
+
+  .member-detail-modal > .profile-modal-head:not(#_) {
+    grid-area: head;
+    display: block;
+    margin-bottom: 8px !important;
+    padding-right: 52px;
+  }
+
+  .profile-modal-head > *:not(#_):not(#_) {
+    margin: 0 !important;
+  }
+
+  .profile-modal-head > h2:not(#_):not(#_) {
+    margin-top: 4px !important;
+    font-size: 22px;
+    color: var(--bar-text);
+  }
+
+  .member-detail-modal > .modal-close:not(#_):not(#_):not(#_) {
+    top: 22px !important;
+    right: 22px !important;
   }
 
   .member-detail-modal > *:not(.modal-close):not(#_):not(#_) {
@@ -114,7 +144,7 @@
   .member-detail-modal .profile-hero-card.has-art .profile-art {
     display: block;
     width: 100%;
-    height: 210px;
+    height: 170px;
     object-fit: contain;
     object-position: bottom center;
     filter: drop-shadow(0 10px 14px rgba(40, 28, 8, 0.2));
@@ -126,17 +156,18 @@
 
   .member-detail-modal > .profile-score-card:not(#_):not(#_) {
     grid-area: score;
-    margin-top: 34px !important;
   }
 
   .member-detail-modal > .profile-form:not(#_) {
     grid-area: form;
   }
 
+  /* The tiles share whatever height is left, so both panes end on the same line. */
   .member-detail-modal > .profile-stat-grid:not(#_):not(#_) {
     grid-area: stats;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    align-self: start;
+    grid-auto-rows: 1fr;
+    align-self: stretch;
   }
 
   /* ---------- Điểm danh prompt: wider, the two answers side by side ---------- */
@@ -176,8 +207,9 @@
   }
 }
 
-/* Phones: the profile keeps its round avatar. */
-.profile-art {
+/* Phones: the profile keeps its round avatar and has no header row. */
+.profile-art,
+.profile-modal-head {
   display: none;
 }
 
