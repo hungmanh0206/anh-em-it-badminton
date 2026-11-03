@@ -1739,7 +1739,7 @@ function Results({ onEditingChange, matches, drawn, scores, setScores, confirmed
 // Home: the latest month's champion, beside or under the next session. The card replays the celebration.
 function HomeChampionCard({ champion, monthLabel: label, onCelebrate }: { champion?: RankingRow; monthLabel: string; onCelebrate: () => void }) {
   const month = label.replace(", ", "/").replace("Tháng ", "THÁNG ");
-  const back = <span className="cc-back" aria-hidden="true"><i className="cc-sweep" /><i className="cc-sweep second" /><i className="cc-rays" /><i className="cc-spark s1" /><i className="cc-spark s2" /><i className="cc-spark s3" /><i className="cc-spark s4" /><i className="cc-shine" /></span>;
+  const back = <span className="cc-back" aria-hidden="true"><i className="cc-sweep" /><i className="cc-sweep second" /><i className="cc-spark s1" /><i className="cc-spark s2" /><i className="cc-spark s3" /><i className="cc-spark s4" /><i className="cc-shine" /></span>;
   if (!champion) return <section className="champion-card is-empty">
     {back}
     <div className="champion-card-main"><span className="cc-avatar champion-card-trophy"><AppIcon name="trophy" /></span><span className="cc-text"><span className="cc-pill"><AppIcon name="trophy" /> Nhà vô địch</span><b className="cc-name">Chưa có</b><span>Nhà vô địch được vinh danh khi tháng đầu tiên khép lại.</span></span></div>
@@ -1751,11 +1751,13 @@ function HomeChampionCard({ champion, monthLabel: label, onCelebrate }: { champi
     {art && <span className="cc-figure" aria-hidden="true"><i className="cc-figure-glow" /><img src={art} alt="" decoding="async" onError={(event) => { event.currentTarget.closest(".champion-card")?.classList.remove("has-art"); event.currentTarget.parentElement?.remove(); }} /></span>}
     <button type="button" className="champion-card-main" aria-label={`Chúc mừng nhà vô địch ${champion.name}, ${label}`} onClick={onCelebrate}>
       <span className="cc-avatar">
+        <i className="cc-halo" aria-hidden="true" />
+        <i className="cc-orbit" aria-hidden="true"><i /></i>
         <span className={avatarClassName("avatar", champion)} style={avatarStyle(champion)}>{champion.initials}</span>
         <span className="cc-crown" aria-hidden="true"><AppIcon name="crown" /></span>
       </span>
       <span className="cc-text">
-        <span className="cc-pill"><AppIcon name="trophy" /> Nhà vô địch</span>
+        <span className="cc-pill"><AppIcon name="trophy" />Nhà vô địch</span>
         <small className="cc-month">{month}</small>
         <b className="cc-name">{champion.name}</b>
       </span>
