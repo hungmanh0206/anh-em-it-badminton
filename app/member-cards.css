@@ -1,68 +1,12 @@
 /* Thành viên › grid view: one card per member with their full-body card art standing on a glow in their own colour.
-   The list/grid switch is a small tray whose pill glides between the two (useSlidingIndicator). */
+   The list/grid switch is the same toggle as the photo library's. */
 
-/* ---------- List / grid switch ---------- */
-.member-view-toggle {
-  position: relative;
-  isolation: isolate;
-  display: inline-flex;
-  flex: none;
-  gap: 2px;
-  padding: 4px;
-  border-radius: 12px;
-  background: var(--pill);
-}
-
-.member-view-toggle > button:not(#_):not(#_) {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 30px;
-  padding: 0;
-  border: 0;
-  border-radius: 9px;
-  background: none;
-  box-shadow: none;
-  color: var(--bar-muted);
-  cursor: pointer;
-  transition: color 200ms ease;
-}
-
-.member-view-toggle > button.active:not(#_):not(#_) {
-  color: var(--bar-accent);
-}
-
-.member-view-toggle > .slide-indicator {
-  z-index: -1;
-  width: var(--ind-w);
-  height: var(--ind-h);
-  border-radius: 9px;
-  background: var(--bar-thumb);
-  box-shadow: var(--bar-thumb-shadow);
-  transform: translate(var(--ind-x), var(--ind-y));
-}
-
-.view-icon {
-  display: block;
-  width: 16px;
-  height: 16px;
-  background: currentColor;
-  -webkit-mask: var(--view-icon) center / contain no-repeat;
-  mask: var(--view-icon) center / contain no-repeat;
-}
-
-.view-icon-list {
-  --view-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='2' width='3' height='3' rx='1'/%3E%3Crect x='6' y='2.5' width='9' height='2' rx='1'/%3E%3Crect x='1' y='6.5' width='3' height='3' rx='1'/%3E%3Crect x='6' y='7' width='9' height='2' rx='1'/%3E%3Crect x='1' y='11' width='3' height='3' rx='1'/%3E%3Crect x='6' y='11.5' width='9' height='2' rx='1'/%3E%3C/svg%3E");
-}
-
-.view-icon-grid {
-  --view-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='1' width='6' height='6' rx='1.6'/%3E%3Crect x='9' y='1' width='6' height='6' rx='1.6'/%3E%3Crect x='1' y='9' width='6' height='6' rx='1.6'/%3E%3Crect x='9' y='9' width='6' height='6' rx='1.6'/%3E%3C/svg%3E");
-}
-
+/* ---------- List / grid switch: the photo library's toggle (.photo-view-toggle), placed for phones here ---------- */
 @media (max-width: 800px) {
   .member-view-toggle {
     grid-column: 2;
     grid-row: 2;
+    justify-self: end;
   }
 
   .member-head-actions .search:not(#_) {
@@ -335,6 +279,31 @@
   :root[data-theme="dark"] .home-champion .champion-card.has-art .champion-card-art {
     opacity: 0.62;
   }
+}
+
+/* ---------- "Ảnh ăn mừng" in the add / edit member forms ---------- */
+.member-card-preview {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 64px;
+  height: 80px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 70%, rgba(255, 200, 61, 0.35), transparent 70%), var(--pill);
+}
+
+.member-card-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+}
+
+.member-card-preview .app-icon {
+  width: 30px;
+  height: 30px;
+  opacity: 0.55;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -4,7 +4,7 @@ import { createContext, type CSSProperties, type Dispatch, type SetStateAction, 
 import { backdropDismissProps, Presence } from "@/app/ui/modal";
 import { PhotoGallery } from "@/app/photo-gallery";
 import { PageHero } from "@/app/ui/page-hero";
-import { roundAvatarImage } from "@/app/ui/avatar-image";
+import { cardArtImage, roundAvatarImage } from "@/app/ui/avatar-image";
 import { ChampionCelebration } from "@/app/ui/champion-celebration";
 import { useCollapsingTopbar } from "@/app/ui/use-collapsing-topbar";
 import { useModalScrollLock } from "@/app/ui/use-modal-scroll-lock";
@@ -50,6 +50,7 @@ type FormByUsername = Record<string, FormResult[]>;
 type HallOfFameEntry = { month: string; label: string; rows: RankingRow[] };
 type AppDataCachePayload = RankingCachePayload & {
   hallOfFame?: HallOfFameEntry[];
+  cardArt?: Record<string, string | null>;
   eloRows: EloRankingRow[];
   eloStatus: EloStatus | null;
   formByUsername?: FormByUsername;
@@ -325,9 +326,13 @@ const membersViewKey = "aemit-members-view";
 type MemberAvatarsCache = { avatars: [string, string][]; storedAt?: number };
 const avatarImageUrl = (username?: string | null) => memberAvatars.get(avatarUsername(username)) ?? null;
 const hasAvatarArt = (username?: string | null) => Boolean(avatarImageUrl(username));
-// A member's full-body card art sits beside their avatar on Cloudinary (member-avatars/card-<username>), so its address
-// follows from the avatar's. Delivered resized and in a modern format; a member without one keeps the plain avatar.
+// A member's celebration picture sits beside their avatar on Cloudinary (member-avatars/card-<username>). One changed
+// from "Sửa thành viên" comes from /api/app-data (null once removed); the first members' pictures follow from the
+// avatar's address. Delivered resized and in a modern format; a member without one keeps the plain avatar.
+const memberCardArt = new Map<string, string | null>();
 const cardArtUrl = (username?: string | null) => {
+  const changed = memberCardArt.get(avatarUsername(username));
+  if (changed !== undefined) return changed;
   const match = /^(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)v\d+\/((?:[^/]+\/)*)avatar-([^/]+)\.png$/.exec(avatarImageUrl(username) ?? "");
   return match ? `${match[1]}c_limit,h_900,f_auto,q_auto/${match[2]}card-${match[3]}.png` : null;
 };
@@ -803,6 +808,8 @@ export default function Home() {
         setChampionRankingRows(payload.championRankingRows);
         setChampionRankingLabel(payload.championRankingLabel);
         setHallOfFame(payload.hallOfFame || []);
+        memberCardArt.clear();
+        Object.entries(payload.cardArt || {}).forEach(([username, url]) => memberCardArt.set(username, url));
         setEloRows(payload.eloRows || []);
         setEloStatus(payload.eloStatus || null);
         setFormByUsername(payload.formByUsername || {});
@@ -1296,7 +1303,7 @@ export default function Home() {
     <section className="content">
       <header><div className="title-group"><div><h1>{screen === "members" && !isAdmin ? "Thành viên" : screenTitles[screen]}</h1></div>{screen === "home" && <p className="title-date">{currentDateLabel}</p>}</div></header>
       {activeGroup && activeGroup.screens.length > 1 && <div ref={tabsRef} key={activeGroup.key} className="page-tabs" aria-label={activeGroup.label}>{activeGroup.screens.map((item) => <button key={item.screen} className={screen === item.screen ? "active" : ""} aria-current={screen === item.screen ? "page" : undefined} onClick={() => openScreen(item.screen)}>{item.label}</button>)}<i className="slide-indicator" aria-hidden="true" /></div>}
-      <div className="screen-view" key={screen}>{screen === "members" ? <Members canManage={isAdmin} members={members} rankingRows={profileRows} rankingMonth={profileAchievementMonth} eloRows={eloRows} formByUsername={formByUsername} onAvatarUpdated={(username, avatarUrl) => { if (avatarUrl) memberAvatars.set(username, avatarUrl); else memberAvatars.delete(username); removeBrowserCache(memberAvatarsCacheKey); setAvatarRevision((revision) => revision + 1); }} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "hall" ? <HallOfFame entries={hallOfFame} onOpenMonth={openRankingMonth} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={rankingFormByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
+      <div className="screen-view" key={screen}>{screen === "members" ? <Members canManage={isAdmin} members={members} rankingRows={profileRows} rankingMonth={profileAchievementMonth} eloRows={eloRows} formByUsername={formByUsername} onAvatarUpdated={(username, avatarUrl) => { if (avatarUrl) memberAvatars.set(username, avatarUrl); else memberAvatars.delete(username); removeBrowserCache(memberAvatarsCacheKey); setAvatarRevision((revision) => revision + 1); }} onCardArtUpdated={(username, cardUrl) => { memberCardArt.set(username, cardUrl); setAvatarRevision((revision) => revision + 1); }} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "hall" ? <HallOfFame entries={hallOfFame} onOpenMonth={openRankingMonth} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={rankingFormByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
         <div className="home-top">
         <div className="next-session">
         <section className="hero">
@@ -2426,6 +2433,35 @@ function useAvatarPicker() {
   return { picked, error, pick, reset };
 }
 
+// The celebration picture chosen for a member, kept here until the form is saved.
+function useCardArtPicker() {
+  const [picked, setPicked] = useState<{ blob: Blob; preview: string } | null>(null);
+  const [error, setError] = useState("");
+  const pick = async (file?: File) => {
+    if (!file) return false;
+    setError("");
+    try {
+      const blob = await cardArtImage(file);
+      setPicked({ blob, preview: URL.createObjectURL(blob) });
+      return true;
+    } catch (pickError) {
+      setError(pickError instanceof Error ? pickError.message : "Không đọc được ảnh này.");
+      return false;
+    }
+  };
+  const reset = () => { setPicked(null); setError(""); };
+  return { picked, error, pick, reset };
+}
+
+function CardArtField({ url, canRemove, error, onPick, onRemove }: { url: string | null; canRemove: boolean; error: string; onPick: (file?: File) => void; onRemove: () => void }) {
+  const input = useRef<HTMLInputElement>(null);
+  return <div className="member-avatar-field member-card-field">
+    <div className="member-card-preview">{url ? <img src={url} alt="" /> : <AppIcon name="trophy" />}</div>
+    <div className="member-avatar-copy"><b>Ảnh ăn mừng</b><div className="member-avatar-actions"><button type="button" className="soft-btn" onClick={() => input.current?.click()}>{url ? "Đổi ảnh" : "Chọn ảnh"}</button>{canRemove && <button type="button" className="soft-btn member-avatar-remove" onClick={onRemove}>Xóa ảnh</button>}</div>{error ? <small className="member-editor-error">{error}</small> : <small className="member-editor-hint">Ảnh toàn thân nền trong suốt (PNG), dùng cho thẻ thành viên và thẻ nhà vô địch.</small>}</div>
+    <input ref={input} type="file" accept="image/png,image/webp,image/*" hidden onChange={(event) => { onPick(event.target.files?.[0]); event.target.value = ""; }} />
+  </div>;
+}
+
 function AvatarField({ url, initials, canRemove, error, onPick, onRemove }: { url: string | null; initials: string; canRemove: boolean; error: string; onPick: (file?: File) => void; onRemove: () => void }) {
   const input = useRef<HTMLInputElement>(null);
   return <div className="member-avatar-field">
@@ -2435,13 +2471,14 @@ function AvatarField({ url, initials, canRemove, error, onPick, onRemove }: { ur
   </div>;
 }
 
-function AddMemberModal({ onClose, onCreate }: { onClose: () => void; onCreate: (values: { name: string; role: "member" | "sub-admin"; password: string; avatar?: Blob }) => Promise<void> }) {
+function AddMemberModal({ onClose, onCreate }: { onClose: () => void; onCreate: (values: { name: string; role: "member" | "sub-admin"; password: string; avatar?: Blob; card?: Blob }) => Promise<void> }) {
   const [name, setName] = useState("");
   const [role, setRole] = useState<"member" | "sub-admin">("member");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const photo = useAvatarPicker();
+  const card = useCardArtPicker();
   const username = usernameFromName(name);
   const submit = async () => {
     if (name.trim().length < 2 || username.length < 2) return setError("Nhập tên thành viên (ít nhất 2 ký tự).");
@@ -2449,7 +2486,7 @@ function AddMemberModal({ onClose, onCreate }: { onClose: () => void; onCreate: 
     setBusy(true);
     setError("");
     try {
-      await onCreate({ name: name.trim(), role, password, avatar: photo.picked?.blob });
+      await onCreate({ name: name.trim(), role, password, avatar: photo.picked?.blob, card: card.picked?.blob });
     } catch (createError) {
       setError(createError instanceof Error ? createError.message : "Không thể thêm thành viên.");
       setBusy(false);
@@ -2461,6 +2498,7 @@ function AddMemberModal({ onClose, onCreate }: { onClose: () => void; onCreate: 
       <p className="eyebrow">THÊM THÀNH VIÊN</p>
       <h2>Thành viên mới</h2>
       <AvatarField url={photo.picked?.preview ?? null} initials={memberInitials(name)} canRemove={Boolean(photo.picked)} error={photo.error} onPick={(file) => void photo.pick(file)} onRemove={photo.reset} />
+      <CardArtField url={card.picked?.preview ?? null} canRemove={Boolean(card.picked)} error={card.error} onPick={(file) => void card.pick(file)} onRemove={card.reset} />
       <label>Tên<input value={name} onChange={(event) => setName(event.target.value)} maxLength={40} autoFocus disabled={busy} placeholder="Ví dụ: Tuấn" />
         <small className="member-editor-hint">Tên đăng nhập: <b>{username || "—"}</b></small></label>
       <label className="member-role-field">Quyền<GlassSelect value={role} options={[{ value: "member", label: "Thành viên" }, { value: "sub-admin", label: "Sub-admin" }]} disabled={busy} onChange={(next) => setRole(next as "member" | "sub-admin")} ariaLabel="Quyền" />
@@ -2472,13 +2510,16 @@ function AddMemberModal({ onClose, onCreate }: { onClose: () => void; onCreate: 
   </div>;
 }
 
-function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formByUsername, onAvatarUpdated, onRoleUpdated }: { canManage: boolean; members: Member[]; rankingRows: RankingRow[]; rankingMonth: string; eloRows: EloRankingRow[]; formByUsername: Record<string, FormResult[]>; onAvatarUpdated: (username: string, avatarUrl: string | null) => void; onRoleUpdated: (username: string, role: MemberRole) => void }) {
+function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formByUsername, onAvatarUpdated, onCardArtUpdated, onRoleUpdated }: { canManage: boolean; members: Member[]; rankingRows: RankingRow[]; rankingMonth: string; eloRows: EloRankingRow[]; formByUsername: Record<string, FormResult[]>; onAvatarUpdated: (username: string, avatarUrl: string | null) => void; onCardArtUpdated: (username: string, cardUrl: string | null) => void; onRoleUpdated: (username: string, role: MemberRole) => void }) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [viewing, setViewing] = useState<Member | null>(null);
   const [editing, setEditing] = useState<Member | null>(null);
   const photo = useAvatarPicker();
   const newAvatar = photo.picked;
   const [avatarRemoved, setAvatarRemoved] = useState(false);
+  const cardPick = useCardArtPicker();
+  const newCard = cardPick.picked;
+  const [cardRemoved, setCardRemoved] = useState(false);
   const [fullName, setFullName] = useState("");
   const [editRole, setEditRole] = useState<"member" | "sub-admin">("member");
   const [searchTerm, setSearchTerm] = useState("");
@@ -2488,7 +2529,6 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
   const [editPassword, setEditPassword] = useState("");
   const [adding, setAdding] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const viewRef = useSlidingIndicator<HTMLDivElement>(viewMode);
   useEffect(() => {
     try { if (localStorage.getItem(membersViewKey) === "grid") window.queueMicrotask(() => setViewMode("grid")); } catch {}
   }, []);
@@ -2564,6 +2604,13 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
             await adminPost("/api/member-avatar", { username: editing.username, avatarUrl: null }, "Không thể xóa ảnh đại diện.");
             onAvatarUpdated(editing.username, null);
           }
+          if (newCard) {
+            const cardUrl = await uploadCardArt(editing.username, newCard.blob);
+            onCardArtUpdated(editing.username, cardUrl);
+          } else if (cardRemoved) {
+            await adminPost("/api/member-card", { username: editing.username, cardUrl: null }, "Không thể xóa ảnh ăn mừng.");
+            onCardArtUpdated(editing.username, null);
+          }
           if (newPassword) {
             await adminPost("/api/member-password", { username: editing.username, password: newPassword }, "Không thể đổi mật khẩu.");
             setRoleNotice(`Đã đổi mật khẩu cho ${editing.name}.`);
@@ -2583,12 +2630,14 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
     setEditPassword("");
     photo.reset();
     setAvatarRemoved(false);
+    cardPick.reset();
+    setCardRemoved(false);
   };
   const closeEditor = () => setEditing(null);
   const pickAvatar = async (file?: File) => { if (await photo.pick(file)) setAvatarRemoved(false); };
-  // Direct browser -> Cloudinary upload, then the profile keeps the delivery URL.
-  const uploadAvatar = async (username: string, blob: Blob) => {
-    const signed = await adminPost("/api/member-avatar/sign", { username }, "Không thể tải ảnh lên.") as unknown as Record<string, string>;
+  // Direct browser -> Cloudinary upload of an avatar or a celebration picture; returns Cloudinary's address.
+  const uploadToCloudinary = async (username: string, blob: Blob, kind: "avatar" | "card") => {
+    const signed = await adminPost("/api/member-avatar/sign", { username, kind }, "Không thể tải ảnh lên.") as unknown as Record<string, string>;
     const form = new FormData();
     form.append("file", blob, "avatar.png");
     form.append("api_key", signed.apiKey);
@@ -2597,8 +2646,18 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
     if (!response) throw new Error("Mất kết nối khi tải ảnh lên Cloudinary.");
     const result = await response.json().catch(() => null) as { secure_url?: string; error?: { message?: string } } | null;
     if (!response.ok || !result?.secure_url) throw new Error(result?.error?.message ? `Cloudinary: ${result.error.message}` : "Cloudinary từ chối ảnh.");
-    await adminPost("/api/member-avatar", { username, avatarUrl: result.secure_url }, "Không thể lưu ảnh đại diện.");
     return result.secure_url;
+  };
+  // Then the profile keeps the delivery URL.
+  const uploadAvatar = async (username: string, blob: Blob) => {
+    const avatarUrl = await uploadToCloudinary(username, blob, "avatar");
+    await adminPost("/api/member-avatar", { username, avatarUrl }, "Không thể lưu ảnh đại diện.");
+    return avatarUrl;
+  };
+  const uploadCardArt = async (username: string, blob: Blob) => {
+    const uploaded = await uploadToCloudinary(username, blob, "card");
+    const saved = await adminPost("/api/member-card", { username, cardUrl: uploaded }, "Không thể lưu ảnh ăn mừng.") as { cardUrl?: string | null };
+    return saved.cardUrl ?? null;
   };
   const adminPost = async (path: string, body: Record<string, unknown>, fallbackError: string) => {
     if (!supabase) throw new Error("Chưa kết nối Supabase.");
@@ -2641,10 +2700,13 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
         <div><h2>Danh sách thành viên</h2><p>{canManage ? "Quản lý thông tin các thành viên CLB." : "Các thành viên đang sinh hoạt cùng CLB."}</p></div>
         <div className="member-head-actions">
           <input className="search" placeholder={canManage ? "Tìm tên, username, quyền..." : "Tìm tên, quyền, level..."} value={searchTerm} onChange={(event) => { setSearchTerm(event.target.value); setOpenMenu(null); }} />
-          <div ref={viewRef} className="member-view-toggle" role="group" aria-label="Kiểu hiển thị">
-            <button type="button" className={viewMode === "list" ? "active" : ""} aria-pressed={viewMode === "list"} aria-label="Dạng danh sách" title="Danh sách" onClick={() => chooseView("list")}><i className="view-icon view-icon-list" aria-hidden="true" /></button>
-            <button type="button" className={viewMode === "grid" ? "active" : ""} aria-pressed={viewMode === "grid"} aria-label="Dạng thẻ" title="Thẻ" onClick={() => chooseView("grid")}><i className="view-icon view-icon-grid" aria-hidden="true" /></button>
-            <i className="slide-indicator" aria-hidden="true" />
+          <div className="photo-view-toggle member-view-toggle" role="group" aria-label="Chế độ xem">
+            <button type="button" className={viewMode === "grid" ? "active" : ""} aria-pressed={viewMode === "grid"} onClick={() => chooseView("grid")} title="Dạng lưới" aria-label="Dạng lưới">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2" /><rect x="13" y="3" width="8" height="8" rx="2" /><rect x="3" y="13" width="8" height="8" rx="2" /><rect x="13" y="13" width="8" height="8" rx="2" /></svg>
+            </button>
+            <button type="button" className={viewMode === "list" ? "active" : ""} aria-pressed={viewMode === "list"} onClick={() => chooseView("list")} title="Dạng danh sách" aria-label="Dạng danh sách">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="4" width="5" height="5" rx="1.5" /><rect x="10" y="5.5" width="11" height="2" rx="1" /><rect x="3" y="15" width="5" height="5" rx="1.5" /><rect x="10" y="16.5" width="11" height="2" rx="1" /></svg>
+            </button>
           </div>
           {canManage && <button type="button" className="primary member-add-btn" onClick={() => setAdding(true)}><span className="plus-icon" aria-hidden="true" /><span className="member-add-full">Thêm thành viên</span><span className="member-add-short">Thêm</span></button>}
         </div>
@@ -2675,7 +2737,7 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
         </article>;
       })}</div>}
     </section>
-    <Presence show={canManage && Boolean(editing)}>{canManage && editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={closeEditor}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><AvatarField url={newAvatar?.preview ?? (avatarRemoved ? null : avatarImageUrl(editing.username))} initials={editing.initials} canRemove={Boolean(newAvatar) || (memberAvatars.has(editing.username) && !avatarRemoved)} error={photo.error} onPick={(file) => void pickAvatar(file)} onRemove={() => { photo.reset(); setAvatarRemoved(memberAvatars.has(editing.username)); }} /><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <GlassSelect value={editRole} options={[{ value: "member", label: "Thành viên" }, { value: "sub-admin", label: "Sub-admin" }]} disabled={roleSaving === editing.username} onChange={(next) => setEditRole(next as "member" | "sub-admin")} ariaLabel="Quyền" />}<small>{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? "Mạnh luôn là Admin, không thể đổi quyền." : editRole === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label><label className="member-password-field">Mật khẩu mới<PasswordField value={editPassword} onChange={setEditPassword} placeholder="Để trống nếu giữ nguyên" /><small className="member-editor-hint">Mật khẩu hiện tại được mã hoá nên không hiển thị được; nhập mật khẩu mới nếu muốn đổi.</small></label><div className="editor-actions"><button className="soft-btn" onClick={closeEditor}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></section></div>}</Presence>
+    <Presence show={canManage && Boolean(editing)}>{canManage && editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={closeEditor}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><AvatarField url={newAvatar?.preview ?? (avatarRemoved ? null : avatarImageUrl(editing.username))} initials={editing.initials} canRemove={Boolean(newAvatar) || (memberAvatars.has(editing.username) && !avatarRemoved)} error={photo.error} onPick={(file) => void pickAvatar(file)} onRemove={() => { photo.reset(); setAvatarRemoved(memberAvatars.has(editing.username)); }} /><CardArtField url={newCard?.preview ?? (cardRemoved ? null : cardArtUrl(editing.username))} canRemove={Boolean(newCard) || (Boolean(cardArtUrl(editing.username)) && !cardRemoved)} error={cardPick.error} onPick={(file) => void cardPick.pick(file).then((ok) => { if (ok) setCardRemoved(false); })} onRemove={() => { cardPick.reset(); setCardRemoved(Boolean(cardArtUrl(editing.username))); }} /><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <GlassSelect value={editRole} options={[{ value: "member", label: "Thành viên" }, { value: "sub-admin", label: "Sub-admin" }]} disabled={roleSaving === editing.username} onChange={(next) => setEditRole(next as "member" | "sub-admin")} ariaLabel="Quyền" />}<small>{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? "Mạnh luôn là Admin, không thể đổi quyền." : editRole === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label><label className="member-password-field">Mật khẩu mới<PasswordField value={editPassword} onChange={setEditPassword} placeholder="Để trống nếu giữ nguyên" /><small className="member-editor-hint">Mật khẩu hiện tại được mã hoá nên không hiển thị được; nhập mật khẩu mới nếu muốn đổi.</small></label><div className="editor-actions"><button className="soft-btn" onClick={closeEditor}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></section></div>}</Presence>
     <Presence show={Boolean(viewing)}>{viewing && (() => {
       const rank = rankingRows.findIndex((row) => row.username === viewing.username || row.name === viewing.name) + 1;
       const achievement = rank > 0 ? rankingRows[rank - 1] : null;
@@ -2685,12 +2747,12 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
       return <div className="modal-backdrop"><ProfilePopover detail member={viewing} rank={rank} achievement={achievement} achievementMonth={rankingMonth} rankClass={rankClass} hasRankingData={hasRankingData} elo={elo} form={formByUsername[viewing.username]} onClose={() => setViewing(null)} /></div>;
     })()}</Presence>
     <Presence show={canManage && adding}>{canManage && adding && <AddMemberModal onClose={() => setAdding(false)} onCreate={async (values) => {
-      const { avatar, ...member } = values;
+      const { avatar, card, ...member } = values;
       const created = await adminPost("/api/member-create", member, "Không thể thêm thành viên.") as { username?: string };
-      if (avatar) {
-        // The member already exists at this point, so a failed photo only needs a retry from "Sửa thành viên".
-        await uploadAvatar(created.username ?? usernameFromName(member.name), avatar).catch(() => window.alert("Đã thêm thành viên nhưng chưa tải được ảnh đại diện. Bạn có thể thêm ảnh ở mục Sửa thành viên."));
-      }
+      const createdUsername = created.username ?? usernameFromName(member.name);
+      // The member already exists at this point, so a failed photo only needs a retry from "Sửa thành viên".
+      if (avatar) await uploadAvatar(createdUsername, avatar).catch(() => window.alert("Đã thêm thành viên nhưng chưa tải được ảnh đại diện. Bạn có thể thêm ảnh ở mục Sửa thành viên."));
+      if (card) await uploadCardArt(createdUsername, card).catch(() => window.alert("Đã thêm thành viên nhưng chưa tải được ảnh ăn mừng. Bạn có thể thêm ảnh ở mục Sửa thành viên."));
       window.location.reload();
     }} />}</Presence>
     <Presence show={Boolean(confirm)}>{confirm && <ConfirmActionModal title={confirm.title} message={confirm.message} onCancel={() => setConfirm(null)} onConfirm={async () => { try { await confirm.action(); } finally { setConfirm(null); } }} />}</Presence>

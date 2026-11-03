@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { AVATAR_FOLDER, avatarPublicId, avatarPublicIdFromUrl, isMemberAvatarUrl } from "../lib/member-avatar.js";
+import { AVATAR_FOLDER, avatarPublicId, avatarPublicIdFromUrl, cardArtUrl, cardArtVersion, cardUploadVersion, isMemberAvatarUrl, withCardArtVersion } from "../lib/member-avatar.js";
 import { resourceToPhotoRow } from "../lib/photos/assets.js";
 
 const cloud = "club";
@@ -38,4 +38,25 @@ test("avatars never show up in the photo gallery, even when the gallery covers t
   assert.equal(resourceToPhotoRow(resource({ public_id: `${AVATAR_FOLDER}/avatar-nam` }), ""), null);
   assert.equal(resourceToPhotoRow(resource({ asset_folder: AVATAR_FOLDER }), "badminton"), null);
   assert.notEqual(resourceToPhotoRow({ ...resource({ asset_folder: "2026" }), public_id: "photo" }, ""), null);
+});
+
+test("celebration picture: only the member's own card upload is accepted, and its version is kept", () => {
+  assert.equal(cardUploadVersion(`${base}/v77/${AVATAR_FOLDER}/card-nam.png`, cloud, "nam"), "v77");
+  assert.equal(cardUploadVersion(`${base}/v77/card-nam.png`, cloud, "nam"), "v77");
+  for (const url of [`${base}/v77/${AVATAR_FOLDER}/card-son.png`, `${base}/v77/${AVATAR_FOLDER}/avatar-nam.png`, `${base}/${AVATAR_FOLDER}/card-nam.png`, `https://evil.example/v77/card-nam.png`, null]) {
+    assert.equal(cardUploadVersion(url, cloud, "nam"), null, String(url));
+  }
+  assert.equal(cardArtUrl(cloud, "nam", "v77"), `${base}/c_limit,h_900,f_auto,q_auto/v77/${AVATAR_FOLDER}/card-nam.png`);
+});
+
+test("celebration picture marker lives beside other description lines", () => {
+  assert.equal(cardArtVersion(null), undefined);
+  const withSub = "[aemit-role:sub-admin]";
+  const marked = withCardArtVersion(withSub, "v5");
+  assert.equal(marked, `${withSub}\n[aemit-card:v5]`);
+  assert.equal(cardArtVersion(marked), "v5");
+  const replaced = withCardArtVersion(marked, "none");
+  assert.equal(replaced, `${withSub}\n[aemit-card:none]`);
+  assert.equal(cardArtVersion(replaced), "none");
+  assert.equal(cardArtVersion("[aemit-card:v5] trailing"), undefined);
 });

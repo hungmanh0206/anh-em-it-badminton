@@ -2,7 +2,9 @@ import { ELO_INITIAL_RATING } from "@/lib/elo/constants";
 import { rankEloPlayers, replayEloMatches } from "@/lib/elo/calculate-elo";
 import { startRatingForProfile } from "@/lib/elo/start-rating";
 import { isMissingEloFeature } from "@/lib/elo/server";
+import { getCloudinaryConfig } from "@/lib/cloudinary";
 import { nextMonthStart } from "@/lib/match-result";
+import { cardArtUrl, cardArtVersion } from "@/lib/member-avatar";
 import { ApiError, jsonError, requireUser } from "@/lib/supabase-admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -435,6 +437,15 @@ export async function GET(request: Request) {
     const queryError = rankingError || championSessionError || profileError || finalSessionError || nextMonthError || historyError || formError || hallError;
     if (queryError) throw queryError;
 
+    // Celebration pictures changed from "Sửa thành viên": the current upload, or null once removed. Members not
+    // listed keep the picture uploaded with the first members.
+    const cloudName = getCloudinaryConfig()?.cloudName;
+    const cardArt: Record<string, string | null> = {};
+    if (cloudName) ((activeProfiles || []) as { username?: string | null; description?: string | null }[]).forEach((profile) => {
+      const version = cardArtVersion(profile.description);
+      if (profile.username && version) cardArt[profile.username.toLowerCase()] = version === "none" ? null : cardArtUrl(cloudName, profile.username.toLowerCase(), version);
+    });
+
     const rankingRowsByMonth = new Map<string, MonthlyResultRow[]>();
     ((allRankingData || []) as MonthlyResultRow[]).forEach((row) => {
       if (!row.month) return;
@@ -516,6 +527,7 @@ export async function GET(request: Request) {
       championRankingRows,
       championRankingLabel,
       hallOfFame,
+      cardArt,
       eloRows,
       eloStatus,
       formByUsername,
