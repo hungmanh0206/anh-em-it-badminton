@@ -2665,9 +2665,10 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
               {art ? <img className="member-card-art" src={art} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.closest(".member-card-tile")?.classList.remove("has-art"); event.currentTarget.remove(); }} /> : null}
               <span className={avatarClassName("avatar member-card-avatar", member)} style={avatarStyle(member)}>{member.initials}</span>
             </span>
+            {role !== "member" && <span className={"member-card-role " + role}>{role === "admin" ? "Admin" : "Sub-admin"}</span>}
             <span className="member-card-info">
               <b>{member.name}</b>
-              <span className="member-card-tags"><span className="member-card-level">Level {member.level}</span>{role !== "member" && <span className={"member-card-role " + role}>{role === "admin" ? "Admin" : "Sub-admin"}</span>}{typeof elo === "number" && <span className="member-card-elo">ELO {Math.round(elo)}</span>}</span>
+              <span className="member-card-meta">Level {member.level}{typeof elo === "number" && <> · ELO <b>{Math.round(elo)}</b></>}</span>
             </span>
           </button>
           {canManage && memberMenu(member, false)}
