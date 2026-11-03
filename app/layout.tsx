@@ -45,6 +45,7 @@ import "./draw-wheel.css";
 import "./workflow-stepper.css";
 import "./liquid-motion.css";
 import "./hall-of-fame.css";
+import "./champion-card.css";
 import "./member-cards.css";
 import "./modal-desktop.css";
 import "./ranking-pages.css";

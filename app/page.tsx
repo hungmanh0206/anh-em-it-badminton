@@ -1739,29 +1739,30 @@ function Results({ onEditingChange, matches, drawn, scores, setScores, confirmed
 // Home: the latest month's champion, beside or under the next session. The card replays the celebration.
 function HomeChampionCard({ champion, monthLabel: label, onCelebrate }: { champion?: RankingRow; monthLabel: string; onCelebrate: () => void }) {
   const month = label.replace(", ", "/").replace("Tháng ", "THÁNG ");
+  const back = <span className="cc-back" aria-hidden="true"><i className="cc-sweep" /><i className="cc-sweep second" /><i className="cc-rays" /><i className="cc-spark s1" /><i className="cc-spark s2" /><i className="cc-spark s3" /><i className="cc-spark s4" /><i className="cc-shine" /></span>;
   if (!champion) return <section className="champion-card is-empty">
-    <div className="champion-card-main"><span className="champion-card-trophy"><AppIcon name="trophy" /></span><span className="champion-card-text"><small>NHÀ VÔ ĐỊCH THÁNG</small><b>Chưa có nhà vô địch</b><span>Nhà vô địch được vinh danh khi tháng đầu tiên khép lại.</span></span></div>
+    {back}
+    <div className="champion-card-main"><span className="cc-avatar champion-card-trophy"><AppIcon name="trophy" /></span><span className="cc-text"><span className="cc-pill"><AppIcon name="trophy" /> Nhà vô địch</span><b className="cc-name">Chưa có</b><span>Nhà vô địch được vinh danh khi tháng đầu tiên khép lại.</span></span></div>
   </section>;
   const diff = `${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff}`;
   const art = cardArtUrl(champion.username);
   return <section className={"champion-card" + (art ? " has-art" : "")}>
-    {art && <img className="champion-card-art" src={art} alt="" aria-hidden="true" decoding="async" onError={(event) => event.currentTarget.remove()} />}
-    <span className="champion-card-mark" aria-hidden="true">1</span>
+    {back}
+    {art && <span className="cc-figure" aria-hidden="true"><i className="cc-figure-glow" /><img src={art} alt="" decoding="async" onError={(event) => { event.currentTarget.closest(".champion-card")?.classList.remove("has-art"); event.currentTarget.parentElement?.remove(); }} /></span>}
     <button type="button" className="champion-card-main" aria-label={`Chúc mừng nhà vô địch ${champion.name}, ${label}`} onClick={onCelebrate}>
-      <span className="champion-card-avatar">
-        <i className="champion-card-rays" aria-hidden="true" />
+      <span className="cc-avatar">
         <span className={avatarClassName("avatar", champion)} style={avatarStyle(champion)}>{champion.initials}</span>
-        <span className="champion-card-crown" aria-hidden="true"><AppIcon name="crown" /></span>
-        <span className="champion-card-medal" aria-hidden="true" />
+        <span className="cc-crown" aria-hidden="true"><AppIcon name="crown" /></span>
       </span>
-      <span className="champion-card-text">
-        <small className="champion-card-ribbon"><span className="champion-card-ribbon-lead">Nhà vô địch · </span>{month}</small>
-        <b>{champion.name}</b>
-        <span className="champion-card-stats">
-          <span><b>{champion.points}</b><small>Điểm</small></span>
-          <span><b>{diff}</b><small>Hiệu số</small></span>
-          <span><b>{champion.matches}</b><small>Trận</small></span>
-        </span>
+      <span className="cc-text">
+        <span className="cc-pill"><AppIcon name="trophy" /> Nhà vô địch</span>
+        <small className="cc-month">{month}</small>
+        <b className="cc-name">{champion.name}</b>
+      </span>
+      <span className="cc-stats">
+        <span><b>{champion.points}</b><small>Điểm</small></span>
+        <span><b>{diff}</b><small>Hiệu số</small></span>
+        <span><b>{champion.matches}</b><small>Trận</small></span>
       </span>
     </button>
   </section>;

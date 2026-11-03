@@ -1,0 +1,490 @@
+/* Home › champion of the month (HomeChampionCard in app/page.tsx). Avatar with crown and the title on the left, the
+   numbers in three tiles under them, and the champion's celebration picture standing on the right, its head rising
+   out of the card. Light moves across it: a slow gold sweep, turning rays, twinkles and a passing shine; the figure
+   breathes gently. Only transforms and opacity animate. */
+.champion-card {
+  --cc-face: linear-gradient(135deg, rgba(255, 246, 214, 0.9) 0%, rgba(255, 224, 150, 0.82) 52%, rgba(246, 192, 72, 0.78) 100%);
+  --cc-ink: #2e1d00;
+  --cc-sub: #8a5300;
+  --cc-sweep: rgba(255, 255, 255, 0.75);
+  --cc-rays: rgba(255, 255, 255, 0.7);
+  --cc-tile: rgba(255, 255, 255, 0.55);
+  --cc-pill: linear-gradient(180deg, rgba(255, 222, 130, 0.95), rgba(255, 186, 30, 0.9));
+  --cc-pill-ink: #3a2400;
+  --cc-name: linear-gradient(180deg, #4a2d00 0%, #2a1800 100%);
+  --cc-avatar-glow: 0 0 0 4px rgba(255, 255, 255, 0.55), 0 0 26px 6px rgba(255, 200, 60, 0.65);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: 210px;
+  margin-top: 26px;
+  border-radius: 22px;
+  color: var(--cc-ink);
+}
+
+:root[data-theme="dark"] .champion-card {
+  --cc-face: radial-gradient(120% 140% at 0% 0%, rgba(120, 82, 14, 0.72), transparent 55%), linear-gradient(135deg, rgba(48, 34, 10, 0.92) 0%, rgba(26, 19, 8, 0.92) 60%, rgba(40, 28, 8, 0.9) 100%);
+  --cc-ink: #fff6dc;
+  --cc-sub: #ffd66d;
+  --cc-sweep: rgba(255, 196, 64, 0.55);
+  --cc-rays: rgba(255, 210, 100, 0.22);
+  --cc-tile: rgba(255, 255, 255, 0.07);
+  --cc-pill: linear-gradient(180deg, rgba(255, 214, 110, 0.95), rgba(214, 150, 20, 0.92));
+  --cc-pill-ink: #2a1800;
+  --cc-name: linear-gradient(180deg, #ffffff 0%, #ffe7a8 100%);
+  --cc-avatar-glow: 0 0 0 4px rgba(255, 200, 80, 0.35), 0 0 30px 8px rgba(255, 183, 0, 0.45);
+}
+
+/* The face and its light, clipped to the card; the figure is outside it so it can rise above the top edge. */
+.cc-back {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--cc-face);
+  box-shadow: var(--glass-lift), 0 0 40px rgba(255, 170, 30, 0.18);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+/* A wide arc of gold light behind the figure, drifting slowly. */
+.cc-sweep {
+  position: absolute;
+  right: -18%;
+  bottom: -70%;
+  width: 95%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, transparent 62%, var(--cc-sweep) 70%, transparent 78%);
+  filter: blur(2px);
+  opacity: 0.85;
+  animation: ccDrift 9s ease-in-out infinite alternate;
+}
+
+.cc-sweep.second {
+  right: 4%;
+  bottom: -95%;
+  width: 120%;
+  opacity: 0.4;
+  animation-duration: 12s;
+  animation-direction: alternate-reverse;
+}
+
+.cc-rays {
+  position: absolute;
+  top: 50%;
+  left: 18%;
+  width: 360px;
+  height: 360px;
+  margin: -180px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(var(--cc-rays) 0deg 6deg, transparent 6deg 20deg);
+  -webkit-mask: radial-gradient(circle, #000 12%, transparent 66%);
+  mask: radial-gradient(circle, #000 12%, transparent 66%);
+  animation: ccRays 48s linear infinite;
+}
+
+.cc-spark {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, rgba(255, 220, 120, 0.9) 40%, transparent 72%);
+  box-shadow: 0 0 10px 2px rgba(255, 205, 90, 0.8);
+  opacity: 0;
+  animation: ccTwinkle 3.6s ease-in-out infinite;
+}
+
+.cc-spark.s1 { top: 18%; left: 46%; }
+.cc-spark.s2 { top: 70%; left: 58%; animation-delay: 1.2s; }
+.cc-spark.s3 { top: 30%; right: 12%; animation-delay: 2.1s; }
+.cc-spark.s4 { bottom: 14%; left: 8%; animation-delay: 2.8s; }
+
+.cc-shine {
+  position: absolute;
+  inset: -20% auto -20% 0;
+  width: 34%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  opacity: 0.6;
+  transform: translateX(-160%) skewX(-18deg);
+  animation: ccShine 7s cubic-bezier(0.4, 0, 0.2, 1) 1.4s infinite;
+}
+
+:root[data-theme="dark"] .cc-shine {
+  background: linear-gradient(100deg, transparent, rgba(255, 220, 140, 0.2), transparent);
+}
+
+/* The figure: anchored to the bottom right, taller than the card. */
+.cc-figure {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 40%;
+  height: calc(100% + 30px);
+  pointer-events: none;
+}
+
+.cc-figure-glow {
+  position: absolute;
+  right: 6%;
+  bottom: 6%;
+  width: 80%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 196, 64, 0.55), transparent);
+  filter: blur(8px);
+  animation: ccPulse 4.5s ease-in-out infinite;
+}
+
+.cc-figure img {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom right;
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.3));
+  -webkit-mask-image: linear-gradient(180deg, #000 88%, transparent);
+  mask-image: linear-gradient(180deg, #000 88%, transparent);
+  transform-origin: 70% 100%;
+  animation: ccBreathe 4.5s ease-in-out infinite;
+}
+
+/* ---- the card's content ---- */
+.champion-card-main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "avatar text"
+    "stats stats";
+  align-items: center;
+  gap: 18px 22px;
+  width: 100%;
+  padding: 26px 42% 22px 26px;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.champion-card-main:focus-visible {
+  outline: 2px solid var(--cc-sub);
+  outline-offset: -4px;
+}
+
+.cc-avatar {
+  position: relative;
+  grid-area: avatar;
+}
+
+.cc-avatar .avatar:not(#_):not(#_):not(#_) {
+  width: 104px;
+  height: 104px;
+  font-size: 32px;
+  box-shadow: var(--cc-avatar-glow) !important;
+}
+
+.cc-crown {
+  position: absolute;
+  top: -34px;
+  left: 50%;
+  translate: -50% 0;
+  animation: ccBob 3.2s ease-in-out infinite;
+}
+
+.cc-crown .app-icon {
+  width: 52px;
+  height: 52px;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.3));
+}
+
+.cc-text {
+  grid-area: text;
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--cc-pill);
+  box-shadow: 0 4px 14px rgba(255, 170, 20, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  color: var(--cc-pill-ink);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cc-pill .app-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.cc-month {
+  padding-bottom: 6px;
+  color: var(--cc-sub);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  background: linear-gradient(90deg, var(--cc-sub), transparent) bottom left / 100% 1px no-repeat;
+}
+
+.cc-name {
+  max-width: 100%;
+  overflow: hidden;
+  background: var(--cc-name);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 46px;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.18));
+}
+
+.cc-stats {
+  grid-area: stats;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cc-stats > span {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  border-radius: 14px;
+  background: var(--cc-tile);
+  box-shadow: var(--glass-lift-card);
+}
+
+.cc-stats b {
+  color: var(--cc-ink);
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.cc-stats small {
+  color: var(--cc-sub);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* No celebration picture: the content takes the whole card. */
+.champion-card:not(.has-art) .champion-card-main {
+  padding-right: 26px;
+}
+
+/* No champion yet. */
+.champion-card.is-empty {
+  min-height: 0;
+  margin-top: 0;
+}
+
+.champion-card.is-empty .champion-card-main {
+  grid-template-areas: "avatar text";
+  padding: 22px 26px;
+  cursor: default;
+}
+
+.champion-card.is-empty .champion-card-trophy .app-icon {
+  width: 48px;
+  height: 48px;
+}
+
+.champion-card.is-empty .cc-text > span {
+  color: var(--cc-sub);
+  font-size: 13px;
+}
+
+/* In its column beside the session card (desktop): a little smaller. */
+@media (min-width: 1024px) {
+  .home-champion .champion-card {
+    height: 100%;
+    margin-top: 0;
+  }
+
+  .home-champion .champion-card-main {
+    align-content: center;
+    gap: 16px 18px;
+    padding: 24px 40% 20px 22px;
+  }
+
+  .home-champion .cc-avatar .avatar:not(#_):not(#_):not(#_) {
+    width: 84px;
+    height: 84px;
+    font-size: 26px;
+  }
+
+  .home-champion .cc-crown {
+    top: -28px;
+  }
+
+  .home-champion .cc-crown .app-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .home-champion .cc-name {
+    font-size: 36px;
+  }
+
+  .home-champion .cc-stats b {
+    font-size: 20px;
+  }
+}
+
+/* iPad: the card spans the page, so the figure sits closer to the content. */
+@media (min-width: 561px) and (max-width: 1023px) {
+  .champion-card-main {
+    grid-template-columns: auto minmax(0, 340px);
+    justify-content: start;
+    padding-right: 36%;
+  }
+
+  .cc-stats {
+    max-width: 470px;
+  }
+
+  .cc-figure {
+    right: 4%;
+    width: 34%;
+  }
+}
+
+/* Phones: the avatar shrinks, the figure keeps its corner. */
+@media (max-width: 560px) {
+  .champion-card {
+    min-height: 0;
+    margin-top: 22px;
+    border-radius: 18px;
+  }
+
+  .champion-card-main {
+    gap: 14px 14px;
+    padding: 20px 40% 16px 16px;
+  }
+
+  .champion-card:not(.has-art) .champion-card-main {
+    padding-right: 16px;
+  }
+
+  .cc-avatar .avatar:not(#_):not(#_):not(#_) {
+    width: 62px;
+    height: 62px;
+    font-size: 20px;
+  }
+
+  .cc-crown {
+    top: -22px;
+  }
+
+  .cc-crown .app-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .cc-pill {
+    padding: 4px 10px;
+    font-size: 10px;
+  }
+
+  .cc-month {
+    font-size: 11px;
+  }
+
+  .cc-name {
+    font-size: 28px;
+  }
+
+  .cc-stats {
+    gap: 6px;
+  }
+
+  .cc-stats > span {
+    padding: 8px 4px;
+    border-radius: 12px;
+  }
+
+  .cc-stats b {
+    font-size: 17px;
+  }
+
+  .cc-stats small {
+    font-size: 9px;
+  }
+
+  .cc-figure {
+    width: 42%;
+    height: calc(100% + 22px);
+  }
+}
+
+@keyframes ccRays {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ccShine {
+  0% { transform: translateX(-160%) skewX(-18deg); }
+  30%, 100% { transform: translateX(420%) skewX(-18deg); }
+}
+
+@keyframes ccDrift {
+  from { transform: translate(0, 0) rotate(0deg); }
+  to { transform: translate(-6%, 4%) rotate(8deg); }
+}
+
+@keyframes ccTwinkle {
+  0%, 100% { opacity: 0; transform: scale(0.4); }
+  45% { opacity: 1; transform: scale(1); }
+  70% { opacity: 0; transform: scale(0.6); }
+}
+
+@keyframes ccPulse {
+  0%, 100% { opacity: 0.6; transform: scale(0.94); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+@keyframes ccBreathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.015); }
+}
+
+@keyframes ccBob {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-3px) rotate(4deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .champion-card *,
+  .champion-card *::before,
+  .champion-card *::after {
+    animation: none !important;
+  }
+
+  .cc-shine,
+  .cc-spark {
+    display: none;
+  }
+}

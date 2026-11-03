@@ -262,3 +262,27 @@
     display: inline;
   }
 }
+
+/* Phones: each row keeps the points, the goal difference, the matches and the form; wins, losses and ELO (which has
+   its own tab) are left to the wider screens, so the second line stays readable. */
+@media (max-width: 700px) {
+  .ranking-panel .rank-mobile-stats > span:is(:nth-child(1), :nth-child(2), :nth-child(5)):not(#_):not(#_) {
+    display: none !important;
+  }
+
+  .ranking-panel .rank-mobile-stats:not(#_):not(#_) {
+    gap: 12px !important;
+  }
+}
+
+/* The narrowest phones: the recent-form dots go too (they are in each member's profile), so names keep their room. */
+@media (max-width: 380px) {
+  .ranking-panel .rank-row .rank-form:not(#_):not(#_):not(#_) {
+    display: none !important;
+  }
+
+  /* The room kept beside the name for those dots is no longer needed. */
+  .ranking-panel .rank-row .person:not(#_):not(#_):not(#_) {
+    padding-right: 0 !important;
+  }
+}
