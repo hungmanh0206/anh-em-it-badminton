@@ -2746,7 +2746,7 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
             </span>
             <span className="member-card-info">
               <b>{member.name}</b>
-              {(canManage || role !== "member") && <span className="member-card-meta">{canManage && <span className="member-card-user">@{member.username}</span>}{role !== "member" && <span className={"member-card-role " + role}>{role === "admin" ? "Admin" : "Sub-admin"}</span>}</span>}
+              {role !== "member" && <span className={"member-card-role " + role}>{role === "admin" ? "Admin" : "Sub-admin"}</span>}
             </span>
           </button>
           {canManage && memberMenu(member, false)}
