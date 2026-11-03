@@ -1266,6 +1266,9 @@
         border-radius: 999px !important
     }
 }
+:root[data-theme="dark"] .checkin-note {
+    color: var(--bar-muted)
+}
 @media (min-width: 801px) {
     :root[data-theme="dark"] .rank-table .rank-row.rank-columns.top-rank {
         border-left: 0 !important
@@ -1356,6 +1359,14 @@
     :root[data-theme="dark"] .hero-stats:not(#_) div:first-child {
         border-left: 0 !important
     }
+}
+@media (min-width: 1024px) {
+    :root[data-theme="dark"] .home-top .hero-stats:not(#_):not(#_) div:first-child {
+        border-left: 0 !important
+    }
+}
+:root[data-theme="dark"] .title-date {
+    color: var(--bar-accent)
 }
 :root[data-theme="dark"] .rules-section-title {
     color: hsla(42, 20%, 95%, 1)

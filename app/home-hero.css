@@ -390,35 +390,6 @@ button.hero-champion:focus-visible {
   .home-top .hero-stats:not(#_):not(#_) div:first-child {
     border-left: 0 !important;
   }
-
-  /* The champion card fills its column: avatar on top, then the name, then the link. */
-  .home-champion .champion-card {
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: center;
-    gap: 14px;
-    height: 100%;
-    padding: 18px var(--block-inset);
-  }
-
-  .home-champion .champion-card-main {
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
-  }
-
-  .home-champion .champion-card-text {
-    justify-items: center;
-  }
-
-  .home-champion .champion-card-avatar .avatar:not(#_):not(#_) {
-    width: 76px;
-    height: 76px;
-  }
-
-  .home-champion .champion-card-link {
-    align-self: center;
-  }
 }
 
 /* Home: today's date on the title's row, at the right. */

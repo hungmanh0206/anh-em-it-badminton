@@ -1726,16 +1726,30 @@ function Results({ onEditingChange, matches, drawn, scores, setScores, confirmed
 function HomeChampionCard({ champion, monthLabel: label, onCelebrate, onOpenHall }: { champion?: RankingRow; monthLabel: string; onCelebrate: () => void; onOpenHall: () => void }) {
   const month = label.replace(", ", "/").replace("Tháng ", "THÁNG ");
   if (!champion) return <section className="champion-card is-empty">
-    <div className="champion-card-main"><span className="champion-card-crown"><AppIcon name="trophy" /></span><span className="champion-card-text"><small>NHÀ VÔ ĐỊCH THÁNG</small><b>Chưa có nhà vô địch</b><span>Nhà vô địch được vinh danh khi tháng đầu tiên khép lại.</span></span></div>
-    <button type="button" className="soft-btn champion-card-link" onClick={onOpenHall}>Bảng vàng</button>
+    <div className="champion-card-main"><span className="champion-card-trophy"><AppIcon name="trophy" /></span><span className="champion-card-text"><small>NHÀ VÔ ĐỊCH THÁNG</small><b>Chưa có nhà vô địch</b><span>Nhà vô địch được vinh danh khi tháng đầu tiên khép lại.</span></span></div>
+    <button type="button" className="champion-card-link" aria-label="Xem Bảng vàng" onClick={onOpenHall}><span className="champion-card-link-text">Bảng vàng</span><span aria-hidden="true"> →</span></button>
   </section>;
   const diff = `${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff}`;
   return <section className="champion-card">
+    <span className="champion-card-mark" aria-hidden="true">1</span>
     <button type="button" className="champion-card-main" aria-label={`Chúc mừng nhà vô địch ${champion.name}, ${label}`} onClick={onCelebrate}>
-      <span className="champion-card-avatar"><span className={avatarClassName("avatar", champion)} style={avatarStyle(champion)}>{champion.initials}</span><span className="champion-card-medal" aria-hidden="true" /></span>
-      <span className="champion-card-text"><small><AppIcon name="crown" /> NHÀ VÔ ĐỊCH {month}</small><b>{champion.name}</b><span>{champion.points} điểm · {diff} hiệu số · {champion.matches} trận</span></span>
+      <span className="champion-card-avatar">
+        <i className="champion-card-rays" aria-hidden="true" />
+        <span className={avatarClassName("avatar", champion)} style={avatarStyle(champion)}>{champion.initials}</span>
+        <span className="champion-card-crown" aria-hidden="true"><AppIcon name="crown" /></span>
+        <span className="champion-card-medal" aria-hidden="true" />
+      </span>
+      <span className="champion-card-text">
+        <small className="champion-card-ribbon"><span className="champion-card-ribbon-lead">Nhà vô địch · </span>{month}</small>
+        <b>{champion.name}</b>
+        <span className="champion-card-stats">
+          <span><b>{champion.points}</b><small>Điểm</small></span>
+          <span><b>{diff}</b><small>Hiệu số</small></span>
+          <span><b>{champion.matches}</b><small>Trận</small></span>
+        </span>
+      </span>
     </button>
-    <button type="button" className="soft-btn champion-card-link" onClick={onOpenHall}>Bảng vàng<span aria-hidden="true"> →</span></button>
+    <button type="button" className="champion-card-link" aria-label="Xem Bảng vàng" onClick={onOpenHall}><span className="champion-card-link-text">Bảng vàng</span><span aria-hidden="true"> →</span></button>
   </section>;
 }
 

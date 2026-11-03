@@ -15,24 +15,85 @@
   --hall-ring: 0 0 0 0 transparent, 0 0 22px rgba(255, 190, 50, 0.4);
 }
 
-/* ---------- Home card ---------- */
+/* ---------- Home card ----------
+   Styled after the gold "player of the month" cards of football games: a metallic gold face, light rays turning slowly
+   behind the champion, a shine that sweeps across now and then, a large "1" set into the card and the numbers in tiles.
+   Only transforms and opacity move. */
 .champion-card {
+  --cc-face: radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.7), transparent 46%), linear-gradient(140deg, rgba(255, 244, 205, 0.78) 0%, rgba(255, 222, 140, 0.72) 48%, rgba(246, 190, 70, 0.7) 100%);
+  --cc-ink: #3a2400;
+  --cc-sub: #8a5300;
+  --cc-rays: rgba(255, 255, 255, 0.7);
+  --cc-mark: rgba(255, 255, 255, 0.34);
+  --cc-tile: rgba(255, 255, 255, 0.5);
+  --cc-tile-ink: #3a2400;
+  --cc-shadow: 0 14px 32px rgba(184, 118, 14, 0.32);
+  --cc-avatar-ring: 0 0 0 3px #fff3c4, 0 0 24px 6px rgba(255, 255, 255, 0.7);
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px var(--block-inset) 14px 14px;
-  border-radius: 16px;
-  background: var(--hall-gold-wash), var(--glass-block);
-  box-shadow: var(--glass-lift);
+  min-height: 112px;
+  overflow: hidden;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: var(--cc-face);
+  box-shadow: var(--cc-shadow);
+  color: var(--cc-ink);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
+}
+
+:root[data-theme="dark"] .champion-card {
+  --cc-face: radial-gradient(circle at 18% 0%, rgba(255, 200, 80, 0.22), transparent 50%), linear-gradient(140deg, rgba(80, 56, 12, 0.72) 0%, rgba(58, 40, 10, 0.66) 45%, rgba(30, 22, 8, 0.62) 100%);
+  --cc-ink: #fff4d2;
+  --cc-sub: #ffd66d;
+  --cc-rays: rgba(255, 214, 110, 0.26);
+  --cc-mark: rgba(255, 210, 100, 0.1);
+  --cc-tile: rgba(255, 255, 255, 0.08);
+  --cc-tile-ink: #fff4d2;
+  --cc-shadow: 0 14px 34px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 200, 80, 0.14) inset;
+  --cc-avatar-ring: 0 0 0 3px #e9b949, 0 0 26px 6px rgba(255, 190, 50, 0.45);
+}
+
+/* A shine sweeping across the card every few seconds. */
+.champion-card::after {
+  content: "";
+  position: absolute;
+  inset: -20% auto -20% 0;
+  z-index: 3;
+  width: 38%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  opacity: 0.7;
+  pointer-events: none;
+  transform: translateX(-140%) skewX(-18deg);
+  animation: ccShine 6s cubic-bezier(0.4, 0, 0.2, 1) 1.2s infinite;
+}
+
+:root[data-theme="dark"] .champion-card::after {
+  background: linear-gradient(100deg, transparent, rgba(255, 220, 140, 0.22), transparent);
+}
+
+.champion-card-mark {
+  position: absolute;
+  right: -8px;
+  bottom: -46px;
+  z-index: -1;
+  color: var(--cc-mark);
+  font-size: 170px;
+  font-style: italic;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  pointer-events: none;
+  user-select: none;
 }
 
 .champion-card-main {
   display: flex;
   flex: 1 1 auto;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
   min-width: 0;
   padding: 0;
   border: 0;
@@ -40,16 +101,13 @@
   color: inherit;
   font: inherit;
   text-align: left;
-}
-
-button.champion-card-main {
   cursor: pointer;
 }
 
-button.champion-card-main:focus-visible {
-  outline: 2px solid rgba(255, 200, 61, 0.8);
-  outline-offset: 4px;
+.champion-card-main:focus-visible {
   border-radius: 12px;
+  outline: 2px solid var(--cc-sub);
+  outline-offset: 4px;
 }
 
 .champion-card-avatar {
@@ -57,24 +115,55 @@ button.champion-card-main:focus-visible {
   flex: none;
 }
 
-.champion-card-avatar .avatar:not(#_):not(#_) {
-  width: 64px;
-  height: 64px;
-  font-size: 22px;
-  box-shadow: 0 0 20px 3px rgba(255, 200, 61, 0.5) !important;
+/* Light rays turning behind the avatar, fading out toward their tips. */
+.champion-card-rays {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  width: 260px;
+  height: 260px;
+  margin: -130px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(var(--cc-rays) 0deg 7deg, transparent 7deg 20deg);
+  -webkit-mask: radial-gradient(circle, #000 18%, transparent 68%);
+  mask: radial-gradient(circle, #000 18%, transparent 68%);
+  pointer-events: none;
+  animation: ccRays 40s linear infinite;
+}
+
+.champion-card-avatar .avatar:not(#_):not(#_):not(#_) {
+  width: 72px;
+  height: 72px;
+  font-size: 24px;
+  box-shadow: var(--cc-avatar-ring) !important;
+}
+
+.champion-card-crown {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  translate: -40% 0;
+  rotate: 14deg;
+}
+
+.champion-card-crown .app-icon {
+  width: 36px;
+  height: 36px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
 }
 
 .champion-card-medal {
   position: absolute;
   right: -6px;
   bottom: -4px;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   background: var(--rank-medal-1) center / contain no-repeat;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
 }
 
-.champion-card-crown {
+.champion-card-trophy {
   display: grid;
   flex: none;
   place-items: center;
@@ -82,56 +171,267 @@ button.champion-card-main:focus-visible {
   height: 56px;
 }
 
-.champion-card-crown .app-icon {
+.champion-card-trophy .app-icon {
   width: 44px;
   height: 44px;
 }
 
 .champion-card-text {
   display: grid;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
 }
 
-.champion-card-text small {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--hall-sub);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-}
-
-.champion-card-text small .app-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.champion-card-text b {
-  overflow: hidden;
-  color: var(--hall-title);
-  font-size: 22px;
+.champion-card-ribbon {
+  width: fit-content;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--cc-tile);
+  color: var(--cc-sub);
+  font-size: 10.5px;
   font-weight: 900;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.champion-card-text > b {
+  overflow: hidden;
+  color: var(--cc-ink);
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.champion-card-text > span {
-  color: var(--hall-muted);
-  font-size: 13px;
-  font-weight: 600;
+.champion-card-stats {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
 }
 
-button.champion-card-main:hover .champion-card-text b {
-  color: var(--bar-accent);
+.champion-card-stats > span {
+  display: grid;
+  justify-items: center;
+  min-width: 52px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: var(--cc-tile);
+}
+
+.champion-card-stats b {
+  color: var(--cc-tile-ink);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.champion-card-stats small {
+  white-space: nowrap;
+  color: var(--cc-sub);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .champion-card-link {
-  flex: none;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 4;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--cc-tile);
+  color: var(--cc-ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
   white-space: nowrap;
+  cursor: pointer;
+}
+
+.champion-card-link:hover {
+  background: var(--cc-ink);
+  color: #fff7dc;
+}
+
+:root[data-theme="dark"] .champion-card-link:hover {
+  color: #2b1d06;
+}
+
+/* Empty: no champion yet. */
+.champion-card.is-empty .champion-card-main {
+  cursor: default;
+}
+
+.champion-card.is-empty .champion-card-text > span {
+  color: var(--cc-sub);
+  font-size: 13px;
+}
+
+@keyframes ccRays {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ccShine {
+  0% {
+    transform: translateX(-140%) skewX(-18deg);
+  }
+
+  30%,
+  100% {
+    transform: translateX(380%) skewX(-18deg);
+  }
+}
+
+/* Its own column beside the session card: everything centred, the avatar larger. */
+@media (min-width: 1024px) {
+  .home-champion .champion-card {
+    justify-content: center;
+    height: 100%;
+    padding: 22px 18px 18px;
+  }
+
+  .home-champion .champion-card-main {
+    flex-direction: column;
+    gap: 14px;
+    text-align: center;
+  }
+
+  .home-champion .champion-card-text {
+    justify-items: center;
+  }
+
+  .home-champion .champion-card-avatar .avatar:not(#_):not(#_):not(#_) {
+    width: 88px;
+    height: 88px;
+    font-size: 28px;
+  }
+
+  .home-champion .champion-card-crown {
+    top: -26px;
+  }
+
+  .home-champion .champion-card-crown .app-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .home-champion .champion-card-rays {
+    width: 340px;
+    height: 340px;
+    margin: -170px;
+  }
+
+  .home-champion .champion-card-mark {
+    right: -4px;
+    bottom: -58px;
+    font-size: 210px;
+  }
+}
+
+@media (max-width: 560px) {
+  .champion-card {
+    min-height: 0;
+    padding: 18px 14px 14px;
+  }
+
+  .champion-card-main {
+    gap: 14px;
+  }
+
+  .champion-card-avatar .avatar:not(#_):not(#_):not(#_) {
+    width: 60px;
+    height: 60px;
+    font-size: 20px;
+  }
+
+  .champion-card-crown {
+    top: -18px;
+  }
+
+  .champion-card-crown .app-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .champion-card-rays {
+    width: 210px;
+    height: 210px;
+    margin: -105px;
+  }
+
+  .champion-card-ribbon {
+    font-size: 9.5px;
+  }
+
+  .champion-card-text > b {
+    font-size: 21px;
+  }
+
+  .champion-card-stats > span {
+    min-width: 46px;
+    padding: 3px 6px;
+  }
+
+  .champion-card-stats b {
+    font-size: 13.5px;
+  }
+
+  .champion-card-stats small {
+    font-size: 8.5px;
+  }
+
+  .champion-card-link {
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  /* A round arrow on the right edge, clear of the text, which keeps room for it. */
+  .champion-card-main {
+    padding-right: 42px;
+  }
+
+  .champion-card-link {
+    top: 50%;
+    right: 12px;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    font-size: 15px;
+    translate: 0 -50%;
+  }
+
+  .champion-card-link-text,
+  .champion-card-ribbon-lead {
+    display: none;
+  }
+
+  .champion-card-mark {
+    font-size: 140px;
+    bottom: -38px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .champion-card::after,
+  .champion-card-rays {
+    animation: none;
+  }
+
+  .champion-card::after {
+    opacity: 0;
+  }
 }
 
 /* ---------- Hall of Fame ---------- */
@@ -367,42 +667,6 @@ button.champion-card-main:hover .champion-card-text b {
 }
 
 @media (max-width: 560px) {
-  .champion-card {
-    gap: 10px;
-    padding: 12px 12px 12px 12px;
-  }
-
-  .champion-card-main {
-    gap: 12px;
-  }
-
-  .champion-card-avatar .avatar:not(#_):not(#_) {
-    width: 52px;
-    height: 52px;
-  }
-
-  .champion-card-text small {
-    font-size: 10px;
-  }
-
-  .champion-card-text b {
-    font-size: 18px;
-  }
-
-  .champion-card-text > span {
-    font-size: 11.5px;
-  }
-
-  .champion-card-link:not(#_) {
-    min-height: 34px;
-    padding: 0 10px !important;
-    font-size: 12px !important;
-  }
-
-  .champion-card-link span {
-    display: none;
-  }
-
   .hall-champion-avatar .avatar:not(#_):not(#_) {
     width: 60px;
     height: 60px;
@@ -448,19 +712,7 @@ button.champion-card-main:hover .champion-card-text b {
   white-space: nowrap;
 }
 
-.champion-card-text small {
-  white-space: nowrap;
-}
 
-@media (max-width: 380px) {
-  .champion-card-text small .app-icon {
-    display: none;
-  }
-
-  .champion-card-text small {
-    white-space: normal;
-  }
-}
 
 /* Kept to one row on every width. */
 .hall-month-head:not(#_):not(#_) {
