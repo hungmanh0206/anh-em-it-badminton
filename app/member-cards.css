@@ -1,12 +1,22 @@
 /* Thành viên › grid view: one card per member with their full-body card art standing on a glow in their own colour.
    The list/grid switch is the same toggle as the photo library's. */
 
-/* ---------- List / grid switch: the photo library's toggle (.photo-view-toggle), placed for phones here ---------- */
+/* ---------- List / grid switch: the photo library's toggle (.photo-view-toggle), as tall as the search box beside it ---------- */
+.member-head-actions .member-view-toggle:not(#_) {
+  align-self: stretch;
+}
+
+.member-view-toggle > button:not(#_):not(#_) {
+  height: auto;
+  min-width: 36px;
+}
+
 @media (max-width: 800px) {
   .member-view-toggle {
     grid-column: 2;
     grid-row: 2;
     justify-self: end;
+    align-self: stretch;
   }
 
   .member-head-actions .search:not(#_) {
