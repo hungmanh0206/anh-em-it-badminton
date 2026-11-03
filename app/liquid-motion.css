@@ -1,6 +1,6 @@
-/* Liquid transitions between pages (view transitions, started in openScreen in app/page.tsx).
-   The page melts into a blur while the next one condenses out of it, and the section and tab markers flow across like
-   a drop: they stretch toward where they are going and settle with a little overshoot. The bars hold still. */
+/* Liquid transitions between pages (view transitions, started through liquidTransition in app/ui/liquid.ts).
+   The page fades out as the next one rises in, and the section and tab markers glide across on one easing curve.
+   Only opacity and transform move, so phones keep up; the bars hold still. */
 .content {
   view-transition-name: page;
 }
@@ -22,60 +22,36 @@
 }
 
 ::view-transition-group(page) {
-  animation-duration: 560ms;
+  animation-duration: 420ms;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 ::view-transition-old(page) {
-  animation: liquidPageOut 260ms cubic-bezier(0.4, 0, 1, 1) both;
+  animation: liquidPageOut 200ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 ::view-transition-new(page) {
-  animation: liquidPageIn 560ms cubic-bezier(0.22, 1, 0.36, 1) 60ms both;
+  animation: liquidPageIn 420ms cubic-bezier(0.22, 1, 0.36, 1) 60ms both;
 }
 
 ::view-transition-group(nav-indicator),
-::view-transition-group(tab-indicator) {
-  animation-duration: 560ms;
-  animation-timing-function: cubic-bezier(0.34, 1.32, 0.5, 1);
-}
-
-::view-transition-image-pair(nav-indicator),
-::view-transition-image-pair(tab-indicator) {
-  animation: liquidStretch 560ms cubic-bezier(0.3, 0, 0.3, 1);
+::view-transition-group(tab-indicator),
+::view-transition-group(filter-pill) {
+  animation-duration: 380ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @keyframes liquidPageOut {
   to {
     opacity: 0;
-    filter: blur(16px) saturate(1.4);
-    transform: scale(0.97);
+    transform: scale(0.985);
   }
 }
 
 @keyframes liquidPageIn {
-  0% {
+  from {
     opacity: 0;
-    filter: blur(18px) saturate(1.5);
-    transform: translateY(14px) scale(1.03);
-  }
-
-  60% {
-    opacity: 1;
-    filter: blur(1px) saturate(1.1);
-  }
-
-  100% {
-    opacity: 1;
-    filter: none;
-    transform: none;
-  }
-}
-
-/* Mid-flight the marker is drawn out long and thin, like a drop pulled across. */
-@keyframes liquidStretch {
-  40% {
-    transform: scale(1.45, 0.72);
+    transform: translateY(12px) scale(1.01);
   }
 }
 
@@ -92,5 +68,72 @@
   ::view-transition-new(*),
   ::view-transition-image-pair(*) {
     animation: none !important;
+  }
+}
+
+/* ---------- Switching theme ---------- */
+/* The whole screen changes at once, so for this one the page and the bars are not pulled out on their own. The new
+   theme spreads from the switch with a soft edge, like spilt colour, and comes into focus as it goes. */
+@property --theme-reveal {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+html.theme-switching :is(.content, .topbar, .nav-indicator, .tab-indicator) {
+  view-transition-name: none;
+}
+
+html.theme-switching::view-transition-old(root) {
+  display: block;
+  animation: none;
+}
+
+html.theme-switching::view-transition-new(root) {
+  --theme-edge: 90px;
+  -webkit-mask: radial-gradient(circle at var(--theme-x) var(--theme-y), #000 calc(var(--theme-reveal) - var(--theme-edge)), transparent var(--theme-reveal));
+  mask: radial-gradient(circle at var(--theme-x) var(--theme-y), #000 calc(var(--theme-reveal) - var(--theme-edge)), transparent var(--theme-reveal));
+  animation: themeSpread 900ms cubic-bezier(0.32, 0.72, 0, 1) both, themeFocus 900ms ease-out both;
+}
+
+@keyframes themeSpread {
+  to {
+    --theme-reveal: calc(var(--theme-r) + var(--theme-edge));
+  }
+}
+
+@keyframes themeFocus {
+  from {
+    opacity: 0.6;
+  }
+}
+
+/* ---------- Tabs and filters inside a page ---------- */
+/* Lighter than changing section: the page only fades across while the pill slides over. */
+.schedule-filter button.active {
+  view-transition-name: filter-pill;
+}
+
+html.vt-tab::view-transition-old(page) {
+  animation: tabFadeOut 140ms ease-in both;
+}
+
+html.vt-tab::view-transition-new(page) {
+  animation: tabFadeIn 220ms ease-out 60ms both;
+}
+
+html.vt-tab::view-transition-group(page) {
+  animation-duration: 220ms;
+}
+
+@keyframes tabFadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
   }
 }
