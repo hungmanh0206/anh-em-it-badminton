@@ -321,9 +321,16 @@ const avatarUsername = (username?: string | null) => String(username || "").trim
 // profiles.avatar_url by username (Cloudinary); a member without one shows a blank avatar.
 const memberAvatars = new Map<string, string>();
 const memberAvatarsCacheKey = "aemit-member-avatars";
+const membersViewKey = "aemit-members-view";
 type MemberAvatarsCache = { avatars: [string, string][]; storedAt?: number };
 const avatarImageUrl = (username?: string | null) => memberAvatars.get(avatarUsername(username)) ?? null;
 const hasAvatarArt = (username?: string | null) => Boolean(avatarImageUrl(username));
+// A member's full-body card art sits beside their avatar on Cloudinary (member-avatars/card-<username>), so its address
+// follows from the avatar's. Delivered resized and in a modern format; a member without one keeps the plain avatar.
+const cardArtUrl = (username?: string | null) => {
+  const match = /^(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)v\d+\/((?:[^/]+\/)*)avatar-([^/]+)\.png$/.exec(avatarImageUrl(username) ?? "");
+  return match ? `${match[1]}c_limit,h_900,f_auto,q_auto/${match[2]}card-${match[3]}.png` : null;
+};
 const avatarStyle = (person: { color?: string | null; username?: string | null }) => {
   const url = avatarImageUrl(person.username);
   return {
@@ -1245,9 +1252,6 @@ export default function Home() {
       document.removeEventListener("click", closeOutside);
     };
   }, [activeUser]);
-  useEffect(() => {
-    if (activeUser && activeUser.role !== "admin" && screen === "members") setScreen("home");
-  }, [activeUser, screen]);
   if (!activeUser && authRestoring) return <main className="login-page"><div className="login-card login-restoring"><div className="login-brand"><span aria-hidden="true" /><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></div><i className="login-spinner" aria-hidden="true" /><p role="status">Đang khôi phục phiên đăng nhập...</p></div></main>;
   if (!activeUser) return <Login onLogin={signIn} error={loginError} />;
   const currentUser = members.find((member) => member.username === activeUser.username) ?? activeUser;
@@ -1284,15 +1288,15 @@ export default function Home() {
         </div>
       </div>
       <nav ref={navRef} className="topbar-nav" aria-label="Các mục">
-        {navGroups.filter((group) => group.key !== "members" || isAdmin).map((group) => <button key={group.key} className={group === activeGroup ? "active" : ""} aria-current={group === activeGroup ? "page" : undefined} onClick={() => { if (group !== activeGroup) openScreen(group.screens[0].screen); }}><AppIcon name={group.icon} /><span>{group.label}</span></button>)}
+        {navGroups.map((group) => <button key={group.key} className={group === activeGroup ? "active" : ""} aria-current={group === activeGroup ? "page" : undefined} onClick={() => { if (group !== activeGroup) openScreen(group.screens[0].screen); }}><AppIcon name={group.icon} /><span>{group.label}</span></button>)}
         <i className="slide-indicator" aria-hidden="true" />
       </nav>
     </div>
     <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setScreen("home"); setActiveUser(null); }} />}</Presence>
     <section className="content">
-      <header><div className="title-group"><div><h1>{screenTitles[screen]}</h1></div>{screen === "home" && <p className="title-date">{currentDateLabel}</p>}</div></header>
+      <header><div className="title-group"><div><h1>{screen === "members" && !isAdmin ? "Thành viên" : screenTitles[screen]}</h1></div>{screen === "home" && <p className="title-date">{currentDateLabel}</p>}</div></header>
       {activeGroup && activeGroup.screens.length > 1 && <div ref={tabsRef} key={activeGroup.key} className="page-tabs" aria-label={activeGroup.label}>{activeGroup.screens.map((item) => <button key={item.screen} className={screen === item.screen ? "active" : ""} aria-current={screen === item.screen ? "page" : undefined} onClick={() => openScreen(item.screen)}>{item.label}</button>)}<i className="slide-indicator" aria-hidden="true" /></div>}
-      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} rankingRows={profileRows} rankingMonth={profileAchievementMonth} eloRows={eloRows} formByUsername={formByUsername} onAvatarUpdated={(username, avatarUrl) => { if (avatarUrl) memberAvatars.set(username, avatarUrl); else memberAvatars.delete(username); removeBrowserCache(memberAvatarsCacheKey); setAvatarRevision((revision) => revision + 1); }} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "hall" ? <HallOfFame entries={hallOfFame} onOpenMonth={openRankingMonth} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={rankingFormByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
+      <div className="screen-view" key={screen}>{screen === "members" ? <Members canManage={isAdmin} members={members} rankingRows={profileRows} rankingMonth={profileAchievementMonth} eloRows={eloRows} formByUsername={formByUsername} onAvatarUpdated={(username, avatarUrl) => { if (avatarUrl) memberAvatars.set(username, avatarUrl); else memberAvatars.delete(username); removeBrowserCache(memberAvatarsCacheKey); setAvatarRevision((revision) => revision + 1); }} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "hall" ? <HallOfFame entries={hallOfFame} onOpenMonth={openRankingMonth} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={rankingFormByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
         <div className="home-top">
         <div className="next-session">
         <section className="hero">
@@ -1728,7 +1732,9 @@ function HomeChampionCard({ champion, monthLabel: label, onCelebrate }: { champi
     <div className="champion-card-main"><span className="champion-card-trophy"><AppIcon name="trophy" /></span><span className="champion-card-text"><small>NHÀ VÔ ĐỊCH THÁNG</small><b>Chưa có nhà vô địch</b><span>Nhà vô địch được vinh danh khi tháng đầu tiên khép lại.</span></span></div>
   </section>;
   const diff = `${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff}`;
-  return <section className="champion-card">
+  const art = cardArtUrl(champion.username);
+  return <section className={"champion-card" + (art ? " has-art" : "")}>
+    {art && <img className="champion-card-art" src={art} alt="" aria-hidden="true" decoding="async" onError={(event) => event.currentTarget.remove()} />}
     <span className="champion-card-mark" aria-hidden="true">1</span>
     <button type="button" className="champion-card-main" aria-label={`Chúc mừng nhà vô địch ${champion.name}, ${label}`} onClick={onCelebrate}>
       <span className="champion-card-avatar">
@@ -2466,7 +2472,7 @@ function AddMemberModal({ onClose, onCreate }: { onClose: () => void; onCreate: 
   </div>;
 }
 
-function Members({ members, rankingRows, rankingMonth, eloRows, formByUsername, onAvatarUpdated, onRoleUpdated }: { members: Member[]; rankingRows: RankingRow[]; rankingMonth: string; eloRows: EloRankingRow[]; formByUsername: Record<string, FormResult[]>; onAvatarUpdated: (username: string, avatarUrl: string | null) => void; onRoleUpdated: (username: string, role: MemberRole) => void }) {
+function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formByUsername, onAvatarUpdated, onRoleUpdated }: { canManage: boolean; members: Member[]; rankingRows: RankingRow[]; rankingMonth: string; eloRows: EloRankingRow[]; formByUsername: Record<string, FormResult[]>; onAvatarUpdated: (username: string, avatarUrl: string | null) => void; onRoleUpdated: (username: string, role: MemberRole) => void }) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [viewing, setViewing] = useState<Member | null>(null);
   const [editing, setEditing] = useState<Member | null>(null);
@@ -2481,6 +2487,16 @@ function Members({ members, rankingRows, rankingMonth, eloRows, formByUsername, 
   const [confirm, setConfirm] = useState<{ title: string; message: string; action: () => Promise<void> } | null>(null);
   const [editPassword, setEditPassword] = useState("");
   const [adding, setAdding] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const viewRef = useSlidingIndicator<HTMLDivElement>(viewMode);
+  useEffect(() => {
+    try { if (localStorage.getItem(membersViewKey) === "grid") window.queueMicrotask(() => setViewMode("grid")); } catch {}
+  }, []);
+  const chooseView = (next: "list" | "grid") => {
+    setViewMode(next);
+    setOpenMenu(null);
+    try { localStorage.setItem(membersViewKey, next); } catch {}
+  };
   const normalizeSearch = (value: string) => value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -2596,6 +2612,8 @@ function Members({ members, rankingRows, rankingMonth, eloRows, formByUsername, 
     if (!response.ok) throw new Error(payload.error || fallbackError);
     return payload;
   };
+  // The panel clips overflow, so menus on the bottom rows open upwards.
+  const memberMenu = (member: Member, openUp: boolean) => <div className="member-actions"><button className="more" aria-label={`Thao tác ${member.name}`} onClick={() => setOpenMenu(openMenu === member.username ? null : member.username)}>•••</button>{openMenu === member.username && <div className={`member-menu${openUp ? " member-menu-up" : ""}`}><button onClick={() => { openEditor(member); setOpenMenu(null); }}>Sửa thành viên</button>{effectiveRole(member.role) === "member" && <button className="danger-text" onClick={() => { remove(member); setOpenMenu(null); }}>Xóa thành viên</button>}</div>}</div>;
   const remove = (member: Member) => setConfirm({ title: "Xác nhận xóa thành viên", message: `Xóa ${member.name} khỏi danh sách hoạt động? Lịch sử thi đấu vẫn được giữ lại.`, action: async () => {
     try {
       if (supabase) {
@@ -2620,24 +2638,43 @@ function Members({ members, rankingRows, rankingMonth, eloRows, formByUsername, 
     </section>
     <section className="panel">
       <div className="panel-head member-panel-head">
-        <div><h2>Danh sách thành viên</h2><p>Quản lý thông tin các thành viên CLB.</p></div>
+        <div><h2>Danh sách thành viên</h2><p>{canManage ? "Quản lý thông tin các thành viên CLB." : "Các thành viên đang sinh hoạt cùng CLB."}</p></div>
         <div className="member-head-actions">
-          <input className="search" placeholder="Tìm tên, username, quyền..." value={searchTerm} onChange={(event) => { setSearchTerm(event.target.value); setOpenMenu(null); }} />
-          <button type="button" className="primary member-add-btn" onClick={() => setAdding(true)}><span className="plus-icon" aria-hidden="true" /><span className="member-add-full">Thêm thành viên</span><span className="member-add-short">Thêm</span></button>
+          <input className="search" placeholder={canManage ? "Tìm tên, username, quyền..." : "Tìm tên, quyền, level..."} value={searchTerm} onChange={(event) => { setSearchTerm(event.target.value); setOpenMenu(null); }} />
+          <div ref={viewRef} className="member-view-toggle" role="group" aria-label="Kiểu hiển thị">
+            <button type="button" className={viewMode === "list" ? "active" : ""} aria-pressed={viewMode === "list"} aria-label="Dạng danh sách" title="Danh sách" onClick={() => chooseView("list")}><i className="view-icon view-icon-list" aria-hidden="true" /></button>
+            <button type="button" className={viewMode === "grid" ? "active" : ""} aria-pressed={viewMode === "grid"} aria-label="Dạng thẻ" title="Thẻ" onClick={() => chooseView("grid")}><i className="view-icon view-icon-grid" aria-hidden="true" /></button>
+            <i className="slide-indicator" aria-hidden="true" />
+          </div>
+          {canManage && <button type="button" className="primary member-add-btn" onClick={() => setAdding(true)}><span className="plus-icon" aria-hidden="true" /><span className="member-add-full">Thêm thành viên</span><span className="member-add-short">Thêm</span></button>}
         </div>
       </div>
       {roleNotice && <div className="member-role-notice">{roleNotice}</div>}
-      <div className="member-table">{visibleMembers.length ? visibleMembers.map((member, index) => {
+      {visibleMembers.length === 0 ? <div className="member-table"><div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div></div> : viewMode === "list" ? <div className="member-table">{visibleMembers.map((member, index) => <div key={member.username}>
+        <button type="button" className="person member-person-btn" aria-label={`Xem thông tin ${member.name}`} onClick={() => setViewing(member)}><div className={avatarClassName("avatar", member)} style={avatarStyle(member)}>{member.initials}</div><div><b>{member.name}</b><small>{canManage ? `@${member.username}` : `Level ${member.level} · ${memberRoleLabel(effectiveRole(member.role))}`}</small></div></button>
+        <span className="status">● Hoạt động</span>
+        {canManage && memberMenu(member, index >= visibleMembers.length - 2)}
+      </div>)}</div> : <div className="member-cards">{visibleMembers.map((member, index) => {
+        const art = cardArtUrl(member.username);
         const role = effectiveRole(member.role);
-        const canDelete = role === "member";
-        return <div key={member.username}>
-          <button type="button" className="person member-person-btn" aria-label={`Xem thông tin ${member.name}`} onClick={() => setViewing(member)}><div className={avatarClassName("avatar", member)} style={avatarStyle(member)}>{member.initials}</div><div><b>{member.name}</b><small>@{member.username}</small></div></button>
-          <span className="status">● Hoạt động</span>
-          <div className="member-actions"><button className="more" aria-label={`Thao tác ${member.name}`} onClick={() => setOpenMenu(openMenu === member.username ? null : member.username)}>•••</button>{/* The panel clips overflow, so menus on the bottom rows open upwards. */}{openMenu === member.username && <div className={`member-menu${index >= visibleMembers.length - 2 ? " member-menu-up" : ""}`}><button onClick={() => { openEditor(member); setOpenMenu(null); }}>Sửa thành viên</button>{canDelete && <button className="danger-text" onClick={() => { remove(member); setOpenMenu(null); }}>Xóa thành viên</button>}</div>}</div>
-        </div>;
-      }) : <div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div>}</div>
+        const elo = eloRows.find((row) => row.username === member.username)?.eloRating;
+        return <article key={member.username} className={"member-card-tile" + (art ? " has-art" : "")} style={{ "--avatar-color": member.color || "#6846e8" } as CSSProperties}>
+          <button type="button" className="member-card-open" aria-label={`Xem thông tin ${member.name}`} onClick={() => setViewing(member)}>
+            <span className="member-card-stage" aria-hidden="true">
+              <i className="member-card-glow" />
+              {art ? <img className="member-card-art" src={art} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.closest(".member-card-tile")?.classList.remove("has-art"); event.currentTarget.remove(); }} /> : null}
+              <span className={avatarClassName("avatar member-card-avatar", member)} style={avatarStyle(member)}>{member.initials}</span>
+            </span>
+            <span className="member-card-info">
+              <b>{member.name}</b>
+              <span className="member-card-tags"><span className="member-card-level">Level {member.level}</span>{role !== "member" && <span className={"member-card-role " + role}>{role === "admin" ? "Admin" : "Sub-admin"}</span>}{typeof elo === "number" && <span className="member-card-elo">ELO {Math.round(elo)}</span>}</span>
+            </span>
+          </button>
+          {canManage && memberMenu(member, false)}
+        </article>;
+      })}</div>}
     </section>
-    <Presence show={Boolean(editing)}>{editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={closeEditor}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><AvatarField url={newAvatar?.preview ?? (avatarRemoved ? null : avatarImageUrl(editing.username))} initials={editing.initials} canRemove={Boolean(newAvatar) || (memberAvatars.has(editing.username) && !avatarRemoved)} error={photo.error} onPick={(file) => void pickAvatar(file)} onRemove={() => { photo.reset(); setAvatarRemoved(memberAvatars.has(editing.username)); }} /><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <GlassSelect value={editRole} options={[{ value: "member", label: "Thành viên" }, { value: "sub-admin", label: "Sub-admin" }]} disabled={roleSaving === editing.username} onChange={(next) => setEditRole(next as "member" | "sub-admin")} ariaLabel="Quyền" />}<small>{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? "Mạnh luôn là Admin, không thể đổi quyền." : editRole === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label><label className="member-password-field">Mật khẩu mới<PasswordField value={editPassword} onChange={setEditPassword} placeholder="Để trống nếu giữ nguyên" /><small className="member-editor-hint">Mật khẩu hiện tại được mã hoá nên không hiển thị được; nhập mật khẩu mới nếu muốn đổi.</small></label><div className="editor-actions"><button className="soft-btn" onClick={closeEditor}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></section></div>}</Presence>
+    <Presence show={canManage && Boolean(editing)}>{canManage && editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={closeEditor}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><AvatarField url={newAvatar?.preview ?? (avatarRemoved ? null : avatarImageUrl(editing.username))} initials={editing.initials} canRemove={Boolean(newAvatar) || (memberAvatars.has(editing.username) && !avatarRemoved)} error={photo.error} onPick={(file) => void pickAvatar(file)} onRemove={() => { photo.reset(); setAvatarRemoved(memberAvatars.has(editing.username)); }} /><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <GlassSelect value={editRole} options={[{ value: "member", label: "Thành viên" }, { value: "sub-admin", label: "Sub-admin" }]} disabled={roleSaving === editing.username} onChange={(next) => setEditRole(next as "member" | "sub-admin")} ariaLabel="Quyền" />}<small>{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? "Mạnh luôn là Admin, không thể đổi quyền." : editRole === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label><label className="member-password-field">Mật khẩu mới<PasswordField value={editPassword} onChange={setEditPassword} placeholder="Để trống nếu giữ nguyên" /><small className="member-editor-hint">Mật khẩu hiện tại được mã hoá nên không hiển thị được; nhập mật khẩu mới nếu muốn đổi.</small></label><div className="editor-actions"><button className="soft-btn" onClick={closeEditor}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></section></div>}</Presence>
     <Presence show={Boolean(viewing)}>{viewing && (() => {
       const rank = rankingRows.findIndex((row) => row.username === viewing.username || row.name === viewing.name) + 1;
       const achievement = rank > 0 ? rankingRows[rank - 1] : null;
@@ -2646,7 +2683,7 @@ function Members({ members, rankingRows, rankingMonth, eloRows, formByUsername, 
       const elo = eloRows.find((row) => row.username === viewing.username || row.name === viewing.name) ?? null;
       return <div className="modal-backdrop"><ProfilePopover detail member={viewing} rank={rank} achievement={achievement} achievementMonth={rankingMonth} rankClass={rankClass} hasRankingData={hasRankingData} elo={elo} form={formByUsername[viewing.username]} onClose={() => setViewing(null)} /></div>;
     })()}</Presence>
-    <Presence show={adding}>{adding && <AddMemberModal onClose={() => setAdding(false)} onCreate={async (values) => {
+    <Presence show={canManage && adding}>{canManage && adding && <AddMemberModal onClose={() => setAdding(false)} onCreate={async (values) => {
       const { avatar, ...member } = values;
       const created = await adminPost("/api/member-create", member, "Không thể thêm thành viên.") as { username?: string };
       if (avatar) {
