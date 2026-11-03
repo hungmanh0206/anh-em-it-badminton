@@ -126,3 +126,38 @@
     width: 132px;
   }
 }
+
+/* ---------- ELO: two Level groups instead of a podium ---------- */
+/* Level 1 (the top four ELO) in blue, Level 2 in green: a soft wash from the left edge and a coloured edge bar. */
+.elo-row.level-1 {
+  --elo-group: 59, 130, 246;
+  --elo-group-ink: #1d4ed8;
+}
+
+.elo-row.level-2 {
+  --elo-group: 34, 197, 94;
+  --elo-group-ink: #15803d;
+}
+
+:root[data-theme="dark"] .elo-row.level-1 {
+  --elo-group-ink: #93c5fd;
+}
+
+:root[data-theme="dark"] .elo-row.level-2 {
+  --elo-group-ink: #86efac;
+}
+
+.elo-list > .elo-row:is(.level-1, .level-2):not(#_):not(#_) {
+  background: linear-gradient(90deg, rgba(var(--elo-group), 0.16), rgba(var(--elo-group), 0.03) 70%) !important;
+  box-shadow: inset 3px 0 0 rgb(var(--elo-group)) !important;
+}
+
+.elo-row:is(.level-1, .level-2) .elo-rank:not(#_):not(#_) {
+  background: rgba(var(--elo-group), 0.14) !important;
+  color: var(--elo-group-ink) !important;
+}
+
+.elo-row:is(.level-1, .level-2) .elo-rating-value b:not(#_):not(#_),
+.elo-row:is(.level-1, .level-2) .elo-row-meta b:not(#_):not(#_) {
+  color: var(--elo-group-ink) !important;
+}

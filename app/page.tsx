@@ -1876,6 +1876,7 @@ const imagePalette = () => (document.documentElement.dataset.theme === "dark" ? 
   cell: "#e6e0d4", positive: "#62dfa6", negative: "#ff978c", elo: "#ddd3bc", emptySlot: "rgba(255, 255, 255, 0.24)",
   avatarShadow: "rgba(0, 0, 0, 0.4)", blankBack: "#3a352b", blankShape: "#8a8274", tintAlpha: 0.2,
   podium: [{ tint: "255, 183, 0", edge: "#ffb700", points: "#ffc83d" }, { tint: "150, 165, 190", edge: "#a3adbd", points: "#cdd6e4" }, { tint: "206, 126, 68", edge: "#cd8a52", points: "#eeaf80" }],
+  levels: [{ tint: "59, 130, 246", edge: "#3b82f6", points: "#93c5fd" }, { tint: "34, 197, 94", edge: "#22c55e", points: "#86efac" }],
 } : {
   page: ["#fffdf8", "#faf8f3", "#f7f3ea"], glow: "255, 183, 0", glowAlpha: 0.14,
   eyebrow: "#b67500", title: "#17140f", card: "#ffffff", cardShadow: "rgba(35, 28, 18, 0.06)", head: "#faf7f0",
@@ -1884,6 +1885,7 @@ const imagePalette = () => (document.documentElement.dataset.theme === "dark" ? 
   cell: "#3d3528", positive: "#1f8a5b", negative: "#c2413b", elo: "#6b5a3a", emptySlot: "rgba(61, 53, 40, 0.22)",
   avatarShadow: "rgba(35, 28, 18, 0.12)", blankBack: "#ece7dd", blankShape: "#a79f92", tintAlpha: 0.13,
   podium: [{ tint: "255, 183, 0", edge: "#ffb700", points: "#b87900" }, { tint: "126, 138, 160", edge: "#a3adbd", points: "#5d6878" }, { tint: "196, 116, 58", edge: "#cd8a52", points: "#a85a24" }],
+  levels: [{ tint: "59, 130, 246", edge: "#3b82f6", points: "#1d4ed8" }, { tint: "34, 197, 94", edge: "#22c55e", points: "#15803d" }],
 });
 type ImagePalette = ReturnType<typeof imagePalette>;
 async function loadImageFonts() {
@@ -2175,16 +2177,13 @@ async function downloadEloImage(rows: EloRankingRow[]) {
   await loadImageFonts();
   const palette = imagePalette();
   const sorted = [...rows].sort((a, b) => a.rank - b.rank);
-  const [medals, avatars] = await Promise.all([
-    Promise.all([1, 2, 3].map((rank) => loadCanvasImage(`/app-icons/rank-${rank}.png?v=ranking-medals-nobg-20260904`))),
-    Promise.all(sorted.map((row) => (hasAvatarArt(row.username) ? loadCanvasImage(avatarImageUrl(row.username)!) : Promise.resolve(null)))),
-  ]);
+  const avatars = await Promise.all(sorted.map((row) => (hasAvatarArt(row.username) ? loadCanvasImage(avatarImageUrl(row.username)!) : Promise.resolve(null))));
   const width = 900;
   const cardX = 24;
   const cardW = width - cardX * 2;
   const cardY = 112;
   const headH = 36;
-  const rowHeights = sorted.map((_, index) => (index < 3 ? 69 : 60));
+  const rowHeights = sorted.map(() => 60);
   const cardH = headH + rowHeights.reduce((sum, h) => sum + h, 0);
   const height = cardY + cardH + 58;
   const rankX = cardX + 48;
@@ -2211,13 +2210,13 @@ async function downloadEloImage(rows: EloRankingRow[]) {
   sorted.forEach((row, index) => {
     const h = rowHeights[index];
     const mid = y + h / 2;
-    const top = index < 3 ? palette.podium[index] : null;
-    drawImageRow(ctx, cardX, cardW, y, h, top, index < sorted.length - 1, palette);
-    drawImageRank(ctx, top ? medals[index] : null, row.rank, rankX, mid, palette);
+    const group = palette.levels[row.level === 1 ? 0 : 1];
+    drawImageRow(ctx, cardX, cardW, y, h, group, index < sorted.length - 1, palette);
+    drawImageRank(ctx, null, row.rank, rankX, mid, palette);
     drawImageMember(ctx, avatars[index], row.name, row.level, memberX, mid, palette);
     ctx.textAlign = "center";
-    ctx.fillStyle = top ? top.points : palette.title;
-    ctx.font = top ? `700 22px ${numberFont}` : `700 18px ${numberFont}`;
+    ctx.fillStyle = group.points;
+    ctx.font = `700 20px ${numberFont}`;
     ctx.fillText(formatElo(row.eloRating), eloX, mid + 1);
     ctx.fillStyle = palette.cell;
     ctx.font = `700 14px ${bodyFont}`;
@@ -2352,9 +2351,9 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
       <div className="elo-list">
         {rows.length > 0 && <div className="elo-head" aria-hidden="true"><span>Hạng</span><span>Thành viên</span><span>ELO</span><span>Số trận</span><span>Level</span></div>}
         {rows.length ? rows.map((row, index) => {
-          const isTopRank = index < 3;
-          return <article className={`elo-row ${isTopRank ? `top-rank top-${index + 1}` : ""}`} key={row.memberId}>
-            <div className={isTopRank ? `elo-rank medal m${index}` : "elo-rank"} aria-label={`Hạng ${row.rank}`}>{isTopRank ? "" : row.rank}</div>
+          // Not a podium: the top four ELO are Level 1 (blue), everyone else Level 2 (green).
+          return <article className={`elo-row level-${row.level === 1 ? 1 : 2}`} key={row.memberId}>
+            <div className="elo-rank" aria-label={`Hạng ${row.rank}`}>{row.rank}</div>
             <div className="person elo-person"><div className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</div><div><b>{row.name}</b></div></div>
             <div className="elo-rating-value"><span>ELO</span><b>{row.eloRating.toLocaleString("vi-VN", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</b></div>
             <div className="elo-row-meta"><span className="elo-matches">{row.matches}<small>{"\u00a0"}trận</small></span><b>{row.level === 1 ? "Level 1" : "Level 2"}</b></div>
