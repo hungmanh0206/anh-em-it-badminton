@@ -263,26 +263,107 @@
   }
 }
 
-/* Phones: each row keeps the points, the goal difference, the matches and the form; wins, losses and ELO (which has
-   its own tab) are left to the wider screens, so the second line stays readable. */
+/* ---------- Phones: every number kept, in order ----------
+   Top line: rank, the member, their recent form, the points. Under it, five even columns (wins, losses, difference,
+   matches, ELO), each a small label over its value. */
 @media (max-width: 700px) {
-  .ranking-panel .rank-mobile-stats > span:is(:nth-child(1), :nth-child(2), :nth-child(5)):not(#_):not(#_) {
-    display: none !important;
+  .ranking-panel .rank-row.rank-columns:not(#_):not(#_):not(#_) {
+    grid-template-columns: 30px minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto !important;
+    grid-template-areas:
+      "rank person points"
+      "stats stats stats" !important;
+    row-gap: 10px !important;
   }
 
-  .ranking-panel .rank-mobile-stats:not(#_):not(#_) {
-    gap: 12px !important;
+  .ranking-panel .rank-row > :is(.rank-number, .medal):not(#_):not(#_):not(#_) {
+    grid-area: rank !important;
+  }
+
+  .ranking-panel .rank-row > .person:not(#_):not(#_):not(#_) {
+    grid-area: person !important;
+    padding-right: 70px !important;
+  }
+
+  .ranking-panel .rank-row > .point-value:not(#_):not(#_):not(#_) {
+    grid-area: points !important;
+    align-self: center;
+  }
+
+  .ranking-panel .rank-row > .rank-form:not(#_):not(#_):not(#_) {
+    display: flex !important;
+    grid-area: person !important;
+    justify-self: end;
+    align-self: center;
+    margin: 0 !important;
+  }
+
+  .ranking-panel .rank-row > .rank-mobile-stats:not(#_):not(#_):not(#_) {
+    display: grid !important;
+    grid-area: stats !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0 !important;
+    width: 100%;
+    margin: 0 !important;
+    padding: 8px 0 0 !important;
+    box-shadow: inset 0 1px 0 var(--glass-line);
+  }
+
+  .ranking-panel .rank-mobile-stats > span:not(#_):not(#_):not(#_) {
+    display: grid !important;
+    justify-items: center;
+    gap: 2px;
+    min-width: 0;
+    padding: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+  }
+
+  .ranking-panel .rank-mobile-stats > span + span:not(#_):not(#_):not(#_) {
+    box-shadow: inset 1px 0 0 var(--glass-line) !important;
+  }
+
+  .ranking-panel .rank-mobile-stats em:not(#_):not(#_) {
+    color: var(--bar-muted);
+    font-size: 9px;
+    font-style: normal;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .ranking-panel .rank-mobile-stats b:not(#_):not(#_) {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
-/* The narrowest phones: the recent-form dots go too (they are in each member's profile), so names keep their room. */
+/* The narrowest phones: the form moves under the five numbers, so the name keeps its room. */
 @media (max-width: 380px) {
-  .ranking-panel .rank-row .rank-form:not(#_):not(#_):not(#_) {
-    display: none !important;
+  .ranking-panel .rank-row.rank-columns:not(#_):not(#_):not(#_) {
+    grid-template-areas:
+      "rank person points"
+      "stats stats stats"
+      "form form form" !important;
+    grid-template-rows: auto auto auto !important;
   }
 
-  /* The room kept beside the name for those dots is no longer needed. */
-  .ranking-panel .rank-row .person:not(#_):not(#_):not(#_) {
+  .ranking-panel .rank-row > .person:not(#_):not(#_):not(#_) {
     padding-right: 0 !important;
+  }
+
+  .ranking-panel .rank-row > .rank-form:not(#_):not(#_):not(#_) {
+    grid-area: form !important;
+    justify-self: center;
+  }
+
+  .ranking-panel .rank-mobile-stats b:not(#_):not(#_) {
+    font-size: 12px;
   }
 }
