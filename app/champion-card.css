@@ -1,6 +1,6 @@
 /* Home › champion of the month (HomeChampionCard in app/page.tsx). Avatar with crown and the title on the left, the
    numbers in three tiles under them, and the champion's celebration picture standing on the right, inside the card. Light moves across it: a slow gold sweep, turning rays, twinkles and a passing shine; the figure
-   breathes gently. Only transforms and opacity animate. */
+   stands still. Only transforms and opacity animate. */
 .champion-card {
   --cc-face: linear-gradient(135deg, rgba(255, 246, 214, 0.9) 0%, rgba(255, 224, 150, 0.82) 52%, rgba(246, 192, 72, 0.78) 100%);
   --cc-ink: #2e1d00;
@@ -124,7 +124,7 @@
   animation: ccPulse 4.5s ease-in-out infinite;
 }
 
-/* A little room above the picture, so its gentle rise never reaches the top of the frame. */
+/* A little room above the picture, so it never touches the top of the frame. */
 .cc-figure img {
   position: absolute;
   right: 0;
@@ -136,8 +136,6 @@
   filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.3));
   -webkit-mask-image: linear-gradient(180deg, #000 88%, transparent);
   mask-image: linear-gradient(180deg, #000 88%, transparent);
-  transform-origin: 70% 100%;
-  animation: ccBreathe 4.5s ease-in-out infinite;
 }
 
 /* ---- the card's content ---- */
@@ -465,11 +463,6 @@
 @keyframes ccPulse {
   0%, 100% { opacity: 0.6; transform: scale(0.94); }
   50% { opacity: 1; transform: scale(1.04); }
-}
-
-@keyframes ccBreathe {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-4px) scale(1.015); }
 }
 
 @media (prefers-reduced-motion: reduce) {
