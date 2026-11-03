@@ -1,0 +1,193 @@
+/* Modals on iPad and desktop (wider than a phone): laid out across instead of one tall column. Phones keep the
+   stacked layout from the other stylesheets. */
+@media (min-width: 701px) {
+  /* ---------- Thêm / Sửa thành viên: a pictures pane on the left, the title and fields on the right ---------- */
+  .member-editor:not(#_):not(#_):not(#_) {
+    display: grid !important;
+    grid-template-columns: 232px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "media head"
+      "media main";
+    gap: 18px 26px;
+    width: min(100% - 48px, 720px) !important;
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
+    padding: 22px 26px 24px 22px !important;
+  }
+
+  .member-editor-head:not(#_) {
+    grid-area: head;
+    padding: 6px 44px 0 0;
+  }
+
+  .member-editor-head > *:not(#_):not(#_) {
+    margin: 0 !important;
+  }
+
+  .member-editor-head > h2:not(#_):not(#_) {
+    margin-top: 4px !important;
+    font-size: 22px;
+  }
+
+  .member-editor-media:not(#_) {
+    grid-area: media;
+    display: grid;
+    align-content: start;
+    gap: 22px;
+    padding: 22px 16px;
+    border-radius: 18px;
+    background: var(--pill);
+  }
+
+  .member-editor-media > .member-avatar-field:not(#_):not(#_) {
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    text-align: center;
+  }
+
+  .member-editor-media .member-avatar-copy:not(#_) {
+    justify-items: center;
+  }
+
+  .member-editor-media .member-avatar-actions:not(#_) {
+    justify-content: center;
+  }
+
+  .member-editor-media .avatar:not(#_):not(#_):not(#_) {
+    width: 92px;
+    height: 92px;
+    font-size: 28px;
+  }
+
+  .member-editor-media .member-card-preview:not(#_) {
+    width: 100px;
+    height: 124px;
+    background: radial-gradient(circle at 50% 75%, rgba(255, 200, 61, 0.35), transparent 70%), var(--glass-card);
+  }
+
+  .member-editor-main:not(#_) {
+    grid-area: main;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .member-editor-main > *:not(#_):not(#_) {
+    margin: 0 !important;
+  }
+
+  .member-editor-main > .editor-actions:not(#_):not(#_) {
+    margin-top: auto !important;
+    padding-top: 8px;
+  }
+
+  /* ---------- Hồ sơ thành viên: a picture pane on the left, the month's numbers on the right ---------- */
+  .member-profile-popover.member-detail-modal:not(#_):not(#_) {
+    display: grid !important;
+    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-areas:
+      "hero score"
+      "hero form"
+      "hero stats";
+    grid-template-rows: auto auto 1fr;
+    gap: 12px 22px;
+    width: min(100% - 48px, 760px) !important;
+    padding: 18px 22px 18px 18px !important;
+  }
+
+  .member-detail-modal > *:not(.modal-close):not(#_):not(#_) {
+    margin: 0 !important;
+  }
+
+  .member-detail-modal > .profile-hero-card:not(#_):not(#_) {
+    grid-area: hero;
+    justify-content: flex-end;
+    min-height: 100%;
+    padding: 20px 16px 18px !important;
+    border-radius: 18px;
+    background: var(--pill) !important;
+  }
+
+  /* With a celebration picture it stands in the pane instead of the round avatar. */
+  .member-detail-modal .profile-hero-card.has-art .profile-art {
+    display: block;
+    width: 100%;
+    height: 210px;
+    object-fit: contain;
+    object-position: bottom center;
+    filter: drop-shadow(0 10px 14px rgba(40, 28, 8, 0.2));
+  }
+
+  .member-detail-modal .profile-hero-card.has-art .profile-medal:not(#_):not(#_) {
+    display: none !important;
+  }
+
+  .member-detail-modal > .profile-score-card:not(#_):not(#_) {
+    grid-area: score;
+    margin-top: 34px !important;
+  }
+
+  .member-detail-modal > .profile-form:not(#_) {
+    grid-area: form;
+  }
+
+  .member-detail-modal > .profile-stat-grid:not(#_):not(#_) {
+    grid-area: stats;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    align-self: start;
+  }
+
+  /* ---------- Điểm danh prompt: wider, the two answers side by side ---------- */
+  .checkin-modal:not(#_):not(#_) {
+    width: min(100% - 48px, 560px) !important;
+    padding: 34px 36px 26px !important;
+  }
+
+  .checkin-modal .modal-actions:not(#_):not(#_) {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .checkin-modal .modal-actions button:not(#_):not(#_) {
+    width: 100%;
+    margin: 0 !important;
+  }
+
+  /* ---------- Confirmations: a little wider, so the message runs on fewer lines ---------- */
+  .confirm-modal:not(#_):not(#_) {
+    width: min(100% - 48px, 460px) !important;
+  }
+
+  /* ---------- Kho ảnh: upload and rename ---------- */
+  .photo-sheet:not(#_):not(#_) {
+    width: min(100% - 48px, 680px);
+  }
+
+  .photo-rename-modal:not(#_):not(#_) {
+    width: min(100% - 48px, 520px);
+  }
+
+  /* ---------- Lịch sử thi đấu: room for both teams and the score on one line ---------- */
+  .history-detail:not(#_):not(#_) {
+    width: min(100% - 48px, 760px) !important;
+  }
+}
+
+/* Phones: the profile keeps its round avatar. */
+.profile-art {
+  display: none;
+}
+
+/* iPad portrait: a narrower pictures pane. */
+@media (min-width: 701px) and (max-width: 900px) {
+  .member-editor:not(#_):not(#_):not(#_) {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+
+  .member-profile-popover.member-detail-modal:not(#_):not(#_) {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+}

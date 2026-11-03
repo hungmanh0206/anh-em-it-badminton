@@ -1349,7 +1349,7 @@ function FormBadges({ form, className = "" }: { form?: FormResult[]; className?:
   </div>;
 }
 
-function ProfilePopover({ detail = false, member, rank, achievement, achievementMonth, rankClass, hasRankingData, elo, form, onClose, onLogout }: { detail?: boolean; member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; hasRankingData: boolean; elo: EloRankingRow | null; form?: FormResult[]; onClose: () => void; onLogout?: () => void }) {
+function ProfilePopover({ detail = false, showUsername = false, member, rank, achievement, achievementMonth, rankClass, hasRankingData, elo, form, onClose, onLogout }: { detail?: boolean; showUsername?: boolean; member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; hasRankingData: boolean; elo: EloRankingRow | null; form?: FormResult[]; onClose: () => void; onLogout?: () => void }) {
   const isTopRank = hasRankingData && rank > 0 && rank <= 3;
   const pointDiff = achievement?.pointDiff;
   const pointDiffLabel = typeof pointDiff === "number" ? `${pointDiff > 0 ? "+" : ""}${pointDiff}` : "0";
@@ -1364,12 +1364,13 @@ function ProfilePopover({ detail = false, member, rank, achievement, achievement
   const eloRankDisplay = typeof elo?.rank === "number" ? `Top ${elo.rank} ELO` : "ELO hiện tại";
   return <aside className={`member-profile-popover profile-${rankClass}${detail ? " member-detail-modal" : ""}`} role="dialog" aria-modal="true" aria-label={`Thông tin hồ sơ ${member.name}`}>
     <button className="modal-close profile-close" onClick={onClose} aria-label="Đóng">×</button>
-    <div className="profile-hero-card">
+    <div className={"profile-hero-card" + (detail && cardArtUrl(member.username) ? " has-art" : "")}>
+      {detail && cardArtUrl(member.username) && <img className="profile-art" src={cardArtUrl(member.username) ?? undefined} alt="" aria-hidden="true" decoding="async" onError={(event) => { event.currentTarget.parentElement?.classList.remove("has-art"); event.currentTarget.remove(); }} />}
       <span className={avatarClassName("profile-medal", member)} style={avatarStyle(member)} aria-hidden="true">{isTopRank ? rank : member.initials}</span>
       <div className="profile-identity">
         <p>{hasRankingData && rank > 0 ? `${positionLabel} · ${achievementMonth}` : "Hồ sơ tháng hiện tại"}</p>
         <h2>{member.name}</h2>
-        {detail && <span className="profile-username">@{member.username}</span>}
+        {detail && showUsername && <span className="profile-username">@{member.username}</span>}
         <span className="profile-role-line">{roleLabel} · Level {member.level}</span>
         <span className="profile-elo-badge"><strong>ELO {eloDisplay}</strong><em>{eloRankDisplay}</em></span>
       </div>
@@ -2458,7 +2459,7 @@ function CardArtField({ url, canRemove, error, onPick, onRemove }: { url: string
   const input = useRef<HTMLInputElement>(null);
   return <div className="member-avatar-field member-card-field">
     <div className="member-card-preview">{url ? <img src={url} alt="" /> : <AppIcon name="trophy" />}</div>
-    <div className="member-avatar-copy"><b>Ảnh ăn mừng</b><div className="member-avatar-actions"><button type="button" className="soft-btn" onClick={() => input.current?.click()}>{url ? "Đổi ảnh" : "Chọn ảnh"}</button>{canRemove && <button type="button" className="soft-btn member-avatar-remove" onClick={onRemove}>Xóa ảnh</button>}</div>{error ? <small className="member-editor-error">{error}</small> : <small className="member-editor-hint">Ảnh toàn thân nền trong suốt (PNG), dùng cho thẻ thành viên và thẻ nhà vô địch.</small>}</div>
+    <div className="member-avatar-copy"><b>Ảnh ăn mừng</b><div className="member-avatar-actions"><button type="button" className="soft-btn" onClick={() => input.current?.click()}>{url ? "Đổi ảnh" : "Chọn ảnh"}</button>{canRemove && <button type="button" className="soft-btn member-avatar-remove" onClick={onRemove}>Xóa ảnh</button>}</div>{error && <small className="member-editor-error">{error}</small>}</div>
     <input ref={input} type="file" accept="image/png,image/webp,image/*" hidden onChange={(event) => { onPick(event.target.files?.[0]); event.target.value = ""; }} />
   </div>;
 }
@@ -2467,7 +2468,7 @@ function AvatarField({ url, initials, canRemove, error, onPick, onRemove }: { ur
   const input = useRef<HTMLInputElement>(null);
   return <div className="member-avatar-field">
     <div className={`avatar${url ? " avatar-art" : ""}`} style={{ "--avatar-image": url ? `url("${url}")` : "none" } as CSSProperties}>{initials}</div>
-    <div className="member-avatar-copy"><b>Ảnh đại diện</b><div className="member-avatar-actions"><button type="button" className="soft-btn" onClick={() => input.current?.click()}>{url ? "Đổi ảnh" : "Chọn ảnh"}</button>{canRemove && <button type="button" className="soft-btn member-avatar-remove" onClick={onRemove}>Xóa ảnh</button>}</div>{error ? <small className="member-editor-error">{error}</small> : <small className="member-editor-hint">Ảnh được cắt tròn và chỉ áp dụng khi lưu.</small>}</div>
+    <div className="member-avatar-copy"><b>Ảnh đại diện</b><div className="member-avatar-actions"><button type="button" className="soft-btn" onClick={() => input.current?.click()}>{url ? "Đổi ảnh" : "Chọn ảnh"}</button>{canRemove && <button type="button" className="soft-btn member-avatar-remove" onClick={onRemove}>Xóa ảnh</button>}</div>{error && <small className="member-editor-error">{error}</small>}</div>
     <input ref={input} type="file" accept="image/*" hidden onChange={(event) => { onPick(event.target.files?.[0]); event.target.value = ""; }} />
   </div>;
 }
@@ -2496,17 +2497,20 @@ function AddMemberModal({ onClose, onCreate }: { onClose: () => void; onCreate: 
   return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Thêm thành viên">
     <form className="member-editor member-add-form" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
       <button type="button" className="modal-close" onClick={onClose} aria-label="Đóng">×</button>
-      <p className="eyebrow">THÊM THÀNH VIÊN</p>
-      <h2>Thành viên mới</h2>
+      <div className="member-editor-head"><p className="eyebrow">THÊM THÀNH VIÊN</p><h2>Thành viên mới</h2></div>
+      <div className="member-editor-media">
       <AvatarField url={photo.picked?.preview ?? null} initials={memberInitials(name)} canRemove={Boolean(photo.picked)} error={photo.error} onPick={(file) => void photo.pick(file)} onRemove={photo.reset} />
       <CardArtField url={card.picked?.preview ?? null} canRemove={Boolean(card.picked)} error={card.error} onPick={(file) => void card.pick(file)} onRemove={card.reset} />
+      </div>
+      <div className="member-editor-main">
       <label>Tên<input value={name} onChange={(event) => setName(event.target.value)} maxLength={40} autoFocus disabled={busy} placeholder="Ví dụ: Tuấn" />
         <small className="member-editor-hint">Tên đăng nhập: <b>{username || "—"}</b></small></label>
       <label className="member-role-field">Quyền<GlassSelect value={role} options={[{ value: "member", label: "Thành viên" }, { value: "sub-admin", label: "Sub-admin" }]} disabled={busy} onChange={(next) => setRole(next as "member" | "sub-admin")} ariaLabel="Quyền" />
-        <small>{role === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label>
+</label>
       <label className="member-password-field">Mật khẩu<PasswordField value={password} onChange={setPassword} placeholder={`Ít nhất ${MEMBER_PASSWORD_MIN} ký tự`} /></label>
       {error && <p className="member-editor-error" role="alert">{error}</p>}
       <div className="editor-actions"><button type="button" className="soft-btn" onClick={onClose} disabled={busy}>Hủy bỏ</button><button type="submit" className="primary" disabled={busy}>{busy ? "Đang thêm…" : "Thêm thành viên"}</button></div>
+      </div>
     </form>
   </div>;
 }
@@ -2738,14 +2742,14 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
         </article>;
       })}</div>}
     </section>
-    <Presence show={canManage && Boolean(editing)}>{canManage && editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={closeEditor}>×</button><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2><AvatarField url={newAvatar?.preview ?? (avatarRemoved ? null : avatarImageUrl(editing.username))} initials={editing.initials} canRemove={Boolean(newAvatar) || (memberAvatars.has(editing.username) && !avatarRemoved)} error={photo.error} onPick={(file) => void pickAvatar(file)} onRemove={() => { photo.reset(); setAvatarRemoved(memberAvatars.has(editing.username)); }} /><CardArtField url={newCard?.preview ?? (cardRemoved ? null : cardArtUrl(editing.username))} canRemove={Boolean(newCard) || (Boolean(cardArtUrl(editing.username)) && !cardRemoved)} error={cardPick.error} onPick={(file) => void cardPick.pick(file).then((ok) => { if (ok) setCardRemoved(false); })} onRemove={() => { cardPick.reset(); setCardRemoved(Boolean(cardArtUrl(editing.username))); }} /><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <GlassSelect value={editRole} options={[{ value: "member", label: "Thành viên" }, { value: "sub-admin", label: "Sub-admin" }]} disabled={roleSaving === editing.username} onChange={(next) => setEditRole(next as "member" | "sub-admin")} ariaLabel="Quyền" />}<small>{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? "Mạnh luôn là Admin, không thể đổi quyền." : editRole === "sub-admin" ? "Sub-admin được nhập, sửa và xác nhận điểm; không được sửa/xóa thành viên." : "Thành viên thường chỉ điểm danh, chọn số và xem kết quả."}</small></label><label className="member-password-field">Mật khẩu mới<PasswordField value={editPassword} onChange={setEditPassword} placeholder="Để trống nếu giữ nguyên" /><small className="member-editor-hint">Mật khẩu hiện tại được mã hoá nên không hiển thị được; nhập mật khẩu mới nếu muốn đổi.</small></label><div className="editor-actions"><button className="soft-btn" onClick={closeEditor}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></section></div>}</Presence>
+    <Presence show={canManage && Boolean(editing)}>{canManage && editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={closeEditor}>×</button><div className="member-editor-head"><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2></div><div className="member-editor-media"><AvatarField url={newAvatar?.preview ?? (avatarRemoved ? null : avatarImageUrl(editing.username))} initials={editing.initials} canRemove={Boolean(newAvatar) || (memberAvatars.has(editing.username) && !avatarRemoved)} error={photo.error} onPick={(file) => void pickAvatar(file)} onRemove={() => { photo.reset(); setAvatarRemoved(memberAvatars.has(editing.username)); }} /><CardArtField url={newCard?.preview ?? (cardRemoved ? null : cardArtUrl(editing.username))} canRemove={Boolean(newCard) || (Boolean(cardArtUrl(editing.username)) && !cardRemoved)} error={cardPick.error} onPick={(file) => void cardPick.pick(file).then((ok) => { if (ok) setCardRemoved(false); })} onRemove={() => { cardPick.reset(); setCardRemoved(Boolean(cardArtUrl(editing.username))); }} /></div><div className="member-editor-main"><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <GlassSelect value={editRole} options={[{ value: "member", label: "Thành viên" }, { value: "sub-admin", label: "Sub-admin" }]} disabled={roleSaving === editing.username} onChange={(next) => setEditRole(next as "member" | "sub-admin")} ariaLabel="Quyền" />}</label><label className="member-password-field">Mật khẩu mới<PasswordField value={editPassword} onChange={setEditPassword} placeholder="Để trống nếu giữ nguyên" /></label><div className="editor-actions"><button className="soft-btn" onClick={closeEditor}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></div></section></div>}</Presence>
     <Presence show={Boolean(viewing)}>{viewing && (() => {
       const rank = rankingRows.findIndex((row) => row.username === viewing.username || row.name === viewing.name) + 1;
       const achievement = rank > 0 ? rankingRows[rank - 1] : null;
       const hasRankingData = Boolean(achievement && !achievement.placeholder && achievement.matches > 0);
       const rankClass = hasRankingData && rank <= 3 ? `rank-${rank}` : "rank-none";
       const elo = eloRows.find((row) => row.username === viewing.username || row.name === viewing.name) ?? null;
-      return <div className="modal-backdrop"><ProfilePopover detail member={viewing} rank={rank} achievement={achievement} achievementMonth={rankingMonth} rankClass={rankClass} hasRankingData={hasRankingData} elo={elo} form={formByUsername[viewing.username]} onClose={() => setViewing(null)} /></div>;
+      return <div className="modal-backdrop"><ProfilePopover detail showUsername={canManage} member={viewing} rank={rank} achievement={achievement} achievementMonth={rankingMonth} rankClass={rankClass} hasRankingData={hasRankingData} elo={elo} form={formByUsername[viewing.username]} onClose={() => setViewing(null)} /></div>;
     })()}</Presence>
     <Presence show={canManage && adding}>{canManage && adding && <AddMemberModal onClose={() => setAdding(false)} onCreate={async (values) => {
       const { avatar, card, ...member } = values;
@@ -2766,7 +2770,7 @@ function Login({ onLogin, error }: { onLogin: (username: string, password: strin
 }
 
 function CheckinModal({ member, onAnswer, onSkip }: { member: Member; onAnswer: (attending: boolean) => void; onSkip: () => void }) {
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Điểm danh buổi chơi" {...backdropDismissProps(onSkip)}><section className="checkin-modal"><button className="modal-close" onClick={onSkip} aria-label="Đóng">×</button><p className="eyebrow">BUỔI CHƠI THỨ BẢY</p><h2>Chào {member.name}, bạn có tham gia không?</h2><p>Hãy phản hồi để Admin chốt danh sách và mở chọn số vào thứ Tư. Bạn vẫn có thể thay đổi sau trong trang chính.</p><div className="modal-actions"><button className="primary" onClick={() => onAnswer(true)}>Tôi tham gia</button><button className="secondary" onClick={() => onAnswer(false)}>Tôi không tham gia</button></div><button className="skip" onClick={onSkip}>Để sau</button></section></div>;
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Điểm danh buổi chơi" {...backdropDismissProps(onSkip)}><section className="checkin-modal"><button className="modal-close" onClick={onSkip} aria-label="Đóng">×</button><p className="eyebrow">BUỔI CHƠI THỨ BẢY</p><h2>Chào {member.name}, bạn có tham gia không?</h2><p>Bạn vẫn có thể đổi lại sau ở Trang chủ.</p><div className="modal-actions"><button className="primary" onClick={() => onAnswer(true)}>Tôi tham gia</button><button className="secondary" onClick={() => onAnswer(false)}>Tôi không tham gia</button></div><button className="skip" onClick={onSkip}>Để sau</button></section></div>;
 }
 function ConfirmActionModal({ title, message, onCancel, onConfirm, icon = "confirm", confirmLabel = "Có, xác nhận", cancelLabel = "Không" }: { title: string; message: string; onCancel: () => void; onConfirm: () => void | Promise<void>; icon?: AppIconName; confirmLabel?: string; cancelLabel?: string }) {
   return <div className="modal-backdrop" role="dialog" aria-modal="true" {...backdropDismissProps(onCancel)}><section className={`confirm-modal confirm-modal-${icon}`}><span className={`modal-icon app-icon app-icon-${icon}`} aria-hidden="true" /><h2>{title}</h2><p>{message}</p><div className="modal-actions confirm-actions"><button className="secondary" onClick={onCancel}>{cancelLabel}</button><button className="primary" onClick={() => void onConfirm()}>{confirmLabel}</button></div></section></div>;
