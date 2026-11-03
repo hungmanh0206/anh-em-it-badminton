@@ -1779,7 +1779,7 @@ function HallOfFame({ entries, onOpenMonth }: { entries: HallOfFameEntry[]; onOp
     <PageHero
       eyebrow="HALL OF FAME"
       title="Bảng vàng thành tích"
-      description="Nhà vô địch của từng tháng, lấy từ bảng xếp hạng đã khép lại nên không mất khi sang tháng mới. Bấm vào một tháng để xem lại bảng xếp hạng đầy đủ."
+      description="Nơi vinh danh những nhà vô địch của CLB qua từng tháng, cùng hai người về nhì và ba đã góp phần làm nên những trận đấu đáng nhớ."
     />
     {entries.length === 0 ? <section className="panel hall-empty"><AppIcon name="trophy" /><b>Bảng vàng còn trống</b><p>Nhà vô địch đầu tiên sẽ có tên ở đây khi tháng đầu tiên khép lại.</p></section> : <div className="hall-list">
       {entries.map((entry, index) => {
