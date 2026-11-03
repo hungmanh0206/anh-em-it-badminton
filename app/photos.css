@@ -921,15 +921,32 @@
   gap: 6px;
 }
 
-.photo-list-actions .photo-action-btn {
-  display: inline-grid;
+/* Rename and delete as small icon buttons: the blue edit mark and the red bin of a saved score row. */
+.photo-list-actions .photo-icon-btn:not(#_) {
+  display: grid;
   place-items: center;
+  width: 36px;
+  height: 36px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 11px;
 }
 
-.photo-list-actions .photo-action-btn svg {
-  display: none;
-  width: 16px;
-  height: 16px;
+.photo-action-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+  background: center / contain no-repeat;
+}
+
+.photo-action-rename {
+  width: 20px;
+  height: 20px;
+  background-image: url("/app-icons/rename.png");
+}
+
+.photo-action-delete {
+  background-image: url("/app-icons/score-clear.png");
 }
 
 .photo-list-error {
@@ -943,9 +960,7 @@
   .photo-list { margin: 0 16px; }
   .photo-list-row { grid-template-columns: 48px minmax(0, 1fr) auto; gap: 10px; padding: 10px; }
   .photo-list-thumb { width: 48px; height: 48px; }
-  .photo-list-actions .photo-action-btn { width: 34px; padding: 0; }
-  .photo-list-actions .photo-action-btn svg { display: block; }
-  .photo-list-actions .photo-action-btn span { display: none; }
+  .photo-list-actions .photo-icon-btn:not(#_) { width: 34px; height: 34px; }
   .photo-list-error { margin: 0 16px 10px; }
 }
 

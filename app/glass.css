@@ -14,10 +14,6 @@
     radial-gradient(circle at 70% 100%, rgba(110, 180, 255, 0.16), transparent 50%),
     rgba(255, 252, 245, 0.66);
   --glass-modal-blur: blur(26px) saturate(170%);
-  --glass-modal-stacked:
-    radial-gradient(circle at 92% 0%, rgba(255, 183, 0, 0.2), transparent 46%),
-    radial-gradient(circle at 0% 34%, rgba(255, 170, 120, 0.14), transparent 48%),
-    rgba(255, 252, 245, 0.92);
   --modal-scrim: rgba(92, 72, 38, 0.3);
   --scrim-layer: 16;
   --scrim-page: color-mix(in srgb, rgb(92 72 38) 30%, var(--glass-page));
@@ -528,11 +524,6 @@ body::before {
   }
 }
 
-/* Modals opened on top of a photo: nearly solid, so the picture behind cannot muddy them. */
-.photo-confirm-backdrop > *:not(#_):not(#_) {
-  background: var(--glass-modal-stacked) !important;
-}
-
 .photo-rename-head h2:not(#_) {
   color: var(--bar-text);
 }
@@ -891,12 +882,20 @@ html:has(.profile-backdrop) body::after {
   z-index: 14;
 }
 
-/* No fixed blur for a first modal: Safari cuts fixed layers at the layout viewport's edge, which drew a line above
-   its address bar. The page blurs itself instead, so the effect runs on under Safari's bars. */
-.modal-backdrop:not(.photo-confirm-backdrop, .presence ~ .presence > *):not(#_):not(#_) {
+/* No fixed blur and no colour of its own for a first modal: Safari cuts fixed layers at the layout viewport's edge,
+   which drew a line above its address bar. The page blurs itself and the scrim colour is one layer over the document
+   instead, so every modal sits on the same backdrop. */
+.modal-backdrop:not(#_):not(#_) {
   background: transparent !important;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+}
+
+/* A modal opened on top of another (a confirmation over a photo) blurs the one below by the same amount, without
+   darkening the page a second time. */
+.presence ~ .presence > .modal-backdrop:not(#_):not(#_) {
+  -webkit-backdrop-filter: var(--modal-scrim-blur);
+  backdrop-filter: var(--modal-scrim-blur);
 }
 
 /* The fixed bars cannot blur with the page, and even blurred their outline shows, so they step aside behind a modal. */

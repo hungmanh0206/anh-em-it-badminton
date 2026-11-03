@@ -1,4 +1,4 @@
-/* Home's three steps: a horizontal stepper in its own glass block. */
+/* Home's three steps: a horizontal stepper at the top of the current step's block (or on its own if ever outside one). */
 .workflow {
   --step-idle: rgba(60, 48, 28, 0.1);
   --step-idle-text: rgba(26, 20, 8, 0.62);
@@ -23,6 +23,17 @@
   box-shadow: var(--glass-lift) !important;
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
+}
+
+/* Inside the step's block it takes the block's glass and just sits above the heading. */
+.panel > .workflow:not(#_):not(#_):not(#_) {
+  margin: 0;
+  padding: 18px max(12px, calc(var(--block-inset) - 14px)) 4px;
+  border-radius: 0;
+  background: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .workflow button:not(#_):not(#_) {

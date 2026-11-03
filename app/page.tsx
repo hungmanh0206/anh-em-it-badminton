@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, type CSSProperties, type Dispatch, type SetStateAction, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createContext, type CSSProperties, type Dispatch, type ReactNode, type SetStateAction, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { backdropDismissProps, Presence } from "@/app/ui/modal";
 import { PhotoGallery } from "@/app/photo-gallery";
 import { PageHero } from "@/app/ui/page-hero";
@@ -1285,6 +1285,8 @@ export default function Home() {
     setRankingMonth(label);
   };
 
+  // The three steps head the current step's block, so the two read as one card.
+  const stepper = <div className={"workflow" + (stepDirection ? ` step-${stepDirection}` : "")}>{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : canGoStep(i) ? "" : "locked"} aria-disabled={i !== step && !canGoStep(i)} onClick={() => goStep(i)}><span key={i < step ? "done" : "number"}>{i < step ? "✓" : i + 1}</span>{label}</button>)}</div>;
   return <main className="app-shell">
     <div className={"topbar" + (topbarCollapsed ? " is-collapsed" : "")}>
       <div className="topbar-row">
@@ -1322,12 +1324,11 @@ export default function Home() {
         <HomeChampionCard champion={champion} monthLabel={championRankingLabel} onCelebrate={() => { unlockFireworkSound(); setCelebrating(true); }} />
         </div>
         </div>
-        <section className={"workflow" + (stepDirection ? ` step-${stepDirection}` : "")}>{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : canGoStep(i) ? "" : "locked"} aria-disabled={i !== step && !canGoStep(i)} onClick={() => goStep(i)}><span key={i < step ? "done" : "number"}>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
         {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
-        {step === 0 && <CheckIn members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
-        {step === 1 && <Draw members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
-        {step === 2 && <Schedule onEditingChange={(rows) => { editingScoreRows.current = new Set(rows); }} scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { setSessionStatus(completed ? "completed" : "scheduled"); if (completed) setHistoryRefreshTick((tick) => tick + 1); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
+        {step === 0 && <CheckIn header={stepper} members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
+        {step === 1 && <Draw header={stepper} members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
+        {step === 2 && <Schedule header={stepper} onEditingChange={(rows) => { editingScoreRows.current = new Set(rows); }} scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { setSessionStatus(completed ? "completed" : "scheduled"); if (completed) setHistoryRefreshTick((tick) => tick + 1); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}</div>
     </section>
     <Presence show={Boolean(showCheckin)}>{showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}</Presence>
@@ -1396,19 +1397,19 @@ function ProfilePopover({ detail = false, member, rank, achievement, achievement
   </aside>;
 }
 
-function CheckIn({ members, onContinue, canSchedule, canManageSession, currentUser, isCheckinWindowOpen, openSelfCheckin }: { members: Member[]; setMembers: (m: Member[]) => void; onContinue: () => void; canSchedule: boolean; canManageSession: boolean; currentUser: Member; isCheckinWindowOpen: boolean; isCheckinTestMode: boolean; openSelfCheckin: () => void }) {
+function CheckIn({ header, members, onContinue, canSchedule, canManageSession, currentUser, isCheckinWindowOpen, openSelfCheckin }: { header?: ReactNode; members: Member[]; setMembers: (m: Member[]) => void; onContinue: () => void; canSchedule: boolean; canManageSession: boolean; currentUser: Member; isCheckinWindowOpen: boolean; isCheckinTestMode: boolean; openSelfCheckin: () => void }) {
   const n = members.filter((m) => m.present).length;
   const l1 = members.filter((m) => m.present && m.level === 1).length;
   const l2 = n - l1;
   const allResponded = members.every((m) => m.responded);
-  return <section className="panel checkin">
+  return <section className="panel checkin">{header}
     <div className="panel-head checkin-head"><div><h2>Điểm danh thành viên</h2></div><div className="count-pill attendance-count-pill"><b>{n}</b><span>có mặt</span></div></div>
     <div className="member-grid">{members.map((m) => <div className={"member-card readonly" + (!m.responded ? "" : m.present ? " is-attending" : " is-absent")} key={m.name}><div className={avatarClassName("avatar", m)} style={avatarStyle(m)}>{m.initials}</div><div><b>{m.name}{m.name === currentUser.name && <em>Bạn</em>}</b><small>Level {m.level} · {m.responded ? <span className={"attendance-status " + (m.present ? "present" : "absent")}>{m.present ? "Tham gia" : "Không tham gia"}</span> : <span className="attendance-status pending">Chưa phản hồi</span>}</small></div></div>)}</div>
     {isCheckinWindowOpen && !canSchedule && <div className="warning">{n < 5 ? "Cần tối thiểu 5 người có mặt để tạo lịch thi đấu tự động." : `Chưa có mẫu lịch phù hợp cho ${n} người (${l1} Level 1 + ${l2} Level 2).`}</div>}
     <div className="panel-foot checkin-actions-foot"><div className="attendance-actions"><button className="soft-btn" disabled={!isCheckinWindowOpen} title={isCheckinWindowOpen ? undefined : "Mở vào thứ Tư"} onClick={openSelfCheckin}>{currentUser.responded ? "Cập nhật điểm danh của tôi" : "Điểm danh của tôi"}</button>{canManageSession && <button className="primary" disabled={!isCheckinWindowOpen || !canSchedule || !allResponded} onClick={onContinue}>Xác nhận điểm danh & mở chọn số <span>→</span></button>}</div></div>
   </section>;
 }
-function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, currentUser, canManageSession, onContinue }: { members: Member[]; drawn: Record<string, number>; allDrawn: boolean; drawSelf: () => void; spinning: boolean; spinTarget: number | null; currentUser: Member; canManageSession: boolean; onContinue: () => void }) {
+function Draw({ header, members, drawn, allDrawn, drawSelf, spinning, spinTarget, currentUser, canManageSession, onContinue }: { header?: ReactNode; members: Member[]; drawn: Record<string, number>; allDrawn: boolean; drawSelf: () => void; spinning: boolean; spinTarget: number | null; currentUser: Member; canManageSession: boolean; onContinue: () => void }) {
   const participantCount = members.length;
   const level1Count = members.filter((member) => member.level === 1).length;
   const level2Count = members.length - level1Count;
@@ -1429,7 +1430,7 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, curren
   const entries = members.map((member) => ({ member, no: spinning && member.name === currentUser.name ? undefined : drawn[member.name] }));
   const hubValue = isWheelSpinning || isHoldingSlot ? undefined : mine ?? autoLastSlot ?? undefined;
   const hubLabel = isWheelSpinning ? "Đang quay" : isHoldingSlot ? "Đang giữ số" : mine ? "Số của bạn" : autoLastSlot ? "Số cuối" : undefined;
-  return <section className="panel draw-panel">
+  return <section className="panel draw-panel">{header}
     <div className="panel-head draw-panel-head"><div><h2>Chọn số ngẫu nhiên</h2></div><span className="mode draw-mode-pill">{modeLabel}</span></div>
     <div className="draw-body">
       <DrawWheel slots={wheelSlots} slotClass={(slot) => drawNumberClass(slot, participantCount)} spinTarget={spinTarget} holding={isHoldingSlot} value={hubValue} label={hubLabel} />
@@ -1439,7 +1440,7 @@ function Draw({ members, drawn, allDrawn, drawSelf, spinning, spinTarget, curren
     {canManageSession && <div className="panel-foot draw-actions-foot"><button className="primary" disabled={!allDrawn} onClick={onContinue}>Tạo lịch thi đấu <span>→</span></button></div>}
   </section>;
 }
-function Schedule({ onEditingChange, scenario, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, rankingRows, rankingMonth, onSaved }: { onEditingChange: (rows: number[]) => void; scenario: ScheduleScenario | null; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: Dispatch<SetStateAction<Record<number, [string, string]>>>; confirmedMatches: Record<number, boolean>; setConfirmedMatches: Dispatch<SetStateAction<Record<number, boolean>>>; sessionId: string | null; canManageScores: boolean; rankingRows: RankingRow[]; rankingMonth: string; onSaved: (completed: boolean) => void }) {
+function Schedule({ header, onEditingChange, scenario, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, rankingRows, rankingMonth, onSaved }: { header?: ReactNode; onEditingChange: (rows: number[]) => void; scenario: ScheduleScenario | null; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: Dispatch<SetStateAction<Record<number, [string, string]>>>; confirmedMatches: Record<number, boolean>; setConfirmedMatches: Dispatch<SetStateAction<Record<number, boolean>>>; sessionId: string | null; canManageScores: boolean; rankingRows: RankingRow[]; rankingMonth: string; onSaved: (completed: boolean) => void }) {
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
   const [focusSlot, setFocusSlot] = useState<number | null>(null);
   // Touch screens: a tap anywhere else clears the highlight.
@@ -1449,9 +1450,9 @@ function Schedule({ onEditingChange, scenario, drawn, scores, setScores, confirm
     document.addEventListener("click", clearOutside);
     return () => document.removeEventListener("click", clearOutside);
   }, [focusSlot]);
-  if (!scenario) return <section className="panel"><div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Lịch chỉ được tạo khi có tối thiểu 5 thành viên và đúng tổ hợp trong thư viện lịch.</p></div></div><div className="empty-ranking">Chưa có lịch phù hợp cho danh sách điểm danh hiện tại.</div></section>;
+  if (!scenario) return <section className="panel">{header}<div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Lịch chỉ được tạo khi có tối thiểu 5 thành viên và đúng tổ hợp trong thư viện lịch.</p></div></div><div className="empty-ranking">Chưa có lịch phù hợp cho danh sách điểm danh hiện tại.</div></section>;
   return <>
-    <SlotFocusContext.Provider value={{ slot: focusSlot, setSlot: setFocusSlot }}><section className="panel combined-schedule-panel">
+    <SlotFocusContext.Provider value={{ slot: focusSlot, setSlot: setFocusSlot }}><section className="panel combined-schedule-panel">{header}
       <div className="panel-head"><div><h2>Lịch thi đấu</h2></div><span className="count-pill schedule-count-pill">{scenario.matches.length} trận</span></div>
       <div className="schedule-grid">{scenario.matches.map((match, i) => <Match match={match} i={i} namesBySlot={namesBySlot} key={i} />)}</div>
     </section></SlotFocusContext.Provider>
@@ -1472,7 +1473,7 @@ function Rules({ members }: { members: Member[] }) {
     <PageHero
       eyebrow="BỘ LUẬT CLB"
       title="Giải cầu lông Anh Em IT"
-      description="Lịch đấu được tạo để mọi thành viên có số trận cân bằng, gặp nhiều đối thủ khác nhau và vẫn giữ tinh thần vui vẻ, cạnh tranh lành mạnh."
+      description="Thể lệ chung của giải: cách chia cặp, tính điểm và giải thưởng mỗi tháng, để buổi chơi nào cũng công bằng và vui vẻ."
       statsLabel="Tóm tắt thể lệ"
       stats={[{ label: "Thể thức đánh đôi", value: "2 vs 2" }, { label: "Trận mỗi người / tuần", value: 4 }, { label: "Người tối đa / buổi", value: 12 }]}
     />
@@ -1583,7 +1584,7 @@ function ScheduleLibrary({ scenarios, members }: { scenarios: ScheduleScenario[]
     <PageHero
       eyebrow="THƯ VIỆN LỊCH"
       title="Mẫu lịch theo số người & Level"
-      description="Lịch chỉ có khi buổi chơi có từ 5 thành viên trở lên. Trang này chỉ để xem các trường hợp tạo lịch, không chọn hay ghi đè lịch của buổi hiện tại."
+      description="Các mẫu lịch thi đấu theo số người tham gia và Level, để anh em biết trước một buổi chơi sẽ diễn ra thế nào."
       statsLabel="Tóm tắt thư viện lịch"
       stats={[{ label: "Người tham gia", value: participantFilter }, { label: "Trường hợp", value: visibleScenarios.length }]}
     />
@@ -2228,7 +2229,7 @@ async function downloadEloImage(rows: EloRankingRow[]) {
 function Ranking({ month, rows, form, elo, onMonthChange, monthOptions, isAdmin, closeStatus, closeNotice, closingMonth, onCloseMonth }: { month: string; rows: RankingRow[]; form: FormByUsername; elo: Record<string, number>; onMonthChange: (month: string) => void; monthOptions: string[]; isAdmin: boolean; closeStatus: MonthCloseStatus | null; closeNotice: string; closingMonth: boolean; onCloseMonth: () => void }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
   return <section className="ranking">
-    <div className="ranking-toolbar"><div className="ranking-filter-row"><GlassSelect value={month} options={monthOptions} onChange={onMonthChange} ariaLabel="Tháng" /><button type="button" className="soft-btn ranking-export-btn" onClick={() => void downloadRankingImage(month, rows, form, elo)}><span className="ranking-export-full">Lưu ảnh BXH</span><span className="ranking-export-short">Lưu ảnh</span></button></div><p className="ranking-note">{closeStatus?.closed ? "BXH tháng này đã chốt, dữ liệu chỉ còn xem." : "Admin chốt BXH sau khi buổi cuối tháng hoàn tất để tạo tháng mới."}</p></div>
+    <div className="ranking-toolbar"><div className="ranking-filter-row"><GlassSelect value={month} options={monthOptions} onChange={onMonthChange} ariaLabel="Tháng" /><button type="button" className="soft-btn ranking-export-btn" onClick={() => void downloadRankingImage(month, rows, form, elo)}><span className="ranking-export-full">Lưu ảnh BXH</span><span className="ranking-export-short">Lưu ảnh</span></button></div>{closeStatus?.closed && <p className="ranking-note">BXH tháng này đã chốt.</p>}</div>
     {isAdmin && closeStatus && <div className={"month-close-card " + (closeStatus.closed ? "closed" : closeStatus.eligible ? "ready" : "waiting")}>
       <div>
         <span>{closeStatus.closed ? "ĐÃ CHỐT THÁNG" : closeStatus.eligible ? "SẴN SÀNG CHỐT" : "CHỜ ĐỦ ĐIỀU KIỆN"}</span>
@@ -2329,7 +2330,7 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
 
     <section className="panel elo-ranking-panel">
       <div className="panel-head elo-panel-head">
-        <div><h2>Thứ hạng ELO</h2><p>Level lấy theo thứ hạng ELO hiện tại, tách riêng với BXH điểm thưởng tháng.</p></div>
+        <div><h2>Thứ hạng ELO</h2><p>Trình độ hiện tại của các thành viên trong CLB.</p></div>
         <div className="elo-head-actions">
           <div className="elo-head-actions"><button type="button" className="soft-btn elo-guide-btn" onClick={() => void downloadEloImage(rows)}>Lưu ảnh ELO</button><button type="button" className="soft-btn elo-guide-btn" onClick={() => setGuideOpen(true)}>Cách tính ELO</button></div>
         </div>
@@ -2389,7 +2390,7 @@ function History({ sessions, currentMonth }: { sessions: HistorySession[]; curre
   };
   return <>
     <section className="panel history-panel">
-      <div className="panel-head"><div><h2>Lịch sử thi đấu</h2><p>Dữ liệu từng buổi chơi, số đã chọn và kết quả được lưu theo tuần.</p></div></div>
+      <div className="panel-head"><div><h2>Lịch sử thi đấu</h2><p>Kết quả các buổi chơi đã qua của CLB.</p></div></div>
       <div className="history-filters">
         <label>Tháng<GlassSelect value={selectedMonth} options={monthOptions} onChange={(next) => { setMonth(next); setWeek("Tất cả các tuần"); }} ariaLabel="Tháng" /></label>
         <label>Tuần<GlassSelect value={week} options={["Tất cả các tuần", ...entries.map((session) => session.week)]} onChange={setWeek} ariaLabel="Tuần" /></label>
