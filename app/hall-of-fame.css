@@ -387,44 +387,6 @@
 /* ---------- Hall of Fame ---------- */
 /* Each month is one card: a head (current-month tag, the month, "Xem BXH"), then the champion with crown and the
    two runners-up side by side, set apart by thin dividers. The latest month glows gold. */
-.hall-page > .page-hero:not(#_):not(#_) {
-  position: relative;
-  overflow: hidden;
-}
-
-/* A shuttlecock on a gold glow fills the hero's empty right side. */
-.hall-page > .page-hero:not(#_):not(#_)::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: 5%;
-  width: min(16%, 150px);
-  aspect-ratio: 1;
-  background: url("/club-mark.png") center / contain no-repeat;
-  filter: drop-shadow(0 0 22px rgba(255, 183, 0, 0.45));
-  pointer-events: none;
-  transform: translateY(-50%) rotate(-12deg);
-}
-
-.hall-page > .page-hero:not(#_):not(#_)::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: -4%;
-  width: min(44%, 400px);
-  aspect-ratio: 2.2;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(255, 190, 60, 0.32), transparent);
-  pointer-events: none;
-  transform: translateY(-50%) rotate(-14deg);
-}
-
-.hall-page > .page-hero > *:not(#_) {
-  position: relative;
-  z-index: 1;
-  max-width: 68%;
-}
-
 .hall-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -752,15 +714,6 @@
 
 /* Phones: the champion across the top, the two runners-up side by side under it. */
 @media (max-width: 560px) {
-  .hall-page > .page-hero > *:not(#_) {
-    max-width: none;
-  }
-
-  .hall-page > .page-hero:not(#_):not(#_)::after,
-  .hall-page > .page-hero:not(#_):not(#_)::before {
-    display: none;
-  }
-
   .hall-badge-long {
     display: none;
   }
