@@ -2236,19 +2236,10 @@ function Ranking({ month, rows, form, elo, onMonthChange, monthOptions, isAdmin,
       title="Bảng xếp hạng tháng"
       description="Cuộc đua điểm thưởng của các thành viên trong tháng. Người đứng đầu khi tháng khép lại là nhà vô địch."
     />
-    {isAdmin && closeStatus && <div className={"month-close-card " + (closeStatus.closed ? "closed" : closeStatus.eligible ? "ready" : "waiting")}>
-      <div>
-        <span>{closeStatus.closed ? "ĐÃ CHỐT THÁNG" : closeStatus.eligible ? "SẴN SÀNG CHỐT" : "CHỜ ĐỦ ĐIỀU KIỆN"}</span>
-        <h3>{closeStatus.monthLabel} → {closeStatus.nextMonthLabel}</h3>
-        <p>{closeStatus.message}</p>
-        {closeNotice && <p className="month-close-feedback" aria-live="polite">{closeNotice}</p>}
-      </div>
-      {!closeStatus.closed && <button className="primary" disabled={!closeStatus.eligible || closingMonth} onClick={onCloseMonth}>{closingMonth ? "Đang chốt..." : `Chốt BXH ${closeStatus.monthLabel}`}</button>}
-    </div>}
     <section className="panel ranking-panel">
       <div className="panel-head elo-panel-head ranking-panel-head">
-        <div><h2>Thứ hạng {month}</h2><p>{closeStatus?.closed ? "BXH tháng này đã chốt." : "Cập nhật sau mỗi trận đã lưu."}</p></div>
-        <div className="elo-head-actions ranking-head-actions"><GlassSelect value={month} options={monthOptions} onChange={onMonthChange} ariaLabel="Tháng" /><button type="button" className="soft-btn elo-guide-btn ranking-export-btn" onClick={() => void downloadRankingImage(month, rows, form, elo)}><span className="ranking-export-full">Lưu ảnh BXH</span><span className="ranking-export-short">Lưu ảnh</span></button></div>
+        <div><h2>Thứ hạng {month}</h2><p>{closeStatus?.closed ? <span className="ranking-closed-note">BXH tháng này đã chốt.</span> : closeNotice ? <span aria-live="polite">{closeNotice}</span> : "Cập nhật sau mỗi trận đã lưu."}</p></div>
+        <div className="elo-head-actions ranking-head-actions"><GlassSelect value={month} options={monthOptions} onChange={onMonthChange} ariaLabel="Tháng" /><button type="button" className="soft-btn elo-guide-btn ranking-export-btn" onClick={() => void downloadRankingImage(month, rows, form, elo)}><span className="ranking-export-full">Lưu ảnh BXH</span><span className="ranking-export-short">Lưu ảnh</span></button>{isAdmin && closeStatus && !closeStatus.closed && <button type="button" className="primary ranking-close-btn" disabled={!closeStatus.eligible || closingMonth} title={closeStatus.eligible ? `Chốt BXH ${closeStatus.monthLabel} để mở ${closeStatus.nextMonthLabel}` : closeStatus.message} onClick={onCloseMonth}>{closingMonth ? "Đang chốt..." : "Chốt BXH"}</button>}</div>
       </div>
     <div className="rank-table rank-table-form"><div className="rank-head rank-columns"><span>Vị trí</span><span>Thành viên</span><span>Điểm</span><span>Điểm thắng</span><span>Điểm thua</span><span>Hiệu số</span><span>Số trận</span><span>ELO</span><span>Phong độ</span></div>{rows.length ? rows.map((row, i) => {
       const isTopRank = hasRankingData && i < 3;

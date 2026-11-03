@@ -50,6 +50,8 @@
 
   .ranking-head-actions:not(#_):not(#_) {
     grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-auto-flow: column;
+    grid-auto-columns: auto;
   }
 
   /* The rating gets room to show in full, with its label above it like the month table's points. */
@@ -160,4 +162,49 @@
 .elo-row:is(.level-1, .level-2) .elo-rating-value b:not(#_):not(#_),
 .elo-row:is(.level-1, .level-2) .elo-row-meta b:not(#_):not(#_) {
   color: var(--elo-group-ink) !important;
+}
+
+/* ---------- Closing the month: a button beside the export; once closed, a green note under the title ---------- */
+.ranking-close-btn:not(#_):not(#_) {
+  min-height: 40px;
+  padding: 0 16px !important;
+  white-space: nowrap;
+}
+
+.ranking-closed-note {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.16);
+  color: #15803d;
+  font-weight: 800;
+}
+
+:root[data-theme="dark"] .ranking-closed-note {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
+/* Phones hide the block's subtitle, but this one says the month is closed, so it stays. */
+@media (max-width: 700px) {
+  .ranking-panel-head > div:first-child > p:has(.ranking-closed-note):not(#_):not(#_) {
+    display: block !important;
+  }
+}
+
+@media (max-width: 700px) {
+  /* With the admin's close button, the month gets its own line and the two buttons share the next. */
+  .ranking-head-actions:has(.ranking-close-btn):not(#_):not(#_):not(#_) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-flow: row;
+  }
+
+  .ranking-head-actions:has(.ranking-close-btn) > .glass-select:not(#_):not(#_) {
+    grid-column: 1 / -1;
+  }
+}
+
+.ranking-head-actions > button:not(#_):not(#_) {
+  justify-content: center;
+  text-align: center;
 }
