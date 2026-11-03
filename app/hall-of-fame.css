@@ -27,7 +27,7 @@
   --cc-mark: rgba(255, 255, 255, 0.34);
   --cc-tile: rgba(255, 255, 255, 0.5);
   --cc-tile-ink: #3a2400;
-  --cc-shadow: 0 14px 32px rgba(184, 118, 14, 0.32);
+  --cc-shadow: var(--glass-lift);
   --cc-avatar-ring: 0 0 0 3px #fff3c4, 0 0 24px 6px rgba(255, 255, 255, 0.7);
   position: relative;
   isolation: isolate;
@@ -36,9 +36,10 @@
   min-height: 112px;
   overflow: hidden;
   padding: 16px 18px;
+  border: 0 !important;
   border-radius: 18px;
   background: var(--cc-face);
-  box-shadow: var(--cc-shadow);
+  box-shadow: var(--cc-shadow) !important;
   color: var(--cc-ink);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
@@ -52,7 +53,7 @@
   --cc-mark: rgba(255, 210, 100, 0.1);
   --cc-tile: rgba(255, 255, 255, 0.08);
   --cc-tile-ink: #fff4d2;
-  --cc-shadow: 0 14px 34px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 200, 80, 0.14) inset;
+  --cc-shadow: var(--glass-lift);
   --cc-avatar-ring: 0 0 0 3px #e9b949, 0 0 26px 6px rgba(255, 190, 50, 0.45);
 }
 
