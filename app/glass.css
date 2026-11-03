@@ -597,11 +597,13 @@ body::before {
   transition: color 420ms ease;
 }
 
-/* Phones: two columns, with a smaller avatar so name and answer still fit. */
+/* Two columns on every screen (an older rule drops to one below 800px, which left iPad mini with a single column). */
+.member-grid:not(#_):not(#_):not(#_) {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/* Phones: a smaller avatar so name and answer still fit. */
 @media (max-width: 700px) {
-  .member-grid:not(#_):not(#_):not(#_) {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
 
   .member-grid > .member-card:not(#_):not(#_):not(#_) {
     min-width: 0;
