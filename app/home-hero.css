@@ -395,14 +395,23 @@ button.hero-champion:focus-visible {
 /* Home: today's date on the title's row, at the right. */
 .title-group:not(#_):not(#_):has(.title-date) {
   display: flex !important;
-  align-items: last baseline !important;
+  align-items: flex-end !important;
   justify-content: space-between;
   gap: 12px;
 }
 
-.title-date {
+/* Today's date in a small glass card at the right end of the title row, its bottom level with the title's. */
+.title-date:not(#_) {
+  flex: none;
   margin: 0;
+  padding: 7px 12px;
+  border-radius: 11px;
+  background: var(--glass-card);
+  box-shadow: var(--glass-lift-card);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   color: var(--bar-accent);
+  line-height: 1.2;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -412,7 +421,9 @@ button.hero-champion:focus-visible {
 }
 
 @media (max-width: 560px) {
-  .title-date {
+  .title-date:not(#_) {
+    padding: 6px 9px;
+    border-radius: 10px;
     font-size: 10.5px;
     letter-spacing: 0.04em;
   }
