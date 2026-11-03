@@ -67,11 +67,16 @@
   font-weight: 600 !important;
 }
 
-/* Every block in the profile card: the same side margin and the same gap between them. */
+/* Every block in the profile card: the same side margin and the same gap between them, from the shared spacing
+   tokens (--card-gap between small blocks, --block-inset at the edge, capped for this narrow card). */
+.member-profile-popover {
+  --profile-inset: min(var(--block-inset), 22px);
+}
+
 .member-profile-popover:not(#_) > .profile-hero-card {
-  padding-right: 16px !important;
-  padding-bottom: 12px !important;
-  padding-left: 16px !important;
+  padding-right: var(--profile-inset) !important;
+  padding-bottom: var(--card-gap) !important;
+  padding-left: var(--profile-inset) !important;
 }
 
 .member-profile-popover:not(#_) .profile-rank-stat b {
@@ -83,20 +88,20 @@
 
 .member-profile-popover:not(#_) > :is(.profile-score-card, .profile-form, .profile-stat-grid, .profile-logout) {
   width: auto;
-  margin: 0 16px 12px !important;
+  margin: 0 var(--profile-inset) var(--card-gap) !important;
 }
 
 .member-profile-popover:not(#_) > .profile-logout {
-  width: calc(100% - 32px);
+  width: calc(100% - 2 * var(--profile-inset));
 }
 
 .member-profile-popover:not(#_) > .profile-stat-grid {
-  gap: 12px !important;
+  gap: var(--card-gap) !important;
   padding: 0 !important;
 }
 
 .member-profile-popover:not(#_) > :last-child {
-  margin-bottom: 16px !important;
+  margin-bottom: var(--profile-inset) !important;
 }
 
 .profile-logout {

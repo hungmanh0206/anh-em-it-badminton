@@ -1349,6 +1349,9 @@ function FormBadges({ form, className = "" }: { form?: FormResult[]; className?:
   </div>;
 }
 
+// "Tháng 11, 2026" as "11/2026", where space is short.
+const shortMonthLabel = (label: string) => label.replace(/^Tháng (\d{1,2}), (\d{4})$/, "$1/$2");
+
 function ProfilePopover({ detail = false, showUsername = false, member, rank, achievement, achievementMonth, rankClass, hasRankingData, elo, form, onClose, onLogout }: { detail?: boolean; showUsername?: boolean; member: Member; rank: number; achievement: RankingRow | null; achievementMonth: string; rankClass: string; hasRankingData: boolean; elo: EloRankingRow | null; form?: FormResult[]; onClose: () => void; onLogout?: () => void }) {
   const isTopRank = hasRankingData && rank > 0 && rank <= 3;
   const pointDiff = achievement?.pointDiff;
@@ -1368,17 +1371,20 @@ function ProfilePopover({ detail = false, showUsername = false, member, rank, ac
     <div className={"profile-hero-card" + (detail && cardArtUrl(member.username) ? " has-art" : "")}>
       {detail && cardArtUrl(member.username) && <img className="profile-art" src={cardArtUrl(member.username) ?? undefined} alt="" aria-hidden="true" decoding="async" onError={(event) => { event.currentTarget.parentElement?.classList.remove("has-art"); event.currentTarget.remove(); }} />}
       <span className={avatarClassName("profile-medal", member)} style={avatarStyle(member)} aria-hidden="true">{isTopRank ? rank : member.initials}</span>
-      <div className="profile-identity">
-        <p>{hasRankingData && rank > 0 ? `${positionLabel} · ${achievementMonth}` : "Hồ sơ tháng hiện tại"}</p>
+      {detail ? <div className="profile-identity profile-identity-detail">
         <h2>{member.name}</h2>
-        {detail && showUsername && <span className="profile-username">@{member.username}</span>}
+        <span className="profile-meta-line">{showUsername && <span className="profile-username">@{member.username}</span>}<span>{roleLabel} · Level {member.level}</span></span>
+        <span className="profile-chip-row"><span className="profile-month-chip">{hasRankingData && rank > 0 ? `${positionLabel} · ${shortMonthLabel(achievementMonth)}` : "Hồ sơ tháng hiện tại"}</span><span className="profile-elo-badge"><strong>ELO {eloDisplay}</strong><em>{eloRankDisplay}</em></span></span>
+      </div> : <div className="profile-identity">
+        <p>{hasRankingData && rank > 0 ? `${positionLabel} · ${shortMonthLabel(achievementMonth)}` : "Hồ sơ tháng hiện tại"}</p>
+        <h2>{member.name}</h2>
         <span className="profile-role-line">{roleLabel} · Level {member.level}</span>
         <span className="profile-elo-badge"><strong>ELO {eloDisplay}</strong><em>{eloRankDisplay}</em></span>
-      </div>
+      </div>}
     </div>
     <div className="profile-score-card">
       <div>
-        <span>Thành tích {achievementMonth}</span>
+        <span>Thành tích {shortMonthLabel(achievementMonth)}</span>
         <b>{points} điểm</b>
       </div>
       <small>{hasRankingData ? `${matches} trận · hiệu số ${pointDiffLabel}` : "Chưa có trận trong tháng này."}</small>

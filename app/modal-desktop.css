@@ -10,11 +10,11 @@
     grid-template-areas:
       "head head"
       "media main";
-    gap: 20px 24px;
+    gap: var(--card-gap);
     width: min(100% - 48px, 760px) !important;
     max-height: calc(100dvh - 48px);
     overflow-y: auto;
-    padding: 24px 26px !important;
+    padding: var(--block-inset) !important;
   }
 
   .member-editor-head:not(#_) {
@@ -24,8 +24,8 @@
 
   /* The close button sits on the header's line. */
   .member-editor > .modal-close:not(#_):not(#_):not(#_) {
-    top: 24px !important;
-    right: 24px !important;
+    top: calc(var(--block-inset) - 2px) !important;
+    right: calc(var(--block-inset) - 2px) !important;
   }
 
   .member-editor-head > *:not(#_):not(#_) {
@@ -84,7 +84,7 @@
     grid-area: main;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--card-gap);
   }
 
   .member-editor-main > *:not(#_):not(#_) {
@@ -106,9 +106,9 @@
       "hero form"
       "hero stats";
     grid-template-rows: auto auto auto 1fr;
-    gap: 12px 22px;
+    gap: var(--card-gap);
     width: min(100% - 48px, 760px) !important;
-    padding: 24px 26px !important;
+    padding: var(--block-inset) !important;
   }
 
   .member-detail-modal > .profile-modal-head:not(#_) {
@@ -129,8 +129,8 @@
   }
 
   .member-detail-modal > .modal-close:not(#_):not(#_):not(#_) {
-    top: 22px !important;
-    right: 22px !important;
+    top: calc(var(--block-inset) - 2px) !important;
+    right: calc(var(--block-inset) - 2px) !important;
   }
 
   .member-detail-modal > *:not(.modal-close):not(#_):not(#_) {
@@ -173,6 +173,7 @@
     grid-area: stats;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     grid-auto-rows: 1fr;
+    gap: var(--card-gap) !important;
     align-self: stretch;
   }
 
@@ -224,4 +225,72 @@
   .member-profile-popover.member-detail-modal:not(#_):not(#_) {
     grid-template-columns: 220px minmax(0, 1fr);
   }
+}
+
+/* ---------- Hồ sơ thành viên: who they are, under the avatar ----------
+   Name, then one quiet line (login, role, Level), then two chips side by side: this month's place and ELO. Centred on
+   the avatar, on every screen. */
+.profile-identity.profile-identity-detail:not(#_):not(#_) {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0;
+  padding: 0 !important;
+  text-align: center;
+}
+
+.profile-identity-detail h2:not(#_):not(#_):not(#_) {
+  margin: 2px 0 0 !important;
+  font-size: 24px !important;
+  line-height: 1.15;
+}
+
+.profile-identity-detail > .profile-meta-line:not(#_):not(#_):not(#_) {
+  display: flex;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  justify-content: center;
+  gap: 2px 8px;
+  color: var(--bar-muted);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.profile-meta-line > .profile-username:not(#_):not(#_) + span::before {
+  content: "·";
+  margin-right: 8px;
+}
+
+.profile-meta-line > .profile-username:not(#_):not(#_) {
+  color: inherit !important;
+  font-size: inherit !important;
+}
+
+.profile-identity-detail > .profile-chip-row:not(#_):not(#_):not(#_) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.profile-chip-row > .profile-month-chip:not(#_):not(#_):not(#_) {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--profile-accent-soft);
+  color: #1a160e;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.05em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.profile-chip-row > .profile-elo-badge:not(#_):not(#_) {
+  margin: 0 !important;
 }
