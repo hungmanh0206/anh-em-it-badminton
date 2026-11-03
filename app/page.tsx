@@ -1793,9 +1793,9 @@ function HallOfFame({ entries, onOpenMonth }: { entries: HallOfFameEntry[]; onOp
         const diff = (value: number) => `${value > 0 ? "+" : ""}${value}`;
         return <article className={"panel hall-month" + (index === 0 ? " is-latest" : "")} key={entry.month}>
           <div className="hall-month-head">
-            {index === 0 && <span className="hall-month-badge"><span aria-hidden="true">🔥</span> <span className="hall-badge-long">Tháng hiện tại</span><span className="hall-badge-short">Hiện tại</span></span>}
+            {index === 0 && <span className="hall-month-badge"><span className="hall-badge-long">Tháng hiện tại</span><span className="hall-badge-short">Hiện tại</span></span>}
             <span className="hall-month-label">{entry.label.toUpperCase()}</span>
-            <button type="button" className="hall-month-open" onClick={() => onOpenMonth(entry.label)}><i className="hall-chart-icon" aria-hidden="true" />Xem BXH</button>
+            <button type="button" className="hall-month-open" onClick={() => onOpenMonth(entry.label)}>Xem BXH</button>
           </div>
           <div className="hall-month-body">
             <div className="hall-champion">
@@ -1807,7 +1807,7 @@ function HallOfFame({ entries, onOpenMonth }: { entries: HallOfFameEntry[]; onOp
               <span className="hall-champion-text">
                 <small><AppIcon name="trophy" /> Nhà vô địch{title > 1 ? ` · lần ${title}` : ""}</small>
                 <b>{winner.name}</b>
-                <span><span className="hall-star" aria-hidden="true">★</span> <span className="hall-stat">{winner.points} điểm</span> · <span className="hall-stat">{diff(winner.pointDiff)} hiệu số</span> · <span className="hall-stat">{winner.matches} trận</span></span>
+                <span><span className="hall-stat">{winner.points} điểm</span> · <span className="hall-stat">{diff(winner.pointDiff)} hiệu số</span></span>
               </span>
             </div>
             {runners.map((row, place) => <div key={row.username || row.name} className={`hall-runner rank-${place + 2}`}>

@@ -402,7 +402,7 @@
 
 .hall-month.is-latest:not(#_):not(#_) {
   background: var(--hall-gold-wash), var(--glass-block) !important;
-  box-shadow: 0 0 0 1px rgba(255, 190, 60, 0.55), 0 0 30px rgba(255, 170, 30, 0.24), var(--glass-lift) !important;
+  box-shadow: 0 0 34px rgba(255, 170, 30, 0.22), var(--glass-lift) !important;
 }
 
 /* ---- head ---- */
@@ -464,18 +464,6 @@
   translate: 0 -1px;
 }
 
-.hall-month.is-latest .hall-month-open:not(#_):not(#_) {
-  box-shadow: 0 0 0 1px rgba(255, 190, 60, 0.6), var(--glass-lift-card);
-}
-
-.hall-chart-icon {
-  width: 13px;
-  height: 13px;
-  background: currentColor;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='8' width='3.2' height='7' rx='1'/%3E%3Crect x='6.4' y='4' width='3.2' height='11' rx='1'/%3E%3Crect x='11.8' y='1' width='3.2' height='14' rx='1'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='8' width='3.2' height='7' rx='1'/%3E%3Crect x='6.4' y='4' width='3.2' height='11' rx='1'/%3E%3Crect x='11.8' y='1' width='3.2' height='14' rx='1'/%3E%3C/svg%3E") center / contain no-repeat;
-}
-
 /* ---- body: champion | runner-up | third ---- */
 .hall-month-body {
   display: grid;
@@ -510,7 +498,7 @@
   width: 76px;
   height: 76px;
   font-size: 24px;
-  box-shadow: 0 0 0 3px rgba(255, 210, 110, 0.85), 0 0 22px rgba(255, 183, 0, 0.45) !important;
+  box-shadow: 0 0 24px rgba(255, 183, 0, 0.5) !important;
 }
 
 /* The latest champion: a gold halo of light around the avatar. */
@@ -573,10 +561,6 @@
   font-size: 12px;
   font-weight: 700;
   line-height: 1.4;
-}
-
-.hall-star {
-  color: #ffb700;
 }
 
 .hall-stat {
@@ -642,11 +626,11 @@
 }
 
 .hall-runner.rank-2 .hall-runner-avatar .avatar:not(#_):not(#_) {
-  box-shadow: 0 0 0 2px rgba(190, 200, 215, 0.9) !important;
+  box-shadow: 0 0 12px rgba(190, 200, 215, 0.55) !important;
 }
 
 .hall-runner.rank-3 .hall-runner-avatar .avatar:not(#_):not(#_) {
-  box-shadow: 0 0 0 2px rgba(205, 138, 82, 0.9) !important;
+  box-shadow: 0 0 12px rgba(205, 138, 82, 0.55) !important;
 }
 
 /* Silver and bronze medals on the avatar. */
