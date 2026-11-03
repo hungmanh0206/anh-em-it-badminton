@@ -31,8 +31,10 @@
   --pill: rgba(60, 48, 28, 0.07);
   --pill-hover: rgba(60, 48, 28, 0.13);
   --pill-text: #4a4133;
-  --mark-well: rgba(120, 92, 40, 0.13);
-  --mark-well-sink: inset 0 2px 5px rgba(90, 65, 20, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.5), 0 1px 0 rgba(255, 255, 255, 0.9);
+  --attend-yes: linear-gradient(115deg, rgba(34, 197, 94, 0.52), rgba(34, 197, 94, 0.3) 55%, rgba(34, 197, 94, 0.16));
+  --attend-yes-lift: 0 2px 4px rgba(21, 128, 61, 0.1), 0 10px 22px rgba(21, 128, 61, 0.18);
+  --attend-no: linear-gradient(115deg, rgba(239, 68, 68, 0.48), rgba(239, 68, 68, 0.27) 55%, rgba(239, 68, 68, 0.14));
+  --attend-no-lift: 0 2px 4px rgba(185, 28, 28, 0.1), 0 10px 22px rgba(185, 28, 28, 0.17);
   --avatar-dome: radial-gradient(circle at 33% 22%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 42%), radial-gradient(circle, transparent 66%, rgba(40, 28, 8, 0.2) 100%);
   --block-gap: 18px;
   --card-gap: 12px;
@@ -396,7 +398,6 @@ body::before {
   .schedule-case,
   .schedule-case-badge,
   .schedule-relaxed-note,
-  .attendance-mark,
   .rank-match-count,
   .point-value,
   .icon-btn,
@@ -556,29 +557,98 @@ body::before {
   grid-template-columns: 1fr 1fr;
 }
 
-/* Attendance marker: an empty well sunk into the card, which fills from its centre once the member answers.
-   A transition rather than an animation, so it only plays on a real change, not on every page load. */
-.attendance-mark:not(#_):not(#_):not(#_) {
-  background-color: var(--mark-well) !important;
-  background-image: radial-gradient(circle closest-side, var(--mark-fill, transparent) 97%, transparent) !important;
-  background-origin: border-box !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-size: 0 0 !important;
-  box-shadow: var(--mark-well-sink) !important;
-  transition: background-size 460ms cubic-bezier(0.3, 1.2, 0.5, 1), box-shadow 300ms ease 160ms, color 200ms ease 240ms !important;
+/* Check-in: a member's card takes a green wash once they say they're coming, a red one if they aren't. Each colour
+   is its own layer (a gradient can't be animated): it sweeps in from the left as it fades up, and when the answer
+   changes one colour melts into the other. */
+.member-grid > .member-card:not(#_):not(#_) {
+  position: relative;
+  isolation: isolate;
+  border: 0 !important;
+  transition: box-shadow 520ms ease;
 }
 
-.attendance-mark.yes:not(#_):not(#_):not(#_) {
-  --mark-fill: #16a46f;
-  background-size: 100% 100% !important;
-  box-shadow: 0 6px 14px rgba(22, 164, 111, 0.26) !important;
+.member-grid > .member-card.is-attending:not(#_):not(#_) {
+  box-shadow: var(--attend-yes-lift) !important;
 }
 
-.attendance-mark.no:not(#_):not(#_):not(#_) {
-  --mark-fill: #e24b5e;
-  background-size: 100% 100% !important;
-  box-shadow: 0 6px 14px rgba(226, 75, 94, 0.24) !important;
+.member-grid > .member-card.is-absent:not(#_):not(#_) {
+  box-shadow: var(--attend-no-lift) !important;
+}
+
+.member-grid > .member-card:not(#_):not(#_)::before,
+.member-grid > .member-card:not(#_):not(#_)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0;
+  clip-path: inset(0 100% 0 0 round 12px);
+  transition: opacity 520ms ease, clip-path 620ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.member-grid > .member-card:not(#_):not(#_)::before {
+  background: var(--attend-yes);
+}
+
+.member-grid > .member-card:not(#_):not(#_)::after {
+  background: var(--attend-no);
+}
+
+.member-grid > .member-card.is-attending:not(#_):not(#_)::before,
+.member-grid > .member-card.is-absent:not(#_):not(#_)::after {
+  opacity: 1;
+  clip-path: inset(0 0 0 0 round 12px);
+}
+
+.member-grid .attendance-status:not(#_) {
+  transition: color 420ms ease;
+}
+
+/* Phones: two columns, with a smaller avatar so name and answer still fit. */
+@media (max-width: 700px) {
+  .member-grid:not(#_):not(#_):not(#_) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .member-grid > .member-card:not(#_):not(#_):not(#_) {
+    min-width: 0;
+    gap: 9px !important;
+    padding: 10px !important;
+  }
+
+  .member-grid > .member-card > .avatar:not(#_):not(#_) {
+    flex: 0 0 36px !important;
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 13px !important;
+  }
+
+  .member-grid > .member-card > div:last-child:not(#_) {
+    min-width: 0;
+  }
+
+  .member-grid > .member-card b:not(#_):not(#_) {
+    overflow: hidden;
+    font-size: 14px !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .member-grid > .member-card small:not(#_):not(#_) {
+    column-gap: 3px !important;
+    row-gap: 1px !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .member-grid > .member-card:not(#_):not(#_)::before,
+  .member-grid > .member-card:not(#_):not(#_)::after {
+    transition: none;
+  }
 }
 
 /* Saved match colour: a layer behind the row whose edges run in from both ends to the middle, and back out when the
