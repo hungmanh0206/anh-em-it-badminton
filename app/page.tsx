@@ -1752,7 +1752,6 @@ function HomeChampionCard({ champion, monthLabel: label, onCelebrate }: { champi
     <button type="button" className="champion-card-main" aria-label={`Chúc mừng nhà vô địch ${champion.name}, ${label}`} onClick={onCelebrate}>
       <span className="cc-avatar">
         <i className="cc-halo" aria-hidden="true" />
-        <i className="cc-orbit" aria-hidden="true"><i /></i>
         <span className={avatarClassName("avatar", champion)} style={avatarStyle(champion)}>{champion.initials}</span>
         <span className="cc-crown" aria-hidden="true"><AppIcon name="crown" /></span>
       </span>

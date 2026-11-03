@@ -1,6 +1,5 @@
 /* Home › champion of the month (HomeChampionCard in app/page.tsx). Avatar with crown and the title on the left, the
-   numbers in three tiles under them, and the champion's celebration picture standing on the right, its head rising
-   out of the card. Light moves across it: a slow gold sweep, turning rays, twinkles and a passing shine; the figure
+   numbers in three tiles under them, and the champion's celebration picture standing on the right, inside the card. Light moves across it: a slow gold sweep, turning rays, twinkles and a passing shine; the figure
    breathes gently. Only transforms and opacity animate. */
 .champion-card {
   --cc-face: linear-gradient(135deg, rgba(255, 246, 214, 0.9) 0%, rgba(255, 224, 150, 0.82) 52%, rgba(246, 192, 72, 0.78) 100%);
@@ -17,7 +16,6 @@
   isolation: isolate;
   display: grid;
   min-height: 210px;
-  margin-top: 26px;
   border-radius: 22px;
   color: var(--cc-ink);
 }
@@ -101,14 +99,16 @@
   background: linear-gradient(100deg, transparent, rgba(255, 220, 140, 0.2), transparent);
 }
 
-/* The figure: anchored to the bottom right, taller than the card. */
+/* The figure: anchored to the bottom right, kept inside the card. */
 .cc-figure {
   position: absolute;
-  right: 0;
+  top: 10px;
+  right: 2%;
   bottom: 0;
   z-index: 1;
-  width: 40%;
-  height: calc(100% + 30px);
+  width: 38%;
+  overflow: hidden;
+  border-radius: 0 0 22px 0;
   pointer-events: none;
 }
 
@@ -190,33 +190,12 @@
   animation: ccPulse 3.6s ease-in-out infinite;
 }
 
-/* A spark of light circling the avatar. */
-.cc-orbit {
-  position: absolute;
-  inset: -12px;
-  z-index: 2;
-  border-radius: 50%;
-  animation: ccOrbit 6s linear infinite;
-}
-
-.cc-orbit > i {
-  position: absolute;
-  top: 50%;
-  left: -3px;
-  width: 8px;
-  height: 8px;
-  margin-top: -4px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff 0%, #ffe08a 45%, transparent 75%);
-  box-shadow: 0 0 10px 3px rgba(255, 205, 90, 0.85), -10px 4px 8px -2px rgba(255, 205, 90, 0.45);
-}
-
 .cc-crown {
   position: absolute;
+  z-index: 2;
   top: -34px;
   left: 50%;
   translate: -50% 0;
-  animation: ccBob 3.2s ease-in-out infinite;
 }
 
 .cc-crown .app-icon {
@@ -348,7 +327,6 @@
 @media (min-width: 1024px) {
   .home-champion .champion-card {
     height: 100%;
-    margin-top: 0;
   }
 
   .home-champion .champion-card-main {
@@ -403,7 +381,6 @@
 @media (max-width: 560px) {
   .champion-card {
     min-height: 0;
-    margin-top: 22px;
     border-radius: 18px;
   }
 
@@ -462,13 +439,10 @@
   }
 
   .cc-figure {
-    width: 42%;
-    height: calc(100% + 22px);
+    top: 8px;
+    width: 40%;
+    border-radius: 0 0 18px 0;
   }
-}
-
-@keyframes ccOrbit {
-  to { transform: rotate(360deg); }
 }
 
 @keyframes ccShine {
@@ -495,11 +469,6 @@
 @keyframes ccBreathe {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-4px) scale(1.015); }
-}
-
-@keyframes ccBob {
-  0%, 100% { transform: translateY(0) rotate(-4deg); }
-  50% { transform: translateY(-3px) rotate(4deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
