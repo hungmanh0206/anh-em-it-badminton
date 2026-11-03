@@ -333,78 +333,26 @@ button.hero-champion:focus-visible {
   }
 }
 
-/* Home: a label row above each top card; on the session card it holds only today's date, on the right. */
-.next-session {
-  display: grid;
-  gap: var(--card-gap);
-  min-width: 0;
-}
-
-.next-session-label {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  padding-inline: 4px;
-}
-
-.next-session-label span:first-child {
-  color: var(--bar-text);
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-
-.next-session-label span:last-child {
-  color: var(--bar-accent);
-  font-size: 11.5px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-align: right;
-  text-transform: uppercase;
-}
-
-@media (max-width: 560px) {
-  .next-session-label span:first-child {
-    font-size: 14px;
-  }
-
-  .next-session-label span:last-child {
-    font-size: 10.5px;
-    letter-spacing: 0.05em;
-  }
-}
-
 /* Home's two top cards: the next session and the champion. Stacked on phones and iPads; side by side once the page is
    wide enough for the session card's two-column layout. */
 .home-top {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--block-gap);
   min-width: 0;
 }
 
+.next-session,
 .home-champion {
   display: grid;
-  grid-template-rows: auto 1fr;
-  gap: var(--card-gap);
+  grid-template-columns: minmax(0, 1fr);
   min-width: 0;
-}
-
-/* Stacked, the champion card follows the session card directly, so its own label is not needed. */
-@media (max-width: 1023px) {
-  .home-champion > .next-session-label {
-    display: none;
-  }
 }
 
 @media (min-width: 1024px) {
   .home-top {
     grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
     align-items: stretch;
-  }
-
-  .next-session {
-    grid-template-rows: auto 1fr;
   }
 
   /* The session card in its column: title and month progress side by side, the numbers across the bottom. */
@@ -473,6 +421,28 @@ button.hero-champion:focus-visible {
   }
 }
 
-.next-session-label span:only-child {
-  margin-left: auto;
+/* Home: today's date on the title's row, at the right. */
+.title-group:not(#_):not(#_):has(.title-date) {
+  display: flex !important;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title-date {
+  margin: 0;
+  color: var(--bar-accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: right;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .title-date {
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+  }
 }

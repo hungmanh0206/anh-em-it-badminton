@@ -456,6 +456,10 @@ button.champion-card-main:hover .champion-card-text b {
   .champion-card-text small .app-icon {
     display: none;
   }
+
+  .champion-card-text small {
+    white-space: normal;
+  }
 }
 
 /* Kept to one row on every width. */
