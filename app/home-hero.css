@@ -446,3 +446,34 @@ button.hero-champion:focus-visible {
     letter-spacing: 0.04em;
   }
 }
+
+/* Phones: the title on top, then the month progress and the two numbers on one row, so the card stays short. */
+@media (max-width: 600px) {
+  .hero:not(#_):not(#_) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "copy copy" "status stats";
+    align-items: end;
+    gap: 14px 16px !important;
+  }
+
+  .hero-copy:not(#_):not(#_) {
+    grid-area: copy;
+    padding-inline: 0 !important;
+  }
+
+  .hero-status:not(#_) {
+    grid-area: status;
+    min-width: 0;
+  }
+
+  .hero-progress:not(#_) {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .hero-stats:not(#_):not(#_) {
+    grid-area: stats;
+    align-self: end;
+  }
+}
