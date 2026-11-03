@@ -1,5 +1,5 @@
-/* Xếp hạng › Bảng xếp hạng and ELO: the same page shape (hero, then one block headed by its title and tools) and the
-   same table look, whatever columns each one has. */
+/* Xếp hạng › Bảng xếp hạng and ELO, and Thi đấu › Thư viện lịch: the same page shape (hero, then one block headed by
+   its title and tools) and the same table look, whatever columns each one has. */
 
 /* The month table sits flat in its block, like the ELO list. */
 .ranking-panel > .rank-table:not(#_):not(#_):not(#_) {
@@ -66,5 +66,63 @@
   .elo-rating-value b:not(#_):not(#_) {
     font-size: 17px;
     white-space: nowrap;
+  }
+}
+
+/* ---------- Thư viện lịch: one block, the head's dropdown picks how many players ---------- */
+.schedule-library-filter .glass-select:not(#_) {
+  width: 150px;
+}
+
+.schedule-library-panel > .schedule-case-list:not(#_):not(#_) {
+  gap: 26px;
+  padding: 4px var(--block-inset) var(--block-inset);
+}
+
+.schedule-library-panel .schedule-case:not(#_):not(#_) {
+  overflow: visible;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0;
+  background: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.schedule-library-panel .schedule-case-head:not(#_):not(#_) {
+  padding: 0 0 12px !important;
+  border: 0 !important;
+}
+
+.schedule-library-panel .schedule-case-head h3:not(#_) {
+  margin: 0;
+  color: var(--bar-text);
+  font-size: 16px;
+  font-weight: 850;
+}
+
+.schedule-library-panel .schedule-case-head p:not(#_) {
+  margin: 3px 0 0;
+}
+
+.schedule-library-panel .schedule-library-grid:not(#_):not(#_) {
+  padding: 0 !important;
+}
+
+@media (max-width: 700px) {
+  /* One tool only, so it stays on the title's line. */
+  .schedule-library-panel > .elo-panel-head:not(#_):not(#_):not(#_) {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+  }
+
+  .schedule-library-panel .schedule-library-filter:not(#_):not(#_) {
+    display: block;
+    width: auto;
+  }
+
+  .schedule-library-filter .glass-select:not(#_):not(#_) {
+    width: 132px;
   }
 }

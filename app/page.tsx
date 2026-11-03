@@ -1571,7 +1571,6 @@ function Rules({ members }: { members: Member[] }) {
 
 function ScheduleLibrary({ scenarios, members }: { scenarios: ScheduleScenario[]; members: Member[] }) {
   const [participantFilter, setParticipantFilter] = useState<ParticipantCount>(5);
-  const filterRef = useSlidingIndicator<HTMLDivElement>(participantFilter);
   // A mix is possible only with enough members of each Level (Level 1 = top 4 ELO, the rest Level 2).
   const clubLevel1 = members.filter((member) => member.level === 1).length;
   const clubLevel2 = members.length - clubLevel1;
@@ -1590,23 +1589,25 @@ function ScheduleLibrary({ scenarios, members }: { scenarios: ScheduleScenario[]
       statsLabel="Tóm tắt thư viện lịch"
       stats={[{ label: "Người tham gia", value: participantFilter }, { label: "Trường hợp", value: visibleScenarios.length }]}
     />
-    <div ref={filterRef} className="schedule-filter" role="group" aria-label="Lọc lịch theo số lượng thành viên">
-      {scheduleParticipants.map((count) => <button key={count} type="button" className={participantFilter === count ? "active" : ""} disabled={!countEnabled(count)} title={countEnabled(count) ? undefined : `Mở khi CLB có từ ${count} thành viên`} onClick={() => setParticipantFilter(count)}>{count} người</button>)}
-      <i className="slide-indicator" aria-hidden="true" />
-    </div>
-    <div className="schedule-case-list" key={participantFilter}>
-      {visibleScenarios.map((scenario) => <article className="panel schedule-case" key={scenario.id}>
-        <div className="schedule-case-head">
-          <div>
-            <h2>{scenario.title}</h2>
-            <p>{scenario.subtitle}</p>
+    <section className="panel schedule-library-panel">
+      <div className="panel-head elo-panel-head">
+        <div><h2>Lịch {participantFilter} người</h2><p>{visibleScenarios.length > 1 ? `${visibleScenarios.length} trường hợp theo Level` : "Một mẫu lịch"}</p></div>
+        <div className="elo-head-actions schedule-library-filter"><GlassSelect value={String(participantFilter)} options={scheduleParticipants.filter(countEnabled).map((count) => ({ value: String(count), label: `${count} người` }))} onChange={(next) => setParticipantFilter(Number(next) as ParticipantCount)} ariaLabel="Số người tham gia" /></div>
+      </div>
+      <div className="schedule-case-list" key={participantFilter}>
+        {visibleScenarios.map((scenario) => <article className="schedule-case" key={scenario.id}>
+          <div className="schedule-case-head">
+            <div>
+              <h3>{scenario.title}</h3>
+              <p>{scenario.subtitle}</p>
+            </div>
           </div>
-        </div>
-        <div className="schedule-grid schedule-library-grid">
-          {scenario.matches.map((match, i) => <Match match={match} i={i} key={`${scenario.id}-${i}`} />)}
-        </div>
-      </article>)}
-    </div>
+          <div className="schedule-grid schedule-library-grid">
+            {scenario.matches.map((match, i) => <Match match={match} i={i} key={`${scenario.id}-${i}`} />)}
+          </div>
+        </article>)}
+      </div>
+    </section>
   </section>;
 }
 // The number picked out on the schedule, to see every match of that player. Without a provider tokens are plain.
