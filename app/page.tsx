@@ -1558,7 +1558,7 @@ function ScheduleLibrary({ scenarios, members }: { scenarios: ScheduleScenario[]
       stats={[{ label: "Người tham gia", value: participantFilter }, { label: "Trường hợp", value: visibleScenarios.length }]}
     />
     <div className="schedule-filter" role="group" aria-label="Lọc lịch theo số lượng thành viên">
-      {scheduleParticipants.map((count) => <button key={count} type="button" className={participantFilter === count ? "active" : ""} disabled={!countEnabled(count)} title={countEnabled(count) ? undefined : `Mở khi CLB có từ ${count} thành viên`} onClick={() => liquidTransition(() => setParticipantFilter(count), "vt-tab")}>{count} người</button>)}
+      {scheduleParticipants.map((count) => <button key={count} type="button" className={participantFilter === count ? "active" : ""} disabled={!countEnabled(count)} title={countEnabled(count) ? undefined : `Mở khi CLB có từ ${count} thành viên`} onClick={() => liquidTransition(() => setParticipantFilter(count), "vt-filter")}>{count} người</button>)}
     </div>
     <div className="schedule-case-list">
       {visibleScenarios.map((scenario) => <article className="panel schedule-case" key={scenario.id}>

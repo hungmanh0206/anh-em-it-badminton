@@ -8,6 +8,8 @@ const THEME_KEY = "aemit-theme";
 type Theme = "light" | "dark";
 
 export function ThemeToggle() {
+  // Only after a tap do the thumb and icons animate; the first render just shows the current theme.
+  const [moved, setMoved] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => (typeof document !== "undefined" && document.documentElement.dataset.theme === "dark" ? "dark" : "light"));
   const apply = (next: Theme) => {
     setTheme(next);
@@ -20,6 +22,7 @@ export function ThemeToggle() {
   };
   // The new theme spreads out from the switch like spilt colour (liquid-motion.css).
   const choose = (next: Theme, from: HTMLElement) => {
+    setMoved(true);
     const root = document.documentElement;
     const { left, top, width, height } = from.getBoundingClientRect();
     const x = left + width / 2;
@@ -31,6 +34,6 @@ export function ThemeToggle() {
   };
   const dark = theme === "dark";
   return <div className="topbar-theme">
-    <button type="button" role="switch" aria-checked={dark} aria-label="Giao diện tối" title={dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"} onClick={(event) => choose(dark ? "light" : "dark", event.currentTarget)}><i className="topbar-theme-thumb" /><span className="topbar-theme-sun" /><span className="topbar-theme-moon" /></button>
+    <button type="button" className={moved ? "has-moved" : undefined} role="switch" aria-checked={dark} aria-label="Giao diện tối" title={dark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"} onClick={(event) => choose(dark ? "light" : "dark", event.currentTarget)}><i className="topbar-theme-thumb" /><span className="topbar-theme-sun" /><span className="topbar-theme-moon" /></button>
   </div>;
 }

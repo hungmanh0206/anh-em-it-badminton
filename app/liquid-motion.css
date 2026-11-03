@@ -1,12 +1,27 @@
 /* Liquid transitions between pages (view transitions, started through liquidTransition in app/ui/liquid.ts).
    The page fades out as the next one rises in, and the section and tab markers glide across on one easing curve.
    Only opacity and transform move, so phones keep up; the bars hold still. */
-.content {
+/* Named only while a transition runs: a named element shuts the glass inside it off from what lies behind, which
+   would leave the bars and blocks barely frosted. liquidTransition puts .vt-active on <html> for the duration. */
+html.vt-active .content {
   view-transition-name: page;
 }
 
-.topbar {
+html.vt-active .topbar {
   view-transition-name: topbar;
+}
+
+html.vt-active .nav-indicator {
+  view-transition-name: nav-indicator;
+}
+
+/* The tab pill only slides when the tab changes; arriving in a section it just comes with the page. */
+html.vt-tab .tab-indicator {
+  view-transition-name: tab-indicator;
+}
+
+html.vt-filter .schedule-filter button.active {
+  view-transition-name: filter-pill;
 }
 
 /* Everything else (the backdrop) does not move: the new view simply replaces the old one. */
@@ -80,7 +95,7 @@
   initial-value: 0px;
 }
 
-html.theme-switching :is(.content, .topbar, .nav-indicator, .tab-indicator) {
+html.theme-switching :is(.content, .topbar, .nav-indicator, .tab-indicator, .schedule-filter button.active) {
   view-transition-name: none;
 }
 
@@ -110,19 +125,15 @@ html.theme-switching::view-transition-new(root) {
 
 /* ---------- Tabs and filters inside a page ---------- */
 /* Lighter than changing section: the page only fades across while the pill slides over. */
-.schedule-filter button.active {
-  view-transition-name: filter-pill;
-}
-
-html.vt-tab::view-transition-old(page) {
+html:is(.vt-tab, .vt-filter)::view-transition-old(page) {
   animation: tabFadeOut 140ms ease-in both;
 }
 
-html.vt-tab::view-transition-new(page) {
+html:is(.vt-tab, .vt-filter)::view-transition-new(page) {
   animation: tabFadeIn 220ms ease-out 60ms both;
 }
 
-html.vt-tab::view-transition-group(page) {
+html:is(.vt-tab, .vt-filter)::view-transition-group(page) {
   animation-duration: 220ms;
 }
 
@@ -135,5 +146,68 @@ html.vt-tab::view-transition-group(page) {
 @keyframes tabFadeIn {
   from {
     opacity: 0;
+  }
+}
+
+/* ---------- The theme switch itself ---------- */
+/* Lifted out of the screen capture while the theme changes, so its own motion shows: the thumb glides over, drawn
+   out a little on the way, and the icon it lands on wakes up, the sun turning in, the moon swinging into place. */
+html.theme-switching .topbar-theme button {
+  view-transition-name: theme-switch;
+}
+
+html.theme-switching::view-transition-old(theme-switch) {
+  display: none;
+}
+
+html.theme-switching::view-transition-new(theme-switch),
+html.theme-switching::view-transition-group(theme-switch) {
+  animation: none;
+}
+
+.topbar-theme button.has-moved[aria-checked="true"] .topbar-theme-thumb {
+  animation: switchThumbOn 520ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.topbar-theme button.has-moved[aria-checked="false"] .topbar-theme-thumb {
+  animation: switchThumbOff 520ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.topbar-theme button.has-moved[aria-checked="false"] .topbar-theme-sun {
+  animation: switchSunIn 620ms cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.topbar-theme button.has-moved[aria-checked="true"] .topbar-theme-moon {
+  animation: switchMoonIn 620ms cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+/* Two names for the same squash, so the animation starts over each way. */
+@keyframes switchThumbOn {
+  40% {
+    scale: 1.28 0.86;
+  }
+}
+
+@keyframes switchThumbOff {
+  40% {
+    scale: 1.28 0.86;
+  }
+}
+
+@keyframes switchSunIn {
+  from {
+    rotate: -140deg;
+    scale: 0.5;
+  }
+}
+
+@keyframes switchMoonIn {
+  0% {
+    rotate: 70deg;
+    scale: 0.5;
+  }
+
+  60% {
+    rotate: -14deg;
   }
 }
