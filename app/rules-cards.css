@@ -1,0 +1,46 @@
+/* Thể lệ: one card per section, its title inside; what is in a section sits flat on that card, set apart by space
+   rather than by cards of its own. */
+.rules-page > .rules-section:not(#_):not(#_):not(#_) {
+  display: grid;
+  gap: 18px;
+  padding: var(--block-inset);
+  border: 0 !important;
+  border-radius: 20px;
+  background: var(--glass-block) !important;
+  box-shadow: var(--glass-lift) !important;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+.rules-section > .rules-section-title:not(#_):not(#_) {
+  margin: 0 !important;
+}
+
+.rules-section :is(.rules-pane, .rules-steps > li, .rules-prizes > div, .rules-match-types > div, .rules-total, .rules-note):not(#_):not(#_):not(#_) {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0;
+  background: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.rules-section .rules-split:not(#_):not(#_):not(#_) {
+  gap: 20px 40px !important;
+}
+
+.rules-section .rules-steps:not(#_):not(#_):not(#_),
+.rules-section .rules-prizes:not(#_):not(#_):not(#_) {
+  gap: 18px 28px !important;
+}
+
+.rules-section .rules-match-types:not(#_):not(#_):not(#_) {
+  gap: 10px !important;
+}
+
+/* The prize total closes the prizes section, left-aligned with the rest. */
+.rules-section > .rules-total:not(#_):not(#_):not(#_) {
+  margin: 0 !important;
+  text-align: left;
+}
