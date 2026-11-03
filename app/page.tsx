@@ -1962,7 +1962,7 @@ function drawImageRow(ctx: CanvasRenderingContext2D, x: number, w: number, y: nu
   }
 }
 // Medal for the podium, numbered circle otherwise.
-function drawImageRank(ctx: CanvasRenderingContext2D, medal: HTMLImageElement | null, rank: number, x: number, mid: number, palette: ImagePalette) {
+function drawImageRank(ctx: CanvasRenderingContext2D, medal: HTMLImageElement | null, rank: number, x: number, mid: number, palette: ImagePalette, ink?: string) {
   if (medal) {
     ctx.drawImage(medal, x - 22, mid - 22, 44, 44);
     return;
@@ -1974,7 +1974,7 @@ function drawImageRank(ctx: CanvasRenderingContext2D, medal: HTMLImageElement | 
   ctx.strokeStyle = palette.circleLine;
   ctx.lineWidth = 1;
   ctx.stroke();
-  ctx.fillStyle = palette.title;
+  ctx.fillStyle = ink ?? palette.title;
   ctx.font = `800 14px ${bodyFont}`;
   ctx.textAlign = "center";
   ctx.fillText(String(rank), x, mid + 0.5);
@@ -2211,8 +2211,8 @@ async function downloadEloImage(rows: EloRankingRow[]) {
     const h = rowHeights[index];
     const mid = y + h / 2;
     const group = palette.levels[row.level === 1 ? 0 : 1];
-    drawImageRow(ctx, cardX, cardW, y, h, group, index < sorted.length - 1, palette);
-    drawImageRank(ctx, null, row.rank, rankX, mid, palette);
+    drawImageRow(ctx, cardX, cardW, y, h, null, index < sorted.length - 1, palette);
+    drawImageRank(ctx, null, row.rank, rankX, mid, palette, group.points);
     drawImageMember(ctx, avatars[index], row.name, row.level, memberX, mid, palette);
     ctx.textAlign = "center";
     ctx.fillStyle = group.points;
@@ -2221,6 +2221,8 @@ async function downloadEloImage(rows: EloRankingRow[]) {
     ctx.fillStyle = palette.cell;
     ctx.font = `700 14px ${bodyFont}`;
     ctx.fillText(String(row.matches), matchesX, mid + 0.5);
+    ctx.fillStyle = group.points;
+    ctx.font = `800 14px ${bodyFont}`;
     ctx.fillText(`Level ${row.level}`, levelX, mid + 0.5);
     y += h;
   });

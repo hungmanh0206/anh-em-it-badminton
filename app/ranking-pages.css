@@ -130,7 +130,7 @@
 }
 
 /* ---------- ELO: two Level groups instead of a podium ---------- */
-/* Level 1 (the top four ELO) in blue, Level 2 in green: a soft wash from the left edge and a coloured edge bar. */
+/* Level 1 (the top four ELO) in blue, Level 2 in green, shown only in the rank, the rating and the Level. */
 .elo-row.level-1 {
   --elo-group: 59, 130, 246;
   --elo-group-ink: #1d4ed8;
@@ -147,11 +147,6 @@
 
 :root[data-theme="dark"] .elo-row.level-2 {
   --elo-group-ink: #86efac;
-}
-
-.elo-list > .elo-row:is(.level-1, .level-2):not(#_):not(#_) {
-  background: linear-gradient(90deg, rgba(var(--elo-group), 0.16), rgba(var(--elo-group), 0.03) 70%) !important;
-  box-shadow: inset 3px 0 0 rgb(var(--elo-group)) !important;
 }
 
 .elo-row:is(.level-1, .level-2) .elo-rank:not(#_):not(#_) {
