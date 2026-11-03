@@ -9,7 +9,7 @@
 @media (max-width: 800px) {
   .hero-stats {
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, max-content));
+    grid-template-columns: repeat(2, minmax(0, max-content));
     gap: 12px !important;
     justify-content: start;
     align-items: end;
@@ -228,7 +228,7 @@ button.hero-champion:focus-visible {
   .hero-stats:not(#_) {
     display: grid !important;
     grid-area: stats;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0 !important;
     justify-content: stretch;
     width: 100%;

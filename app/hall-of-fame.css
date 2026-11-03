@@ -1,0 +1,478 @@
+/* Champion of the month: the card on Home (HomeChampionCard) and Xếp hạng › Bảng vàng (HallOfFame) in app/page.tsx. */
+:root {
+  --hall-gold-wash: radial-gradient(circle at 0% 50%, rgba(255, 200, 61, 0.34), transparent 58%), radial-gradient(circle at 100% 0%, rgba(255, 150, 90, 0.14), transparent 46%);
+  --hall-title: #231a0e;
+  --hall-sub: #9a6414;
+  --hall-muted: #6f6657;
+  --hall-ring: 0 0 0 0 transparent, 0 0 22px rgba(255, 190, 50, 0.55);
+}
+
+:root[data-theme="dark"] {
+  --hall-gold-wash: radial-gradient(circle at 0% 50%, rgba(255, 183, 0, 0.24), transparent 60%), radial-gradient(circle at 100% 0%, rgba(226, 88, 44, 0.16), transparent 48%);
+  --hall-title: #fffaf0;
+  --hall-sub: #ffd66d;
+  --hall-muted: #cfc6b4;
+  --hall-ring: 0 0 0 0 transparent, 0 0 22px rgba(255, 190, 50, 0.4);
+}
+
+/* ---------- Home card ---------- */
+.champion-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px var(--block-inset) 14px 14px;
+  border-radius: 16px;
+  background: var(--hall-gold-wash), var(--glass-block);
+  box-shadow: var(--glass-lift);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+.champion-card-main {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+button.champion-card-main {
+  cursor: pointer;
+}
+
+button.champion-card-main:focus-visible {
+  outline: 2px solid rgba(255, 200, 61, 0.8);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+.champion-card-avatar {
+  position: relative;
+  flex: none;
+}
+
+.champion-card-avatar .avatar:not(#_):not(#_) {
+  width: 64px;
+  height: 64px;
+  font-size: 22px;
+  box-shadow: 0 0 20px 3px rgba(255, 200, 61, 0.5) !important;
+}
+
+.champion-card-medal {
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+  width: 26px;
+  height: 26px;
+  background: var(--rank-medal-1) center / contain no-repeat;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+.champion-card-crown {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+}
+
+.champion-card-crown .app-icon {
+  width: 44px;
+  height: 44px;
+}
+
+.champion-card-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.champion-card-text small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--hall-sub);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.champion-card-text small .app-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.champion-card-text b {
+  overflow: hidden;
+  color: var(--hall-title);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.champion-card-text > span {
+  color: var(--hall-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+button.champion-card-main:hover .champion-card-text b {
+  color: var(--bar-accent);
+}
+
+.champion-card-link {
+  flex: none;
+  white-space: nowrap;
+}
+
+/* ---------- Hall of Fame ---------- */
+.hall-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--card-gap);
+}
+
+.hall-month:not(#_) {
+  display: grid;
+  gap: 14px;
+  padding: 16px var(--block-inset) 18px !important;
+}
+
+.hall-month.is-latest:not(#_):not(#_) {
+  grid-column: 1 / -1;
+  background: var(--hall-gold-wash), var(--glass-block) !important;
+}
+
+.hall-month-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.hall-month-label {
+  color: var(--hall-sub);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hall-month-badge {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--gold-glass);
+  color: #3d2500;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.hall-month-open:not(#_) {
+  min-height: 32px;
+  margin-left: auto;
+  padding: 0 12px !important;
+  font-size: 12.5px !important;
+}
+
+.hall-champion {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.hall-champion-avatar {
+  position: relative;
+  flex: none;
+}
+
+.hall-champion-avatar .avatar:not(#_):not(#_) {
+  width: 72px;
+  height: 72px;
+  font-size: 24px;
+  box-shadow: var(--hall-ring) !important;
+}
+
+.is-latest .hall-champion-avatar .avatar:not(#_):not(#_) {
+  width: 92px;
+  height: 92px;
+  font-size: 30px;
+}
+
+.hall-crown {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  translate: -38% 0;
+  rotate: 14deg;
+}
+
+.hall-crown .app-icon {
+  width: 34px;
+  height: 34px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+.is-latest .hall-crown {
+  top: -26px;
+}
+
+.is-latest .hall-crown .app-icon {
+  width: 42px;
+  height: 42px;
+}
+
+.hall-champion-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hall-champion-text small {
+  color: var(--hall-sub);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.hall-champion-text b {
+  overflow: hidden;
+  color: var(--hall-title);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.is-latest .hall-champion-text b {
+  font-size: 30px;
+}
+
+.hall-champion-text > span {
+  color: var(--hall-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hall-runners {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--card-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hall-runners li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: var(--glass-card);
+  box-shadow: var(--glass-lift-card);
+}
+
+.hall-runner-avatar {
+  position: relative;
+  flex: none;
+}
+
+.hall-runner-avatar::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  bottom: -4px;
+  width: 18px;
+  height: 18px;
+  background: var(--rank-medal-2) center / contain no-repeat;
+}
+
+.rank-3 .hall-runner-avatar::after {
+  background-image: var(--rank-medal-3);
+}
+
+.hall-runner-text {
+  display: grid;
+  min-width: 0;
+}
+
+.hall-runner-text small {
+  color: var(--hall-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.hall-runner-text b {
+  overflow: hidden;
+  color: var(--hall-title);
+  font-size: 14.5px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hall-runner-text > span {
+  color: var(--hall-muted);
+  font-size: 12px;
+}
+
+.hall-empty:not(#_) {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 36px var(--block-inset) !important;
+  color: var(--hall-muted);
+  text-align: center;
+}
+
+.hall-empty .app-icon {
+  width: 52px;
+  height: 52px;
+}
+
+.hall-empty b {
+  color: var(--hall-title);
+  font-size: 17px;
+}
+
+.hall-empty p {
+  margin: 0;
+}
+
+/* The months come in one after another. */
+.hall-list > .hall-month {
+  animation: caseRiseIn 380ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.hall-list > .hall-month:nth-child(2) { animation-delay: 50ms; }
+.hall-list > .hall-month:nth-child(3) { animation-delay: 90ms; }
+.hall-list > .hall-month:nth-child(n + 4) { animation-delay: 120ms; }
+
+@media (max-width: 760px) {
+  .hall-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .champion-card {
+    gap: 10px;
+    padding: 12px 12px 12px 12px;
+  }
+
+  .champion-card-main {
+    gap: 12px;
+  }
+
+  .champion-card-avatar .avatar:not(#_):not(#_) {
+    width: 52px;
+    height: 52px;
+  }
+
+  .champion-card-text small {
+    font-size: 10px;
+  }
+
+  .champion-card-text b {
+    font-size: 18px;
+  }
+
+  .champion-card-text > span {
+    font-size: 11.5px;
+  }
+
+  .champion-card-link:not(#_) {
+    min-height: 34px;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+  }
+
+  .champion-card-link span {
+    display: none;
+  }
+
+  .hall-champion-avatar .avatar:not(#_):not(#_) {
+    width: 60px;
+    height: 60px;
+  }
+
+  .is-latest .hall-champion-avatar .avatar:not(#_):not(#_) {
+    width: 72px;
+    height: 72px;
+  }
+
+  .hall-champion-text b {
+    font-size: 19px;
+  }
+
+  .is-latest .hall-champion-text b {
+    font-size: 23px;
+  }
+
+  .hall-champion-text > span {
+    font-size: 12px;
+  }
+
+  .hall-runners li {
+    padding: 7px 8px;
+  }
+
+  .hall-runner-text b {
+    font-size: 13.5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hall-list > .hall-month {
+    animation: none;
+  }
+}
+
+/* The month head stays on one line: label, badge and button keep their own width. */
+.hall-month-label,
+.hall-month-badge,
+.hall-month-open:not(#_) {
+  flex: none;
+  white-space: nowrap;
+}
+
+.champion-card-text small {
+  white-space: nowrap;
+}
+
+@media (max-width: 380px) {
+  .champion-card-text small .app-icon {
+    display: none;
+  }
+}
+
+/* Kept to one row on every width. */
+.hall-month-head:not(#_):not(#_) {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+@media (max-width: 400px) {
+  .hall-month-open span {
+    display: none;
+  }
+}
+
+/* The narrowest phones: the latest month already stands out by its gold, so its badge goes. */
+@media (max-width: 350px) {
+  .hall-month-badge {
+    display: none;
+  }
+}

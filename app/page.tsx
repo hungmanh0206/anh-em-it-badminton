@@ -46,7 +46,10 @@ type RankingCachePayload = {
 // One of a member's most recent matches, as computed by /api/app-data (newest first).
 type FormResult = { result: "W" | "L"; date: string; score: string };
 type FormByUsername = Record<string, FormResult[]>;
+// One month in the Hall of Fame, as sent by /api/app-data: its label and top three (newest month first).
+type HallOfFameEntry = { month: string; label: string; rows: RankingRow[] };
 type AppDataCachePayload = RankingCachePayload & {
+  hallOfFame?: HallOfFameEntry[];
   eloRows: EloRankingRow[];
   eloStatus: EloStatus | null;
   formByUsername?: FormByUsername;
@@ -54,7 +57,7 @@ type AppDataCachePayload = RankingCachePayload & {
   historySessions: HistorySession[];
   monthCloseStatus: MonthCloseStatus | null;
 };
-type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "elo" | "history" | "photos";
+type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "elo" | "hall" | "history" | "photos";
 type SessionStatus = "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 type AttendanceRow = { choice: "pending" | "attending" | "absent"; drawn_number: number | null; level_at_time?: "1" | "2" | number | string | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
 type HomeSessionPayload = { inactive?: boolean; sessionId?: string | null; sessionDate?: string; status?: SessionStatus; attendances?: AttendanceRow[]; needsReset?: boolean; drawsReassigned?: boolean; scheduleCleared?: boolean; error?: string };
@@ -99,7 +102,7 @@ const attendeeCountFromAttendances = (attendances: HistorySessionRow["attendance
 const navGroups: { key: string; label: string; icon: AppIconName; screens: { screen: Screen; label: string }[] }[] = [
   { key: "home", label: "Trang chủ", icon: "home", screens: [{ screen: "home", label: "Trang chủ" }] },
   { key: "matches", label: "Thi đấu", icon: "schedule", screens: [{ screen: "schedules", label: "Lịch thi đấu" }, { screen: "history", label: "Kết quả & lịch sử" }] },
-  { key: "standings", label: "Xếp hạng", icon: "ranking", screens: [{ screen: "ranking", label: "Bảng xếp hạng" }, { screen: "elo", label: "ELO" }] },
+  { key: "standings", label: "Xếp hạng", icon: "ranking", screens: [{ screen: "ranking", label: "Bảng xếp hạng" }, { screen: "elo", label: "ELO" }, { screen: "hall", label: "Bảng vàng" }] },
   { key: "library", label: "Thư viện", icon: "photos", screens: [{ screen: "photos", label: "Kho ảnh" }, { screen: "rules", label: "Thể lệ" }] },
   { key: "members", label: "Thành viên", icon: "members", screens: [{ screen: "members", label: "Thành viên" }] },
 ];
@@ -110,6 +113,7 @@ const screenTitles: Record<Screen, string> = {
   schedules: "Lịch thi đấu",
   ranking: "Bảng xếp hạng",
   elo: "ELO",
+  hall: "Bảng vàng thành tích",
   history: "Lịch sử thi đấu",
   photos: "Kho ảnh",
 };
@@ -364,6 +368,7 @@ export default function Home() {
   const [liveRankingRows, setLiveRankingRows] = useState<RankingRow[]>([]);
   const [previousRankingRows, setPreviousRankingRows] = useState<RankingRow[]>([]);
   const [championRankingRows, setChampionRankingRows] = useState<RankingRow[]>([]);
+  const [hallOfFame, setHallOfFame] = useState<HallOfFameEntry[]>([]);
   const [, setAvatarRevision] = useState(0);
   const [celebrating, setCelebrating] = useState(false);
   const closeCelebration = useCallback(() => setCelebrating(false), []);
@@ -790,6 +795,7 @@ export default function Home() {
         setPreviousRankingRows(payload.previousRankingRows);
         setChampionRankingRows(payload.championRankingRows);
         setChampionRankingLabel(payload.championRankingLabel);
+        setHallOfFame(payload.hallOfFame || []);
         setEloRows(payload.eloRows || []);
         setEloStatus(payload.eloStatus || null);
         setFormByUsername(payload.formByUsername || {});
@@ -1256,12 +1262,16 @@ export default function Home() {
   const profileRankClass = profileHasRankingData && profileRank > 0 && profileRank <= 3 ? `rank-${profileRank}` : "rank-none";
   const profileElo = eloRows.find((row) => row.username === currentUser.username || row.name === currentUser.name) ?? null;
   const champion = championRankingRows[0];
-  const championMonthLabel = championRankingLabel.split(",")[0].toUpperCase();
   const activeGroup = navGroups.find((group) => group.screens.some((item) => item.screen === screen));
   const openScreen = (next: Screen) => {
     window.scrollTo({ top: 0, behavior: "instant" });
     setScreen(next);
     if (next === "ranking") setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel);
+  };
+  const openRankingMonth = (label: string) => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+    setScreen("ranking");
+    setRankingMonth(label);
   };
 
   return <main className="app-shell">
@@ -1282,19 +1292,19 @@ export default function Home() {
     <section className="content">
       <header><div className="title-group"><div><p className="eyebrow">{currentDateLabel}</p><h1>{screenTitles[screen]}</h1></div></div></header>
       {activeGroup && activeGroup.screens.length > 1 && <div ref={tabsRef} key={activeGroup.key} className="page-tabs" aria-label={activeGroup.label}>{activeGroup.screens.map((item) => <button key={item.screen} className={screen === item.screen ? "active" : ""} aria-current={screen === item.screen ? "page" : undefined} onClick={() => openScreen(item.screen)}>{item.label}</button>)}<i className="slide-indicator" aria-hidden="true" /></div>}
-      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} rankingRows={profileRows} rankingMonth={profileAchievementMonth} eloRows={eloRows} formByUsername={formByUsername} onAvatarUpdated={(username, avatarUrl) => { if (avatarUrl) memberAvatars.set(username, avatarUrl); else memberAvatars.delete(username); removeBrowserCache(memberAvatarsCacheKey); setAvatarRevision((revision) => revision + 1); }} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={rankingFormByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
+      <div className="screen-view" key={screen}>{screen === "members" ? <Members members={members} rankingRows={profileRows} rankingMonth={profileAchievementMonth} eloRows={eloRows} formByUsername={formByUsername} onAvatarUpdated={(username, avatarUrl) => { if (avatarUrl) memberAvatars.set(username, avatarUrl); else memberAvatars.delete(username); removeBrowserCache(memberAvatarsCacheKey); setAvatarRevision((revision) => revision + 1); }} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "hall" ? <HallOfFame entries={hallOfFame} onOpenMonth={openRankingMonth} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={rankingFormByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
         <section className="hero">
           <div className="hero-copy"><span className="live-dot">● {session.state}</span><h2>{sessionTitle(session.date)}</h2><p>07:00 – 09:00</p></div>
-          <div className="hero-stats"><div><b>{present.length}</b><small>THAM GIA</small></div><div><b>{notAttending.length}</b><small>KHÔNG THAM GIA</small></div><div><b>{String(step + 1).padStart(2, "0")}<em>/{String(steps.length).padStart(2, "0")}</em></b><small>BƯỚC HIỆN TẠI</small></div></div>
+          <div className="hero-stats"><div><b>{present.length}</b><small>THAM GIA</small></div><div><b>{notAttending.length}</b><small>KHÔNG THAM GIA</small></div></div>
           <div className="hero-status">
           <div className="hero-progress">
             <span className="hero-progress-month">{currentMonthLabel.replace(", ", "/").toUpperCase()}</span>
             <span className="hero-progress-count"><b>{progress.completed} / {progress.total}</b><small>buổi<span className="hero-progress-rest"> hoàn thành</span></small></span>
             <span className="hero-progress-bar"><i style={{ width: `${progress.total ? (progress.completed / progress.total) * 100 : 0}%` }} /></span>
           </div>
-          {champion ? <button type="button" className="hero-champion" aria-label={`Chúc mừng nhà vô địch ${champion.name}`} onClick={() => { unlockFireworkSound(); setCelebrating(true); }}><div className={avatarClassName("avatar small", champion)} style={avatarStyle(champion)}>{champion.initials}</div><div className="hero-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b><AppIcon name="crown" /> {champion.name}</b><span>{`${champion.points} điểm · ${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff} hiệu số`}</span></div></button> : <div className="hero-champion"><div className="hero-champion-text"><small>NHÀ VÔ ĐỊCH {championMonthLabel}</small><b>Chưa ghi danh</b></div></div>}
           </div>
         </section>
+        <HomeChampionCard champion={champion} monthLabel={championRankingLabel} onCelebrate={() => { unlockFireworkSound(); setCelebrating(true); }} onOpenHall={() => openScreen("hall")} />
         <section className={"workflow" + (stepDirection ? ` step-${stepDirection}` : "")}>{steps.map((label, i) => <button key={label} className={i === step ? "current" : i < step ? "done" : canGoStep(i) ? "" : "locked"} aria-disabled={i !== step && !canGoStep(i)} onClick={() => goStep(i)}><span key={i < step ? "done" : "number"}>{i < step ? "✓" : i + 1}</span>{label}</button>)}</section>
         {loginError && <div className="warning">{loginError}</div>}
         {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
@@ -1705,6 +1715,72 @@ function Results({ onEditingChange, matches, drawn, scores, setScores, confirmed
     <Presence show={clearing !== null}>{clearing !== null && <ConfirmActionModal title={`Xóa điểm trận ${clearing + 1}?`} message={`Kết quả ${savedBeforeEdit[clearing]?.join("–") ?? ""} sẽ bị xóa, trận trở về chưa có điểm. BXH, ELO và Phong độ được tính lại ngay.`} confirmLabel="Xóa điểm" cancelLabel="Hủy" onCancel={() => setClearing(null)} onConfirm={async () => { const index = clearing; setClearing(null); await clearMatch(index); }} />}</Presence>
   </section>;
 }
+// Home: the latest month's champion, under the next session and above the steps. The card replays the celebration;
+// its side link leads to the full Hall of Fame.
+function HomeChampionCard({ champion, monthLabel: label, onCelebrate, onOpenHall }: { champion?: RankingRow; monthLabel: string; onCelebrate: () => void; onOpenHall: () => void }) {
+  const month = label.replace(", ", "/").replace("Tháng ", "THÁNG ");
+  if (!champion) return <section className="champion-card is-empty">
+    <div className="champion-card-main"><span className="champion-card-crown"><AppIcon name="trophy" /></span><span className="champion-card-text"><small>NHÀ VÔ ĐỊCH THÁNG</small><b>Chưa có nhà vô địch</b><span>Nhà vô địch được vinh danh khi tháng đầu tiên khép lại.</span></span></div>
+    <button type="button" className="soft-btn champion-card-link" onClick={onOpenHall}>Bảng vàng</button>
+  </section>;
+  const diff = `${champion.pointDiff > 0 ? "+" : ""}${champion.pointDiff}`;
+  return <section className="champion-card">
+    <button type="button" className="champion-card-main" aria-label={`Chúc mừng nhà vô địch ${champion.name}, ${label}`} onClick={onCelebrate}>
+      <span className="champion-card-avatar"><span className={avatarClassName("avatar", champion)} style={avatarStyle(champion)}>{champion.initials}</span><span className="champion-card-medal" aria-hidden="true" /></span>
+      <span className="champion-card-text"><small><AppIcon name="crown" /> NHÀ VÔ ĐỊCH {month}</small><b>{champion.name}</b><span>{champion.points} điểm · {diff} hiệu số · {champion.matches} trận</span></span>
+    </button>
+    <button type="button" className="soft-btn champion-card-link" onClick={onOpenHall}>Bảng vàng<span aria-hidden="true"> →</span></button>
+  </section>;
+}
+
+// Xếp hạng › Bảng vàng: every month's champion with its runners-up, newest first. A month opens its full ranking.
+function HallOfFame({ entries, onOpenMonth }: { entries: HallOfFameEntry[]; onOpenMonth: (label: string) => void }) {
+  const titles = new Map<string, number>();
+  // Which title this is for the champion, counted from the oldest month up.
+  const titleNumber = new Map<string, number>();
+  [...entries].reverse().forEach((entry) => {
+    const winner = entry.rows[0];
+    if (!winner) return;
+    const key = winner.username || winner.name;
+    titles.set(key, (titles.get(key) ?? 0) + 1);
+    titleNumber.set(entry.month, titles.get(key) ?? 1);
+  });
+  const best = [...titles.entries()].sort((a, b) => b[1] - a[1])[0];
+  const bestName = best ? entries.find((entry) => (entry.rows[0]?.username || entry.rows[0]?.name) === best[0])?.rows[0]?.name : undefined;
+  const nameOf = (key: string) => entries.find((entry) => (entry.rows[0]?.username || entry.rows[0]?.name) === key)?.rows[0]?.name ?? key;
+  const tied = best ? [...titles.entries()].filter(([, count]) => count === best[1]) : [];
+  return <section className="hall-page">
+    <PageHero
+      eyebrow="HALL OF FAME"
+      title="Bảng vàng thành tích"
+      description="Nhà vô địch của từng tháng, lấy từ bảng xếp hạng đã khép lại nên không mất khi sang tháng mới. Bấm vào một tháng để xem lại bảng xếp hạng đầy đủ."
+      statsLabel="Tóm tắt bảng vàng"
+      stats={[
+        { label: "Tháng đã trao", value: entries.length },
+        { label: tied.length > 1 ? "Nhiều lần nhất" : "Vô địch nhiều nhất", value: best ? `${tied.length > 1 ? tied.map(([key]) => nameOf(key)).join(", ") : bestName} · ${best[1]} lần` : "—" },
+      ]}
+    />
+    {entries.length === 0 ? <section className="panel hall-empty"><AppIcon name="trophy" /><b>Bảng vàng còn trống</b><p>Nhà vô địch đầu tiên sẽ có tên ở đây khi tháng đầu tiên khép lại.</p></section> : <div className="hall-list">
+      {entries.map((entry, index) => {
+        const [winner, ...runners] = entry.rows;
+        if (!winner) return null;
+        const title = titleNumber.get(entry.month) ?? 1;
+        return <article className={"panel hall-month" + (index === 0 ? " is-latest" : "")} key={entry.month}>
+          <div className="hall-month-head"><span className="hall-month-label">{entry.label}</span>{index === 0 && <span className="hall-month-badge">Mới nhất</span>}<button type="button" className="soft-btn hall-month-open" onClick={() => onOpenMonth(entry.label)}>Xem BXH<span aria-hidden="true"> →</span></button></div>
+          <div className="hall-champion">
+            <span className="hall-champion-avatar"><span className={avatarClassName("avatar", winner)} style={avatarStyle(winner)}>{winner.initials}</span><span className="hall-crown"><AppIcon name="crown" /></span></span>
+            <span className="hall-champion-text"><small>Nhà vô địch{title > 1 ? ` · lần thứ ${title}` : ""}</small><b>{winner.name}</b><span>{winner.points} điểm · {winner.pointDiff > 0 ? "+" : ""}{winner.pointDiff} hiệu số · {winner.matches} trận</span></span>
+          </div>
+          {runners.length > 0 && <ol className="hall-runners">{runners.map((row, place) => <li key={row.username || row.name} className={`rank-${place + 2}`}>
+            <span className="hall-runner-avatar"><span className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</span></span>
+            <span className="hall-runner-text"><small>{place === 0 ? "Giải nhì" : "Giải ba"}</small><b>{row.name}</b><span>{row.points} điểm · {row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span></span>
+          </li>)}</ol>}
+        </article>;
+      })}
+    </div>}
+  </section>;
+}
+
 function LiveRankingSnapshot({ rows, month }: { rows: RankingRow[]; month: string }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
   const completedMatches = Math.floor(rows.reduce((total, row) => total + row.matches, 0) / 4);

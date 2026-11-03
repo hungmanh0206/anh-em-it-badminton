@@ -381,6 +381,9 @@ function buildFormByUsername(sessions: EloSessionRow[], activeProfiles: Supabase
   return form;
 }
 
+// The club's monthly ranking starts here (earlier months were trial runs), and so does the Hall of Fame.
+const HALL_OF_FAME_FROM = "2026-07-01";
+
 function requireDateKey(value: string | null, fallback: string, name: string) {
   const key = value || fallback;
   if (!dateKeyPattern.test(key)) throw new ApiError(400, `${name} không hợp lệ.`);
@@ -416,6 +419,7 @@ export async function GET(request: Request) {
       { data: historyData, error: historyError },
       eloRatingsRead,
       { data: formSessions, error: formError },
+      { data: hallRankingData, error: hallError },
     ] = await Promise.all([
       admin.from("monthly_results").select(rankingSelect).in("month", requestedRankingMonths),
       admin.from("play_sessions").select("session_date, status").in("session_date", championFinalSessionKeys),
@@ -425,9 +429,10 @@ export async function GET(request: Request) {
       admin.from("play_sessions").select("id, session_date, matches(match_no, team_a, team_b), attendances(choice)").eq("status", "completed").order("session_date", { ascending: false }),
       admin.from("elo_ratings").select("member_id, elo_rating, updated_at"),
       admin.from("play_sessions").select("session_date, matches(id, match_no, team_a, team_b, score_a, score_b)").order("session_date", { ascending: false }),
+      admin.from("monthly_results").select(rankingSelect).gte("month", HALL_OF_FAME_FROM),
     ]);
 
-    const queryError = rankingError || championSessionError || profileError || finalSessionError || nextMonthError || historyError || formError;
+    const queryError = rankingError || championSessionError || profileError || finalSessionError || nextMonthError || historyError || formError || hallError;
     if (queryError) throw queryError;
 
     const rankingRowsByMonth = new Map<string, MonthlyResultRow[]>();
@@ -472,6 +477,23 @@ export async function GET(request: Request) {
       championRankingLabel = monthLabel(latestChampionMonth);
     }
 
+    // Every month that has crowned a champion, newest first, with its top three. It reads the stored monthly ranking,
+    // by the same rule as the champion above, so it carries on across month changes without a table of its own.
+    const hallRowsByMonth = new Map<string, MonthlyResultRow[]>();
+    ((hallRankingData || []) as MonthlyResultRow[]).forEach((row) => {
+      if (!row.month) return;
+      hallRowsByMonth.set(row.month, [...(hallRowsByMonth.get(row.month) ?? []), row]);
+    });
+    const hallOfFame = [...hallRowsByMonth.entries()]
+      .filter(([monthKey, rows]) => rows.some((row) => row.matches_played > 0)
+        && (monthKey < currentMonthKey || (monthKey === currentMonthKey && completedFinalSessionDates.has(dateKey(finalSaturdayOfMonth(monthStartFromKey(monthKey)))))))
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([monthKey, rows]) => ({
+        month: monthKey,
+        label: monthLabel(monthStartFromKey(monthKey)),
+        rows: mapRows(sortMonthlyResultRows(rows.filter((row) => row.matches_played > 0))).slice(0, 3),
+      }));
+
     const historySessions = ((historyData || []) as HistorySessionRow[]).map((session) => {
       const matchAttendees = attendeeCountFromMatches(session.matches);
       return {
@@ -493,6 +515,7 @@ export async function GET(request: Request) {
       previousRankingRows,
       championRankingRows,
       championRankingLabel,
+      hallOfFame,
       eloRows,
       eloStatus,
       formByUsername,
