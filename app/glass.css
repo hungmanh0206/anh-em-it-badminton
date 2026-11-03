@@ -31,9 +31,9 @@
   --pill: rgba(60, 48, 28, 0.07);
   --pill-hover: rgba(60, 48, 28, 0.13);
   --pill-text: #4a4133;
-  --attend-yes: linear-gradient(115deg, rgba(34, 197, 94, 0.52), rgba(34, 197, 94, 0.3) 55%, rgba(34, 197, 94, 0.16));
+  --attend-yes: linear-gradient(115deg, color-mix(in srgb, rgb(34, 197, 94) var(--row-tint), transparent), color-mix(in srgb, rgb(34, 197, 94) 30%, transparent) 56%, color-mix(in srgb, rgb(34, 197, 94) 14%, transparent));
   --attend-yes-lift: 0 2px 4px rgba(21, 128, 61, 0.1), 0 10px 22px rgba(21, 128, 61, 0.18);
-  --attend-no: linear-gradient(115deg, rgba(239, 68, 68, 0.48), rgba(239, 68, 68, 0.27) 55%, rgba(239, 68, 68, 0.14));
+  --attend-no: linear-gradient(115deg, color-mix(in srgb, rgb(247, 85, 85) var(--row-tint), transparent), color-mix(in srgb, rgb(247, 85, 85) 30%, transparent) 56%, color-mix(in srgb, rgb(247, 85, 85) 14%, transparent));
   --attend-no-lift: 0 2px 4px rgba(185, 28, 28, 0.1), 0 10px 22px rgba(185, 28, 28, 0.17);
   --avatar-dome: radial-gradient(circle at 33% 22%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 42%), radial-gradient(circle, transparent 66%, rgba(40, 28, 8, 0.2) 100%);
   --block-gap: 18px;
@@ -557,9 +557,9 @@ body::before {
   grid-template-columns: 1fr 1fr;
 }
 
-/* Check-in: a member's card takes a green wash once they say they're coming, a red one if they aren't. Each colour
-   is its own layer (a gradient can't be animated): it sweeps in from the left as it fades up, and when the answer
-   changes one colour melts into the other. */
+/* Check-in: a member's card takes a green wash once they say they're coming, a red one if they aren't, in the
+   same strength as a saved match row. Each colour is its own layer (a gradient can't be animated): it sweeps in from
+   the left as it fades up, and when the answer changes one colour melts into the other. */
 .member-grid > .member-card:not(#_):not(#_) {
   position: relative;
   isolation: isolate;
