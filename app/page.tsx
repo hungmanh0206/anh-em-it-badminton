@@ -1790,16 +1790,35 @@ function HallOfFame({ entries, onOpenMonth }: { entries: HallOfFameEntry[]; onOp
         const [winner, ...runners] = entry.rows;
         if (!winner) return null;
         const title = titleNumber.get(entry.month) ?? 1;
+        const diff = (value: number) => `${value > 0 ? "+" : ""}${value}`;
         return <article className={"panel hall-month" + (index === 0 ? " is-latest" : "")} key={entry.month}>
-          <div className="hall-month-head"><span className="hall-month-label">{entry.label}</span>{index === 0 && <span className="hall-month-badge">Nhà vô địch hiện tại</span>}<button type="button" className="soft-btn hall-month-open" onClick={() => onOpenMonth(entry.label)}>Xem BXH</button></div>
-          <div className="hall-champion">
-            <span className="hall-champion-avatar"><span className={avatarClassName("avatar", winner)} style={avatarStyle(winner)}>{winner.initials}</span><span className="hall-crown"><AppIcon name="crown" /></span></span>
-            <span className="hall-champion-text"><small>Nhà vô địch{title > 1 ? ` · lần thứ ${title}` : ""}</small><b>{winner.name}</b><span>{winner.points} điểm · {winner.pointDiff > 0 ? "+" : ""}{winner.pointDiff} hiệu số · {winner.matches} trận</span></span>
+          <div className="hall-month-head">
+            {index === 0 && <span className="hall-month-badge"><span aria-hidden="true">🔥</span> <span className="hall-badge-long">Tháng hiện tại</span><span className="hall-badge-short">Hiện tại</span></span>}
+            <span className="hall-month-label">{entry.label.toUpperCase()}</span>
+            <button type="button" className="hall-month-open" onClick={() => onOpenMonth(entry.label)}><i className="hall-chart-icon" aria-hidden="true" />Xem BXH</button>
           </div>
-          {runners.length > 0 && <ol className="hall-runners">{runners.map((row, place) => <li key={row.username || row.name} className={`rank-${place + 2}`}>
-            <span className="hall-runner-avatar"><span className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</span></span>
-            <span className="hall-runner-text"><small>{place === 0 ? "Giải nhì" : "Giải ba"}</small><b>{row.name}</b><span>{row.points} điểm · {row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span></span>
-          </li>)}</ol>}
+          <div className="hall-month-body">
+            <div className="hall-champion">
+              <span className="hall-champion-avatar">
+                {index === 0 && <i className="hall-laurel" aria-hidden="true" />}
+                <span className={avatarClassName("avatar", winner)} style={avatarStyle(winner)}>{winner.initials}</span>
+                <span className="hall-crown"><AppIcon name="crown" /></span>
+              </span>
+              <span className="hall-champion-text">
+                <small><AppIcon name="trophy" /> Nhà vô địch{title > 1 ? ` · lần ${title}` : ""}</small>
+                <b>{winner.name}</b>
+                <span><span className="hall-star" aria-hidden="true">★</span> <span className="hall-stat">{winner.points} điểm</span> · <span className="hall-stat">{diff(winner.pointDiff)} hiệu số</span> · <span className="hall-stat">{winner.matches} trận</span></span>
+              </span>
+            </div>
+            {runners.map((row, place) => <div key={row.username || row.name} className={`hall-runner rank-${place + 2}`}>
+              <small>{place === 0 ? "Giải nhì" : "Giải ba"}</small>
+              <span className="hall-runner-who">
+                <span className="hall-runner-avatar"><span className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</span></span>
+                <b>{row.name}</b>
+              </span>
+              <span className="hall-runner-score">{row.points} điểm · {diff(row.pointDiff)}</span>
+            </div>)}
+          </div>
         </article>;
       })}
     </div>}
@@ -2731,7 +2750,7 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
       </div>
       {roleNotice && <div className="member-role-notice">{roleNotice}</div>}
       {visibleMembers.length === 0 ? <div className="member-table"><div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div></div> : viewMode === "list" ? <div className="member-table">{visibleMembers.map((member, index) => <div key={member.username}>
-        <button type="button" className="person member-person-btn" aria-label={`Xem thông tin ${member.name}`} onClick={() => setViewing(member)}><div className={avatarClassName("avatar", member)} style={avatarStyle(member)}>{member.initials}</div><div><b>{member.name}</b><small>{canManage ? `@${member.username}` : `Level ${member.level} · ${memberRoleLabel(effectiveRole(member.role))}`}</small></div></button>
+        <button type="button" className="person member-person-btn" aria-label={`Xem thông tin ${member.name}`} onClick={() => setViewing(member)}><div className={avatarClassName("avatar", member)} style={avatarStyle(member)}>{member.initials}</div><div><b>{member.name}{effectiveRole(member.role) !== "member" && <span className={"member-card-role " + effectiveRole(member.role)}>{effectiveRole(member.role) === "admin" ? "Admin" : "Sub-admin"}</span>}</b><small>{canManage ? `@${member.username}` : `Level ${member.level}`}</small></div></button>
         <span className="status">● Hoạt động</span>
         {canManage && memberMenu(member, index >= visibleMembers.length - 2)}
       </div>)}</div> : <div className="member-cards">{visibleMembers.map((member, index) => {

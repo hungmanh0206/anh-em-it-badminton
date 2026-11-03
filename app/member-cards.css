@@ -310,3 +310,14 @@
     transition: none;
   }
 }
+
+/* List view: the same Admin / Sub-admin tag right after the name. */
+.member-table .member-person-btn b:not(#_) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.member-table .member-card-role:not(#_) {
+  font-size: 9px;
+}
