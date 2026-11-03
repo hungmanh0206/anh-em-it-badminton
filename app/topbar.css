@@ -325,24 +325,8 @@
   font-weight: 800;
 }
 
-/* Light rising from the underline: a blurred patch of its own, so it has no edge to show. */
-.topbar-nav button.active:not(#_)::before {
-  content: "";
-  position: absolute;
-  right: 14%;
-  bottom: -14px;
-  left: 14%;
-  z-index: -1;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--bar-active-glow);
-  filter: blur(11px);
-  pointer-events: none;
-}
-
-/* The line under the current section. */
-.topbar-nav button.active:not(#_)::after {
-  content: "";
+/* The line under the current section, a real element so it can flow from one section to the next (liquid-motion.css). */
+.nav-indicator {
   position: absolute;
   right: 10%;
   bottom: 0;
@@ -350,6 +334,22 @@
   height: 3px;
   border-radius: 999px 999px 0 0;
   background: #ffc83d;
+  pointer-events: none;
+  view-transition-name: nav-indicator;
+}
+
+/* Light rising from the line: a blurred patch of its own, so it has no edge to show. */
+.nav-indicator::before {
+  content: "";
+  position: absolute;
+  right: 5%;
+  bottom: -14px;
+  left: 5%;
+  z-index: -1;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bar-active-glow);
+  filter: blur(11px);
 }
 
 .topbar-nav button:not(#_) .app-icon {
@@ -397,10 +397,25 @@
   color: var(--bar-text);
 }
 
+.page-tabs button {
+  position: relative;
+  isolation: isolate;
+}
+
 .page-tabs button.active {
+  color: var(--bar-accent);
+}
+
+/* The pill behind the current tab, a real element so it can slide to the next tab (liquid-motion.css). */
+.tab-indicator {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
   background: var(--bar-thumb);
   box-shadow: var(--bar-thumb-shadow);
-  color: var(--bar-accent);
+  pointer-events: none;
+  view-transition-name: tab-indicator;
 }
 
 .topbar-nav button:focus-visible,
