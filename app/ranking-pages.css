@@ -203,3 +203,9 @@
   justify-content: center;
   text-align: center;
 }
+
+/* Column titles: the ELO list uses the month table's header look (no fill, the same rule under it). */
+.elo-list > .elo-head:not(#_):not(#_):not(#_) {
+  background: transparent !important;
+  border-bottom: 1px solid var(--glass-line) !important;
+}

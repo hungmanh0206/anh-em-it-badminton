@@ -160,21 +160,24 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Admin / Sub-admin, a gold tag in the top corner. */
+/* Under the name: the login (admins only) and an Admin / Sub-admin tag. */
+.member-card-meta:not(#_) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
 .member-card-role {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 1;
-  padding: 4px 9px;
+  padding: 2px 8px;
   border-radius: 999px;
   background: var(--gold-glass);
   box-shadow: var(--gold-glass-shadow);
   color: #3a2400;
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 900;
   letter-spacing: 0.04em;
-  line-height: 1.2;
+  line-height: 1.4;
   text-transform: uppercase;
 }
 

@@ -2737,7 +2737,6 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
       </div>)}</div> : <div className="member-cards">{visibleMembers.map((member, index) => {
         const art = cardArtUrl(member.username);
         const role = effectiveRole(member.role);
-        const elo = eloRows.find((row) => row.username === member.username)?.eloRating;
         return <article key={member.username} className={"member-card-tile" + (art ? " has-art" : "")} style={{ "--avatar-color": member.color || "#6846e8" } as CSSProperties}>
           <button type="button" className="member-card-open" aria-label={`Xem thông tin ${member.name}`} onClick={() => setViewing(member)}>
             <span className="member-card-stage" aria-hidden="true">
@@ -2745,10 +2744,9 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
               {art ? <img className="member-card-art" src={art} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.closest(".member-card-tile")?.classList.remove("has-art"); event.currentTarget.remove(); }} /> : null}
               <span className={avatarClassName("avatar member-card-avatar", member)} style={avatarStyle(member)}>{member.initials}</span>
             </span>
-            {role !== "member" && <span className={"member-card-role " + role}>{role === "admin" ? "Admin" : "Sub-admin"}</span>}
             <span className="member-card-info">
               <b>{member.name}</b>
-              <span className="member-card-meta">Level {member.level}{typeof elo === "number" && <> · ELO <b>{Math.round(elo)}</b></>}</span>
+              {(canManage || role !== "member") && <span className="member-card-meta">{canManage && <span className="member-card-user">@{member.username}</span>}{role !== "member" && <span className={"member-card-role " + role}>{role === "admin" ? "Admin" : "Sub-admin"}</span>}</span>}
             </span>
           </button>
           {canManage && memberMenu(member, false)}
