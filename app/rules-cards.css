@@ -12,8 +12,13 @@
   backdrop-filter: var(--glass-blur);
 }
 
+/* A little more room under each title than between the parts that follow. */
 .rules-section > .rules-section-title:not(#_):not(#_) {
-  margin: 0 !important;
+  margin: 0 0 12px !important;
+}
+
+.rules-section .rules-sub:not(#_):not(#_) {
+  margin: 0 0 12px !important;
 }
 
 .rules-section :is(.rules-pane, .rules-steps > li, .rules-prizes > div, .rules-match-types > div, .rules-total, .rules-note):not(#_):not(#_):not(#_) {

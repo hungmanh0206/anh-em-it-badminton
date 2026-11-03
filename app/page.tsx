@@ -2356,11 +2356,14 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
   </section>;
 }
 function History({ sessions, currentMonth }: { sessions: HistorySession[]; currentMonth: string }) {
-  const [month, setMonth] = useState(currentMonth);
+  // Until a month is picked, the latest month that has results (sessions load after the page opens).
+  const [month, setMonth] = useState<string | null>(null);
   const [week, setWeek] = useState("Tất cả các tuần");
   const [detail, setDetail] = useState<{ title: string; rows: { no: number; a: string; b: string; sa: number; sb: number }[] } | null>(null);
   const monthOptions = [...new Set([currentMonth, ...sessions.map((session) => monthLabel(new Date(`${session.date}T00:00:00`)))])];
-  const selectedMonth = monthOptions.includes(month) ? month : currentMonth;
+  const latestDate = sessions.reduce<string | null>((latest, session) => (!latest || session.date > latest ? session.date : latest), null);
+  const latestMonth = latestDate ? monthLabel(new Date(`${latestDate}T00:00:00`)) : currentMonth;
+  const selectedMonth = month && monthOptions.includes(month) ? month : latestMonth;
   const entries = sessions
     .filter((session) => monthLabel(new Date(`${session.date}T00:00:00`)) === selectedMonth)
     .map((session) => {
