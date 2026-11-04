@@ -263,3 +263,51 @@
 .member-table .member-card-role:not(#_) {
   font-size: 9px;
 }
+
+/* Điểm danh on phones: Level and the answer always on two lines, and every card in the grid the same height. */
+@media (max-width: 700px) {
+  .member-grid:not(#_):not(#_):not(#_) {
+    grid-auto-rows: 1fr;
+  }
+
+  .member-grid > .member-card:not(#_):not(#_):not(#_) {
+    height: 100%;
+    align-items: center;
+  }
+
+  .member-grid > .member-card small:not(#_):not(#_):not(#_) {
+    display: grid !important;
+    gap: 1px !important;
+  }
+
+  .member-grid > .member-card .attend-sep:not(#_) {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .member-grid > .member-card:not(#_):not(#_):not(#_) {
+    gap: 6px !important;
+    padding: 9px 6px 9px 7px !important;
+  }
+
+  .member-grid > .member-card > .avatar:not(#_):not(#_):not(#_) {
+    flex-basis: 30px !important;
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .member-grid > .member-card small:not(#_):not(#_):not(#_) {
+    font-size: 9.5px !important;
+    white-space: nowrap;
+  }
+
+  .member-grid > .member-card b:not(#_):not(#_):not(#_) {
+    font-size: 13px !important;
+  }
+
+  .member-grid > .member-card b em:not(#_):not(#_) {
+    padding: 1px 4px !important;
+    font-size: 8.5px !important;
+  }
+}
