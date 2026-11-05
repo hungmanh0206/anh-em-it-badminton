@@ -1329,7 +1329,7 @@ export default function Home() {
         {loginError && <div className="warning">{loginError}</div>}
         {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
         {step === 0 && <CheckIn header={stepper} drawOpen={drawOpen} members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
-        {step === 1 && <Draw header={stepper} scheduleOpen={scheduleOpen} members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
+        {step === 1 && <Draw header={stepper} scenario={currentScheduleScenario} scheduleOpen={scheduleOpen} members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
         {step === 2 && <Schedule header={stepper} members={members} onEditingChange={(rows) => { editingScoreRows.current = new Set(rows); }} scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { setSessionStatus(completed ? "completed" : "scheduled"); if (completed) setHistoryRefreshTick((tick) => tick + 1); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}</div>
     </section>
@@ -1419,7 +1419,7 @@ function CheckIn({ header, drawOpen, members, onContinue, canSchedule, canManage
     <div className="panel-foot checkin-actions-foot"><div className="attendance-actions"><button className="soft-btn" disabled={!isCheckinWindowOpen} title={isCheckinWindowOpen ? undefined : "Mở vào thứ Tư"} onClick={openSelfCheckin}>{currentUser.responded ? "Cập nhật điểm danh của tôi" : "Điểm danh của tôi"}</button>{canManageSession && <button className="primary" disabled={drawOpen || !isCheckinWindowOpen || !canSchedule || !allResponded} title={drawOpen ? "Đã mở chọn số" : undefined} onClick={onContinue}>Xác nhận điểm danh & mở chọn số</button>}</div></div>
   </section>;
 }
-function Draw({ header, scheduleOpen, members, drawn, allDrawn, drawSelf, spinning, spinTarget, currentUser, canManageSession, onContinue }: { header?: ReactNode; scheduleOpen: boolean; members: Member[]; drawn: Record<string, number>; allDrawn: boolean; drawSelf: () => void; spinning: boolean; spinTarget: number | null; currentUser: Member; canManageSession: boolean; onContinue: () => void }) {
+function Draw({ header, scenario, scheduleOpen, members, drawn, allDrawn, drawSelf, spinning, spinTarget, currentUser, canManageSession, onContinue }: { header?: ReactNode; scenario: ScheduleScenario | null | undefined; scheduleOpen: boolean; members: Member[]; drawn: Record<string, number>; allDrawn: boolean; drawSelf: () => void; spinning: boolean; spinTarget: number | null; currentUser: Member; canManageSession: boolean; onContinue: () => void }) {
   const participantCount = members.length;
   const level1Count = members.filter((member) => member.level === 1).length;
   const level2Count = members.length - level1Count;
@@ -1441,7 +1441,7 @@ function Draw({ header, scheduleOpen, members, drawn, allDrawn, drawSelf, spinni
   const hubValue = isWheelSpinning || isHoldingSlot ? undefined : mine ?? autoLastSlot ?? undefined;
   const hubLabel = isWheelSpinning ? "Đang quay" : isHoldingSlot ? "Đang giữ số" : mine ? "Số của bạn" : autoLastSlot ? "Số cuối" : undefined;
   return <section className="panel draw-panel">{header}
-    <div className="panel-head draw-panel-head"><div><h2>Chọn số ngẫu nhiên</h2></div><span className="mode draw-mode-pill">{modeLabel}</span></div>
+    <div className="panel-head draw-panel-head"><div><h2>Chọn số ngẫu nhiên</h2><SchedulePick scenario={scenario} /></div><span className="mode draw-mode-pill">{modeLabel}</span></div>
     <div className="draw-body">
       <DrawWheel slots={wheelSlots} slotClass={(slot) => drawNumberClass(slot, participantCount)} spinTarget={spinTarget} holding={isHoldingSlot} value={hubValue} label={hubLabel} />
       <div className="draw-copy"><span className="tag draw-range-tag">Chọn số · {rangeLabel}</span><h2>{isWheelSpinning ? "Vòng quay đang chọn số…" : isHoldingSlot ? "Đang giữ số hợp lệ…" : mine ? "Bạn đã chọn xong" : currentUser.present ? (autoLastSlot ? "Bạn là người cuối trong dải số này" : "Đến lượt bạn chọn số") : "Bạn chưa điểm danh tham gia"}</h2><button className="primary" disabled={spinning || !currentUser.present || Boolean(mine)} onClick={drawSelf}>{spinning ? "Đang xử lý…" : mine ? "Đã có số" : autoLastSlot ? "Nhận số cuối cùng" : "Chọn số của tôi"} <span>↻</span></button></div>
@@ -1463,7 +1463,7 @@ function Schedule({ header, members, onEditingChange, scenario, drawn, scores, s
   if (!scenario) return <section className="panel">{header}<div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Lịch chỉ được tạo khi có tối thiểu 5 thành viên và đúng tổ hợp trong thư viện lịch.</p></div></div><div className="empty-ranking">Chưa có lịch phù hợp cho danh sách điểm danh hiện tại.</div></section>;
   return <>
     <SlotFocusContext.Provider value={{ slot: focusSlot, setSlot: setFocusSlot }}>
-      <Results header={header} key={`${sessionId ?? "local"}-${scenario.id}`} onEditingChange={onEditingChange} matches={scenario.matches} drawn={drawn} people={people} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} onSaved={onSaved} />
+      <Results header={header} scenario={scenario} key={`${sessionId ?? "local"}-${scenario.id}`} onEditingChange={onEditingChange} matches={scenario.matches} drawn={drawn} people={people} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} onSaved={onSaved} />
     </SlotFocusContext.Provider>
     <LiveRankingSnapshot rows={rankingRows} month={rankingMonth} />
   </>;
@@ -1630,13 +1630,18 @@ function SlotToken({ no, name, open, person }: { no: number; name?: string; open
     // On touch the tap highlights this player's matches; it must not also open the match the token sits in.
     onClick: (event: React.MouseEvent) => { if (!canHover()) { event.stopPropagation(); focus.setSlot((current) => (current === no ? null : no)); } },
   } : {};
-  return <span className={`slot-token ${open ? "level-open" : `level-${slotLevel(no)}`}${focusClass}${person ? " has-avatar" : ""}`} {...focusEvents}>{person ? <><span className={avatarClassName("avatar slot-avatar", person)} style={avatarStyle(person)} aria-hidden="true">{person.initials}</span><span className="slot-label"><b>{no}</b>{name && <small>- {name}</small>}</span></> : <><b>{no}</b>{name && <small>{name}</small>}</>}</span>;
+  return <span className={`slot-token ${open ? "level-open" : `level-${slotLevel(no)}`}${focusClass}${person ? " has-avatar" : ""}`} {...focusEvents}>{person ? <span className="slot-chip"><span className={avatarClassName("avatar slot-avatar", person)} style={avatarStyle(person)} aria-hidden="true">{person.initials}</span><span className="slot-label"><b>{no}</b>{name && <small>- {name}</small>}</span></span> : <><b>{no}</b>{name && <small>{name}</small>}</>}</span>;
 }
 function TeamPair({ team, namesBySlot, open, people }: { team: readonly [number, number]; namesBySlot?: Record<number, string>; open?: boolean; people?: Map<string, MatchPerson> }) { const person = (slot: number) => { const name = namesBySlot?.[slot]; return name ? people?.get(name) : undefined; }; return <span className="team-pair"><SlotToken no={team[0]} name={namesBySlot?.[team[0]]} open={open} person={person(team[0])} /><i>+</i><SlotToken no={team[1]} name={namesBySlot?.[team[1]]} open={open} person={person(team[1])} /></span>; }
+// Which schedule from the library this session uses, under the heading of steps 2 and 3.
+function SchedulePick({ scenario }: { scenario?: ScheduleScenario | null }) {
+  if (!scenario) return null;
+  return <p className="schedule-pick">Lịch áp dụng: <b>{scenario.title}</b> · {scenario.subtitle}</p>;
+}
 function Match({ match, i, namesBySlot }: { match: ScheduleMatch; i: number; namesBySlot?: Record<number, string> }) { const open = match.type === "MỞ"; return <article className="match schedule-match-card"><div className="match-top"><b>TRẬN {String(i + 1).padStart(2, "0")}</b></div><div className="teams"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={open} /><strong>VS</strong><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={open} /></div></article>; }
 // Lịch thi đấu: every match in one list, each row showing both teams and the saved score (green for the winners, red
 // for the losers). A row opens the match: admins enter, change or clear the score there; everyone else sees it.
-function Results({ header, onEditingChange, matches, drawn, people, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, onSaved }: { header?: ReactNode; onEditingChange: (rows: number[]) => void; matches: ScheduleMatch[]; drawn: Record<string, number>; people: Map<string, MatchPerson>; scores: Record<number, [string, string]>; setScores: Dispatch<SetStateAction<Record<number, [string, string]>>>; confirmedMatches: Record<number, boolean>; setConfirmedMatches: Dispatch<SetStateAction<Record<number, boolean>>>; sessionId: string | null; canManageScores: boolean; onSaved: (completed: boolean) => void }) {
+function Results({ header, scenario, onEditingChange, matches, drawn, people, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, onSaved }: { header?: ReactNode; scenario: ScheduleScenario; onEditingChange: (rows: number[]) => void; matches: ScheduleMatch[]; drawn: Record<string, number>; people: Map<string, MatchPerson>; scores: Record<number, [string, string]>; setScores: Dispatch<SetStateAction<Record<number, [string, string]>>>; confirmedMatches: Record<number, boolean>; setConfirmedMatches: Dispatch<SetStateAction<Record<number, boolean>>>; sessionId: string | null; canManageScores: boolean; onSaved: (completed: boolean) => void }) {
   const [openMatch, setOpenMatch] = useState<number | null>(null);
   const [saving, setSaving] = useState<number | null>(null);
   const { toast, showToast, dismissToast } = useToast();
@@ -1708,7 +1713,7 @@ function Results({ header, onEditingChange, matches, drawn, people, scores, setS
   };
   const savedScore = (index: number): [string, string] => (confirmedMatches[index] ? scores[index] ?? ["", ""] : ["", ""]);
   return <section className="panel result-entry-panel combined-match-panel">{header}
-    <div className="panel-head"><div><h2>Lịch thi đấu</h2><p>{canManageScores ? "Bấm vào trận để nhập hoặc sửa điểm." : "Bấm vào trận để xem tỉ số."}</p></div><span className="count-pill match-count-pill"><b>{confirmedCount}</b><small>/{matches.length} trận</small></span></div>
+    <div className="panel-head"><div><h2>Lịch thi đấu</h2><SchedulePick scenario={scenario} /><p>{canManageScores ? "Bấm vào trận để nhập hoặc sửa điểm." : "Bấm vào trận để xem tỉ số."}</p></div><span className="count-pill match-count-pill"><b>{confirmedCount}</b><small>/{matches.length} trận</small></span></div>
     <div className="result-list">{matches.map((match, i) => {
       const confirmed = Boolean(confirmedMatches[i]);
       const [scoreAText, scoreBText] = savedScore(i);

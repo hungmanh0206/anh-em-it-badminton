@@ -379,34 +379,43 @@
   gap: 6px;
 }
 
+/* The player keeps an even share of the row; what lights up on hover is the chip hugging their avatar and name. */
 .match-open-row .slot-token.has-avatar:not(#_):not(#_):not(#_) {
   display: inline-flex !important;
   flex: 1 1 0;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
   min-width: 0;
   min-height: 0;
-  padding: 5px 6px !important;
-  border-radius: 12px;
+  padding: 0 !important;
 }
 
-/* No tile around a player: just the avatar and "1 - Tên", on the row itself. */
 .match-open-row .slot-token.has-avatar:not(#_):not(#_):not(#_):not(#_) {
-  border-radius: 12px;
+  border-radius: 0;
   background: none !important;
   box-shadow: none !important;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  transition: opacity 160ms ease, transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+  transform: none;
+  transition: opacity 160ms ease;
 }
 
-/* Hovering a player (a tap on touch screens) brings their tile back, in every match they play. */
-.match-open-row .slot-token.has-avatar.slot-focused:not(#_):not(#_):not(#_):not(#_):not(#_) {
-  background: rgba(255, 200, 61, 0.32) !important;
-  box-shadow: none !important;
-  transform: none;
+.slot-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: 10px;
+  transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+
+/* Hovering a player (a tap on touch screens) lights their chip, in every match they play. */
+.match-open-row .slot-focused .slot-chip {
+  background: rgba(255, 200, 61, 0.32);
+  box-shadow: 0 0 9px rgba(255, 190, 40, 0.38);
 }
 
 .match-open-row .slot-token .slot-avatar:not(#_):not(#_):not(#_) {
@@ -473,8 +482,8 @@
     gap: 3px;
   }
 
-  .match-open-row .slot-token.has-avatar:not(#_):not(#_):not(#_) {
-    padding: 5px 3px !important;
+  .slot-chip {
+    padding: 4px 2px;
   }
 
   .match-open-row .slot-label > :is(b, small):not(#_):not(#_):not(#_) {
@@ -528,10 +537,9 @@
     display: none;
   }
 
-  .match-open-row .slot-token.has-avatar:not(#_):not(#_):not(#_) {
-    gap: 2px;
-    padding: 4px 2px !important;
-    border-radius: 9px;
+  .slot-chip {
+    padding: 3px 2px;
+    border-radius: 8px;
   }
 
   .match-open-row .slot-token .slot-avatar:not(#_):not(#_):not(#_) {
@@ -559,11 +567,14 @@
 
   .match-open-row .slot-token.has-avatar:not(#_):not(#_):not(#_) {
     flex: none;
-    flex-direction: row;
     justify-content: flex-start;
-    gap: 4px;
     width: 100%;
-    padding: 3px 4px !important;
+  }
+
+  .slot-chip {
+    flex-direction: row;
+    gap: 4px;
+    padding: 2px 4px;
   }
 
   .match-open-row .slot-token .slot-avatar:not(#_):not(#_):not(#_) {
