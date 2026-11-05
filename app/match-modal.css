@@ -394,11 +394,19 @@
 
 /* No tile around a player: just the avatar and "1 - Tên", on the row itself. */
 .match-open-row .slot-token.has-avatar:not(#_):not(#_):not(#_):not(#_) {
-  border-radius: 0;
+  border-radius: 12px;
   background: none !important;
   box-shadow: none !important;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+  transition: opacity 160ms ease, transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+/* Hovering a player (a tap on touch screens) brings their tile back, in every match they play. */
+.match-open-row .slot-token.has-avatar.slot-focused:not(#_):not(#_):not(#_):not(#_):not(#_) {
+  background: rgba(255, 200, 61, 0.32) !important;
+  box-shadow: 0 0 14px 1px rgba(255, 190, 40, 0.65) !important;
+  transform: scale(1.04);
 }
 
 .match-open-row .slot-token .slot-avatar:not(#_):not(#_):not(#_) {
