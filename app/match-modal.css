@@ -405,8 +405,8 @@
 /* Hovering a player (a tap on touch screens) brings their tile back, in every match they play. */
 .match-open-row .slot-token.has-avatar.slot-focused:not(#_):not(#_):not(#_):not(#_):not(#_) {
   background: rgba(255, 200, 61, 0.32) !important;
-  box-shadow: 0 0 14px 1px rgba(255, 190, 40, 0.65) !important;
-  transform: scale(1.04);
+  box-shadow: none !important;
+  transform: none;
 }
 
 .match-open-row .slot-token .slot-avatar:not(#_):not(#_):not(#_) {
