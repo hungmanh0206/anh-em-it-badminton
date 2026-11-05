@@ -155,6 +155,7 @@ body::before {
 .checkin-modal:not(#_),
 .history-detail:not(#_),
 .elo-guide-modal:not(#_),
+.match-modal:not(#_),
 .photo-sheet:not(#_),
 .photo-preview:not(#_),
 .photo-confirm-backdrop > *:not(#_) {

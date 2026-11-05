@@ -1250,7 +1250,7 @@ export default function Home() {
       pointerDownTarget = null;
       if (!(target instanceof Element)) return;
       if (!target.closest(".topbar-profile, .member-profile-popover")) setShowProfileCard(false);
-      if (target.closest(".modal-backdrop") && !target.closest(".checkin-modal, .confirm-modal, .history-detail, .member-editor, .member-detail-modal, .elo-guide-modal, .photo-sheet, .photo-preview, .photo-confirm-backdrop")) {
+      if (target.closest(".modal-backdrop") && !target.closest(".checkin-modal, .confirm-modal, .history-detail, .member-editor, .member-detail-modal, .elo-guide-modal, .photo-sheet, .photo-preview, .photo-confirm-backdrop, .match-modal")) {
         (document.querySelector(".presence:not(.presence-leaving) .modal-backdrop .modal-close") as HTMLButtonElement | null)?.click();
       }
     };
@@ -1330,7 +1330,7 @@ export default function Home() {
         {attendanceChangeNotice && <div className="warning">{attendanceChangeNotice}</div>}
         {step === 0 && <CheckIn header={stepper} drawOpen={drawOpen} members={members} setMembers={setMembers} onContinue={() => setConfirmation({ title: "Xác nhận điểm danh", message: "Mở chọn số sau khi xác nhận toàn bộ thành viên đã phản hồi?", action: confirmAttendanceAndOpenDraw })} canSchedule={canSchedule} canManageSession={canManageSession} currentUser={currentUser} isCheckinWindowOpen={isCheckinWindowOpen} isCheckinTestMode={isCheckinTestMode} openSelfCheckin={() => { setCheckinPopupMode("manual"); setShowCheckin(true); }} />}
         {step === 1 && <Draw header={stepper} scheduleOpen={scheduleOpen} members={present} drawn={validDrawn} allDrawn={allDrawn} drawSelf={drawSelf} spinning={spinning} spinTarget={spinTarget} currentUser={currentUser} canManageSession={canManageSession} onContinue={() => setConfirmation({ title: "Xác nhận tạo lịch", message: "Tạo lịch thi đấu từ kết quả chọn số hiện tại?", action: confirmScheduleFromDraw })} />}
-        {step === 2 && <Schedule header={stepper} onEditingChange={(rows) => { editingScoreRows.current = new Set(rows); }} scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { setSessionStatus(completed ? "completed" : "scheduled"); if (completed) setHistoryRefreshTick((tick) => tick + 1); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
+        {step === 2 && <Schedule header={stepper} members={members} onEditingChange={(rows) => { editingScoreRows.current = new Set(rows); }} scenario={currentScheduleScenario} drawn={validDrawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} rankingRows={liveRankingRows} rankingMonth={sessionMonthLabel} onSaved={(completed) => { setSessionStatus(completed ? "completed" : "scheduled"); if (completed) setHistoryRefreshTick((tick) => tick + 1); setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel); setRankingRefreshTick((tick) => tick + 1); }} />}
       </>}</div>
     </section>
     <Presence show={Boolean(showCheckin)}>{showCheckin && <CheckinModal member={activeUser} onAnswer={(attending) => { closeCheckinPopup(); if (!attending) setDismissedCheckinPromptKey(currentCheckinPromptKey); setConfirmation({ title: "Xác nhận điểm danh", message: attending ? "Bạn xác nhận tham gia buổi chơi này?" : "Bạn xác nhận không tham gia buổi chơi này?", action: () => checkInSelf(attending) }); }} onSkip={dismissCheckinPopupToAttendance} />}</Presence>
@@ -1450,8 +1450,8 @@ function Draw({ header, scheduleOpen, members, drawn, allDrawn, drawSelf, spinni
     {canManageSession && <div className="panel-foot draw-actions-foot"><button className="primary" disabled={scheduleOpen || !allDrawn} title={scheduleOpen ? "Đã tạo lịch thi đấu" : undefined} onClick={onContinue}>Tạo lịch thi đấu</button></div>}
   </section>;
 }
-function Schedule({ header, onEditingChange, scenario, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, rankingRows, rankingMonth, onSaved }: { header?: ReactNode; onEditingChange: (rows: number[]) => void; scenario: ScheduleScenario | null; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: Dispatch<SetStateAction<Record<number, [string, string]>>>; confirmedMatches: Record<number, boolean>; setConfirmedMatches: Dispatch<SetStateAction<Record<number, boolean>>>; sessionId: string | null; canManageScores: boolean; rankingRows: RankingRow[]; rankingMonth: string; onSaved: (completed: boolean) => void }) {
-  const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
+function Schedule({ header, members, onEditingChange, scenario, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, rankingRows, rankingMonth, onSaved }: { header?: ReactNode; members: Member[]; onEditingChange: (rows: number[]) => void; scenario: ScheduleScenario | null; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: Dispatch<SetStateAction<Record<number, [string, string]>>>; confirmedMatches: Record<number, boolean>; setConfirmedMatches: Dispatch<SetStateAction<Record<number, boolean>>>; sessionId: string | null; canManageScores: boolean; rankingRows: RankingRow[]; rankingMonth: string; onSaved: (completed: boolean) => void }) {
+  const people = new Map(members.map((member) => [member.name, member] as const));
   const [focusSlot, setFocusSlot] = useState<number | null>(null);
   // Touch screens: a tap anywhere else clears the highlight.
   useEffect(() => {
@@ -1462,11 +1462,9 @@ function Schedule({ header, onEditingChange, scenario, drawn, scores, setScores,
   }, [focusSlot]);
   if (!scenario) return <section className="panel">{header}<div className="panel-head"><div><h2>Lịch thi đấu tự động</h2><p>Lịch chỉ được tạo khi có tối thiểu 5 thành viên và đúng tổ hợp trong thư viện lịch.</p></div></div><div className="empty-ranking">Chưa có lịch phù hợp cho danh sách điểm danh hiện tại.</div></section>;
   return <>
-    <SlotFocusContext.Provider value={{ slot: focusSlot, setSlot: setFocusSlot }}><section className="panel combined-schedule-panel">{header}
-      <div className="panel-head"><div><h2>Lịch thi đấu</h2></div><span className="count-pill schedule-count-pill">{scenario.matches.length} trận</span></div>
-      <div className="schedule-grid">{scenario.matches.map((match, i) => <Match match={match} i={i} namesBySlot={namesBySlot} key={i} />)}</div>
-    </section></SlotFocusContext.Provider>
-    <Results key={`${sessionId ?? "local"}-${scenario.id}`} onEditingChange={onEditingChange} matches={scenario.matches} drawn={drawn} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} onSaved={onSaved} />
+    <SlotFocusContext.Provider value={{ slot: focusSlot, setSlot: setFocusSlot }}>
+      <Results header={header} key={`${sessionId ?? "local"}-${scenario.id}`} onEditingChange={onEditingChange} matches={scenario.matches} drawn={drawn} people={people} scores={scores} setScores={setScores} confirmedMatches={confirmedMatches} setConfirmedMatches={setConfirmedMatches} sessionId={sessionId} canManageScores={canManageScores} onSaved={onSaved} />
+    </SlotFocusContext.Provider>
     <LiveRankingSnapshot rows={rankingRows} month={rankingMonth} />
   </>;
 }
@@ -1621,49 +1619,42 @@ function ScheduleLibrary({ scenarios, members }: { scenarios: ScheduleScenario[]
 // The number picked out on the schedule, to see every match of that player. Without a provider tokens are plain.
 const SlotFocusContext = createContext<{ slot: number | null; setSlot: Dispatch<SetStateAction<number | null>> } | null>(null);
 const canHover = () => window.matchMedia("(hover: hover)").matches;
-function SlotToken({ no, name, open }: { no: number; name?: string; open?: boolean }) {
+type MatchPerson = Pick<Member, "username" | "name" | "initials" | "color">;
+
+function SlotToken({ no, name, open, person }: { no: number; name?: string; open?: boolean; person?: MatchPerson }) {
   const focus = useContext(SlotFocusContext);
   const focusClass = !focus || focus.slot === null ? "" : focus.slot === no ? " slot-focused" : " slot-dimmed";
   const focusEvents = focus ? {
     onMouseEnter: () => { if (canHover()) focus.setSlot(no); },
     onMouseLeave: () => { if (canHover()) focus.setSlot(null); },
-    onClick: () => { if (!canHover()) focus.setSlot((current) => (current === no ? null : no)); },
+    // On touch the tap highlights this player's matches; it must not also open the match the token sits in.
+    onClick: (event: React.MouseEvent) => { if (!canHover()) { event.stopPropagation(); focus.setSlot((current) => (current === no ? null : no)); } },
   } : {};
-  return <span className={`slot-token ${open ? "level-open" : `level-${slotLevel(no)}`}${focusClass}`} {...focusEvents}><b>{no}</b>{name && <small>{name}</small>}</span>;
+  return <span className={`slot-token ${open ? "level-open" : `level-${slotLevel(no)}`}${focusClass}${person ? " has-avatar" : ""}`} {...focusEvents}>{person ? <><span className={avatarClassName("avatar slot-avatar", person)} style={avatarStyle(person)} aria-hidden="true">{person.initials}</span><span className="slot-label"><b>{no}</b>{name && <small>- {name}</small>}</span></> : <><b>{no}</b>{name && <small>{name}</small>}</>}</span>;
 }
-function TeamPair({ team, namesBySlot, open }: { team: readonly [number, number]; namesBySlot?: Record<number, string>; open?: boolean }) { return <span className="team-pair"><SlotToken no={team[0]} name={namesBySlot?.[team[0]]} open={open} /><i>+</i><SlotToken no={team[1]} name={namesBySlot?.[team[1]]} open={open} /></span>; }
+function TeamPair({ team, namesBySlot, open, people }: { team: readonly [number, number]; namesBySlot?: Record<number, string>; open?: boolean; people?: Map<string, MatchPerson> }) { const person = (slot: number) => { const name = namesBySlot?.[slot]; return name ? people?.get(name) : undefined; }; return <span className="team-pair"><SlotToken no={team[0]} name={namesBySlot?.[team[0]]} open={open} person={person(team[0])} /><i>+</i><SlotToken no={team[1]} name={namesBySlot?.[team[1]]} open={open} person={person(team[1])} /></span>; }
 function Match({ match, i, namesBySlot }: { match: ScheduleMatch; i: number; namesBySlot?: Record<number, string> }) { const open = match.type === "MỞ"; return <article className="match schedule-match-card"><div className="match-top"><b>TRẬN {String(i + 1).padStart(2, "0")}</b></div><div className="teams"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={open} /><strong>VS</strong><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={open} /></div></article>; }
-function Results({ onEditingChange, matches, drawn, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, onSaved }: { onEditingChange: (rows: number[]) => void; matches: ScheduleMatch[]; drawn: Record<string, number>; scores: Record<number, [string, string]>; setScores: Dispatch<SetStateAction<Record<number, [string, string]>>>; confirmedMatches: Record<number, boolean>; setConfirmedMatches: Dispatch<SetStateAction<Record<number, boolean>>>; sessionId: string | null; canManageScores: boolean; onSaved: (completed: boolean) => void }) {
-  const [editing, setEditing] = useState<Record<number, boolean>>({});
-  // Scores saved before "Sửa": the row keeps showing that result until the edit is saved.
-  const [savedBeforeEdit, setSavedBeforeEdit] = useState<Record<number, [string, string]>>({});
+// Lịch thi đấu: every match in one list, each row showing both teams and the saved score (green for the winners, red
+// for the losers). A row opens the match: admins enter, change or clear the score there; everyone else sees it.
+function Results({ header, onEditingChange, matches, drawn, people, scores, setScores, confirmedMatches, setConfirmedMatches, sessionId, canManageScores, onSaved }: { header?: ReactNode; onEditingChange: (rows: number[]) => void; matches: ScheduleMatch[]; drawn: Record<string, number>; people: Map<string, MatchPerson>; scores: Record<number, [string, string]>; setScores: Dispatch<SetStateAction<Record<number, [string, string]>>>; confirmedMatches: Record<number, boolean>; setConfirmedMatches: Dispatch<SetStateAction<Record<number, boolean>>>; sessionId: string | null; canManageScores: boolean; onSaved: (completed: boolean) => void }) {
+  const [openMatch, setOpenMatch] = useState<number | null>(null);
   const [saving, setSaving] = useState<number | null>(null);
-  // Score boxes shown in red: set by a wrong entry or a refused confirm, cleared when focus leaves the row's boxes.
-  const [redBoxes, setRedBoxes] = useState<Record<number, { a: boolean; b: boolean }>>({});
   const { toast, showToast, dismissToast } = useToast();
   const [clearing, setClearing] = useState<number | null>(null);
+  // While an admin has a match open, a refresh from the server leaves that match alone.
   useEffect(() => {
-    onEditingChange(Object.keys(editing).filter((row) => editing[Number(row)]).map(Number));
-  }, [editing, onEditingChange]);
+    onEditingChange(canManageScores && openMatch !== null ? [openMatch] : []);
+  }, [openMatch, canManageScores, onEditingChange]);
   const namesBySlot = Object.fromEntries(Object.entries(drawn).map(([name, no]) => [no, name])) as Record<number, string>;
   const confirmedCount = Object.values(confirmedMatches).filter(Boolean).length;
-  const saveMatch = async (match: ScheduleMatch, index: number) => {
+  // Saves the score typed in the match window; true once it is stored.
+  const saveMatch = async (match: ScheduleMatch, index: number, scoreAText: string, scoreBText: string) => {
     // Serialize score writes so monthly totals cannot lose updates.
-    if (saving !== null) return;
-    const [scoreAText, scoreBText] = scores[index] ?? ["", ""];
-    const entryError = scoreEntryError(scoreAText, scoreBText);
-    if (entryError) {
-      showToast(confirmedMatches[index] && scoreAText === "" && scoreBText === "" ? "Muốn bỏ kết quả trận này, bấm Xóa điểm." : entryError);
-      const bothValid = isScoreText(scoreAText) && isScoreText(scoreBText);
-      setRedBoxes({ ...redBoxes, [index]: { a: bothValid || !isScoreText(scoreAText), b: bothValid || !isScoreText(scoreBText) } });
-      document.getElementById(`match-score-${index}-${isScoreText(scoreAText) && !isScoreText(scoreBText) ? "b" : "a"}`)?.focus();
-      return;
-    }
-    if (!supabase || !sessionId) return showToast("Chưa có phiên Supabase để lưu kết quả.");
+    if (saving !== null) return false;
+    if (!supabase || !sessionId) { showToast("Chưa có phiên Supabase để lưu kết quả."); return false; }
     const scoreA = Number(scoreAText);
     const scoreB = Number(scoreBText);
     setSaving(index);
-    setRedBoxes({ ...redBoxes, [index]: { a: false, b: false } });
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const response = await fetch("/api/match-result", {
@@ -1672,21 +1663,23 @@ function Results({ onEditingChange, matches, drawn, scores, setScores, confirmed
         body: JSON.stringify({ sessionId, matchNo: index + 1, matchType: match.type, teamA: match.teamA, teamB: match.teamB, scoreA, scoreB, totalMatches: matches.length }),
       });
       const payload = await response.json().catch(() => ({})) as { error?: string; completed?: boolean };
-      if (!response.ok) return showToast(payload.error || "Không thể lưu kết quả trận.");
+      if (!response.ok) { showToast(payload.error || "Không thể lưu kết quả trận."); return false; }
+      setScores((current) => ({ ...current, [index]: [scoreAText, scoreBText] }));
       setConfirmedMatches((current) => ({ ...current, [index]: true }));
-      setEditing((current) => ({ ...current, [index]: false }));
       showToast(`Đã lưu trận ${index + 1} (${scoreA}–${scoreB}), BXH đã cập nhật.`, "success");
       onSaved(Boolean(payload.completed));
+      return true;
     } catch {
       showToast("Không kết nối được máy chủ, điểm chưa được lưu.");
+      return false;
     } finally {
       setSaving(null);
     }
   };
   // Takes a saved result back out (e.g. entered on the wrong match); the ranking and ELO follow.
   const clearMatch = async (index: number) => {
-    if (saving !== null) return;
-    if (!supabase || !sessionId) return showToast("Chưa có phiên Supabase để lưu kết quả.");
+    if (saving !== null) return false;
+    if (!supabase || !sessionId) { showToast("Chưa có phiên Supabase để lưu kết quả."); return false; }
     setSaving(index);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -1696,53 +1689,101 @@ function Results({ onEditingChange, matches, drawn, scores, setScores, confirmed
         body: JSON.stringify({ sessionId, matchNo: index + 1, totalMatches: matches.length }),
       });
       const payload = await response.json().catch(() => ({})) as { error?: string };
-      if (!response.ok) return showToast(payload.error || "Không thể xóa điểm trận này.");
+      if (!response.ok) { showToast(payload.error || "Không thể xóa điểm trận này."); return false; }
       setScores((current) => {
         const remaining = { ...current };
         delete remaining[index];
         return remaining;
       });
       setConfirmedMatches((current) => ({ ...current, [index]: false }));
-      setEditing((current) => ({ ...current, [index]: false }));
-      setRedBoxes((current) => ({ ...current, [index]: { a: false, b: false } }));
       showToast(`Đã xóa điểm trận ${index + 1}, BXH đã cập nhật.`, "success");
       onSaved(false);
+      return true;
     } catch {
       showToast("Không kết nối được máy chủ, điểm chưa được xóa.");
+      return false;
     } finally {
       setSaving(null);
     }
   };
-  return <section className="panel result-entry-panel"><div className="panel-head"><div><h2>Điểm số từng trận</h2></div><span className="count-pill match-count-pill"><b>{confirmedCount}</b><small>/{matches.length} trận</small></span></div><div className="result-list">{matches.map((match, i) => {
-    const confirmed = Boolean(confirmedMatches[i]);
-    const locked = !canManageScores || (confirmed && !editing[i]);
-    const [scoreAText = "", scoreBText = ""] = scores[i] ?? ["", ""];
-    const [savedAText, savedBText] = (editing[i] && savedBeforeEdit[i]) || [scoreAText, scoreBText];
-    const scoreAValue = Number(savedAText);
-    const scoreBValue = Number(savedBText);
-    const hasResultColor = confirmed && isScoreText(savedAText) && isScoreText(savedBText) && scoreAValue !== scoreBValue;
-    const resultClassName = hasResultColor ? (scoreAValue > scoreBValue ? " result-a-wins" : " result-b-wins") : "";
-    const scoreAInvalid = !locked && Boolean(redBoxes[i]?.a);
-    const scoreBInvalid = !locked && Boolean(redBoxes[i]?.b);
-    // Keeps exactly what was typed; wrong content only raises a warning and blocks the confirm.
-    const changeScore = (next: [string, string], box: "a" | "b") => {
-      const typed = next[box === "a" ? 0 : 1];
-      const wrong = typed !== "" && !isScoreText(typed);
-      setScores((current) => ({ ...current, [i]: next }));
-      setRedBoxes({ ...redBoxes, [i]: { a: scoreAInvalid, b: scoreBInvalid, [box]: wrong } });
-      if (wrong) showToast(SCORE_FORMAT_ERROR);
-    };
-    const scoreInputProps = { inputMode: "numeric", autoComplete: "off", required: true, disabled: locked } as const;
-    return <div className={"result-row schedule-result-row match-result-row " + (confirmed ? "confirmed" : "") + resultClassName} key={i}>
-      <div className="match-result-meta"><b>{i + 1}</b></div>
-      <div className="match-result-team match-result-team-a"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
-      <div className="match-score-controls" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setRedBoxes((current) => ({ ...current, [i]: { a: false, b: false } })); }}><input {...scoreInputProps} id={`match-score-${i}-a`} className={scoreAInvalid ? "score-invalid" : undefined} aria-invalid={scoreAInvalid} aria-label={`Điểm đội A trận ${i + 1}`} value={scoreAText} onChange={e => changeScore([e.target.value, scoreBText], "a")}/><em>:</em><input {...scoreInputProps} id={`match-score-${i}-b`} className={scoreBInvalid ? "score-invalid" : undefined} aria-invalid={scoreBInvalid} aria-label={`Điểm đội B trận ${i + 1}`} value={scoreBText} onChange={e => changeScore([scoreAText, e.target.value], "b")}/></div>
-      <div className="match-result-team match-result-team-b"><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={match.type === "MỞ"} /></div>
-      <div className={"result-actions" + (confirmed && editing[i] ? " result-actions-edit" : "")}>{canManageScores && (confirmed && !editing[i] ? <button className="soft-btn result-icon-button edit" aria-label={`Sửa điểm trận ${i + 1}`} title="Sửa" disabled={saving !== null} onClick={() => { setSavedBeforeEdit({ ...savedBeforeEdit, [i]: [scoreAText, scoreBText] }); setEditing({ ...editing, [i]: true }); }}><span className="result-action-text">Sửa</span></button> : <button className="primary result-icon-button save" aria-label={confirmed ? `Lưu lại điểm trận ${i + 1}` : `Xác nhận điểm trận ${i + 1}`} title={confirmed ? "Lưu lại" : "Xác nhận"} disabled={saving !== null} onClick={() => void saveMatch(match, i)}>{confirmed ? <span className="score-action-icon score-action-save" aria-hidden="true" /> : <span className="result-action-text">{saving === i ? "Lưu..." : "Xác nhận"}</span>}</button>)}{canManageScores && confirmed && editing[i] && <button className="soft-btn result-icon-button result-clear-button" aria-label={`Xóa điểm trận ${i + 1}`} title="Xóa điểm" disabled={saving !== null} onClick={() => setClearing(i)}><span className="score-action-icon score-action-clear" aria-hidden="true" /></button>}</div>
-    </div>;
-  })}</div><Toast toast={toast} onClose={dismissToast} />
-    <Presence show={clearing !== null}>{clearing !== null && <ConfirmActionModal title={`Xóa điểm trận ${clearing + 1}?`} message={`Kết quả ${savedBeforeEdit[clearing]?.join("–") ?? ""} sẽ bị xóa, trận trở về chưa có điểm. BXH, ELO và Phong độ được tính lại ngay.`} confirmLabel="Xóa điểm" cancelLabel="Hủy" onCancel={() => setClearing(null)} onConfirm={async () => { const index = clearing; setClearing(null); await clearMatch(index); }} />}</Presence>
+  const savedScore = (index: number): [string, string] => (confirmedMatches[index] ? scores[index] ?? ["", ""] : ["", ""]);
+  return <section className="panel result-entry-panel combined-match-panel">{header}
+    <div className="panel-head"><div><h2>Lịch thi đấu</h2><p>{canManageScores ? "Bấm vào trận để nhập hoặc sửa điểm." : "Bấm vào trận để xem tỉ số."}</p></div><span className="count-pill match-count-pill"><b>{confirmedCount}</b><small>/{matches.length} trận</small></span></div>
+    <div className="result-list">{matches.map((match, i) => {
+      const confirmed = Boolean(confirmedMatches[i]);
+      const [scoreAText, scoreBText] = savedScore(i);
+      const hasResultColor = confirmed && isScoreText(scoreAText) && isScoreText(scoreBText) && Number(scoreAText) !== Number(scoreBText);
+      const resultClassName = hasResultColor ? (Number(scoreAText) > Number(scoreBText) ? " result-a-wins" : " result-b-wins") : "";
+      const open = match.type === "MỞ";
+      return <div role="button" tabIndex={0} className={"result-row schedule-result-row match-result-row match-open-row " + (confirmed ? "confirmed" : "") + resultClassName} key={i} aria-label={`Trận ${i + 1}${confirmed ? `, tỉ số ${scoreAText}–${scoreBText}` : ", chưa có điểm"}`} onClick={() => setOpenMatch(i)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setOpenMatch(i); } }}>
+        <div className="match-result-meta"><b>{i + 1}</b></div>
+        <div className="match-result-team match-result-team-a"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={open} people={people} /></div>
+        <div className="match-score-controls" aria-hidden="true"><input readOnly disabled tabIndex={-1} value={scoreAText} /><em>:</em><input readOnly disabled tabIndex={-1} value={scoreBText} /></div>
+        <div className="match-result-team match-result-team-b"><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={open} people={people} /></div>
+        <div className="result-actions"><span className="match-open-chevron" aria-hidden="true" /></div>
+      </div>;
+    })}</div><Toast toast={toast} onClose={dismissToast} />
+    <Presence show={openMatch !== null}>{openMatch !== null && matches[openMatch] && <MatchModal key={openMatch} index={openMatch} match={matches[openMatch]} namesBySlot={namesBySlot} people={people} saved={savedScore(openMatch)} confirmed={Boolean(confirmedMatches[openMatch])} canManage={canManageScores} saving={saving === openMatch} showToast={showToast} onClose={() => setOpenMatch(null)} onSave={async (a, b) => { if (await saveMatch(matches[openMatch], openMatch, a, b)) setOpenMatch(null); }} onClear={() => setClearing(openMatch)} />}</Presence>
+    <Presence show={clearing !== null}>{clearing !== null && <ConfirmActionModal title={`Xóa điểm trận ${clearing + 1}?`} message={`Kết quả ${savedScore(clearing).join("–")} sẽ bị xóa, trận trở về chưa có điểm. BXH, ELO và Phong độ được tính lại ngay.`} confirmLabel="Xóa điểm" cancelLabel="Hủy" onCancel={() => setClearing(null)} onConfirm={async () => { const index = clearing; setClearing(null); if (await clearMatch(index)) setOpenMatch(null); }} />}</Presence>
   </section>;
+}
+
+// One match, opened from Lịch thi đấu: the two teams face each other in their celebration pictures (or avatars), the
+// score between them. Admins type the score here (the keyboard only opens when a score box is tapped), save it or
+// clear it; everyone else just sees it. Winners glow green, losers red, as on the row.
+function MatchModal({ index, match, namesBySlot, people, saved, confirmed, canManage, saving, showToast, onClose, onSave, onClear }: { index: number; match: ScheduleMatch; namesBySlot: Record<number, string>; people: Map<string, MatchPerson>; saved: [string, string]; confirmed: boolean; canManage: boolean; saving: boolean; showToast: (message: string) => void; onClose: () => void; onSave: (scoreA: string, scoreB: string) => void; onClear: () => void }) {
+  const [draft, setDraft] = useState<[string, string]>(saved);
+  const [red, setRed] = useState({ a: false, b: false });
+  const shown = canManage ? draft : saved;
+  const winner = confirmed && isScoreText(saved[0]) && isScoreText(saved[1]) && Number(saved[0]) !== Number(saved[1]) ? (Number(saved[0]) > Number(saved[1]) ? "a" : "b") : null;
+  const change = (box: 0 | 1, value: string) => {
+    const next: [string, string] = box === 0 ? [value, draft[1]] : [draft[0], value];
+    setDraft(next);
+    const wrong = value !== "" && !isScoreText(value);
+    setRed((current) => ({ ...current, [box === 0 ? "a" : "b"]: wrong }));
+    if (wrong) showToast(SCORE_FORMAT_ERROR);
+  };
+  const save = () => {
+    const entryError = scoreEntryError(draft[0], draft[1]);
+    if (entryError) {
+      showToast(confirmed && draft[0] === "" && draft[1] === "" ? "Muốn bỏ kết quả trận này, bấm Xóa điểm." : entryError);
+      const bothValid = isScoreText(draft[0]) && isScoreText(draft[1]);
+      setRed({ a: bothValid || !isScoreText(draft[0]), b: bothValid || !isScoreText(draft[1]) });
+      return;
+    }
+    onSave(draft[0], draft[1]);
+  };
+  const team = (side: "a" | "b") => {
+    const slots = side === "a" ? match.teamA : match.teamB;
+    return <div className={"mm-team" + (winner ? (winner === side ? " is-win" : " is-lose") : "")}>{slots.map((slot) => {
+      const name = namesBySlot[slot];
+      const person = name ? people.get(name) : undefined;
+      const art = person ? cardArtUrl(person.username) : null;
+      return <div className="mm-player" key={slot} style={{ "--avatar-color": person?.color || "#6846e8" } as CSSProperties}>
+        <span className="mm-figure"><i className="mm-glow" aria-hidden="true" />{art ? <img src={art} alt="" decoding="async" /> : person ? <span className={avatarClassName("avatar", person)} style={avatarStyle(person)}>{person.initials}</span> : <span className="mm-slot-no">{slot}</span>}</span>
+        <span className="mm-name"><b className={`mm-no ${match.type === "MỞ" ? "level-open" : `level-${slotLevel(slot)}`}`}>{slot}</b> - {name ?? `Số ${slot}`}</span>
+      </div>;
+    })}</div>;
+  };
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`Trận ${index + 1}`} {...backdropDismissProps(onClose)}>
+    <section className="match-modal">
+      <button type="button" className="modal-close" onClick={onClose} aria-label="Đóng">×</button>
+      <div className="mm-head"><p className="eyebrow">TRẬN {String(index + 1).padStart(2, "0")}</p><h2>{confirmed ? "Kết quả trận đấu" : canManage ? "Nhập tỉ số" : "Chưa có kết quả"}</h2></div>
+      <div className="mm-board">
+        {team("a")}
+        <div className="mm-score">
+          {canManage
+            ? <><input inputMode="numeric" autoComplete="off" aria-label={`Điểm đội A trận ${index + 1}`} className={red.a ? "score-invalid" : undefined} aria-invalid={red.a} value={shown[0]} onChange={(event) => change(0, event.target.value)} /><em>:</em><input inputMode="numeric" autoComplete="off" aria-label={`Điểm đội B trận ${index + 1}`} className={red.b ? "score-invalid" : undefined} aria-invalid={red.b} value={shown[1]} onChange={(event) => change(1, event.target.value)} /></>
+            : <><b>{shown[0] || "–"}</b><em>:</em><b>{shown[1] || "–"}</b></>}
+        </div>
+        {team("b")}
+      </div>
+      {canManage && <div className="editor-actions mm-actions">
+        {confirmed ? <button type="button" className="soft-btn member-avatar-remove" disabled={saving} onClick={onClear}>Xóa điểm</button> : <button type="button" className="soft-btn" disabled={saving} onClick={onClose}>Hủy</button>}
+        <button type="button" className="primary" disabled={saving} onClick={save}>{saving ? "Đang lưu…" : "Lưu"}</button>
+      </div>}
+    </section>
+  </div>;
 }
 // Home: the latest month's champion, beside or under the next session. The card replays the celebration.
 function HomeChampionCard({ champion, monthLabel: label, onCelebrate }: { champion?: RankingRow; monthLabel: string; onCelebrate: () => void }) {
