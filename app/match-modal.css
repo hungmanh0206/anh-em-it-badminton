@@ -392,9 +392,13 @@
   border-radius: 12px;
 }
 
-/* A plain chip: only the number carries the Level's colour. */
-.match-open-row:not(.result-a-wins, .result-b-wins) .slot-token.has-avatar:not(#_):not(#_):not(#_):not(#_) {
-  background: var(--pill) !important;
+/* No tile around a player: just the avatar and "1 - Tên", on the row itself. */
+.match-open-row .slot-token.has-avatar:not(#_):not(#_):not(#_):not(#_) {
+  border-radius: 0;
+  background: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .match-open-row .slot-token .slot-avatar:not(#_):not(#_):not(#_) {
@@ -522,14 +526,6 @@
     border-radius: 9px;
   }
 
-  .match-open-row:is(.result-a-wins, .result-b-wins) .slot-token.has-avatar:not(#_):not(#_):not(#_) {
-    background: rgba(255, 255, 255, 0.8) !important;
-  }
-
-  :root[data-theme="dark"] .match-open-row:is(.result-a-wins, .result-b-wins) .slot-token.has-avatar:not(#_):not(#_):not(#_) {
-    background: rgba(0, 0, 0, 0.36) !important;
-  }
-
   .match-open-row .slot-token .slot-avatar:not(#_):not(#_):not(#_) {
     width: 24px;
     height: 24px;
@@ -572,4 +568,10 @@
   .match-open-row .match-score-controls:not(#_):not(#_):not(#_) {
     margin-top: 10px;
   }
+}
+
+/* On a saved row's green and red the Level colours would sink in, so the number takes the name's colour. */
+:root:not([data-theme="dark"]) .match-open-row:is(.result-a-wins, .result-b-wins) .slot-label > b:not(#_):not(#_):not(#_) {
+  color: #14110a !important;
+  text-shadow: none;
 }
