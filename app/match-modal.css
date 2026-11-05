@@ -1,9 +1,11 @@
 /* Lịch thi đấu (Results in app/page.tsx): read-only match rows that open MatchModal, where the score is entered. */
 
 /* ---------- Rows ---------- */
-/* The tail column now only holds a chevron, so it mirrors the number column and the score sits in the middle. */
+/* An empty tail as wide as the number column keeps the score in the middle of the row. */
 .result-entry-panel .match-result-row.match-open-row:not(#_):not(#_) {
-  --row-tail: var(--row-lead);
+  --row-lead: 30px;
+  --row-tail: 30px;
+  padding-block: 8px !important;
   cursor: pointer;
   transition: --row-sweep 640ms cubic-bezier(0.4, 0, 0.2, 1), --row-start 0s linear 640ms, --row-end 0s linear 640ms, box-shadow 220ms ease, translate 220ms ease !important;
 }
@@ -23,48 +25,6 @@
   pointer-events: none;
   opacity: 1 !important;
   -webkit-text-fill-color: currentColor;
-}
-
-.match-open-row .result-actions:not(#_):not(#_) {
-  display: grid;
-  place-items: center;
-}
-
-.match-open-chevron {
-  width: 9px;
-  height: 9px;
-  border-top: 2.5px solid var(--bar-muted);
-  border-right: 2.5px solid var(--bar-muted);
-  border-radius: 1px;
-  opacity: 0.7;
-  rotate: 45deg;
-  translate: -2px 0;
-}
-
-/* An avatar beside each player's number. */
-.slot-token.has-avatar:not(#_):not(#_):not(#_) {
-  gap: 5px;
-}
-
-.slot-token .slot-avatar:not(#_):not(#_):not(#_) {
-  flex: none;
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  font-size: 9px;
-}
-
-@media (max-width: 560px) {
-  .slot-token .slot-avatar:not(#_):not(#_):not(#_) {
-    width: 20px;
-    height: 20px;
-    min-width: 20px;
-    font-size: 8px;
-  }
-
-  .match-open-chevron {
-    display: none;
-  }
 }
 
 /* ---------- The match window ---------- */
@@ -381,31 +341,6 @@
   }
 }
 
-/* ---------- Player chips in the rows: avatar on top, then "number · name" ---------- */
-.slot-token.has-avatar:not(#_):not(#_):not(#_) {
-  display: inline-flex !important;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-
-.slot-label {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-  white-space: nowrap;
-}
-
-.slot-token.has-avatar .slot-label > b:not(#_):not(#_) {
-  font-size: 12px !important;
-  line-height: 1.1;
-}
-
-.slot-token.has-avatar .slot-label > small:not(#_):not(#_) {
-  margin: 0 !important;
-  line-height: 1.1;
-}
-
 /* iPad: the window spans the screen, the pictures in between the phone and desktop sizes. */
 @media (min-width: 561px) and (max-width: 1023px) {
   .match-modal {
@@ -436,5 +371,205 @@
     padding: 0 14px !important;
     border-radius: 10px !important;
     font-size: 12.5px;
+  }
+}
+
+/* ---------- Player chips in the rows: the avatar on top, "1 - Tên" under it, the number in its Level's colour ---------- */
+.match-open-row .team-pair:not(#_):not(#_):not(#_) {
+  gap: 6px;
+}
+
+.match-open-row .slot-token.has-avatar:not(#_):not(#_):not(#_) {
+  display: inline-flex !important;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 0;
+  padding: 5px 6px !important;
+  border-radius: 12px;
+}
+
+/* A plain chip: only the number carries the Level's colour. */
+.match-open-row:not(.result-a-wins, .result-b-wins) .slot-token.has-avatar:not(#_):not(#_):not(#_):not(#_) {
+  background: var(--pill) !important;
+}
+
+.match-open-row .slot-token .slot-avatar:not(#_):not(#_):not(#_) {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  font-size: 11px;
+}
+
+.slot-label {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.match-open-row .slot-label > b:not(#_):not(#_):not(#_) {
+  display: inline;
+  width: auto;
+  height: auto;
+  margin: 0;
+  background: none !important;
+  box-shadow: none !important;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.match-open-row .slot-label > small:not(#_):not(#_):not(#_) {
+  min-width: 0;
+  max-width: none;
+  margin: 0 !important;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1023px) {
+  .match-open-row .slot-label > :is(b, small):not(#_):not(#_):not(#_) {
+    font-size: 14px;
+  }
+
+  .match-open-row .slot-token .slot-avatar:not(#_):not(#_):not(#_) {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+  }
+}
+
+/* Between phone and iPad width: a step smaller, and the rows lose their side columns' spare room. */
+@media (min-width: 561px) and (max-width: 780px) {
+  .result-entry-panel .match-result-row.match-open-row:not(#_):not(#_) {
+    --row-lead: 18px;
+    --row-tail: 18px;
+    gap: 6px;
+    padding-inline: 8px !important;
+  }
+
+  .match-open-row .team-pair:not(#_):not(#_):not(#_) {
+    gap: 3px;
+  }
+
+  .match-open-row .slot-token.has-avatar:not(#_):not(#_):not(#_) {
+    padding: 5px 3px !important;
+  }
+
+  .match-open-row .slot-label > :is(b, small):not(#_):not(#_):not(#_) {
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 561px) and (max-width: 640px) {
+  .match-open-row .slot-label > :is(b, small):not(#_):not(#_):not(#_) {
+    font-size: 11px;
+  }
+}
+
+/* Phones: the same chip, smaller, and the rows give the teams all the width they can. */
+@media (max-width: 560px) {
+  /* The match number sits above the score, so the teams get the row's whole width. */
+  .result-entry-panel .match-result-row.match-open-row:not(#_):not(#_) {
+    --row-lead: 0px;
+    --row-tail: 0px;
+    grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr) !important;
+    grid-template-areas: "team-a score team-b";
+    gap: 4px;
+    padding: 8px 6px !important;
+  }
+
+  .match-open-row .match-result-meta:not(#_):not(#_):not(#_) {
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    z-index: 1;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    font-size: 11px;
+    translate: -50% 0;
+  }
+
+  .match-open-row .match-score-controls:not(#_):not(#_):not(#_) {
+    margin-top: 12px;
+  }
+
+  .match-open-row .team-pair:not(#_):not(#_):not(#_) {
+    gap: 3px;
+  }
+
+  .match-open-row .team-pair > i:not(#_):not(#_) {
+    display: none;
+  }
+
+  .match-open-row .slot-token.has-avatar:not(#_):not(#_):not(#_) {
+    gap: 2px;
+    padding: 4px 2px !important;
+    border-radius: 9px;
+  }
+
+  .match-open-row:is(.result-a-wins, .result-b-wins) .slot-token.has-avatar:not(#_):not(#_):not(#_) {
+    background: rgba(255, 255, 255, 0.8) !important;
+  }
+
+  :root[data-theme="dark"] .match-open-row:is(.result-a-wins, .result-b-wins) .slot-token.has-avatar:not(#_):not(#_):not(#_) {
+    background: rgba(0, 0, 0, 0.36) !important;
+  }
+
+  .match-open-row .slot-token .slot-avatar:not(#_):not(#_):not(#_) {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    font-size: 9px;
+  }
+
+  .slot-label {
+    gap: 2px;
+  }
+
+  .match-open-row .slot-label > :is(b, small):not(#_):not(#_):not(#_) {
+    font-size: 10px;
+  }
+}
+
+/* Narrow phones: a team's two players stacked, each chip with its avatar beside the name, so no name is cut. */
+@media (max-width: 380px) {
+  .match-open-row .team-pair:not(#_):not(#_):not(#_) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .match-open-row .slot-token.has-avatar:not(#_):not(#_):not(#_) {
+    flex: none;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 4px;
+    width: 100%;
+    padding: 3px 4px !important;
+  }
+
+  .match-open-row .slot-token .slot-avatar:not(#_):not(#_):not(#_) {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    font-size: 8px;
+  }
+
+  .match-open-row .match-score-controls:not(#_):not(#_):not(#_) {
+    margin-top: 10px;
   }
 }

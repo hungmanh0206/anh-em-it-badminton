@@ -1720,7 +1720,6 @@ function Results({ header, onEditingChange, matches, drawn, people, scores, setS
         <div className="match-result-team match-result-team-a"><TeamPair team={match.teamA} namesBySlot={namesBySlot} open={open} people={people} /></div>
         <div className="match-score-controls" aria-hidden="true"><input readOnly disabled tabIndex={-1} value={scoreAText} /><em>:</em><input readOnly disabled tabIndex={-1} value={scoreBText} /></div>
         <div className="match-result-team match-result-team-b"><TeamPair team={match.teamB} namesBySlot={namesBySlot} open={open} people={people} /></div>
-        <div className="result-actions"><span className="match-open-chevron" aria-hidden="true" /></div>
       </div>;
     })}</div><Toast toast={toast} onClose={dismissToast} />
     <Presence show={openMatch !== null}>{openMatch !== null && matches[openMatch] && <MatchModal key={openMatch} index={openMatch} match={matches[openMatch]} namesBySlot={namesBySlot} people={people} saved={savedScore(openMatch)} confirmed={Boolean(confirmedMatches[openMatch])} canManage={canManageScores} saving={saving === openMatch} showToast={showToast} onClose={() => setOpenMatch(null)} onSave={async (a, b) => { if (await saveMatch(matches[openMatch], openMatch, a, b)) setOpenMatch(null); }} onClear={() => setClearing(openMatch)} />}</Presence>
