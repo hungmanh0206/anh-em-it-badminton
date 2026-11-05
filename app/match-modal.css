@@ -420,3 +420,31 @@
 
 
 }
+
+/* "Xóa điểm" reads as a delete: soft red glass with red text, the same size as "Lưu". */
+.mm-actions .member-avatar-remove:not(:disabled):not(#_):not(#_):not(#_) {
+  background: rgba(239, 68, 68, 0.12) !important;
+  box-shadow: none !important;
+  color: #d63f3f !important;
+}
+
+:root[data-theme="dark"] .mm-actions .member-avatar-remove:not(:disabled):not(#_):not(#_):not(#_) {
+  background: rgba(239, 68, 68, 0.18) !important;
+  color: #ff8a8a !important;
+}
+
+/* iPad and phones: small buttons, side by side in the middle, taking little room. */
+@media (max-width: 1023px) {
+  .mm-actions:not(#_):not(#_) {
+    gap: 8px;
+  }
+
+  .mm-actions button:not(#_):not(#_):not(#_) {
+    width: auto;
+    min-width: 82px;
+    min-height: 34px;
+    padding: 0 14px !important;
+    border-radius: 10px !important;
+    font-size: 12.5px;
+  }
+}
