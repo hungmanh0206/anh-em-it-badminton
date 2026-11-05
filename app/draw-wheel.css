@@ -1,18 +1,19 @@
-/* Draw wheel (app/ui/draw-wheel.tsx). Everything is sized from --wheel-size; colours are tokens for each theme. */
+/* Draw wheel (app/ui/draw-wheel.tsx), drawn like a glossy game prize wheel: a thick bevelled gold rim with bulbs, a
+   chunky pointer, a recessed disc in gold and brown, white buttons for the numbers and a gold-ringed brown hub.
+   Everything is sized from --wheel-size and looks the same in both themes. */
 .prize-wheel {
-  --wheel-size: clamp(148px, 38vw, 252px);
-  --rim: conic-gradient(from 24deg, #b97a12, #ffe9a3 9%, #e9a824 21%, #fff1b8 34%, #c98a17 48%, #ffe08a 62%, #b97a12 76%, #ffefb0 90%, #b97a12);
-  --rim-shadow: 0 14px 30px rgba(150, 100, 10, 0.3);
-  --disc-shade: radial-gradient(circle, transparent 52%, rgba(150, 100, 10, 0.16) 100%);
-  --disc-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.5), transparent 46%);
-  --disc-dash: rgba(170, 115, 15, 0.42);
-  --hub-face: radial-gradient(circle at 38% 28%, #fffdf6, #fdf0cf 70%, #f7dfa8);
-  --hub-text: #4a2a05;
-  --hub-stroke: #f0b429;
-  --hub-pill: linear-gradient(180deg, #ffd566, #f7b92e);
-  --hub-pill-text: #5a3704;
-  --badge-face: radial-gradient(circle at 36% 26%, #ffffff, #eef4ff 78%);
-  --badge-shadow: 0 3px 8px rgba(40, 60, 120, 0.3);
+  --wheel-size: clamp(148px, 38vw, 260px);
+  --wheel-1: #f7b917;
+  --wheel-2: #5c3a17;
+  --wheel-3: #f4ad0c;
+  --wheel-4: #4f3113;
+  --wheel-odd: #a8691a;
+  --gold-top: #ffe066;
+  --gold-mid: #f7b417;
+  --gold-low: #e08f00;
+  --rim-shadow: 0 calc(var(--wheel-size) * 0.04) calc(var(--wheel-size) * 0.08) rgba(120, 70, 0, 0.35);
+  --hub-face: radial-gradient(circle at 50% 30%, #74491f, #4d3013 72%);
+  --hub-text: #ffd02b;
   position: relative;
   flex: none;
   width: var(--wheel-size);
@@ -21,39 +22,44 @@
 }
 
 :root[data-theme="dark"] .prize-wheel {
-  --rim-shadow: 0 0 34px rgba(255, 190, 60, 0.34), 0 14px 32px rgba(0, 0, 0, 0.6);
-  --disc-shade: radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.26) 100%);
-  --disc-sheen: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent 46%);
-  --disc-dash: rgba(255, 236, 170, 0.6);
-  --hub-face: radial-gradient(circle at 38% 28%, #54401a, #2a1e0b 70%, #1a1206);
-  --hub-text: #ffe9a8;
-  --hub-stroke: transparent;
-  --hub-glow: 0 0 14px rgba(255, 200, 80, 0.75);
-  --hub-pill-text: #3d2500;
-  --badge-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
+  --rim-shadow: 0 0 calc(var(--wheel-size) * 0.12) rgba(255, 190, 60, 0.3), 0 calc(var(--wheel-size) * 0.04) calc(var(--wheel-size) * 0.09) rgba(0, 0, 0, 0.6);
 }
 
 /* ---------- Gold rim and bulbs ---------- */
+/* The rim is raised: light along its top edge, shade along its foot; a groove inside holds the disc. */
 .prize-rim {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: var(--rim);
-  box-shadow: var(--rim-shadow);
+  background: linear-gradient(180deg, var(--gold-top), var(--gold-mid) 52%, var(--gold-low));
+  box-shadow:
+    var(--rim-shadow),
+    inset 0 calc(var(--wheel-size) * 0.012) calc(var(--wheel-size) * 0.008) rgba(255, 255, 255, 0.65),
+    inset 0 calc(var(--wheel-size) * -0.018) calc(var(--wheel-size) * 0.025) rgba(150, 80, 0, 0.55);
+}
+
+.prize-rim::after {
+  content: "";
+  position: absolute;
+  inset: 7.5%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #c97a00, #ffd04a);
+  box-shadow: inset 0 calc(var(--wheel-size) * 0.012) calc(var(--wheel-size) * 0.02) rgba(110, 55, 0, 0.6);
 }
 
 .prize-rim i {
-  --bulb-size: calc(var(--wheel-size) * 0.026);
+  --bulb-size: calc(var(--wheel-size) * 0.036);
   position: absolute;
   top: 50%;
   left: 50%;
+  z-index: 1;
   width: var(--bulb-size);
   height: var(--bulb-size);
   margin: calc(var(--bulb-size) / -2);
   border-radius: 50%;
-  background: #fffbe6;
-  box-shadow: 0 0 calc(var(--wheel-size) * 0.03) 1px rgba(255, 236, 160, 0.95);
-  transform: rotate(calc(var(--bulb) * 30deg)) translateY(calc(var(--wheel-size) * -0.463));
+  background: radial-gradient(circle at 40% 35%, #ffffff, #fff6c8 60%, #ffe27a);
+  box-shadow: 0 0 calc(var(--wheel-size) * 0.035) calc(var(--wheel-size) * 0.004) rgba(255, 245, 190, 0.95);
+  transform: rotate(calc(var(--bulb) * 30deg + 15deg)) translateY(calc(var(--wheel-size) * -0.462));
   animation: prizeBulb 2.4s ease-in-out calc(var(--bulb) * 200ms) infinite;
 }
 
@@ -63,27 +69,40 @@
   animation-delay: calc(var(--bulb) * 40ms);
 }
 
-/* ---------- Pointer ---------- */
+/* ---------- Pointer: a glossy gold arrow on a tab, pointing into the wheel ---------- */
 .prize-pointer {
-  --pointer-size: calc(var(--wheel-size) * 0.1);
+  --pointer-w: calc(var(--wheel-size) * 0.15);
   position: absolute;
-  top: calc(var(--pointer-size) * -0.3);
+  top: calc(var(--wheel-size) * -0.045);
   left: 50%;
   z-index: 3;
-  width: var(--pointer-size);
-  height: calc(var(--pointer-size) * 1.1);
-  margin-left: calc(var(--pointer-size) / -2);
-  background: linear-gradient(180deg, #fff1b8, #e9a824 62%, #b97a12);
-  clip-path: polygon(0 0, 100% 0, 100% 34%, 50% 100%, 0 34%);
-  filter: drop-shadow(0 2px 3px rgba(90, 55, 0, 0.5));
+  width: var(--pointer-w);
+  height: calc(var(--pointer-w) * 1.05);
+  margin-left: calc(var(--pointer-w) / -2);
+  background: linear-gradient(180deg, #fff2a6 0%, #ffd23a 30%, #f5a800 78%, #d98a00);
+  clip-path: polygon(8% 0, 92% 0, 100% 16%, 100% 30%, 56% 96%, 50% 100%, 44% 96%, 0 30%, 0 16%);
+  filter: drop-shadow(0 calc(var(--wheel-size) * 0.012) calc(var(--wheel-size) * 0.012) rgba(110, 60, 0, 0.55));
+}
+
+/* A highlight down its face, for the bevel. */
+.prize-pointer::after {
+  content: "";
+  position: absolute;
+  top: 10%;
+  left: 30%;
+  width: 22%;
+  height: 46%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0));
 }
 
 /* ---------- Turning disc ---------- */
 .prize-disc {
   position: absolute;
-  inset: 8.5%;
+  inset: 9%;
   border-radius: 50%;
-  background: var(--disc-sheen), var(--disc-shade), var(--wheel-segments);
+  background: radial-gradient(circle, transparent 60%, rgba(50, 25, 0, 0.32) 100%), var(--wheel-segments);
+  box-shadow: inset 0 calc(var(--wheel-size) * 0.02) calc(var(--wheel-size) * 0.04) rgba(50, 25, 0, 0.45);
   animation: prizeDiscIn 260ms ease-out;
 }
 
@@ -92,7 +111,7 @@
   content: "";
   position: absolute;
   inset: 12.6%;
-  border: 1.5px dashed var(--disc-dash);
+  border: 1.5px dashed rgba(255, 255, 255, 0.7);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -102,7 +121,7 @@
 }
 
 .prize-slot {
-  --badge-size: calc(var(--wheel-size) * 0.17);
+  --badge-size: calc(var(--wheel-size) * 0.19);
   position: absolute;
   top: 50%;
   left: 50%;
@@ -110,33 +129,38 @@
   width: var(--badge-size);
   height: var(--badge-size);
   margin: calc(var(--badge-size) / -2);
-  transform: rotate(var(--slot-angle)) translateY(calc(var(--wheel-size) * -0.31)) rotate(calc(var(--slot-angle) * -1));
+  transform: rotate(var(--slot-angle)) translateY(calc(var(--wheel-size) * -0.3)) rotate(calc(var(--slot-angle) * -1));
 }
 
+/* White buttons, domed: a bright top, a soft shade underneath and a drop shadow. The number keeps its Level colour. */
 .prize-badge {
   --badge-glow: rgba(70, 140, 255, 0.75);
-  --badge-text: #1668e3;
+  --badge-text: #1560d4;
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: var(--badge-face);
-  box-shadow: var(--badge-shadow), 0 0 calc(var(--wheel-size) * 0.03) var(--badge-glow);
+  background: radial-gradient(circle at 38% 26%, #ffffff, #f6f6f4 55%, #dcdcd8);
+  box-shadow:
+    0 calc(var(--wheel-size) * 0.012) 0 rgba(150, 140, 120, 0.55),
+    0 calc(var(--wheel-size) * 0.024) calc(var(--wheel-size) * 0.04) rgba(40, 20, 0, 0.38),
+    inset 0 calc(var(--wheel-size) * -0.008) calc(var(--wheel-size) * 0.012) rgba(0, 0, 0, 0.12);
   color: var(--badge-text);
-  font-size: calc(var(--wheel-size) * 0.1);
+  font-size: calc(var(--wheel-size) * 0.105);
   font-weight: 1000;
   line-height: 1;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .prize-badge.level-2 {
   --badge-glow: rgba(40, 190, 120, 0.75);
-  --badge-text: #0f9a5c;
+  --badge-text: #138a3d;
 }
 
 .prize-badge.level-open {
   --badge-glow: rgba(255, 183, 0, 0.8);
-  --badge-text: #b8760e;
+  --badge-text: #c27a00;
 }
 
 .is-spinning .prize-badge {
@@ -148,16 +172,19 @@
   animation: prizeSpinBack var(--spin-ms) both, prizeBadgeWin 620ms ease-out calc(var(--spin-ms) - 620ms) both;
 }
 
-/* ---------- Hub ---------- */
+/* ---------- Hub: a raised gold ring around a brown face ---------- */
 .prize-hub {
   position: absolute;
-  inset: 28.5%;
+  inset: 29%;
   z-index: 2;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--rim);
-  box-shadow: 0 calc(var(--wheel-size) * 0.02) calc(var(--wheel-size) * 0.05) rgba(90, 55, 0, 0.42);
+  background: linear-gradient(180deg, var(--gold-top), var(--gold-mid) 55%, var(--gold-low));
+  box-shadow:
+    0 calc(var(--wheel-size) * 0.022) calc(var(--wheel-size) * 0.05) rgba(60, 30, 0, 0.5),
+    inset 0 calc(var(--wheel-size) * 0.008) calc(var(--wheel-size) * 0.006) rgba(255, 255, 255, 0.7),
+    inset 0 calc(var(--wheel-size) * -0.01) calc(var(--wheel-size) * 0.016) rgba(150, 80, 0, 0.55);
 }
 
 .prize-hub-face {
@@ -166,29 +193,29 @@
   align-content: center;
   justify-items: center;
   gap: calc(var(--wheel-size) * 0.012);
-  width: 88%;
-  height: 88%;
+  width: 84%;
+  height: 84%;
   border-radius: 50%;
   background: var(--hub-face);
-  box-shadow: inset 0 2px 6px rgba(120, 80, 10, 0.26);
+  box-shadow: inset 0 calc(var(--wheel-size) * 0.012) calc(var(--wheel-size) * 0.03) rgba(0, 0, 0, 0.55);
 }
 
+/* The number in raised gold. */
 .prize-hub-face b {
   color: var(--hub-text);
   font-size: calc(var(--wheel-size) * 0.17);
   font-weight: 1000;
   line-height: 0.92;
   letter-spacing: -0.04em;
-  text-shadow: var(--hub-glow, none);
-  -webkit-text-stroke: 1.5px var(--hub-stroke);
-  paint-order: stroke fill;
+  text-shadow: 0 calc(var(--wheel-size) * 0.01) 0 #b06a00, 0 calc(var(--wheel-size) * 0.018) calc(var(--wheel-size) * 0.02) rgba(0, 0, 0, 0.45);
 }
 
 .prize-hub-face small:not(#_):not(#_):not(#_) {
   padding: calc(var(--wheel-size) * 0.008) calc(var(--wheel-size) * 0.028);
   border-radius: 999px;
-  background: var(--hub-pill);
-  color: var(--hub-pill-text) !important;
+  background: linear-gradient(180deg, #ffe266, #f5ac0a);
+  box-shadow: 0 calc(var(--wheel-size) * 0.006) calc(var(--wheel-size) * 0.012) rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  color: #4a2b00 !important;
   font-size: max(8px, calc(var(--wheel-size) * 0.046));
   font-weight: 900;
   line-height: 1.3;

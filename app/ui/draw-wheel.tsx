@@ -12,7 +12,9 @@ const segmentGradient = (count: number) => {
   return `conic-gradient(${Array.from({ length: safeCount }, (_, index) => {
     const start = (index * 360) / safeCount;
     const end = ((index + 1) * 360) / safeCount;
-    return `${colors[index % colors.length]} ${start}deg ${end}deg`;
+    // An odd count would put two alike segments side by side where the circle closes; the last takes its own tone.
+    const color = safeCount % 2 === 1 && safeCount > 1 && index === safeCount - 1 ? "var(--wheel-odd)" : colors[index % colors.length];
+    return `${color} ${start}deg ${end}deg`;
   }).join(", ")})`;
 };
 
