@@ -595,7 +595,7 @@
     background: var(--club-gold-50) !important
 }
 :root[data-theme="dark"] .attendance-actions .soft-btn {
-    border: 2px solid var(--club-gold-600) !important;
+    border: 0 !important;
     background: linear-gradient(180deg, var(--club-gold-300), var(--club-gold-500)) !important;
     color: #1a1408 !important;
     box-shadow: var(--club-shadow-gold) !important
@@ -1362,8 +1362,16 @@
         border-left: 0 !important
     }
 }
-:root[data-theme="dark"] .title-date {
+:root[data-theme="dark"] .title-date:not(#_) {
+    border-radius: 11px;
+    background: var(--glass-card);
+    box-shadow: var(--glass-lift-card);
     color: var(--bar-accent)
+}
+@media (max-width: 560px) {
+    :root[data-theme="dark"] .title-date:not(#_) {
+        border-radius: 10px
+    }
 }
 :root[data-theme="dark"] .rules-section-title {
     color: hsla(42, 20%, 95%, 1)
@@ -2765,6 +2773,18 @@
 }
 :root[data-theme="dark"] .photo-list-main small {
     color: hsla(42, 20%, 76%, 1)
+}
+:root[data-theme="dark"] .photo-list-actions .photo-icon-btn:not(#_) {
+    border-radius: 11px
+}
+:root[data-theme="dark"] .photo-action-icon {
+    background: center / contain no-repeat
+}
+:root[data-theme="dark"] .photo-action-rename {
+    background-image: url("/app-icons/rename.png")
+}
+:root[data-theme="dark"] .photo-action-delete {
+    background-image: url("/app-icons/score-clear.png")
 }
 :root[data-theme="dark"] .photo-list-error {
     color: hsla(3, 59%, 74%, 1)

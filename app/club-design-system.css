@@ -243,7 +243,7 @@ header {
 }
 
 .attendance-actions .soft-btn {
-  border: 2px solid var(--club-gold-600) !important;
+  border: 0 !important;
   background: linear-gradient(180deg, var(--club-gold-300), var(--club-gold-500)) !important;
   color: var(--club-ink-950) !important;
   box-shadow: var(--club-shadow-gold) !important;
