@@ -1713,7 +1713,7 @@ function Results({ header, scenario, onEditingChange, matches, drawn, people, sc
   };
   const savedScore = (index: number): [string, string] => (confirmedMatches[index] ? scores[index] ?? ["", ""] : ["", ""]);
   return <section className="panel result-entry-panel combined-match-panel">{header}
-    <div className="panel-head"><div><h2>Lịch thi đấu</h2><SchedulePick scenario={scenario} /><p>{canManageScores ? "Bấm vào trận để nhập hoặc sửa điểm." : "Bấm vào trận để xem tỉ số."}</p></div><span className="count-pill match-count-pill"><b>{confirmedCount}</b><small>/{matches.length} trận</small></span></div>
+    <div className="panel-head"><div><h2>Lịch thi đấu</h2><SchedulePick scenario={scenario} /></div><span className="count-pill match-count-pill"><b>{confirmedCount}</b><small>/{matches.length} trận</small></span></div>
     <div className="result-list">{matches.map((match, i) => {
       const confirmed = Boolean(confirmedMatches[i]);
       const [scoreAText, scoreBText] = savedScore(i);

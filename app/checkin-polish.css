@@ -156,10 +156,6 @@
 .panel-head .schedule-pick:not(#_):not(#_):not(#_) {
   display: block !important;
   margin: 2px 0 0;
-  color: var(--bar-text);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.4;
 }
 
 .schedule-pick b {
