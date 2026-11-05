@@ -459,14 +459,16 @@ export default function Home() {
   const drawOpen = ["checked_in", "drawn", "scheduled", "completed"].includes(sessionStatus);
   const scheduleOpen = ["scheduled", "completed"].includes(sessionStatus);
   const steps = ["Điểm danh", "Chọn số", "Lịch thi đấu"];
-  // Whether the workflow tab `next` can be opened right now (mirrors the checks in goStep).
+  // Whether the workflow tab `next` can be opened right now (mirrors the checks in goStep). Chọn số opens only after
+  // "Xác nhận điểm danh & mở chọn số" (status checked_in or later) and Lịch thi đấu only after "Tạo lịch thi đấu"
+  // (status scheduled or completed), for admins as for everyone else; finishing the check-in alone opens neither.
   const canGoStep = (next: number) => {
     if (next === 0) return true;
     const isManager = isScoreManagerRole(activeUser?.role);
     if (!isManager && !signedInMemberPresent) return false;
     if (next > step && !isManager) return next === 1 ? drawOpen : next === 2 ? scheduleOpen && Boolean(currentScheduleScenario) : false;
     if (next > step + 1) return false;
-    if (next === 1 && !drawOpen && (!isCheckinWindowOpen || !canSchedule || !allAttendanceDone)) return false;
+    if (next === 1 && !drawOpen) return false;
     if (next === 2 && (!scheduleOpen || !currentScheduleScenario || !allDrawn)) return false;
     return true;
   };
@@ -485,7 +487,7 @@ export default function Home() {
       if (next === 2 && scheduleOpen && currentScheduleScenario) return setStep(2);
       return;
     }
-    if (next > step + 1 || (next === 1 && !drawOpen && (!isCheckinWindowOpen || !canSchedule || !allAttendanceDone)) || (next === 2 && (!scheduleOpen || !currentScheduleScenario || !allDrawn))) return;
+    if (next > step + 1 || (next === 1 && !drawOpen) || (next === 2 && (!scheduleOpen || !currentScheduleScenario || !allDrawn))) return;
     setStep(next);
   };
   const closeCheckinPopup = () => {
