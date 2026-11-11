@@ -378,3 +378,22 @@
     font-size: 12px;
   }
 }
+
+/* L1 / L2 chips beside a name: blue for Level 1, green for Level 2, as everywhere else. */
+.rank-row .level.level-chip-1:not(#_):not(#_):not(#_) {
+  background: var(--tile-1) !important;
+  color: #1560d4 !important;
+}
+
+.rank-row .level.level-chip-2:not(#_):not(#_):not(#_) {
+  background: var(--tile-2) !important;
+  color: #138a3d !important;
+}
+
+:root[data-theme="dark"] .rank-row .level.level-chip-1:not(#_):not(#_):not(#_) {
+  color: #93c5fd !important;
+}
+
+:root[data-theme="dark"] .rank-row .level.level-chip-2:not(#_):not(#_):not(#_) {
+  color: #86efac !important;
+}
