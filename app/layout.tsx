@@ -48,6 +48,7 @@ import "./hall-of-fame.css";
 import "./champion-card.css";
 import "./match-modal.css";
 import "./login-pattern.css";
+import "./ranking-mobile-table.css";
 import "./member-cards.css";
 import "./modal-desktop.css";
 import "./ranking-pages.css";

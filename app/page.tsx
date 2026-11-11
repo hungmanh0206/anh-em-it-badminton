@@ -2304,6 +2304,58 @@ async function downloadEloImage(rows: EloRankingRow[]) {
   drawImageFooter(ctx, cardX, width, height, palette);
   saveImage(canvas, `Bảng ELO ${new Date().toLocaleDateString("vi-VN").replaceAll("/", "-")}.png`);
 }
+// Phones: the month table as on desktop, in one of three views (short, full, form). The rank and the
+// member stay pinned while the other columns swipe sideways; the scrollbar itself is hidden.
+type MobileRankView = "short" | "full" | "form";
+const mobileRankViewKey = "aemit-ranking-mobile-view";
+const mobileRankViews: { key: MobileRankView; label: string }[] = [{ key: "short", label: "Ngắn" }, { key: "full", label: "Đầy đủ" }, { key: "form", label: "Phong độ" }];
+function MobileRankTable({ rows, form, elo, hasRankingData }: { rows: RankingRow[]; form: FormByUsername; elo: Record<string, number>; hasRankingData: boolean }) {
+  const [view, setView] = useState<MobileRankView>("short");
+  const tabsRef = useSlidingIndicator<HTMLDivElement>(view);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(mobileRankViewKey);
+      if (saved === "full" || saved === "form") window.queueMicrotask(() => setView(saved));
+    } catch {}
+  }, []);
+  const choose = (next: MobileRankView) => {
+    setView(next);
+    try { localStorage.setItem(mobileRankViewKey, next); } catch {}
+  };
+  const signed = (value: number) => `${value > 0 ? "+" : ""}${value}`;
+  const columns: { key: string; label: string; cell: (row: RankingRow) => ReactNode }[] = view === "form"
+    ? [{ key: "form", label: "Phong độ", cell: (row) => <FormBadges form={row.username ? form[row.username] : undefined} className="bxh-form" /> }]
+    : [
+      { key: "points", label: "Điểm", cell: (row) => <b className="bxh-points">{row.points}</b> },
+      ...(view === "full" ? [
+        { key: "won", label: "Điểm thắng", cell: (row: RankingRow) => row.pointsWon },
+        { key: "lost", label: "Điểm thua", cell: (row: RankingRow) => row.pointsLost },
+      ] : []),
+      { key: "diff", label: "Hiệu số", cell: (row) => <span className={row.pointDiff >= 0 ? "positive" : "negative"}>{signed(row.pointDiff)}</span> },
+      { key: "matches", label: "Số trận", cell: (row) => row.matches },
+      ...(view === "full" ? [{ key: "elo", label: "ELO", cell: (row: RankingRow) => <span className="bxh-elo">{formatElo(row.username ? elo[row.username] : undefined)}</span> }] : []),
+    ];
+  return <div className="bxh-m">
+    <div ref={tabsRef} className="bxh-tabs" role="tablist" aria-label="Kiểu hiển thị BXH">
+      {mobileRankViews.map((item) => <button key={item.key} type="button" role="tab" aria-selected={view === item.key} className={view === item.key ? "active" : ""} onClick={() => choose(item.key)}>{item.label}</button>)}
+      <i className="slide-indicator" aria-hidden="true" />
+    </div>
+    <div className={`bxh-scroll view-${view}`}>
+      <table className="bxh-table">
+        <thead><tr><th className="c-pos">Vị trí</th><th className="c-name">Thành viên</th>{columns.map((column) => <th key={column.key} className={`c-${column.key}`}>{column.label}</th>)}</tr></thead>
+        <tbody>{rows.map((row, i) => {
+          const top = hasRankingData && i < 3 ? i + 1 : 0;
+          return <tr key={row.name} className={top ? `top-${top}` : undefined}>
+            <td className="c-pos">{top ? <span className={`bxh-medal bxh-medal-${top}`} aria-label={`Hạng ${top}`} /> : <span className="bxh-rank">{i + 1}</span>}</td>
+            <td className="c-name"><span className="bxh-person"><span className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</span><b>{row.name}</b><span className={`level level-chip-${row.level === 1 ? 1 : 2}`}>L{row.level}</span></span></td>
+            {columns.map((column) => <td key={column.key} className={`c-${column.key}`}>{column.cell(row)}</td>)}
+          </tr>;
+        })}</tbody>
+      </table>
+    </div>
+  </div>;
+}
+
 function Ranking({ month, rows, form, elo, onMonthChange, monthOptions, isAdmin, closeStatus, closeNotice, closingMonth, onCloseMonth }: { month: string; rows: RankingRow[]; form: FormByUsername; elo: Record<string, number>; onMonthChange: (month: string) => void; monthOptions: string[]; isAdmin: boolean; closeStatus: MonthCloseStatus | null; closeNotice: string; closingMonth: boolean; onCloseMonth: () => void }) {
   const hasRankingData = rows.some((row) => !row.placeholder && row.matches > 0);
   return <section className="ranking">
@@ -2321,6 +2373,7 @@ function Ranking({ month, rows, form, elo, onMonthChange, monthOptions, isAdmin,
       const isTopRank = hasRankingData && i < 3;
       return <div className={"rank-row rank-columns " + (isTopRank ? "top-rank top-" + (i + 1) : "")} key={row.name}><b className={isTopRank ? "medal m" + i : "rank-number"}>{i + 1}</b><div className="person"><div className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</div><b>{row.name}</b><span className={`level level-chip-${row.level === 1 ? 1 : 2}`}>L{row.level}</span><span className="rank-elo-chip">ELO {formatElo(row.username ? elo[row.username] : undefined)}</span></div><b className="point-value">{row.points}</b><span>{row.pointsWon}</span><span>{row.pointsLost}</span><span className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</span><span>{row.matches}</span><div className="rank-elo">{formatElo(row.username ? elo[row.username] : undefined)}</div><FormBadges form={row.username ? form[row.username] : undefined} className="rank-form" /><div className="rank-mobile-stats" aria-hidden="true"><span><em>Thắng</em><b>{row.pointsWon}</b></span><span><em>Thua</em><b>{row.pointsLost}</b></span><span><em>Hiệu</em><b className={row.pointDiff >= 0 ? "positive" : "negative"}>{row.pointDiff > 0 ? "+" : ""}{row.pointDiff}</b></span><span><em>Trận</em><b>{row.matches}</b></span><span className="rank-mobile-elo"><em>ELO</em><b>{formatElo(row.username ? elo[row.username] : undefined)}</b></span></div></div>;
     }) : <div className="empty-ranking">Chưa có thành viên hoạt động để hiển thị BXH {month}.</div>}</div>
+      {rows.length > 0 && <MobileRankTable rows={rows} form={form} elo={elo} hasRankingData={hasRankingData} />}
     </section>
   </section>;
 }

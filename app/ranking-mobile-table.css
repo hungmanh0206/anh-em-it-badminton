@@ -1,0 +1,380 @@
+/* Xếp hạng › Bảng xếp hạng on phones (MobileRankTable in app/page.tsx): the desktop table, in three
+   views. The rank and member columns stay pinned while the rest swipe sideways, with no scrollbar showing. */
+.bxh-m {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .ranking-panel > .rank-table:not(#_):not(#_):not(#_):not(#_) {
+    display: none !important;
+  }
+
+  .bxh-m {
+    --bxh-surface: #fbf8f1;
+    --bxh-line: rgba(90, 70, 30, 0.1);
+    --bxh-head: rgba(74, 62, 44, 0.62);
+    display: grid;
+    gap: var(--card-gap);
+    margin: 0 var(--block-inset) var(--block-inset);
+  }
+
+  :root[data-theme="dark"] .bxh-m {
+    --bxh-surface: #221e17;
+    --bxh-line: rgba(255, 255, 255, 0.08);
+    --bxh-head: rgba(255, 250, 240, 0.55);
+  }
+}
+
+/* ---------- The three views: a small switch, its pill gliding between them ---------- */
+.bxh-tabs {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--bar-switch);
+  box-shadow: var(--bar-switch-shadow);
+}
+
+.bxh-tabs > button {
+  padding: 8px 6px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--bar-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+
+.bxh-tabs > button.active {
+  color: var(--bar-accent);
+}
+
+.bxh-tabs > .slide-indicator {
+  z-index: -1;
+  width: var(--ind-w);
+  height: var(--ind-h);
+  border-radius: 10px;
+  background: var(--bar-thumb);
+  box-shadow: var(--bar-thumb-shadow);
+  transform: translate(var(--ind-x), var(--ind-y));
+}
+
+/* ---------- Table ---------- */
+.bxh-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 14px;
+  background: var(--bxh-surface);
+  scrollbar-width: none;
+}
+
+.bxh-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.bxh-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--bar-text);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The full view keeps every column at its natural width, so the table runs wider than the screen and swipes. */
+.view-full .bxh-table {
+  width: max-content;
+  min-width: 100%;
+}
+
+.bxh-table th,
+.bxh-table td {
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--bxh-line);
+  background: var(--bxh-surface);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.bxh-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.bxh-table th {
+  color: var(--bxh-head);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Pinned columns. */
+.bxh-table .c-pos {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  width: 40px;
+  min-width: 40px;
+  padding-inline: 4px 2px;
+}
+
+.bxh-table .c-name {
+  position: sticky;
+  left: 40px;
+  z-index: 2;
+  text-align: left;
+}
+
+/* Short and form views fit the screen: the member column takes what is left and long names end in "…". */
+.view-short .bxh-table .c-name,
+.view-form .bxh-table .c-name {
+  width: 100%;
+  max-width: 0;
+}
+
+.bxh-person > b {
+  flex: 0 1 auto;
+}
+
+.view-full .bxh-table .c-name {
+  min-width: 132px;
+  max-width: 150px;
+}
+
+.view-full .bxh-table td:not(.c-pos, .c-name),
+.view-full .bxh-table th:not(.c-pos, .c-name) {
+  min-width: 62px;
+}
+
+.view-form .bxh-table .c-form {
+  width: 1%;
+  padding-right: 12px;
+}
+
+.bxh-person {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.bxh-person .avatar:not(#_):not(#_):not(#_) {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+}
+
+.bxh-person > b {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13.5px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+}
+
+.bxh-person .level:not(#_):not(#_):not(#_) {
+  flex: none;
+  margin: 0 !important;
+  padding: 2px 5px !important;
+  border-radius: 6px !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  line-height: 1.2;
+}
+
+.bxh-table .level.level-chip-1:not(#_):not(#_):not(#_) {
+  background: var(--tile-1) !important;
+  color: #1560d4 !important;
+}
+
+.bxh-table .level.level-chip-2:not(#_):not(#_):not(#_) {
+  background: var(--tile-2) !important;
+  color: #138a3d !important;
+}
+
+:root[data-theme="dark"] .bxh-table .level.level-chip-1:not(#_):not(#_):not(#_) {
+  color: #93c5fd !important;
+}
+
+:root[data-theme="dark"] .bxh-table .level.level-chip-2:not(#_):not(#_):not(#_) {
+  color: #86efac !important;
+}
+
+.bxh-rank {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--pill);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.bxh-medal {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  background: var(--rank-medal-1) center / contain no-repeat;
+  vertical-align: middle;
+}
+
+.bxh-medal.bxh-medal-2 {
+  background-image: var(--rank-medal-2);
+}
+
+.bxh-medal.bxh-medal-3 {
+  background-image: var(--rank-medal-3);
+}
+
+.bxh-points {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.bxh-table .positive {
+  color: #1f8a5b;
+  font-weight: 800;
+}
+
+.bxh-table .negative {
+  color: #c2413b;
+  font-weight: 800;
+}
+
+:root[data-theme="dark"] .bxh-table .positive {
+  color: #5ee0a0;
+}
+
+:root[data-theme="dark"] .bxh-table .negative {
+  color: #ff8a80;
+}
+
+.bxh-elo {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+}
+
+.bxh-form:not(#_):not(#_) {
+  display: inline-flex !important;
+  gap: 4px;
+}
+
+/* The top three, tinted as on desktop: a coloured bar at the left, the tint strongest on the pinned side. */
+.bxh-table tr:is(.top-1, .top-2, .top-3) td {
+  background: linear-gradient(var(--bxh-tint-soft), var(--bxh-tint-soft)), var(--bxh-surface);
+}
+
+/* The tint fades across the pinned name cell into the soft tint of the other columns, so there is no step between
+   them, at rest or while the columns swipe underneath. */
+.bxh-table tr:is(.top-1, .top-2, .top-3) td.c-pos {
+  background: linear-gradient(var(--bxh-tint), var(--bxh-tint)), var(--bxh-surface);
+}
+
+.bxh-table tr:is(.top-1, .top-2, .top-3) td.c-name {
+  background: linear-gradient(90deg, var(--bxh-tint), var(--bxh-tint-soft)), var(--bxh-surface);
+}
+
+.bxh-table tr:is(.top-1, .top-2, .top-3) td.c-pos {
+  box-shadow: inset 4px 0 0 var(--bxh-bar);
+}
+
+.bxh-table tr.top-1 {
+  --bxh-tint: rgba(255, 210, 90, 0.3);
+  --bxh-tint-soft: rgba(255, 210, 90, 0.14);
+  --bxh-bar: #e8b229;
+}
+
+.bxh-table tr.top-2 {
+  --bxh-tint: rgba(176, 188, 206, 0.32);
+  --bxh-tint-soft: rgba(176, 188, 206, 0.14);
+  --bxh-bar: #aeb6c5;
+}
+
+.bxh-table tr.top-3 {
+  --bxh-tint: rgba(222, 146, 82, 0.24);
+  --bxh-tint-soft: rgba(222, 146, 82, 0.1);
+  --bxh-bar: #cd8752;
+}
+
+.bxh-table tr.top-1 .bxh-points {
+  color: #c48a00;
+}
+
+.bxh-table tr.top-2 .bxh-points {
+  color: #6b7686;
+}
+
+.bxh-table tr.top-3 .bxh-points {
+  color: #b5642c;
+}
+
+:root[data-theme="dark"] .bxh-table tr.top-1 .bxh-points {
+  color: #ffc83d;
+}
+
+:root[data-theme="dark"] .bxh-table tr.top-2 .bxh-points {
+  color: #cdd6e4;
+}
+
+:root[data-theme="dark"] .bxh-table tr.top-3 .bxh-points {
+  color: #eeaf80;
+}
+
+/* The narrowest phones: a little tighter. */
+@media (max-width: 360px) {
+  .bxh-table th,
+  .bxh-table td {
+    padding-inline: 5px;
+  }
+
+  .bxh-person {
+    gap: 5px;
+  }
+
+  .bxh-person .avatar:not(#_):not(#_):not(#_) {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+  }
+
+  .bxh-person > b {
+    font-size: 12.5px;
+  }
+}
+
+/* The narrowest phones: the short view drops the Level chip and the form view shrinks the dots, so names fit. */
+@media (max-width: 360px) {
+  .bxh-table th,
+  .bxh-table td {
+    padding-inline: 4px;
+  }
+
+  .bxh-table th {
+    font-size: 8.5px;
+    letter-spacing: 0.03em;
+  }
+
+  .view-short .bxh-person .level {
+    display: none !important;
+  }
+
+  .bxh-form:not(#_):not(#_) {
+    gap: 2px;
+  }
+
+  .bxh-form .form-badge:not(#_):not(#_):not(#_) {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+  }
+}
