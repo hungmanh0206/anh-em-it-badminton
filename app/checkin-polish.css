@@ -163,16 +163,8 @@
   font-weight: 850;
 }
 
-/* Under "Điểm danh thành viên" while the check-in is open: why a schedule can't be made yet. */
+/* Under "Điểm danh thành viên" while the check-in is open: why a schedule can't be made yet (styled with every other
+   line under a block title, in glass.css). */
 .checkin-head .checkin-hint:not(#_):not(#_):not(#_) {
   display: block !important;
-  margin: 3px 0 0;
-  color: #b45309;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-:root[data-theme="dark"] .checkin-head .checkin-hint:not(#_):not(#_):not(#_) {
-  color: #fbbf24;
 }
