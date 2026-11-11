@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, type CSSProperties, type Dispatch, type ReactNode, type SetStateAction, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { backdropDismissProps, Presence } from "@/app/ui/modal";
 import { PhotoGallery } from "@/app/photo-gallery";
 import { PageHero } from "@/app/ui/page-hero";
@@ -2680,6 +2681,19 @@ function AddMemberModal({ onClose, onCreate }: { onClose: () => void; onCreate: 
 
 function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formByUsername, onAvatarUpdated, onCardArtUpdated, onRoleUpdated }: { canManage: boolean; members: Member[]; rankingRows: RankingRow[]; rankingMonth: string; eloRows: EloRankingRow[]; formByUsername: Record<string, FormResult[]>; onAvatarUpdated: (username: string, avatarUrl: string | null) => void; onCardArtUpdated: (username: string, cardUrl: string | null) => void; onRoleUpdated: (username: string, role: MemberRole) => void }) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  // The ••• menu is drawn on the page body, not inside the block, so its glass can blur what lies beneath it
+  // (a block's own glass would keep it from seeing past the block). It sits under its button, or above it near the bottom.
+  const [menuSpot, setMenuSpot] = useState<CSSProperties>({});
+  useEffect(() => {
+    if (!openMenu) return;
+    const close = () => setOpenMenu(null);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [openMenu]);
   const [viewing, setViewing] = useState<Member | null>(null);
   const [editing, setEditing] = useState<Member | null>(null);
   const photo = useAvatarPicker();
@@ -2722,7 +2736,7 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
       const target = pointerDownTarget ?? event.target;
       pointerDownTarget = null;
       if (!(target instanceof Element)) return;
-      if (!target.closest(".member-actions")) setOpenMenu(null);
+      if (!target.closest(".member-actions, .member-menu")) setOpenMenu(null);
       if (target.closest(".modal-backdrop") && !target.closest(".member-editor, .confirm-modal")) { setEditing(null); setAdding(false); }
     };
     document.addEventListener("pointerdown", rememberPointerDown);
@@ -2840,7 +2854,20 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
     return payload;
   };
   // The panel clips overflow, so menus on the bottom rows open upwards.
-  const memberMenu = (member: Member, openUp: boolean) => <div className="member-actions"><button className="more" aria-label={`Thao tác ${member.name}`} onClick={() => setOpenMenu(openMenu === member.username ? null : member.username)}>•••</button>{openMenu === member.username && <div className={`member-menu${openUp ? " member-menu-up" : ""}`}><button onClick={() => { openEditor(member); setOpenMenu(null); }}>Sửa thành viên</button>{effectiveRole(member.role) === "member" && <button className="danger-text" onClick={() => { remove(member); setOpenMenu(null); }}>Xóa thành viên</button>}</div>}</div>;
+  const toggleMemberMenu = (member: Member, button: HTMLElement) => {
+    if (openMenu === member.username) { setOpenMenu(null); return; }
+    const box = button.getBoundingClientRect();
+    // The page keeps a gutter for the scrollbar, so measure from the page's own right edge rather than the window's.
+    const pageRight = document.documentElement.getBoundingClientRect().right;
+    const clientHeight = document.documentElement.clientHeight;
+    const right = Math.max(8, pageRight - box.right);
+    // On phones the tab bar sits along the bottom; a menu that would run into it opens upward instead.
+    const tabBar = document.querySelector(".topbar-nav")?.getBoundingClientRect();
+    const floor = tabBar && tabBar.top > clientHeight / 2 ? tabBar.top : clientHeight;
+    setMenuSpot(floor - box.bottom < 110 ? { right, top: "auto", bottom: clientHeight - box.top + 6 } : { right, top: box.bottom + 6, bottom: "auto" });
+    setOpenMenu(member.username);
+  };
+  const memberMenu = (member: Member) => <div className="member-actions"><button className="more" aria-label={`Thao tác ${member.name}`} aria-expanded={openMenu === member.username} onClick={(event) => toggleMemberMenu(member, event.currentTarget)}>•••</button>{openMenu === member.username && createPortal(<div className="member-menu member-menu-floating" style={menuSpot}><button onClick={() => { openEditor(member); setOpenMenu(null); }}>Sửa thành viên</button>{effectiveRole(member.role) === "member" && <button className="danger-text" onClick={() => { remove(member); setOpenMenu(null); }}>Xóa thành viên</button>}</div>, document.body)}</div>;
   const remove = (member: Member) => setConfirm({ title: "Xác nhận xóa thành viên", message: `Xóa ${member.name} khỏi danh sách hoạt động? Lịch sử thi đấu vẫn được giữ lại.`, action: async () => {
     try {
       if (supabase) {
@@ -2886,11 +2913,11 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
         </div>
       </div>
       {roleNotice && <div className="member-role-notice">{roleNotice}</div>}
-      {visibleMembers.length === 0 ? <div className="member-table"><div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div></div> : viewMode === "list" ? <div className="member-table">{visibleMembers.map((member, index) => <div key={member.username}>
+      {visibleMembers.length === 0 ? <div className="member-table"><div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div></div> : viewMode === "list" ? <div className="member-table">{visibleMembers.map((member) => <div key={member.username}>
         <button type="button" className="person member-person-btn" aria-label={`Xem thông tin ${member.name}`} onClick={() => setViewing(member)}><div className={avatarClassName("avatar", member)} style={avatarStyle(member)}>{member.initials}</div><div><b>{member.name}{effectiveRole(member.role) !== "member" && <span className={"member-card-role " + effectiveRole(member.role)}>{effectiveRole(member.role) === "admin" ? "Admin" : "Sub-admin"}</span>}</b><small>{canManage ? `@${member.username}` : `Level ${member.level}`}</small></div></button>
         <span className="status">● Hoạt động</span>
-        {canManage && memberMenu(member, index >= visibleMembers.length - 2)}
-      </div>)}</div> : <div className="member-cards">{visibleMembers.map((member, index) => {
+        {canManage && memberMenu(member)}
+      </div>)}</div> : <div className="member-cards">{visibleMembers.map((member) => {
         const art = cardArtUrl(member.username);
         const role = effectiveRole(member.role);
         return <article key={member.username} className={"member-card-tile" + (art ? " has-art" : "")} style={{ "--avatar-color": member.color || "#6846e8" } as CSSProperties}>
@@ -2905,7 +2932,7 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
               {role !== "member" && <span className={"member-card-role " + role}>{role === "admin" ? "Admin" : "Sub-admin"}</span>}
             </span>
           </button>
-          {canManage && memberMenu(member, false)}
+          {canManage && memberMenu(member)}
         </article>;
       })}</div>}
     </section>
