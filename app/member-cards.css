@@ -311,3 +311,34 @@
     font-size: 8.5px !important;
   }
 }
+
+/* Empty picture slots in the add / edit member forms. */
+.field-empty-icon {
+  display: block;
+  flex: none;
+  background: center / contain no-repeat;
+}
+
+.field-empty-icon.avatar-empty {
+  width: 64px;
+  height: 64px;
+  background-image: url("/app-icons/avatar-empty.png");
+}
+
+@media (min-width: 701px) {
+  .member-editor-media .field-empty-icon.avatar-empty {
+    width: 92px;
+    height: 92px;
+    margin: 16px 0;
+  }
+}
+
+.member-card-preview.is-empty:not(#_):not(#_) {
+  background: none !important;
+}
+
+.field-empty-icon.photo-empty {
+  width: 100%;
+  height: 100%;
+  background-image: url("/app-icons/photo-empty.png");
+}

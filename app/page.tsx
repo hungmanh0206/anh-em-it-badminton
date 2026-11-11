@@ -2539,7 +2539,7 @@ function useCardArtPicker() {
 function CardArtField({ url, canRemove, error, onPick, onRemove }: { url: string | null; canRemove: boolean; error: string; onPick: (file?: File) => void; onRemove: () => void }) {
   const input = useRef<HTMLInputElement>(null);
   return <div className="member-avatar-field member-card-field">
-    <div className="member-card-preview">{url ? <img src={url} alt="" /> : <AppIcon name="trophy" />}</div>
+    <div className={"member-card-preview" + (url ? "" : " is-empty")}>{url ? <img src={url} alt="" /> : <span className="field-empty-icon photo-empty" aria-hidden="true" />}</div>
     <div className="member-avatar-copy"><b>Ảnh ăn mừng</b><div className="member-avatar-actions"><button type="button" className="soft-btn" onClick={() => input.current?.click()}>{url ? "Đổi ảnh" : "Chọn ảnh"}</button>{canRemove && <button type="button" className="soft-btn member-avatar-remove" onClick={onRemove}>Xóa ảnh</button>}</div>{error && <small className="member-editor-error">{error}</small>}</div>
     <input ref={input} type="file" accept="image/png,image/webp,image/*" hidden onChange={(event) => { onPick(event.target.files?.[0]); event.target.value = ""; }} />
   </div>;
@@ -2548,7 +2548,7 @@ function CardArtField({ url, canRemove, error, onPick, onRemove }: { url: string
 function AvatarField({ url, initials, canRemove, error, onPick, onRemove }: { url: string | null; initials: string; canRemove: boolean; error: string; onPick: (file?: File) => void; onRemove: () => void }) {
   const input = useRef<HTMLInputElement>(null);
   return <div className="member-avatar-field">
-    <div className={`avatar${url ? " avatar-art" : ""}`} style={{ "--avatar-image": url ? `url("${url}")` : "none" } as CSSProperties}>{initials}</div>
+    {url ? <div className="avatar avatar-art" style={{ "--avatar-image": `url("${url}")` } as CSSProperties}>{initials}</div> : <span className="field-empty-icon avatar-empty" aria-hidden="true" />}
     <div className="member-avatar-copy"><b>Ảnh đại diện</b><div className="member-avatar-actions"><button type="button" className="soft-btn" onClick={() => input.current?.click()}>{url ? "Đổi ảnh" : "Chọn ảnh"}</button>{canRemove && <button type="button" className="soft-btn member-avatar-remove" onClick={onRemove}>Xóa ảnh</button>}</div>{error && <small className="member-editor-error">{error}</small>}</div>
     <input ref={input} type="file" accept="image/*" hidden onChange={(event) => { onPick(event.target.files?.[0]); event.target.value = ""; }} />
   </div>;
