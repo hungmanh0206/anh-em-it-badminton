@@ -9,8 +9,13 @@
     display: none !important;
   }
 
+  /* The tools above sit one card gap from the view switch / the table, like every other stack of blocks. */
+  :is(.ranking-panel, .elo-ranking-panel) > .panel-head:not(#_):not(#_):not(#_):not(#_) {
+    margin-bottom: 0 !important;
+    padding-bottom: var(--card-gap) !important;
+  }
+
   .bxh-m {
-    --bxh-surface: #fbf8f1;
     --bxh-line: rgba(90, 70, 30, 0.1);
     --bxh-head: rgba(74, 62, 44, 0.62);
     display: grid;
@@ -19,7 +24,6 @@
   }
 
   :root[data-theme="dark"] .bxh-m {
-    --bxh-surface: #221e17;
     --bxh-line: rgba(255, 255, 255, 0.08);
     --bxh-head: rgba(255, 250, 240, 0.55);
   }
@@ -66,13 +70,50 @@
   transform: translate(var(--ind-x), var(--ind-y));
 }
 
-/* ---------- Table ---------- */
+/* ---------- Table ----------
+   Two tables side by side on the block itself (no box of their own, as on desktop): the rank and member on the left,
+   the other columns on the right in a strip that swipes, so nothing slides under the member column. */
+.bxh-split {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+/* The top three bands lie under both tables as one piece each, so no seam shows where the tables meet. */
+.bxh-band {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: -1;
+  height: 50px;
+  background: var(--bxh-tint);
+  box-shadow: inset 4px 0 0 var(--bxh-bar);
+  pointer-events: none;
+}
+
+.bxh-band.band-1 {
+  top: 34px;
+  --bxh-tint: rgba(255, 210, 90, 0.2);
+  --bxh-bar: #e8b229;
+}
+
+.bxh-band.band-2 {
+  top: 84px;
+  --bxh-tint: rgba(176, 188, 206, 0.22);
+  --bxh-bar: #aeb6c5;
+}
+
+.bxh-band.band-3 {
+  top: 134px;
+  --bxh-tint: rgba(222, 146, 82, 0.16);
+  --bxh-bar: #cd8752;
+}
+
 .bxh-scroll {
   overflow-x: auto;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
-  border-radius: 14px;
-  background: var(--bxh-surface);
   scrollbar-width: none;
 }
 
@@ -89,26 +130,25 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* The full view keeps every column at its natural width, so the table runs wider than the screen and swipes. */
-.view-full .bxh-table {
+/* The full view keeps every column at its natural width, so its strip runs wider than the screen and swipes. */
+.view-full .bxh-cols {
   width: max-content;
   min-width: 100%;
 }
 
+/* One height for every row and for the header, so the two tables line up. */
 .bxh-table th,
 .bxh-table td {
-  padding: 10px 6px;
+  box-sizing: border-box;
+  height: 50px;
+  padding: 0 6px;
   border-bottom: 1px solid var(--bxh-line);
-  background: var(--bxh-surface);
   text-align: center;
   white-space: nowrap;
 }
 
-.bxh-table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
 .bxh-table th {
+  height: 34px;
   color: var(--bxh-head);
   font-size: 9.5px;
   font-weight: 800;
@@ -116,47 +156,33 @@
   text-transform: uppercase;
 }
 
-/* Pinned columns. */
-.bxh-table .c-pos {
-  position: sticky;
-  left: 0;
-  z-index: 2;
+.bxh-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.bxh-fixed .c-pos {
   width: 40px;
   min-width: 40px;
   padding-inline: 4px 2px;
 }
 
-.bxh-table .c-name {
-  position: sticky;
-  left: 40px;
-  z-index: 2;
+.bxh-fixed .c-name {
+  max-width: 150px;
   text-align: left;
-}
-
-/* Short and form views fit the screen: the member column takes what is left and long names end in "…". */
-.view-short .bxh-table .c-name,
-.view-form .bxh-table .c-name {
-  width: 100%;
-  max-width: 0;
 }
 
 .bxh-person > b {
   flex: 0 1 auto;
 }
 
-.view-full .bxh-table .c-name {
-  min-width: 132px;
-  max-width: 150px;
-}
-
-.view-full .bxh-table td:not(.c-pos, .c-name),
-.view-full .bxh-table th:not(.c-pos, .c-name) {
+.view-full .bxh-cols td,
+.view-full .bxh-cols th {
   min-width: 62px;
 }
 
-.view-form .bxh-table .c-form {
-  width: 1%;
-  padding-right: 12px;
+.view-form .bxh-cols .c-form {
+  text-align: right;
+  padding-right: 4px;
 }
 
 .bxh-person {
@@ -269,64 +295,28 @@
   gap: 4px;
 }
 
-/* The top three, tinted as on desktop: a coloured bar at the left, the tint strongest on the pinned side. */
-.bxh-table tr:is(.top-1, .top-2, .top-3) td {
-  background: linear-gradient(var(--bxh-tint-soft), var(--bxh-tint-soft)), var(--bxh-surface);
-}
 
-/* The tint fades across the pinned name cell into the soft tint of the other columns, so there is no step between
-   them, at rest or while the columns swipe underneath. */
-.bxh-table tr:is(.top-1, .top-2, .top-3) td.c-pos {
-  background: linear-gradient(var(--bxh-tint), var(--bxh-tint)), var(--bxh-surface);
-}
-
-.bxh-table tr:is(.top-1, .top-2, .top-3) td.c-name {
-  background: linear-gradient(90deg, var(--bxh-tint), var(--bxh-tint-soft)), var(--bxh-surface);
-}
-
-.bxh-table tr:is(.top-1, .top-2, .top-3) td.c-pos {
-  box-shadow: inset 4px 0 0 var(--bxh-bar);
-}
-
-.bxh-table tr.top-1 {
-  --bxh-tint: rgba(255, 210, 90, 0.3);
-  --bxh-tint-soft: rgba(255, 210, 90, 0.14);
-  --bxh-bar: #e8b229;
-}
-
-.bxh-table tr.top-2 {
-  --bxh-tint: rgba(176, 188, 206, 0.32);
-  --bxh-tint-soft: rgba(176, 188, 206, 0.14);
-  --bxh-bar: #aeb6c5;
-}
-
-.bxh-table tr.top-3 {
-  --bxh-tint: rgba(222, 146, 82, 0.24);
-  --bxh-tint-soft: rgba(222, 146, 82, 0.1);
-  --bxh-bar: #cd8752;
-}
-
-.bxh-table tr.top-1 .bxh-points {
+.bxh-table tr.bxh-top-1 .bxh-points {
   color: #c48a00;
 }
 
-.bxh-table tr.top-2 .bxh-points {
+.bxh-table tr.bxh-top-2 .bxh-points {
   color: #6b7686;
 }
 
-.bxh-table tr.top-3 .bxh-points {
+.bxh-table tr.bxh-top-3 .bxh-points {
   color: #b5642c;
 }
 
-:root[data-theme="dark"] .bxh-table tr.top-1 .bxh-points {
+:root[data-theme="dark"] .bxh-table tr.bxh-top-1 .bxh-points {
   color: #ffc83d;
 }
 
-:root[data-theme="dark"] .bxh-table tr.top-2 .bxh-points {
+:root[data-theme="dark"] .bxh-table tr.bxh-top-2 .bxh-points {
   color: #cdd6e4;
 }
 
-:root[data-theme="dark"] .bxh-table tr.top-3 .bxh-points {
+:root[data-theme="dark"] .bxh-table tr.bxh-top-3 .bxh-points {
   color: #eeaf80;
 }
 
@@ -446,10 +436,6 @@
   .elo-m .bxh-table .c-pos {
     width: 32px;
     min-width: 32px;
-  }
-
-  .elo-m .bxh-table .c-name {
-    left: 32px;
   }
 
   .elo-m .bxh-rank {

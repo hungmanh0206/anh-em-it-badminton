@@ -1413,9 +1413,8 @@ function CheckIn({ header, drawOpen, members, onContinue, canSchedule, canManage
   const l2 = n - l1;
   const allResponded = members.every((m) => m.responded);
   return <section className="panel checkin">{header}
-    <div className="panel-head checkin-head"><div><h2>Điểm danh thành viên</h2></div><div className="count-pill attendance-count-pill"><b>{n}</b><span>có mặt</span></div></div>
+    <div className="panel-head checkin-head"><div><h2>Điểm danh thành viên</h2>{isCheckinWindowOpen && !canSchedule && <p className="checkin-hint">{n < 5 ? "Cần tối thiểu 5 người có mặt để tạo lịch thi đấu tự động." : `Chưa có mẫu lịch phù hợp cho ${n} người (${l1} Level 1 + ${l2} Level 2).`}</p>}</div><div className="count-pill attendance-count-pill"><b>{n}</b><span>có mặt</span></div></div>
     <div className="member-grid">{members.map((m) => <div className={"member-card readonly" + (!m.responded ? "" : m.present ? " is-attending" : " is-absent")} key={m.name}><div className={avatarClassName("avatar", m)} style={avatarStyle(m)}>{m.initials}</div><div><b>{m.name}{m.name === currentUser.name && <em>Bạn</em>}</b><small><span className="attend-level">Level {m.level}</span><span className="attend-sep"> · </span>{m.responded ? <span className={"attendance-status " + (m.present ? "present" : "absent")}>{m.present ? "Tham gia" : "Không tham gia"}</span> : <span className="attendance-status pending">Chưa phản hồi</span>}</small></div></div>)}</div>
-    {isCheckinWindowOpen && !canSchedule && <div className="warning">{n < 5 ? "Cần tối thiểu 5 người có mặt để tạo lịch thi đấu tự động." : `Chưa có mẫu lịch phù hợp cho ${n} người (${l1} Level 1 + ${l2} Level 2).`}</div>}
     <div className="panel-foot checkin-actions-foot"><div className="attendance-actions"><button className="soft-btn" disabled={!isCheckinWindowOpen} title={isCheckinWindowOpen ? undefined : "Mở vào thứ Tư"} onClick={openSelfCheckin}>{currentUser.responded ? "Cập nhật điểm danh của tôi" : "Điểm danh của tôi"}</button>{canManageSession && <button className="primary" disabled={drawOpen || !isCheckinWindowOpen || !canSchedule || !allResponded} title={drawOpen ? "Đã mở chọn số" : undefined} onClick={onContinue}>Xác nhận điểm danh & mở chọn số</button>}</div></div>
   </section>;
 }
@@ -2308,7 +2307,7 @@ async function downloadEloImage(rows: EloRankingRow[]) {
 // member stay pinned while the other columns swipe sideways; the scrollbar itself is hidden.
 type MobileRankView = "short" | "full" | "form";
 const mobileRankViewKey = "aemit-ranking-mobile-view";
-const mobileRankViews: { key: MobileRankView; label: string }[] = [{ key: "short", label: "Ngắn" }, { key: "full", label: "Đầy đủ" }, { key: "form", label: "Phong độ" }];
+const mobileRankViews: { key: MobileRankView; label: string }[] = [{ key: "short", label: "Cơ bản" }, { key: "full", label: "Đầy đủ" }, { key: "form", label: "Phong độ" }];
 function MobileRankTable({ rows, form, elo, hasRankingData }: { rows: RankingRow[]; form: FormByUsername; elo: Record<string, number>; hasRankingData: boolean }) {
   const [view, setView] = useState<MobileRankView>("short");
   const tabsRef = useSlidingIndicator<HTMLDivElement>(view);
@@ -2340,18 +2339,27 @@ function MobileRankTable({ rows, form, elo, hasRankingData }: { rows: RankingRow
       {mobileRankViews.map((item) => <button key={item.key} type="button" role="tab" aria-selected={view === item.key} className={view === item.key ? "active" : ""} onClick={() => choose(item.key)}>{item.label}</button>)}
       <i className="slide-indicator" aria-hidden="true" />
     </div>
-    <div className={`bxh-scroll view-${view}`}>
-      <table className="bxh-table">
-        <thead><tr><th className="c-pos">Vị trí</th><th className="c-name">Thành viên</th>{columns.map((column) => <th key={column.key} className={`c-${column.key}`}>{column.label}</th>)}</tr></thead>
+    <div className={`bxh-split view-${view}`}>
+      {hasRankingData && [1, 2, 3].slice(0, rows.length).map((place) => <i key={place} className={`bxh-band band-${place}`} aria-hidden="true" />)}
+      <table className="bxh-table bxh-fixed">
+        <thead><tr><th className="c-pos">Vị trí</th><th className="c-name">Thành viên</th></tr></thead>
         <tbody>{rows.map((row, i) => {
           const top = hasRankingData && i < 3 ? i + 1 : 0;
-          return <tr key={row.name} className={top ? `top-${top}` : undefined}>
+          return <tr key={row.name} className={top ? `bxh-top-${top}` : undefined}>
             <td className="c-pos">{top ? <span className={`bxh-medal bxh-medal-${top}`} aria-label={`Hạng ${top}`} /> : <span className="bxh-rank">{i + 1}</span>}</td>
             <td className="c-name"><span className="bxh-person"><span className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</span><b>{row.name}</b><span className={`level level-chip-${row.level === 1 ? 1 : 2}`}>L{row.level}</span></span></td>
-            {columns.map((column) => <td key={column.key} className={`c-${column.key}`}>{column.cell(row)}</td>)}
           </tr>;
         })}</tbody>
       </table>
+      <div className="bxh-scroll">
+        <table className="bxh-table bxh-cols">
+          <thead><tr>{columns.map((column) => <th key={column.key} className={`c-${column.key}`}>{column.label}</th>)}</tr></thead>
+          <tbody>{rows.map((row, i) => {
+            const top = hasRankingData && i < 3 ? i + 1 : 0;
+            return <tr key={row.name} className={top ? `bxh-top-${top}` : undefined}>{columns.map((column) => <td key={column.key} className={`c-${column.key}`}>{column.cell(row)}</td>)}</tr>;
+          })}</tbody>
+        </table>
+      </div>
     </div>
   </div>;
 }
@@ -2481,17 +2489,24 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
         }) : <div className="empty-ranking">Chưa có thành viên hoạt động để hiển thị ELO.</div>}
       </div>
       {rows.length > 0 && <div className="bxh-m elo-m">
-        <div className="bxh-scroll view-short">
-          <table className="bxh-table">
-            <thead><tr><th className="c-pos">Hạng</th><th className="c-name">Thành viên</th><th>ELO</th><th>Số trận</th><th>Level</th></tr></thead>
+        <div className="bxh-split view-short">
+          <table className="bxh-table bxh-fixed">
+            <thead><tr><th className="c-pos">Hạng</th><th className="c-name">Thành viên</th></tr></thead>
             <tbody>{rows.map((row) => <tr key={row.memberId} className={`elo-level-${row.level === 1 ? 1 : 2}`}>
               <td className="c-pos"><span className="bxh-rank">{row.rank}</span></td>
               <td className="c-name"><span className="bxh-person"><span className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</span><b>{row.name}</b></span></td>
-              <td><b className="elo-m-value">{formatElo(row.eloRating)}</b></td>
-              <td>{row.matches}</td>
-              <td><b className="elo-m-level"><span className="lv-word">Level </span><span className="lv-short">L</span>{row.level === 1 ? 1 : 2}</b></td>
             </tr>)}</tbody>
           </table>
+          <div className="bxh-scroll">
+            <table className="bxh-table bxh-cols">
+              <thead><tr><th>ELO</th><th>Số trận</th><th>Level</th></tr></thead>
+              <tbody>{rows.map((row) => <tr key={row.memberId} className={`elo-level-${row.level === 1 ? 1 : 2}`}>
+                <td><b className="elo-m-value">{formatElo(row.eloRating)}</b></td>
+                <td>{row.matches}</td>
+                <td><b className="elo-m-level"><span className="lv-word">Level </span><span className="lv-short">L</span>{row.level === 1 ? 1 : 2}</b></td>
+              </tr>)}</tbody>
+            </table>
+          </div>
         </div>
       </div>}
     </section>
