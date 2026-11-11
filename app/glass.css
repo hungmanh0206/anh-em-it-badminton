@@ -989,9 +989,10 @@ html:has(.modal-backdrop:not(.profile-backdrop), .champion-celebration) .topbar:
   filter: invert(1) brightness(1.2);
 }
 
-/* The line under a block's title, one style everywhere: the main text colour (dark on light, white on dark), a
-   step smaller than body text. Whether it shows on phones is left to each block. */
+/* The line under a block's title, one style everywhere and on every screen: the main text colour (dark on light,
+   white on dark), a step smaller than body text. */
 .panel-head > div:first-child > :is(p, .schedule-pick, .checkin-hint):not(#_):not(#_):not(#_):not(#_) {
+  display: block !important;
   margin: 4px 0 0 !important;
   color: var(--bar-text) !important;
   font-size: 12.5px !important;
