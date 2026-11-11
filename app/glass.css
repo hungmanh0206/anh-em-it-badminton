@@ -995,6 +995,6 @@ html:has(.modal-backdrop:not(.profile-backdrop), .champion-celebration) .topbar:
   margin: 4px 0 0 !important;
   color: var(--bar-text) !important;
   font-size: 12.5px !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1.5 !important;
 }
