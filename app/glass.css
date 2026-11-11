@@ -1012,3 +1012,13 @@ html:has(.modal-backdrop:not(.profile-backdrop), .champion-celebration) .topbar:
     font-size: 18px !important;
   }
 }
+
+/* Dropdown lists (the month, role and player-count pickers, the ••• member menu): the header's glass, see-through and
+   blurring what lies under it. */
+:is(.glass-select-list, .member-menu):not(#_):not(#_):not(#_) {
+  border: 0 !important;
+  background: var(--bar-bg) !important;
+  box-shadow: var(--bar-shadow) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(170%) !important;
+  backdrop-filter: blur(18px) saturate(170%) !important;
+}
