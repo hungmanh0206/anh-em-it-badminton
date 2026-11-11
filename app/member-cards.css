@@ -342,3 +342,35 @@
   height: 100%;
   background-image: url("/app-icons/photo-empty.png");
 }
+
+/* Phones: the two picture slots side by side, each centred over its label and button, the same size. */
+@media (max-width: 700px) {
+  .member-editor-media:not(#_):not(#_) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--card-gap);
+    margin-bottom: var(--card-gap);
+  }
+
+  .member-editor-media > .member-avatar-field:not(#_):not(#_):not(#_) {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    text-align: center;
+  }
+
+  .member-editor-media .member-avatar-copy:not(#_):not(#_) {
+    justify-items: center;
+  }
+
+  .member-editor-media .member-avatar-actions:not(#_):not(#_) {
+    justify-content: center;
+  }
+
+  .member-editor-media :is(.avatar, .field-empty-icon.avatar-empty, .member-card-preview):not(#_):not(#_):not(#_) {
+    width: 72px;
+    height: 72px;
+    margin: 0;
+  }
+}
