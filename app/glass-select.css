@@ -20,12 +20,14 @@
   transition: box-shadow 160ms ease, opacity 160ms ease;
 }
 
-.glass-select:not(#_):hover:not(:disabled) {
-  box-shadow: var(--glass-lift-card), 0 0 0 2px rgba(255, 183, 0, 0.26);
+/* No ring round the field: hovered or open, it only lifts a little more. The ring stays for keyboard focus alone. */
+.glass-select:not(#_):hover:not(:disabled),
+.glass-select[aria-expanded="true"]:not(#_) {
+  outline: 0;
+  box-shadow: var(--glass-lift);
 }
 
-.glass-select:not(#_):focus-visible,
-.glass-select[aria-expanded="true"]:not(#_) {
+.glass-select:not(#_):focus-visible:not([aria-expanded="true"]) {
   outline: 0;
   box-shadow: var(--glass-lift-card), 0 0 0 2px rgba(255, 183, 0, 0.55);
 }
@@ -97,7 +99,7 @@
   align-content: start;
   gap: 2px;
   margin: 0;
-  padding: 6px;
+  padding: 4px;
   overflow-y: auto;
   overscroll-behavior: contain;
   border-radius: 14px;
@@ -112,10 +114,10 @@
 
 .glass-select-list li {
   overflow: hidden;
-  padding: 10px 12px;
-  border-radius: 9px;
+  padding: 10px 12px 10px max(8px, calc(var(--select-pad, 18px) - 4px));
+  border-radius: 10px;
   color: var(--bar-text);
-  font-size: 14px;
+  font-size: var(--select-font, 14px);
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;

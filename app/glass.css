@@ -1014,10 +1014,10 @@ html:has(.modal-backdrop:not(.profile-backdrop), .champion-celebration) .topbar:
 }
 
 /* Dropdown lists (the month, role and player-count pickers, the ••• member menu): the header's glass, see-through and
-   blurring what lies under it. */
+   blurring what lies under it, without the header's gold corner glow, which reads as a smudge on a small list. */
 :is(.glass-select-list, .member-menu):not(#_):not(#_):not(#_) {
   border: 0 !important;
-  background: var(--bar-bg) !important;
+  background: var(--glass-block) !important;
   box-shadow: var(--bar-shadow) !important;
   -webkit-backdrop-filter: blur(18px) saturate(170%) !important;
   backdrop-filter: blur(18px) saturate(170%) !important;
