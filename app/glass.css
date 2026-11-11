@@ -999,3 +999,16 @@ html:has(.modal-backdrop:not(.profile-backdrop), .champion-celebration) .topbar:
   font-weight: 400 !important;
   line-height: 1.5 !important;
 }
+
+/* Block titles, one size per screen everywhere (Điểm danh thành viên, Danh sách thành viên, the Thể lệ sections…). */
+:is(.panel-head h2, .rules-section-title):not(#_):not(#_):not(#_):not(#_) {
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  line-height: 1.3 !important;
+}
+
+@media (max-width: 700px) {
+  :is(.panel-head h2, .rules-section-title):not(#_):not(#_):not(#_):not(#_) {
+    font-size: 18px !important;
+  }
+}
