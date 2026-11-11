@@ -2480,6 +2480,20 @@ function EloRanking({ rows, status }: { rows: EloRankingRow[]; status: EloStatus
           </article>;
         }) : <div className="empty-ranking">Chưa có thành viên hoạt động để hiển thị ELO.</div>}
       </div>
+      {rows.length > 0 && <div className="bxh-m elo-m">
+        <div className="bxh-scroll view-short">
+          <table className="bxh-table">
+            <thead><tr><th className="c-pos">Hạng</th><th className="c-name">Thành viên</th><th>ELO</th><th>Số trận</th><th>Level</th></tr></thead>
+            <tbody>{rows.map((row) => <tr key={row.memberId} className={`elo-level-${row.level === 1 ? 1 : 2}`}>
+              <td className="c-pos"><span className="bxh-rank">{row.rank}</span></td>
+              <td className="c-name"><span className="bxh-person"><span className={avatarClassName("avatar small", row)} style={avatarStyle(row)}>{row.initials}</span><b>{row.name}</b></span></td>
+              <td><b className="elo-m-value">{formatElo(row.eloRating)}</b></td>
+              <td>{row.matches}</td>
+              <td><b className="elo-m-level"><span className="lv-word">Level </span><span className="lv-short">L</span>{row.level === 1 ? 1 : 2}</b></td>
+            </tr>)}</tbody>
+          </table>
+        </div>
+      </div>}
     </section>
     <Presence show={guideOpen}>{guideOpen && <EloGuideModal onClose={() => setGuideOpen(false)} />}</Presence>
   </section>;
