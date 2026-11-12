@@ -94,7 +94,7 @@ button,
     color 180ms var(--club-ease);
 }
 
-button:focus-visible,
+/* Fields get the soft gold glow; buttons get the one gold ring from button-states.css. */
 input:focus-visible,
 select:focus-visible {
   outline: none !important;

@@ -1,0 +1,139 @@
+/* One set of states for every button in the app, in both themes. Loaded last so it settles what the older layers
+   left uneven (some buttons lifted 1px on hover, some 3px, some not at all; only a few gave way when pressed; the gold
+   buttons showed no keyboard ring; disabled looked different from one kind to the next).
+
+   The kinds:
+   - filled: the gold buttons (and the red one for deleting): .primary, .new-btn, the gold .soft-btn variants
+   - soft:   the white glass buttons: .secondary, .soft-btn, .skip, .profile-logout, .photo-action-btn, page numbers
+   - icon:   round icon buttons: .modal-close, .more, .password-toggle
+   - field:  the dropdown field (.glass-select)
+   - tab:    segmented switches and tab bars: their pill shows the choice, so they only change colour
+
+   The states, the same for all:
+   - hover (mouse only): filled and soft lift 1px with their hover fill; icons fill in; inactive tabs darken
+   - pressed: everything gives way to 97%, and a lifted button comes back down
+   - keyboard focus: one gold ring outside the button
+   - disabled: no hover, no press, not-allowed cursor; buttons go flat and muted, icons and tabs fade */
+
+:root {
+  --focus-ring: rgba(255, 183, 0, 0.75);
+}
+
+:root[data-theme="dark"] {
+  --focus-ring: rgba(255, 205, 80, 0.85);
+}
+
+/* ---------- One timing for every kind ---------- */
+:is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button, .result-clear-button, .modal-close, .more, .password-toggle, .glass-select, .page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button, .topbar-nav button):not(#_):not(#_):not(#_):not(#_) {
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease,
+    translate 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    scale 120ms ease-out !important;
+}
+
+/* ---------- Hover ---------- */
+/* Filled and soft buttons lift by the same 1px (an older rule added a 2px transform on top for some of them). */
+:is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .result-clear-button):not(:disabled):not(#_):not(#_):not(#_):not(#_) {
+  transform: none !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .result-clear-button):not(:disabled):not(#_):not(#_):not(#_):not(#_):hover {
+    translate: 0 -1px;
+  }
+
+  /* White glass buttons show the brighter glass on hover, wherever they sit. */
+  :is(.secondary, .skip, .profile-logout, .photo-action-btn, .result-clear-button, .soft-btn:not(.attendance-actions .soft-btn, .history-detail-btn)):not(:disabled):not(#_):not(#_):not(#_):not(#_):hover {
+    background: var(--button-soft-hover) !important;
+  }
+
+  /* Gold buttons show the brighter gold on hover, wherever they sit. */
+  :is(.primary:not(.photo-danger), .new-btn, .attendance-actions .soft-btn, .history-list .history-detail-btn):not(:disabled):not(#_):not(#_):not(#_):not(#_):hover {
+    background: var(--gold-glass-hover) !important;
+  }
+
+  :is(.modal-close, .more, .password-toggle):not(:disabled):not(#_):not(#_):not(#_):not(#_):hover {
+    background: var(--button-soft-hover) !important;
+    color: var(--bar-text) !important;
+  }
+
+  /* Inactive tabs: only the text darkens; the gliding pill marks the chosen one. */
+  :is(.page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button, .topbar-nav button):not(.active, [aria-selected="true"], :disabled):not(#_):not(#_):not(#_):not(#_):hover {
+    color: var(--bar-text) !important;
+  }
+
+  /* Tabs on a bare track also get a faint fill under the pointer. The list/grid switch had an opaque white hover from
+     an older layer; it now behaves like the other tabs. */
+  :is(.page-tabs button, .bxh-tabs > button, .photo-view-toggle button, .topbar-nav button):not(.active, [aria-selected="true"], :disabled):not(#_):not(#_):not(#_):not(#_):hover {
+    background: var(--pill) !important;
+  }
+}
+
+/* The current choice (the open tab, the current page, the view in use) does nothing when clicked, so it does not
+   react to hover or press either. */
+@media (hover: hover) and (pointer: fine) {
+  :is(.photo-pagination-pages button, .photo-view-toggle button, .schedule-filter button).active:not(#_):not(#_):not(#_):not(#_):hover {
+    background: var(--gold-glass) !important;
+  }
+}
+
+:is(.photo-pagination-pages button, .photo-view-toggle button, .page-tabs button, .bxh-tabs > button, .topbar-nav button).active:not(#_):not(#_):not(#_):not(#_) {
+  cursor: default !important;
+}
+
+/* ---------- Pressed ---------- */
+:is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button, .result-clear-button, .modal-close, .more, .password-toggle, .glass-select, .page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button, .topbar-nav button):not(:disabled, .active, [aria-current="page"], [aria-selected="true"]):not(#_):not(#_):not(#_):not(#_):active {
+  scale: 0.97 !important;
+  translate: 0 0 !important;
+}
+
+/* ---------- Keyboard focus: one ring for all ---------- */
+button:focus-visible:not(#_):not(#_):not(#_):not(#_) {
+  outline: 2px solid var(--focus-ring) !important;
+  outline-offset: 2px !important;
+}
+
+/* Kinds without a shadow of their own drop the older shadow ring, so the ring never shows twice. */
+:is(.modal-close, .more, .password-toggle, .page-tabs button, .bxh-tabs > button, .photo-view-toggle button, .topbar-nav button, .topbar-theme button, .topbar-profile-btn):focus-visible:not(#_):not(#_):not(#_):not(#_) {
+  box-shadow: none !important;
+}
+
+.glass-select:focus-visible:not(#_):not(#_):not(#_):not(#_) {
+  box-shadow: var(--glass-lift-card) !important;
+}
+
+/* ---------- Disabled ---------- */
+:is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button, .result-clear-button, .modal-close, .more, .password-toggle, .glass-select, .page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button, .topbar-nav button):disabled:not(#_):not(#_):not(#_):not(#_) {
+  translate: none !important;
+  scale: none !important;
+  transform: none !important;
+  cursor: not-allowed !important;
+}
+
+/* The dropdown field goes flat and muted like the buttons beside it (it used to only fade). */
+.glass-select:disabled:not(#_):not(#_):not(#_):not(#_) {
+  background: var(--button-off) !important;
+  box-shadow: none !important;
+  color: var(--button-off-text) !important;
+  opacity: 1 !important;
+}
+
+.glass-select:disabled:not(#_):not(#_):not(#_):not(#_) > svg {
+  color: var(--button-off-text);
+}
+
+/* Icons and tabs have no fill to flatten, so they fade instead. */
+:is(.modal-close, .more, .password-toggle, .page-tabs button, .bxh-tabs > button, .photo-view-toggle button, .topbar-nav button):disabled:not(#_):not(#_):not(#_):not(#_) {
+  opacity: 0.45 !important;
+}
+
+/* Reduced motion: states still change colour, but nothing lifts or shrinks. */
+@media (prefers-reduced-motion: reduce) {
+  :is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button, .result-clear-button, .modal-close, .more, .password-toggle, .glass-select, .page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button, .topbar-nav button):not(#_):not(#_):not(#_):not(#_):is(:hover, :active) {
+    translate: none !important;
+    scale: none !important;
+  }
+}

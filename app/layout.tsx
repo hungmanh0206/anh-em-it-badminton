@@ -54,6 +54,7 @@ import "./ranking-pages.css";
 import "./rules-cards.css";
 import "./photo-upload-preview.css";
 import "./dark-theme.css";
+import "./button-states.css";
 
 // Lets the fixed bars reach the screen edges; they pad themselves for the notch and home indicator.
 export const viewport: Viewport = { viewportFit: "cover" };
