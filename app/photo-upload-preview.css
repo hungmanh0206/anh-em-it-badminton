@@ -4,7 +4,9 @@
    inside it instead of growing the sheet. */
 .photo-dropzone.photo-previews:not(#_):not(#_) {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0;
   justify-items: stretch;
   gap: 10px;
   height: 280px;
@@ -163,8 +165,10 @@
   height: 40px;
 }
 
+/* A long file name is cut with "…" instead of widening the sheet past the screen. */
 .photo-preview-caption {
   display: flex;
+  min-width: 0;
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
@@ -174,6 +178,7 @@
 }
 
 .photo-previews .photo-preview-caption b:not(#_):not(#_) {
+  min-width: 0;
   overflow: hidden;
   color: var(--bar-text);
   font-size: 13px;
@@ -217,4 +222,13 @@
   .photo-preview-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+/* The sheet's fields never grow wider than the sheet. */
+.photo-sheet-body:not(#_) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.photo-sheet-body > * {
+  min-width: 0;
 }
