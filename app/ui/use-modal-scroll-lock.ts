@@ -19,7 +19,22 @@ export function useModalScrollLock() {
       }
       event.preventDefault();
     };
-    document.addEventListener("touchmove", holdPage, { passive: false });
-    return () => document.removeEventListener("touchmove", holdPage);
+    // A blocking touch listener makes every scroll wait for the page's script, so it is only attached while a modal is
+    // actually open; the rest of the time scrolling stays free.
+    let attached = false;
+    const sync = () => {
+      const open = Boolean(document.querySelector(MODAL_OPEN));
+      if (open === attached) return;
+      attached = open;
+      if (open) document.addEventListener("touchmove", holdPage, { passive: false });
+      else document.removeEventListener("touchmove", holdPage);
+    };
+    const observer = new MutationObserver(sync);
+    observer.observe(document.body, { childList: true, subtree: true });
+    sync();
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("touchmove", holdPage);
+    };
   }, []);
 }

@@ -283,7 +283,7 @@ async function loadPersistedEloRows(eloRatingsRead: EloRatingsRead, activeProfil
     status: {
       source: "database" as const,
       processedMatches: 0,
-      message: latestUpdatedAt ? `ELO đang lấy từ bảng đã backfill, cập nhật gần nhất ${new Date(String(latestUpdatedAt)).toLocaleString("vi-VN")}.` : "ELO đang lấy từ bảng đã backfill.",
+      message: latestUpdatedAt ? `ELO đang lấy từ bảng đã backfill, cập nhật gần nhất ${new Date(String(latestUpdatedAt)).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}.` : "ELO đang lấy từ bảng đã backfill.",
     },
   };
 }

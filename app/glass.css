@@ -872,7 +872,10 @@ html:has(.modal-backdrop, .champion-celebration) body:not(#_) {
   overflow: hidden !important;
 }
 
-html:has(.modal-backdrop, .champion-celebration):not(#_) {
+/* The scrollbar's room is always kept, so a short page (no scrollbar) and a long one (scrollbar) put their blocks at
+   the same width, and switching between them never shifts the content sideways. Phones' scrollbars float, so they
+   are unaffected. */
+html:not(#_) {
   scrollbar-gutter: stable;
 }
 

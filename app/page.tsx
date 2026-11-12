@@ -122,12 +122,25 @@ const screenTitles: Record<Screen, string> = {
 const screenKeys = Object.keys(screenTitles) as Screen[];
 // The month filter lists every month from here on; May and June 2026 stay hidden as before.
 const firstRankingMonth = new Date(2026, 6, 1);
+// Browser storage that never throws: with site data blocked (some private modes, strict settings) reading
+// window.localStorage itself throws, which would blank the whole app. Values then live in memory for the visit.
+const safeStorage = (kind: "localStorage" | "sessionStorage") => {
+  const memory = new Map<string, string>();
+  const real = () => { try { return typeof window === "undefined" ? null : window[kind]; } catch { return null; } };
+  return {
+    getItem: (key: string) => { try { return real()?.getItem(key) ?? memory.get(key) ?? null; } catch { return memory.get(key) ?? null; } },
+    setItem: (key: string, value: string) => { memory.set(key, value); try { real()?.setItem(key, value); } catch {} },
+    removeItem: (key: string) => { memory.delete(key); try { real()?.removeItem(key); } catch {} },
+  };
+};
+const localStorage = safeStorage("localStorage");
+const sessionStorage = safeStorage("sessionStorage");
 const isScreenKey = (value: string | null | undefined): value is Screen => Boolean(value && screenKeys.includes(value as Screen));
 const screenFromLocation = () => {
   if (typeof window === "undefined") return "home";
   const hashScreen = window.location.hash.replace(/^#\/?/, "");
   if (isScreenKey(hashScreen)) return hashScreen;
-  const savedScreen = window.localStorage.getItem("aemit-current-screen");
+  const savedScreen = localStorage.getItem("aemit-current-screen");
   return isScreenKey(savedScreen) ? savedScreen : "home";
 };
 const slotLevel = (no: number): 1 | 2 => no <= 4 ? 1 : 2;
@@ -244,7 +257,7 @@ type TimedCachePayload = { storedAt?: number };
 type CachedHomeSessionPayload = HomeSessionPayload & { storedAt: number };
 const readBrowserCache = <T extends TimedCachePayload>(key: string, maxAgeMs: number): T | null => {
   if (typeof window === "undefined") return null;
-  for (const storage of [window.sessionStorage, window.localStorage]) {
+  for (const storage of [sessionStorage, localStorage]) {
     try {
       const raw = storage.getItem(key);
       if (!raw) continue;
@@ -260,7 +273,7 @@ const readBrowserCache = <T extends TimedCachePayload>(key: string, maxAgeMs: nu
 const writeBrowserCache = <T extends TimedCachePayload>(key: string, payload: T) => {
   if (typeof window === "undefined") return;
   const nextPayload = { ...payload, storedAt: payload.storedAt ?? Date.now() };
-  for (const storage of [window.sessionStorage, window.localStorage]) {
+  for (const storage of [sessionStorage, localStorage]) {
     try {
       storage.setItem(key, JSON.stringify(nextPayload));
     } catch {
@@ -270,7 +283,7 @@ const writeBrowserCache = <T extends TimedCachePayload>(key: string, payload: T)
 };
 const removeBrowserCache = (key: string) => {
   if (typeof window === "undefined") return;
-  for (const storage of [window.sessionStorage, window.localStorage]) {
+  for (const storage of [sessionStorage, localStorage]) {
     try {
       storage.removeItem(key);
     } catch {
@@ -279,6 +292,13 @@ const removeBrowserCache = (key: string) => {
   }
 };
 const ENABLE_TEST_FLOW = process.env.NEXT_PUBLIC_ENABLE_TEST_FLOW === "true";
+// realtime-js hands back a channel of the same name while it is still leaving, and subscribing to that does nothing,
+// so every subscription gets a name of its own.
+let liveChannelSeq = 0;
+const liveChannelName = (base: string) => `${base}-${++liveChannelSeq}`;
+const NETWORK_LOGIN_ERROR = "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.";
+const isNetworkAuthError = (error: { status?: number; name?: string; message?: string }) =>
+  error.name === "AuthRetryableFetchError" || error.status === 0 || /fetch|network/i.test(error.message || "");
 const TEMP_RESET_HOME_ATTENDANCE_FOR_TEST = false;
 const initialMembers: Member[] = [
   { name: "Mạnh", initials: "M", level: 1, color: "#6846e8", present: false, username: "manh", password: "123456", role: "admin", responded: false },
@@ -367,10 +387,13 @@ export default function Home() {
   const editingScoreRows = useRef<Set<number>>(new Set());
   const [confirmedMatches, setConfirmedMatches] = useState<Record<number, boolean>>({});
   const [activeUser, setActiveUser] = useState<Member | null>(null);
+  useEffect(() => { activeUserRef.current = activeUser; }, [activeUser]);
   const [showCheckin, setShowCheckin] = useState(false);
   const [checkinPopupMode, setCheckinPopupMode] = useState<"auto" | "manual" | null>(null);
   const [dismissedCheckinPromptKey, setDismissedCheckinPromptKey] = useState<string | null>(null);
   const [loginError, setLoginError] = useState("");
+  const quietSignOutRef = useRef(false);
+  const activeUserRef = useRef<Member | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [spinTarget, setSpinTarget] = useState<number | null>(null);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
@@ -523,11 +546,25 @@ export default function Home() {
     setDrawn(nextDrawn);
   }, []);
 
+  // Signs out this device only (other devices stay signed in) and shows why, without the "session expired" notice.
+  const endSession = (message = "") => {
+    quietSignOutRef.current = true;
+    void supabase?.auth.signOut({ scope: "local" });
+    setScreen("home");
+    setActiveUser(null);
+    setLoginError(message);
+  };
   const signIn = async (username: string, password: string) => {
     const normalized = username.trim().toLowerCase();
+    if (!normalized || !password) return setLoginError("Nhập tên đăng nhập và mật khẩu.");
     if (supabase) {
-      const { error } = await supabase.auth.signInWithPassword({ email: `${normalized}@anhemit.club`, password });
-      if (error) return setLoginError("Tên đăng nhập hoặc mật khẩu chưa đúng.");
+      let error: { status?: number; name?: string; message?: string } | null = null;
+      try {
+        ({ error } = await supabase.auth.signInWithPassword({ email: `${normalized}@anhemit.club`, password }));
+      } catch {
+        return setLoginError(NETWORK_LOGIN_ERROR);
+      }
+      if (error) return setLoginError(isNetworkAuthError(error) ? NETWORK_LOGIN_ERROR : "Tên đăng nhập hoặc mật khẩu chưa đúng.");
       // Every sign-in starts at home, whatever page the last session was on.
       setScreen("home");
       const localUser = members.find((m) => m.username === normalized);
@@ -536,11 +573,14 @@ export default function Home() {
         setLoginError("");
         closeCheckinPopup();
       }
-      const { data: profile } = await supabase.from("profiles").select("full_name, username, level, role, description").eq("username", normalized).single();
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("full_name, username, level, role, description").eq("username", normalized).single();
       if (profile) {
         setActiveUser(memberFromProfile(profile, localUser)); setLoginError(""); closeCheckinPopup(); return;
       }
+      // Only active profiles can be read: no row means the account was removed.
+      if (profileError?.code === "PGRST116") return endSession("Tài khoản này đã ngừng hoạt động. Liên hệ Admin nếu cần mở lại.");
       if (localUser) return;
+      return endSession("Không tải được hồ sơ. Kiểm tra mạng rồi thử lại.");
     }
     const user = members.find((m) => m.username === normalized && m.password === password);
     if (!user) return setLoginError("Tên đăng nhập hoặc mật khẩu chưa đúng.");
@@ -612,27 +652,43 @@ export default function Home() {
     if (!supabase) return;
     const client = supabase;
     const restoreSession = async () => {
-      const { data: { session: savedSession } } = await client.auth.getSession();
-      const username = savedSession?.user.email?.split("@")[0];
-      if (username) {
-        const localUser = initialMembers.find((member) => member.username === username);
-        if (localUser) {
-          setActiveUser(localUser);
-          setAuthRestoring(false);
+      try {
+        const { data: { session: savedSession } } = await client.auth.getSession();
+        const username = savedSession?.user.email?.split("@")[0];
+        if (username) {
+          const localUser = initialMembers.find((member) => member.username === username);
+          if (localUser) {
+            setActiveUser(localUser);
+            setAuthRestoring(false);
+          }
+          const { data: profile, error: profileError } = await client.from("profiles").select("full_name, username, level, role, description").eq("username", username).single();
+          if (profile) setActiveUser(memberFromProfile(profile, localUser));
+          else if (profileError?.code === "PGRST116") endSession("Tài khoản này đã ngừng hoạt động. Liên hệ Admin nếu cần mở lại.");
         }
-        const { data: profile } = await client.from("profiles").select("full_name, username, level, role, description").eq("username", username).single();
-        if (profile) setActiveUser(memberFromProfile(profile, localUser));
+      } catch {
+        // Offline on reload: the sign-in screen (or the founding member fallback) shows instead of an endless spinner.
+      } finally {
+        setAuthRestoring(false);
       }
-      setAuthRestoring(false);
     };
     void restoreSession();
+    // A session that ends on its own (refresh token expired or revoked) takes the user back to sign-in with a reason,
+    // instead of leaving them "signed in" with every action failing.
+    const { data: { subscription } } = client.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_OUT") return;
+      if (!quietSignOutRef.current && activeUserRef.current) setLoginError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      quietSignOutRef.current = false;
+      setScreen("home");
+      setActiveUser(null);
+    });
+    return () => subscription.unsubscribe();
   }, []);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
   useEffect(() => {
-    window.localStorage.setItem("aemit-current-screen", screen);
+    localStorage.setItem("aemit-current-screen", screen);
     const nextHash = `#${screen}`;
     if (window.location.hash !== nextHash) {
       window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${nextHash}`);
@@ -725,14 +781,17 @@ export default function Home() {
     } else {
       setAttendanceSynced(false);
     }
+    let attendanceRequest = 0;
     const loadLiveAttendance = async () => {
+      const request = ++attendanceRequest;
       try {
         const { data: { session: authSession } } = await client.auth.getSession();
         const response = await fetch("/api/home-session", {
           headers: { ...(authSession?.access_token ? { Authorization: `Bearer ${authSession.access_token}` } : {}) },
         });
         const payload = await response.json().catch(() => ({ error: "Không thể tải phiên điểm danh." })) as HomeSessionPayload;
-        if (cancelled) return;
+        // Several changes arrive together; only the answer to the newest request is applied.
+        if (cancelled || request !== attendanceRequest) return;
         if (!response.ok) {
           setLoginError(payload.error || "Không thể tải phiên điểm danh.");
           return;
@@ -744,12 +803,14 @@ export default function Home() {
         }
         writeBrowserCache(cacheKey, { ...payload, storedAt: Date.now() });
         applyHomeSessionPayload(payload);
+      } catch {
+        if (!cancelled && request === attendanceRequest) setLoginError("Không tải được điểm danh. Kiểm tra mạng rồi thử lại.");
       } finally {
         if (!cancelled) setAttendanceSynced(true);
       }
     };
     void loadLiveAttendance();
-    const channel = client.channel("club-attendance-live")
+    const channel = client.channel(liveChannelName("club-attendance-live"))
       .on("postgres_changes", { event: "*", schema: "public", table: "attendances" }, loadLiveAttendance)
       .on("postgres_changes", { event: "*", schema: "public", table: "play_sessions" }, loadLiveAttendance)
       .subscribe();
@@ -823,6 +884,9 @@ export default function Home() {
       if (useAggregatedAppData) {
         const cached = readBrowserCache<AppDataCachePayload>(appDataCacheKey, instantCacheTtlMs);
         if (cached) applyAppData(cached);
+        // One score save sends several live updates; wait a moment so they become a single request.
+        await new Promise((resolve) => window.setTimeout(resolve, 250));
+        if (cancelled) return;
         try {
           const { data: { session: authSession } } = await client.auth.getSession();
           const params = new URLSearchParams({ month, currentMonth: currentMonthKey, sessionMonth: sessionMonthKey, previousMonth: previousMonthKey });
@@ -831,6 +895,8 @@ export default function Home() {
             cache: "no-store",
           });
           const payload = await response.json().catch(() => ({ error: "Không thể tải dữ liệu CLB." })) as AppDataCachePayload & { error?: string };
+          // A newer request (another month picked, another update) has replaced this one.
+          if (cancelled) return;
           if (!response.ok) {
             setLoginError(payload.error || "Không thể tải dữ liệu CLB.");
             return;
@@ -839,8 +905,8 @@ export default function Home() {
           setLoginError("");
           applyAppData(nextPayload);
           writeBrowserCache(appDataCacheKey, nextPayload);
-        } catch (error) {
-          setLoginError(error instanceof Error ? error.message : "Không thể tải dữ liệu CLB.");
+        } catch {
+          if (!cancelled) setLoginError("Không tải được dữ liệu CLB. Kiểm tra mạng rồi thử lại.");
         }
         return;
       }
@@ -878,7 +944,7 @@ export default function Home() {
         return mergedRows.sort(rankingSort);
       };
       try {
-        const cached = window.sessionStorage.getItem(rankingCacheKey);
+        const cached = sessionStorage.getItem(rankingCacheKey);
         if (cached) {
           const parsed = JSON.parse(cached) as RankingCachePayload;
           if (Date.now() - parsed.storedAt < rankingCacheTtlMs) {
@@ -891,7 +957,7 @@ export default function Home() {
           }
         }
       } catch {
-        window.sessionStorage.removeItem(rankingCacheKey);
+        sessionStorage.removeItem(rankingCacheKey);
       }
       const requestedRankingMonths = [...new Set([month, currentMonthKey, sessionMonthKey, previousMonthKey, ...championMonthKeys])];
       const [{ data: allRankingData }, { data: championFinalSessions }, { data: activeProfiles }, { data: finalSession }, { count: nextMonthRows }] = await Promise.all([
@@ -941,7 +1007,7 @@ export default function Home() {
       }
       setChampionRankingRows(nextChampionRankingRows);
       setChampionRankingLabel(nextChampionRankingLabel);
-      window.sessionStorage.setItem(rankingCacheKey, JSON.stringify({
+      sessionStorage.setItem(rankingCacheKey, JSON.stringify({
         rankingRows: nextRankingRows,
         currentRankingRows: nextCurrentRankingRows,
         liveRankingRows: nextLiveRankingRows,
@@ -965,13 +1031,15 @@ export default function Home() {
         message: closed ? `Đã tạo BXH ${monthLabel(selectedNextMonthDate)}.` : !currentRows ? "Tháng này chưa có dữ liệu BXH để chốt." : !finalSessionCompleted ? "Buổi cuối tháng chưa hoàn tất nhập điểm." : "Sẵn sàng chốt BXH và tạo tháng mới.",
       });
     };
+    let cancelled = false;
     void loadRanking();
+    return () => { cancelled = true; };
   }, [activeUsername, rankingMonth, currentMonthKey, previousMonthKey, sessionMonthKey, rankingRefreshTick, historyRefreshTick]);
   useEffect(() => {
     if (!supabase || !activeUsername) return;
     const client = supabase;
     const channel = client
-      .channel("club-ranking-live")
+      .channel(liveChannelName("club-ranking-live"))
       .on("postgres_changes", { event: "*", schema: "public", table: "monthly_results" }, () => {
         setRankingRefreshTick((tick) => tick + 1);
       })
@@ -1031,13 +1099,13 @@ export default function Home() {
     const historyCacheKey = "aemit-history-cache-v3";
     const loadHistory = async () => {
       try {
-        const cached = window.sessionStorage.getItem(historyCacheKey);
+        const cached = sessionStorage.getItem(historyCacheKey);
         if (cached) {
           const parsed = JSON.parse(cached) as { sessions: HistorySession[]; storedAt: number };
           if (Date.now() - parsed.storedAt < rankingCacheTtlMs) setHistorySessions(parsed.sessions);
         }
       } catch {
-        window.sessionStorage.removeItem(historyCacheKey);
+        sessionStorage.removeItem(historyCacheKey);
       }
       const { data } = await client.from("play_sessions").select("id, session_date, matches(match_no, team_a, team_b), attendances(choice)").eq("status", "completed").order("session_date", { ascending: false });
       if (!data) return;
@@ -1051,7 +1119,7 @@ export default function Home() {
         };
       });
       setHistorySessions(nextSessions);
-      window.sessionStorage.setItem(historyCacheKey, JSON.stringify({ sessions: nextSessions, storedAt: Date.now() }));
+      sessionStorage.setItem(historyCacheKey, JSON.stringify({ sessions: nextSessions, storedAt: Date.now() }));
     };
     void loadHistory();
   }, [activeUsername, historyRefreshTick]);
@@ -1060,7 +1128,7 @@ export default function Home() {
     const client = supabase;
     const refreshHistory = () => setHistoryRefreshTick((tick) => tick + 1);
     const channel = client
-      .channel("club-history-live")
+      .channel(liveChannelName("club-history-live"))
       .on("postgres_changes", { event: "*", schema: "public", table: "play_sessions" }, refreshHistory)
       .on("postgres_changes", { event: "*", schema: "public", table: "matches" }, refreshHistory)
       .subscribe();
@@ -1093,7 +1161,7 @@ export default function Home() {
       setConfirmedMatches(nextConfirmed);
     };
     void loadSavedMatches();
-    const channel = client.channel("club-match-results").on("postgres_changes", { event: "*", schema: "public", table: "matches", filter: `session_id=eq.${sessionId}` }, loadSavedMatches).subscribe();
+    const channel = client.channel(liveChannelName("club-match-results")).on("postgres_changes", { event: "*", schema: "public", table: "matches", filter: `session_id=eq.${sessionId}` }, loadSavedMatches).subscribe();
     return () => { cancelled = true; void client.removeChannel(channel); };
   }, [sessionId]);
   const drawSelf = async () => {
@@ -1304,7 +1372,7 @@ export default function Home() {
         <i className="slide-indicator" aria-hidden="true" />
       </nav>
     </div>
-    <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); void supabase?.auth.signOut(); setScreen("home"); setActiveUser(null); }} />}</Presence>
+    <Presence show={Boolean(logoutConfirmOpen)}>{logoutConfirmOpen && <ConfirmActionModal icon="logout" title="Đăng xuất?" message="Bạn có chắc muốn đăng xuất khỏi tài khoản này không?" confirmLabel="Đăng xuất" cancelLabel="Hủy" onCancel={() => setLogoutConfirmOpen(false)} onConfirm={() => { setLogoutConfirmOpen(false); endSession(); }} />}</Presence>
     <section className="content">
       <header><div className="title-group"><div><h1>{screen === "members" && !isAdmin ? "Thành viên" : screenTitles[screen]}</h1></div>{screen === "home" && <p className="title-date">{currentDateLabel}</p>}</div></header>
       {activeGroup && activeGroup.screens.length > 1 && <div ref={tabsRef} key={activeGroup.key} className="page-tabs" aria-label={activeGroup.label}>{activeGroup.screens.map((item) => <button key={item.screen} className={screen === item.screen ? "active" : ""} aria-current={screen === item.screen ? "page" : undefined} onClick={() => openScreen(item.screen)}>{item.label}</button>)}<i className="slide-indicator" aria-hidden="true" /></div>}
@@ -2582,6 +2650,8 @@ function PasswordField({ value, onChange, placeholder, autoFocus }: { value: str
 // A photo chosen for a member: cropped round, kept here until the form is saved.
 function useAvatarPicker() {
   const [picked, setPicked] = useState<{ blob: Blob; preview: string } | null>(null);
+  // Each picked photo gets a preview address; the previous one is released when it is replaced or the picker closes.
+  useEffect(() => () => { if (picked) URL.revokeObjectURL(picked.preview); }, [picked]);
   const [error, setError] = useState("");
   const pick = async (file?: File) => {
     if (!file) return false;
@@ -2602,6 +2672,8 @@ function useAvatarPicker() {
 // The celebration picture chosen for a member, kept here until the form is saved.
 function useCardArtPicker() {
   const [picked, setPicked] = useState<{ blob: Blob; preview: string } | null>(null);
+  // Each picked photo gets a preview address; the previous one is released when it is replaced or the picker closes.
+  useEffect(() => () => { if (picked) URL.revokeObjectURL(picked.preview); }, [picked]);
   const [error, setError] = useState("");
   const pick = async (file?: File) => {
     if (!file) return false;
@@ -2960,12 +3032,24 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
 
 function Login({ onLogin, error }: { onLogin: (username: string, password: string) => void | Promise<void>; error: string }) {
   const [username, setUsername] = useState(""); const [password, setPassword] = useState("");
-  return <main className="login-page"><section className="login-card"><div className="login-brand"><span aria-hidden="true" /><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></div><div><p className="eyebrow">Xin chào!</p><h1>Đăng nhập CLB</h1><p>Đăng nhập để điểm danh và theo dõi lịch thi đấu của bạn.</p></div><form onSubmit={(e) => { e.preventDefault(); void onLogin(username, password); }}><label>Tên đăng nhập<input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Nhập tên đăng nhập" /></label><label>Mật khẩu<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Nhập mật khẩu" /></label>{error && <p className="login-error">{error}</p>}<button className="primary" type="submit">Đăng nhập <span>→</span></button></form></section></main>;
+  const [busy, setBusy] = useState(false);
+  const submit = async () => {
+    if (busy) return;
+    setBusy(true);
+    try { await onLogin(username, password); } finally { setBusy(false); }
+  };
+  return <main className="login-page"><section className="login-card"><div className="login-brand"><span aria-hidden="true" /><div><b>ANH EM IT</b><small>BADMINTON CLUB</small></div></div><div><p className="eyebrow">Xin chào!</p><h1>Đăng nhập CLB</h1><p>Đăng nhập để điểm danh và theo dõi lịch thi đấu của bạn.</p></div><form onSubmit={(e) => { e.preventDefault(); void submit(); }}><label>Tên đăng nhập<input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Nhập tên đăng nhập" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} /></label><label>Mật khẩu<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Nhập mật khẩu" autoComplete="current-password" /></label>{error && !busy && <p className="login-error" role="alert">{error}</p>}<button className="primary" type="submit" disabled={busy} aria-busy={busy}>{busy ? "Đang đăng nhập..." : <>Đăng nhập <span>→</span></>}</button></form></section></main>;
 }
 
 function CheckinModal({ member, onAnswer, onSkip }: { member: Member; onAnswer: (attending: boolean) => void; onSkip: () => void }) {
   return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Điểm danh buổi chơi" {...backdropDismissProps(onSkip)}><section className="checkin-modal"><button className="modal-close" onClick={onSkip} aria-label="Đóng">×</button><p className="eyebrow">BUỔI CHƠI THỨ BẢY</p><h2>Chào {member.name}, bạn có tham gia không?</h2><p>Chưa quyết định? Bấm × để điểm danh sau ở Trang chủ.</p><div className="modal-actions"><button className="primary" onClick={() => onAnswer(true)}>Tôi tham gia</button><button className="secondary" onClick={() => onAnswer(false)}>Tôi không tham gia</button></div></section></div>;
 }
 function ConfirmActionModal({ title, message, onCancel, onConfirm, icon = "confirm", confirmLabel = "Có, xác nhận", cancelLabel = "Không" }: { title: string; message: string; onCancel: () => void; onConfirm: () => void | Promise<void>; icon?: AppIconName; confirmLabel?: string; cancelLabel?: string }) {
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" {...backdropDismissProps(onCancel)}><section className={`confirm-modal confirm-modal-${icon}`}><span className={`modal-icon app-icon app-icon-${icon}`} aria-hidden="true" /><h2>{title}</h2><p>{message}</p><div className="modal-actions confirm-actions"><button className="secondary" onClick={onCancel}>{cancelLabel}</button><button className="primary" onClick={() => void onConfirm()}>{confirmLabel}</button></div></section></div>;
+  const [busy, setBusy] = useState(false);
+  const confirm = async () => {
+    if (busy) return;
+    setBusy(true);
+    try { await onConfirm(); } finally { setBusy(false); }
+  };
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" {...backdropDismissProps(onCancel)}><section className={`confirm-modal confirm-modal-${icon}`}><span className={`modal-icon app-icon app-icon-${icon}`} aria-hidden="true" /><h2>{title}</h2><p>{message}</p><div className="modal-actions confirm-actions"><button className="secondary" onClick={onCancel}>{cancelLabel}</button><button className="primary" disabled={busy} aria-busy={busy} onClick={() => void confirm()}>{confirmLabel}</button></div></section></div>;
 }

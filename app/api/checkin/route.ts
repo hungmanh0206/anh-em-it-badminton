@@ -60,6 +60,8 @@ async function assertSessionResultsAreReversible(admin: SupabaseClient, session:
   if ((nextMonthCount || 0) > 0) {
     throw new ApiError(400, "Tháng này đã chốt BXH nên không thể đổi điểm danh làm thay đổi kết quả đã lưu.");
   }
+  // Changing attendance redoes the draw and the schedule, which would delete every score already saved for the session.
+  throw new ApiError(400, "Buổi này đã có kết quả trận đấu nên không thể đổi điểm danh nữa. Liên hệ Admin nếu cần điều chỉnh.");
 }
 
 async function resetWorkflowAfterAttendanceChange(admin: SupabaseClient, session: PlaySession) {
@@ -260,6 +262,10 @@ export async function POST(request: Request) {
         .single();
       if (error) throw error;
       session = data as PlaySession;
+      // Members answer for this week's session only, never for a past or a later one.
+      if (!isTestFlowEnabled() && normalizeSessionDateKey(session.session_date) !== normalizeSessionDateKey(targetSessionDateKey(now))) {
+        throw new ApiError(400, "Chỉ điểm danh được cho buổi chơi của tuần này.");
+      }
       session = await moveSessionToDate(admin, session, normalizeSessionDateKey(session.session_date));
     } else {
       session = await getOrCreateSession(admin, user.id, targetSessionDateKey(now));

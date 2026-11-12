@@ -10,6 +10,7 @@ type ProfileJoin = {
   username?: string | null;
   full_name?: string | null;
   level?: "1" | "2" | number | string | null;
+  is_active?: boolean | null;
 };
 
 type AttendanceWithProfile = {
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
     const sessionId = body.sessionId;
     const readAttendances = () => admin
       .from("attendances")
-      .select("member_id, choice, drawn_number, level_at_time, profiles!attendances_member_id_fkey(id, username, full_name, level)")
+      .select("member_id, choice, drawn_number, level_at_time, profiles!attendances_member_id_fkey(id, username, full_name, level, is_active)")
       .eq("session_id", sessionId);
     // The first attendance read starts together with the session check; retries read again.
     const [{ data: sessionRow, error: sessionError }, firstAttendanceRead] = await Promise.all([
@@ -62,7 +63,8 @@ export async function POST(request: Request) {
         return Response.json({ error: "Bạn cần điểm danh tham gia trước khi chọn số." }, { status: 400 });
       }
 
-      const attendingRows = attendances.filter((attendance) => attendance.choice === "attending");
+      // A member removed after checking in no longer plays, as in the confirm step and the reassignment plan.
+      const attendingRows = attendances.filter((attendance) => attendance.choice === "attending" && toProfile(attendance.profiles)?.is_active !== false);
       const participantCount = attendingRows.length;
       const level1Count = attendingRows.filter((attendance) => attendanceLevel(attendance) === 1).length;
       const level2Count = attendingRows.length - level1Count;
@@ -74,7 +76,7 @@ export async function POST(request: Request) {
       if (!pool.length) return Response.json({ error: "Không có dải số phù hợp với Level của bạn trong buổi này." }, { status: 400 });
 
       const inactiveMemberIdsWithStaleSlots = attendances
-        .filter((attendance) => attendance.choice !== "attending" && typeof attendance.drawn_number === "number")
+        .filter((attendance) => (attendance.choice !== "attending" || toProfile(attendance.profiles)?.is_active === false) && typeof attendance.drawn_number === "number")
         .map((attendance) => attendance.member_id);
       const invalidMemberIds = attendingRows
         .filter((attendance) => typeof attendance.drawn_number === "number")

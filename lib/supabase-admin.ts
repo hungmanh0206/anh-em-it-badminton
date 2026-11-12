@@ -70,7 +70,7 @@ const claimedUserId = (token: string) => {
   }
 };
 
-const profileColumns = "id, role, full_name, username, level, description";
+const profileColumns = "id, role, full_name, username, level, description, is_active";
 
 export async function requireUser(request: Request) {
   const admin = createSupabaseAdmin();
@@ -89,6 +89,7 @@ export async function requireUser(request: Request) {
     ? claimedProfile
     : await admin.from("profiles").select(profileColumns).eq("id", authData.user.id).single();
   if (profileError || !profile) throw new ApiError(403, "Không tìm thấy hồ sơ người dùng.");
+  if (profile.is_active === false) throw new ApiError(403, "Tài khoản này đã ngừng hoạt động.");
 
   const normalizedProfile = {
     ...profile,
@@ -121,5 +122,7 @@ export async function requireSessionManager(request: Request) {
 
 export function jsonError(error: unknown) {
   if (error instanceof ApiError) return Response.json({ error: error.message }, { status: error.status });
-  return Response.json({ error: error instanceof Error ? error.message : "Có lỗi xảy ra." }, { status: 500 });
+  // Database and library errors can name tables and constraints: keep them in the server log, show a plain message.
+  console.error(error);
+  return Response.json({ error: "Có lỗi máy chủ, vui lòng thử lại." }, { status: 500 });
 }

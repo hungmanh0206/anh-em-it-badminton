@@ -8,6 +8,7 @@ type Body = {
 
 type ProfileJoin = {
   level?: "1" | "2" | number | string | null;
+  is_active?: boolean | null;
 };
 
 type AttendanceWithProfile = {
@@ -29,11 +30,12 @@ export async function POST(request: Request) {
 
     const { data: attendances, error: attendanceError } = await admin
       .from("attendances")
-      .select("drawn_number, level_at_time, profiles!attendances_member_id_fkey(level)")
+      .select("drawn_number, level_at_time, profiles!attendances_member_id_fkey(level, is_active)")
       .eq("session_id", body.sessionId)
       .eq("choice", "attending");
     if (attendanceError) throw attendanceError;
-    const attendanceRows = (attendances || []) as AttendanceWithProfile[];
+    // A member removed after checking in no longer plays, as in the draw and the confirm step.
+    const attendanceRows = ((attendances || []) as AttendanceWithProfile[]).filter((attendance) => toProfile(attendance.profiles)?.is_active !== false);
     if (!attendanceRows.length) return Response.json({ error: "Chưa có thành viên tham gia để tạo lịch." }, { status: 400 });
 
     const level1Count = attendanceRows.filter((attendance) => attendanceLevel(attendance) === 1).length;
