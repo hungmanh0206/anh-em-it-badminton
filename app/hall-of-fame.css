@@ -88,12 +88,7 @@
   transition: background 180ms ease, box-shadow 180ms ease, color 180ms ease, translate 180ms ease;
 }
 
-.hall-month-open:not(#_):not(#_):hover {
-  background: var(--gold-glass);
-  box-shadow: var(--gold-glass-shadow), 0 0 16px rgba(255, 183, 0, 0.35);
-  color: #1a1408;
-  translate: 0 -1px;
-}
+/* Hover, press and focus come from button-states.css, like every other glass button. */
 
 /* ---- body: champion | runner-up | third ---- */
 .hall-month-body {

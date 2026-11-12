@@ -9,9 +9,7 @@
     radial-gradient(circle at 0% 100%, rgba(255, 230, 156, 0.36), transparent 34%),
     linear-gradient(145deg, #ffffff 0%, #fffdf8 48%, #fff1c9 100%) !important;
   box-shadow:
-    0 26px 62px rgba(26, 21, 11, 0.25),
-    0 0 0 4px rgba(255, 183, 0, 0.08),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.86) !important;
+    0 26px 62px rgba(26, 21, 11, 0.25) !important;
 }
 
 .member-profile-popover.profile-rank-none {

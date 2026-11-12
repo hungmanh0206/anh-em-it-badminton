@@ -5,9 +5,12 @@
    The kinds:
    - filled: the gold buttons (and the red one for deleting): .primary, .new-btn, the gold .soft-btn variants
    - soft:   the white glass buttons: .secondary, .soft-btn, .skip, .profile-logout, .photo-action-btn, page numbers
-   - icon:   round icon buttons: .modal-close, .more, .password-toggle
+   - glass also covers "Xem BXH" in Bảng vàng (.hall-month-open); "Lưu ảnh BXH/ELO" are .soft-btn
+   - icon:   round icon buttons: .modal-close, .champion-close, .more, .password-toggle
+   - on-photo: the photo viewer's arrows and full-screen button keep their dark glass, and press like the rest
    - field:  the dropdown field (.glass-select)
    - tab:    segmented switches and tab bars: their pill shows the choice, so they only change colour
+             (the header's own sections keep their original look: text colour only, set in topbar.css)
 
    The states, the same for all:
    - hover (mouse only): filled and soft lift 1px with their hover fill; icons fill in; inactive tabs darken
@@ -24,7 +27,7 @@
 }
 
 /* ---------- One timing for every kind ---------- */
-:is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button, .result-clear-button, .modal-close, .more, .password-toggle, .glass-select, .page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button, .topbar-nav button):not(#_):not(#_):not(#_):not(#_) {
+:is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button, .result-clear-button, .hall-month-open, .modal-close, .champion-close, .more, .password-toggle, .glass-select, .page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button):not(#_):not(#_):not(#_):not(#_) {
   transition:
     background-color 160ms ease,
     color 160ms ease,
@@ -36,17 +39,17 @@
 
 /* ---------- Hover ---------- */
 /* Filled and soft buttons lift by the same 1px (an older rule added a 2px transform on top for some of them). */
-:is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .result-clear-button):not(:disabled):not(#_):not(#_):not(#_):not(#_) {
+:is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .result-clear-button, .hall-month-open):not(:disabled):not(#_):not(#_):not(#_):not(#_) {
   transform: none !important;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  :is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .result-clear-button):not(:disabled):not(#_):not(#_):not(#_):not(#_):hover {
+  :is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .result-clear-button, .hall-month-open):not(:disabled):not(#_):not(#_):not(#_):not(#_):hover {
     translate: 0 -1px;
   }
 
   /* White glass buttons show the brighter glass on hover, wherever they sit. */
-  :is(.secondary, .skip, .profile-logout, .photo-action-btn, .result-clear-button, .soft-btn:not(.attendance-actions .soft-btn, .history-detail-btn)):not(:disabled):not(#_):not(#_):not(#_):not(#_):hover {
+  :is(.secondary, .skip, .profile-logout, .photo-action-btn, .result-clear-button, .hall-month-open, .soft-btn:not(.attendance-actions .soft-btn, .history-detail-btn)):not(:disabled):not(#_):not(#_):not(#_):not(#_):hover {
     background: var(--button-soft-hover) !important;
   }
 
@@ -55,19 +58,19 @@
     background: var(--gold-glass-hover) !important;
   }
 
-  :is(.modal-close, .more, .password-toggle):not(:disabled):not(#_):not(#_):not(#_):not(#_):hover {
+  :is(.modal-close, .champion-close, .more, .password-toggle):not(:disabled):not(#_):not(#_):not(#_):not(#_):hover {
     background: var(--button-soft-hover) !important;
     color: var(--bar-text) !important;
   }
 
   /* Inactive tabs: only the text darkens; the gliding pill marks the chosen one. */
-  :is(.page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button, .topbar-nav button):not(.active, [aria-selected="true"], :disabled):not(#_):not(#_):not(#_):not(#_):hover {
+  :is(.page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button):not(.active, [aria-selected="true"], :disabled):not(#_):not(#_):not(#_):not(#_):hover {
     color: var(--bar-text) !important;
   }
 
   /* Tabs on a bare track also get a faint fill under the pointer. The list/grid switch had an opaque white hover from
      an older layer; it now behaves like the other tabs. */
-  :is(.page-tabs button, .bxh-tabs > button, .photo-view-toggle button, .topbar-nav button):not(.active, [aria-selected="true"], :disabled):not(#_):not(#_):not(#_):not(#_):hover {
+  :is(.page-tabs button, .bxh-tabs > button, .photo-view-toggle button):not(.active, [aria-selected="true"], :disabled):not(#_):not(#_):not(#_):not(#_):hover {
     background: var(--pill) !important;
   }
 }
@@ -80,12 +83,12 @@
   }
 }
 
-:is(.photo-pagination-pages button, .photo-view-toggle button, .page-tabs button, .bxh-tabs > button, .topbar-nav button).active:not(#_):not(#_):not(#_):not(#_) {
+:is(.photo-pagination-pages button, .photo-view-toggle button, .page-tabs button, .bxh-tabs > button).active:not(#_):not(#_):not(#_):not(#_) {
   cursor: default !important;
 }
 
 /* ---------- Pressed ---------- */
-:is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button, .result-clear-button, .modal-close, .more, .password-toggle, .glass-select, .page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button, .topbar-nav button):not(:disabled, .active, [aria-current="page"], [aria-selected="true"]):not(#_):not(#_):not(#_):not(#_):active {
+:is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button, .result-clear-button, .hall-month-open, .modal-close, .champion-close, .more, .password-toggle, .glass-select, .page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button):not(:disabled, .active, [aria-current="page"], [aria-selected="true"]):not(#_):not(#_):not(#_):not(#_):active {
   scale: 0.97 !important;
   translate: 0 0 !important;
 }
@@ -97,7 +100,7 @@ button:focus-visible:not(#_):not(#_):not(#_):not(#_) {
 }
 
 /* Kinds without a shadow of their own drop the older shadow ring, so the ring never shows twice. */
-:is(.modal-close, .more, .password-toggle, .page-tabs button, .bxh-tabs > button, .photo-view-toggle button, .topbar-nav button, .topbar-theme button, .topbar-profile-btn):focus-visible:not(#_):not(#_):not(#_):not(#_) {
+:is(.modal-close, .champion-close, .more, .password-toggle, .page-tabs button, .bxh-tabs > button, .photo-view-toggle button, .topbar-theme button, .topbar-profile-btn):focus-visible:not(#_):not(#_):not(#_):not(#_) {
   box-shadow: none !important;
 }
 
@@ -106,7 +109,7 @@ button:focus-visible:not(#_):not(#_):not(#_):not(#_) {
 }
 
 /* ---------- Disabled ---------- */
-:is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button, .result-clear-button, .modal-close, .more, .password-toggle, .glass-select, .page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button, .topbar-nav button):disabled:not(#_):not(#_):not(#_):not(#_) {
+:is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button, .result-clear-button, .hall-month-open, .modal-close, .champion-close, .more, .password-toggle, .glass-select, .page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button):disabled:not(#_):not(#_):not(#_):not(#_) {
   translate: none !important;
   scale: none !important;
   transform: none !important;
@@ -126,14 +129,83 @@ button:focus-visible:not(#_):not(#_):not(#_):not(#_) {
 }
 
 /* Icons and tabs have no fill to flatten, so they fade instead. */
-:is(.modal-close, .more, .password-toggle, .page-tabs button, .bxh-tabs > button, .photo-view-toggle button, .topbar-nav button):disabled:not(#_):not(#_):not(#_):not(#_) {
+:is(.modal-close, .champion-close, .more, .password-toggle, .page-tabs button, .bxh-tabs > button, .photo-view-toggle button):disabled:not(#_):not(#_):not(#_):not(#_) {
   opacity: 0.45 !important;
 }
 
 /* Reduced motion: states still change colour, but nothing lifts or shrinks. */
 @media (prefers-reduced-motion: reduce) {
-  :is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button, .result-clear-button, .modal-close, .more, .password-toggle, .glass-select, .page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button, .topbar-nav button):not(#_):not(#_):not(#_):not(#_):is(:hover, :active) {
+  :is(.primary, .new-btn, .soft-btn, .secondary, .skip, .profile-logout, .photo-action-btn, .photo-pagination-pages button, .result-clear-button, .hall-month-open, .modal-close, .champion-close, .more, .password-toggle, .glass-select, .page-tabs button, .bxh-tabs > button, .schedule-filter button, .photo-view-toggle button):not(#_):not(#_):not(#_):not(#_):is(:hover, :active) {
     translate: none !important;
     scale: none !important;
+  }
+}
+
+/* ---------- Photo viewer: dark glass over the photo ---------- */
+/* No outline borders (raised by a shadow like everything else), the same timing, and the same press. */
+:is(.photo-nav, .photo-fullscreen-btn):not(#_):not(#_):not(#_):not(#_) {
+  border: 0 !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28) !important;
+  transition: background-color 160ms ease, opacity 160ms ease, scale 120ms ease-out !important;
+}
+
+:is(.photo-nav, .photo-fullscreen-btn):not(:disabled):not(#_):not(#_):not(#_):not(#_):active {
+  scale: 0.97;
+}
+
+/* ---------- Menu rows (••• member menu): the same hover as the dropdown lists' rows ---------- */
+.member-menu button:not(#_):not(#_):not(#_):not(#_) {
+  transition: background-color 160ms ease, color 160ms ease !important;
+}
+
+.member-menu button:not(#_):not(#_):not(#_):not(#_):hover {
+  background: var(--bar-track) !important;
+}
+
+.member-menu button:not(#_):not(#_):not(#_):not(#_):focus-visible {
+  outline-offset: -2px !important;
+}
+
+/* ---------- One weight for button text ---------- */
+/* "Hủy bỏ" beside "Thêm thành viên" was regular weight while the gold button was bold. */
+:is(.primary, .new-btn, .soft-btn, .secondary, .skip):not(#_):not(#_):not(#_) {
+  font-weight: 800 !important;
+}
+
+/* ---------- Tools in a block's head: one size on each screen ----------
+   The month or player-count picker, the search box, "Lưu ảnh BXH/ELO", "Cách tính ELO", "Chốt BXH" and
+   "Thêm thành viên" stand side by side, so they share one height, corner and text size: 42px on desktop and iPad,
+   38px on phones (the list/grid switch stretches to the search box beside it). */
+:is(.ranking-head-actions, .elo-head-actions, .member-head-actions, .schedule-library-filter) > :is(button, .search):not(#_):not(#_):not(#_):not(#_) {
+  height: 42px;
+  min-height: 0;
+  margin-top: 0 !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+}
+
+:is(.ranking-head-actions, .elo-head-actions, .member-head-actions) > button:not(.glass-select):not(#_):not(#_):not(#_):not(#_) {
+  padding: 0 16px !important;
+}
+
+@media (max-width: 700px) {
+  :is(.ranking-head-actions, .elo-head-actions, .member-head-actions, .schedule-library-filter) > :is(button, .search):not(#_):not(#_):not(#_):not(#_) {
+    height: 38px;
+    font-size: 12.5px !important;
+  }
+
+  :is(.ranking-head-actions, .elo-head-actions, .member-head-actions) > button:not(.glass-select):not(#_):not(#_):not(#_):not(#_) {
+    padding: 0 12px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  :is(.ranking-head-actions, .elo-head-actions, .member-head-actions) > button:not(.glass-select):not(#_):not(#_):not(#_):not(#_) {
+    padding: 0 9px !important;
+    font-size: 11.5px !important;
+  }
+
+  .ranking-head-actions > .glass-select:not(#_):not(#_):not(#_):not(#_) {
+    font-size: 11.5px !important;
   }
 }

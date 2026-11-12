@@ -50,7 +50,7 @@
   --button-danger-text: #c2413b;
   --gold-glass: linear-gradient(180deg, rgba(255, 220, 125, 0.76), rgba(255, 190, 30, 0.62));
   --gold-glass-hover: linear-gradient(180deg, rgba(255, 220, 125, 0.92), rgba(255, 190, 30, 0.8));
-  --gold-glass-shadow: 0 6px 16px rgba(184, 118, 14, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --gold-glass-shadow: 0 6px 16px rgba(184, 118, 14, 0.18);
   --draw-glow: radial-gradient(circle at 24% 50%, rgba(255, 200, 61, 0.42), transparent 56%);
   --draw-glow-end: radial-gradient(circle at 96% 0%, rgba(255, 150, 90, 0.2), transparent 48%);
   --wheel-1: #ffdf85;
@@ -488,7 +488,7 @@ body::before {
 /* Destructive confirm: red glass instead of gold. */
 .primary.photo-danger:not(:disabled):not(#_):not(#_) {
   background: var(--button-danger) !important;
-  box-shadow: 0 6px 16px rgba(190, 50, 50, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 6px 16px rgba(190, 50, 50, 0.24) !important;
   color: #fff !important;
 }
 
@@ -1024,4 +1024,15 @@ html:has(.modal-backdrop:not(.profile-backdrop), .champion-celebration) .topbar:
   box-shadow: var(--bar-shadow) !important;
   -webkit-backdrop-filter: blur(18px) saturate(170%) !important;
   backdrop-filter: blur(18px) saturate(170%) !important;
+}
+
+/* Every block, modal and button keeps a 1px transparent border (the "no borders" rule only clears its colour). A
+   background is laid out inside that border by default and repeats, so a gradient's far side (the gold glow in a
+   corner) wrapped into the 1px strip on the opposite edge and showed as a thin gold line along it. Laying every
+   background out from the outer edge leaves nothing to wrap. */
+/* The five ids outrank every "background: … !important" in the older layers, which would reset it otherwise. */
+*:not(#_):not(#_):not(#_):not(#_):not(#_),
+*:not(#_):not(#_):not(#_):not(#_):not(#_)::before,
+*:not(#_):not(#_):not(#_):not(#_):not(#_)::after {
+  background-origin: border-box !important;
 }

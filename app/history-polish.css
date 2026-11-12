@@ -8,7 +8,7 @@
   border: 1px solid #e9a800 !important;
   border-radius: 10px !important;
   background: linear-gradient(180deg, #ffd24d 0%, #ffb700 100%) !important;
-  box-shadow: 0 5px 12px rgba(255, 170, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+  box-shadow: 0 5px 12px rgba(255, 170, 0, 0.24) !important;
   color: #1a1408 !important;
   font-size: 12.5px !important;
   font-weight: 800 !important;
@@ -18,7 +18,7 @@
 
 .history-list .history-detail-btn:hover {
   background: linear-gradient(180deg, #ffdc6b 0%, #ffc21a 100%) !important;
-  box-shadow: 0 7px 16px rgba(255, 170, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 7px 16px rgba(255, 170, 0, 0.32) !important;
 }
 
 .history-list .history-detail-btn:hover {

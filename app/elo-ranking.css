@@ -130,7 +130,7 @@
 
 .elo-row.top-rank .elo-rank {
   border: 0;
-  box-shadow: 0 10px 20px rgba(26, 21, 14, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.52);
+  box-shadow: 0 10px 20px rgba(26, 21, 14, 0.14);
 }
 
 .elo-row.top-1 .elo-rank {

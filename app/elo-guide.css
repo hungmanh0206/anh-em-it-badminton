@@ -13,11 +13,6 @@
   cursor: pointer;
 }
 
-.elo-guide-btn:hover {
-  border-color: #e9a800 !important;
-  background: #fff3d1 !important;
-  color: #5c4100 !important;
-}
 
 /* Sits at the right end of the "Thứ hạng ELO" header. */
 .elo-head-actions {
@@ -32,10 +27,6 @@
   white-space: nowrap;
 }
 
-.elo-guide-btn:focus-visible {
-  outline: 3px solid rgba(255, 183, 0, 0.45) !important;
-  outline-offset: 2px !important;
-}
 
 /* Header and footer stay put; only the body scrolls. */
 .elo-guide-modal {

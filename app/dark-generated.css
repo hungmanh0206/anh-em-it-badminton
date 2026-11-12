@@ -538,7 +538,7 @@
 :root[data-theme="dark"] p, :root[data-theme="dark"] small, :root[data-theme="dark"] .panel-head p, :root[data-theme="dark"] .hero p, :root[data-theme="dark"] .member-card small {
     color: var(--club-ink-600)
 }
-:root[data-theme="dark"] button:focus-visible, :root[data-theme="dark"] input:focus-visible, :root[data-theme="dark"] select:focus-visible {
+:root[data-theme="dark"] input:focus-visible, :root[data-theme="dark"] select:focus-visible {
     outline: none !important;
     box-shadow: var(--club-focus) !important;
     border-color: var(--club-gold-500) !important
@@ -1266,6 +1266,9 @@
         border-radius: 999px !important
     }
 }
+:root[data-theme="dark"] .schedule-pick b {
+    color: var(--bar-accent)
+}
 @media (min-width: 801px) {
     :root[data-theme="dark"] .rank-table .rank-row.rank-columns.top-rank {
         border-left: 0 !important
@@ -1686,9 +1689,7 @@
     background: radial-gradient(circle at 92% 0%, rgba(255, 183, 0, 0.16), transparent 32%),
     radial-gradient(circle at 0% 100%, rgba(255, 230, 156, 0.36), transparent 34%),
     linear-gradient(145deg, hsla(42, 10%, 14%, 1) 0%, hsla(43, 42%, 17%, 1) 48%, hsla(44, 42%, 17%, 1) 100%) !important;
-    box-shadow: 0 26px 62px rgba(0, 0, 0, 0.5),
-    0 0 0 4px rgba(255, 183, 0, 0.08),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.103) !important
+    box-shadow: 0 26px 62px rgba(0, 0, 0, 0.5) !important
 }
 :root[data-theme="dark"] .member-profile-popover::before {
     background: radial-gradient(circle at 18% 18%, hsla(42, 10%, 14%, 0.82), transparent 30%),
@@ -1803,7 +1804,7 @@
     linear-gradient(145deg, hsla(47, 42%, 17%, 1) 0%, #ffd66d 52%, #ffb700 100%) !important;
     border: 1px solid rgba(255, 183, 0, 0.34) !important;
     border-radius: 16px !important;
-    box-shadow: 0 12px 26px rgba(255, 183, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.086) !important
+    box-shadow: 0 12px 26px rgba(255, 183, 0, 0.24) !important
 }
 :root[data-theme="dark"] .login-brand > span {
     background: var(--club-mark-image) center / 96% auto no-repeat,
@@ -1811,7 +1812,7 @@
     linear-gradient(145deg, #1a1712 0%, #33270a 60%, #7a5a00 100%) !important;
     border: 1px solid rgba(255, 214, 109, 0.45) !important;
     border-radius: 18px !important;
-    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.017) !important
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.5) !important
 }
 :root[data-theme="dark"] .login-brand b {
     color: var(--club-ink-900, hsla(42, 20%, 94%, 1)) !important
@@ -1882,7 +1883,7 @@
 :root[data-theme="dark"] .modal-icon.app-icon {
     border-radius: 20px;
     background-color: hsla(47, 42%, 17%, 1);
-    box-shadow: 0 14px 30px rgba(255, 183, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.086)
+    box-shadow: 0 14px 30px rgba(255, 183, 0, 0.22)
 }
 :root[data-theme="dark"] .result-icon-button.edit .result-action-icon {
     background-image: var(--icon-pencil)
@@ -1927,7 +1928,7 @@
     border: 0 !important;
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a79f92'%3E%3Ccircle cx='12' cy='8.6' r='4.3'/%3E%3Cpath d='M3.6 24c.3-6.6 3.8-9.8 8.4-9.8s8.1 3.2 8.4 9.8z'/%3E%3C/svg%3E") center / 100% no-repeat,
     hsla(42, 10%, 17%, 1) !important;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.19) !important
+    box-shadow: none !important
 }
 :root[data-theme="dark"] .attendance-mark.yes, :root[data-theme="dark"] .checkin .attendance-mark.yes {
     background: #16a46f !important;
@@ -2108,7 +2109,7 @@
 }
 :root[data-theme="dark"] .elo-row.top-rank .elo-rank {
     border: 0;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.062)
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.34)
 }
 :root[data-theme="dark"] .elo-row.top-1 .elo-rank {
     background: linear-gradient(135deg, #ffe071, #ffb000 62%, #d99000)
@@ -2347,12 +2348,12 @@
     border: 1px solid #e9a800 !important;
     border-radius: 10px !important;
     background: linear-gradient(180deg, #ffd24d 0%, #ffb700 100%) !important;
-    box-shadow: 0 5px 12px rgba(255, 170, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.066) !important;
+    box-shadow: 0 5px 12px rgba(255, 170, 0, 0.24) !important;
     color: #1a1408 !important
 }
 :root[data-theme="dark"] .history-list .history-detail-btn:hover {
     background: linear-gradient(180deg, #ffdc6b 0%, #ffc21a 100%) !important;
-    box-shadow: 0 7px 16px rgba(255, 170, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.072) !important
+    box-shadow: 0 7px 16px rgba(255, 170, 0, 0.32) !important
 }
 :root[data-theme="dark"] .history-list .history-detail-btn:focus-visible {
     outline: 3px solid rgba(255, 183, 0, 0.45) !important;
@@ -2367,15 +2368,6 @@
     border-radius: 10px !important;
     background: hsla(40, 42%, 17%, 1) !important;
     color: hsla(42, 85%, 72%, 1) !important
-}
-:root[data-theme="dark"] .elo-guide-btn:hover {
-    border-color: #e9a800 !important;
-    background: hsla(44, 42%, 17%, 1) !important;
-    color: hsla(42, 85%, 72%, 1) !important
-}
-:root[data-theme="dark"] .elo-guide-btn:focus-visible {
-    outline: 3px solid rgba(255, 183, 0, 0.45) !important;
-    outline-offset: 2px !important
 }
 :root[data-theme="dark"] .elo-guide-modal {
     border-radius: 20px;
@@ -2844,7 +2836,7 @@
     border: 1px solid rgba(255, 183, 0, 0.3);
     border-radius: 16px;
     background: hsla(42, 10%, 14%, 0.78);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.102)
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14)
 }
 :root[data-theme="dark"] .page-hero-stats span {
     color: hsla(42, 20%, 83%, 1)
