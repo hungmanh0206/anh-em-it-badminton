@@ -209,3 +209,18 @@ button:focus-visible:not(#_):not(#_):not(#_):not(#_) {
     font-size: 11.5px !important;
   }
 }
+
+/* ---------- ••• in the member list ----------
+   In the grid it already sits in a small circle; in the list it was bare text, so the hover fill came out as a grey
+   square. It gets an invisible 32px circle, so at rest it looks as before and the hover fills a circle. */
+.member-actions .more:not(.member-card-tile .more):not(#_):not(#_) {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0 0 2px;
+  border: 0;
+  border-radius: 50%;
+  line-height: 1;
+  letter-spacing: 1px;
+}
