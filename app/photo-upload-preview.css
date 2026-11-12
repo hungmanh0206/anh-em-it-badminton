@@ -1,0 +1,220 @@
+/* Kho ảnh › Tải ảnh lên (PhotoUploadModal in app/photo-gallery.tsx): picked photos show in the pick area itself,
+   before anything is saved. One photo shows large; several show as a grid of squares, with a tile to add more. */
+/* The preview area keeps one fixed size whatever is picked: a photo fits inside it whole, and several photos scroll
+   inside it instead of growing the sheet. */
+.photo-dropzone.photo-previews:not(#_):not(#_) {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: stretch;
+  gap: 10px;
+  height: 280px;
+  padding: 10px;
+  text-align: left;
+  cursor: default;
+}
+
+.photo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  align-content: start;
+  gap: 8px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  scrollbar-width: thin;
+}
+
+.photo-preview-tile,
+.photo-preview-add {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  background: var(--pill);
+}
+
+.photo-preview-tile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* HEIC and other formats the browser cannot draw: the file type stands in for the picture. */
+.photo-preview-fallback {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--bar-muted);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.photo-preview-tile.is-error img {
+  opacity: 0.45;
+}
+
+.photo-preview-status {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(20, 16, 10, 0.62);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.photo-preview-tile.is-done .photo-preview-status {
+  background: rgba(24, 128, 80, 0.85);
+}
+
+.photo-preview-tile.is-error .photo-preview-status {
+  background: rgba(190, 52, 46, 0.88);
+}
+
+.photo-preview-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  background: #ffb700;
+  transition: width 200ms ease;
+}
+
+.photo-preview-remove:not(#_):not(#_):not(#_) {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(20, 16, 10, 0.6) !important;
+  box-shadow: none !important;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.photo-preview-remove:not(#_):not(#_):not(#_):hover {
+  background: rgba(190, 52, 46, 0.9) !important;
+}
+
+.photo-previews .photo-preview-add label:not(#_) {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--bar-accent);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.photo-preview-add label:hover {
+  background: var(--pill);
+}
+
+.photo-preview-add input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* One photo: it fills the area, shown whole (never cropped or stretched), with a slim "Thêm ảnh" strip under it. */
+.photo-previews.is-single .photo-preview-grid {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) 40px;
+  align-content: stretch;
+  overflow: hidden;
+}
+
+.photo-previews.is-single .photo-preview-tile {
+  aspect-ratio: auto;
+  height: auto;
+  min-height: 0;
+}
+
+.photo-previews.is-single .photo-preview-tile img {
+  object-fit: contain;
+}
+
+.photo-previews.is-single .photo-preview-add {
+  aspect-ratio: auto;
+  height: 40px;
+}
+
+.photo-preview-caption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  padding: 0 2px;
+  color: var(--bar-text);
+}
+
+.photo-previews .photo-preview-caption b:not(#_):not(#_) {
+  overflow: hidden;
+  color: var(--bar-text);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.photo-preview-caption small {
+  flex: none;
+  color: var(--bar-muted);
+  font-size: 12px;
+}
+
+.photo-upload-notes {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  color: var(--bar-muted);
+  font-size: 12.5px;
+  list-style: none;
+}
+
+.photo-upload-notes b {
+  color: var(--bar-text);
+}
+
+.photo-upload-notes .is-error {
+  color: #c2413b;
+}
+
+:root[data-theme="dark"] .photo-upload-notes .is-error {
+  color: #ff8a80;
+}
+
+@media (max-width: 560px) {
+  .photo-dropzone.photo-previews:not(#_):not(#_) {
+    height: 240px;
+  }
+
+  .photo-preview-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

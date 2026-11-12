@@ -52,6 +52,7 @@ import "./member-cards.css";
 import "./modal-desktop.css";
 import "./ranking-pages.css";
 import "./rules-cards.css";
+import "./photo-upload-preview.css";
 import "./dark-theme.css";
 
 // Lets the fixed bars reach the screen edges; they pad themselves for the notch and home indicator.

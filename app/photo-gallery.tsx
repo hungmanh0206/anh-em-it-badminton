@@ -568,7 +568,7 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
   </div>;
 }
 
-type UploadItem = { key: string; file: File; status: "pending" | "uploading" | "saving" | "done" | "error"; progress: number; message?: string };
+type UploadItem = { key: string; file: File; preview: string; noPreview?: boolean; status: "pending" | "uploading" | "saving" | "done" | "error"; progress: number; message?: string };
 type SignedUpload = { uploadUrl: string; apiKey: string; signature: string; folder: string; timestamp: number; allowed_formats: string };
 
 const NEW_FOLDER = "__new__";
@@ -643,6 +643,16 @@ function PhotoUploadModal({ folders, defaultFolder, onClose, onUploaded }: { fol
   const target = sanitizeFolderInput(targetInput);
 
   const update = (key: string, patch: Partial<UploadItem>) => setItems((current) => current.map((item) => (item.key === key ? { ...item, ...patch } : item)));
+  // Each picked photo is shown from a local address until it is uploaded; those addresses are released when a photo is
+  // taken out or the sheet closes.
+  const itemsRef = useRef(items);
+  useEffect(() => { itemsRef.current = items; }, [items]);
+  useEffect(() => () => { itemsRef.current.forEach((item) => URL.revokeObjectURL(item.preview)); }, []);
+  const removeItem = (key: string) => setItems((current) => {
+    const gone = current.find((item) => item.key === key);
+    if (gone) URL.revokeObjectURL(gone.preview);
+    return current.filter((item) => item.key !== key);
+  });
 
   const addFiles = (fileList: FileList | null) => {
     if (!fileList) return;
@@ -653,6 +663,7 @@ function PhotoUploadModal({ folders, defaultFolder, onClose, onUploaded }: { fol
       return {
         key: `${Date.now()}-${index}-${file.name}`,
         file,
+        preview: URL.createObjectURL(file),
         status: invalidType || tooLarge ? "error" : "pending",
         progress: 0,
         message: invalidType ? "Không phải file ảnh hợp lệ." : tooLarge ? `Ảnh vượt quá ${formatSize(PHOTO_MAX_BYTES)}.` : undefined,
@@ -708,25 +719,39 @@ function PhotoUploadModal({ folders, defaultFolder, onClose, onUploaded }: { fol
       </header>
       <div className="photo-sheet-body">
         <label className="photo-field">Danh mục
-          <GlassSelect value={folderChoice} options={[...folders.map((folder) => ({ value: folder.folder, label: `${folder.label} (${folder.folder || "thư mục gốc"})` })), { value: NEW_FOLDER, label: "Danh mục mới…", plus: true }]} onChange={setFolderChoice} disabled={busy} ariaLabel="Danh mục" />
+          <GlassSelect value={folderChoice} options={[...folders.map((folder) => ({ value: folder.folder, label: `${folder.label} (${folder.folder || "thư mục gốc"})` })), { value: NEW_FOLDER, label: "Danh mục mới…" }]} onChange={setFolderChoice} disabled={busy} ariaLabel="Danh mục" />
         </label>
         {folderChoice === NEW_FOLDER && <label className="photo-field">Tên thư mục mới
           <input value={newFolder} onChange={(event) => setNewFolder(event.target.value)} placeholder="ví dụ 2026/week-05" disabled={busy} />
           <small>{target === null ? "Chỉ dùng chữ thường không dấu, số, '-' hoặc '_'." : `Sẽ hiển thị là “${folderLabel(target)}”.`}</small>
         </label>}
-        <label className="photo-dropzone">
+        {/* Picked photos show right here before anything is saved; "Tải lên" sends them. */}
+        {items.length === 0 ? <label className="photo-dropzone">
           <input type="file" accept="image/*" multiple disabled={busy} onChange={(event) => { addFiles(event.target.files); event.target.value = ""; }} />
           <b>Chọn ảnh</b>
           <span>JPG, PNG, WEBP, HEIC… tối đa {formatSize(PHOTO_MAX_BYTES)} mỗi ảnh</span>
-        </label>
+        </label> : <div className={`photo-dropzone photo-previews${items.length === 1 ? " is-single" : ""}`}>
+          <ul className="photo-preview-grid">
+            {items.map((item) => <li key={item.key} className={`photo-preview-tile is-${item.status}`} title={item.file.name}>
+              {item.noPreview
+                ? <span className="photo-preview-fallback">{item.file.name.split(".").pop()?.toUpperCase() || "ẢNH"}</span>
+                : <img src={item.preview} alt={item.file.name} onError={() => update(item.key, { noPreview: true })} />}
+              {item.status !== "pending" && <span className="photo-preview-status">{item.status === "uploading" ? `${item.progress}%` : item.status === "saving" ? "Đang lưu…" : item.status === "done" ? "Xong" : "Lỗi"}</span>}
+              {item.status === "uploading" && <i className="photo-preview-bar" style={{ width: `${item.progress}%` }} />}
+              {!busy && item.status !== "done" && <button type="button" className="photo-preview-remove" onClick={() => removeItem(item.key)} aria-label={`Bỏ ảnh ${item.file.name}`}>×</button>}
+            </li>)}
+            {!busy && <li className="photo-preview-add">
+              <label>
+                <input type="file" accept="image/*" multiple onChange={(event) => { addFiles(event.target.files); event.target.value = ""; }} />
+                <span>Thêm ảnh</span>
+              </label>
+            </li>}
+          </ul>
+          {items.length === 1 && <p className="photo-preview-caption"><b>{items[0].file.name}</b><small>{formatSize(items[0].file.size)}</small></p>}
+        </div>}
         {formError && <p className="photo-form-error" role="alert">{formError}</p>}
-        {items.length > 0 && <ul className="photo-upload-list">
-          {items.map((item) => <li key={item.key} className={`photo-upload-item is-${item.status}`}>
-            <div><b>{item.file.name}</b><small>{formatSize(item.file.size)}</small></div>
-            <span className="photo-upload-status">{item.status === "pending" ? "Chờ tải" : item.status === "uploading" ? `${item.progress}%` : item.status === "saving" ? "Đang lưu…" : item.status === "done" ? "Xong" : "Lỗi"}</span>
-            {item.status === "uploading" && <i className="photo-upload-bar" style={{ width: `${item.progress}%` }} />}
-            {item.message && <p>{item.message}</p>}
-          </li>)}
+        {items.some((item) => item.message) && <ul className="photo-upload-notes">
+          {items.filter((item) => item.message).map((item) => <li key={item.key} className={`is-${item.status}`}><b>{item.file.name}</b> {item.message}</li>)}
         </ul>}
       </div>
       <div className="modal-actions photo-sheet-footer">
