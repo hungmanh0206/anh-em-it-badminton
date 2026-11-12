@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { preconnect } from "react-dom";
+import { createPortal, preconnect } from "react-dom";
 import { supabase } from "@/lib/supabase";
 import { PHOTO_FORMATS, PHOTO_MAX_BYTES } from "@/lib/photos/assets";
 import { folderLabel, sanitizeFolderInput } from "@/lib/photos/folders";
@@ -520,6 +520,31 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
     }
   };
 
+  const stageView = <div ref={stage} className={`photo-preview-stage${fullscreenMode === "overlay" ? " is-fullscreen" : ""}`}
+    onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX ?? null; }}
+    onTouchEnd={(event) => {
+      const start = touchStart.current;
+      touchStart.current = null;
+      const end = event.changedTouches[0]?.clientX;
+      if (start === null || end === undefined || Math.abs(end - start) < 50) return;
+      go(end < start ? 1 : -1);
+    }}>
+    {/* The grid thumbnail is already cached: show it blurred at once while the sharp image loads. */}
+    <div className="photo-preview-ambient" style={{ backgroundImage: `url("${photo.thumbUrl}")` }} aria-hidden="true" />
+    {broken !== photo.id && loadedId !== photo.id && <span className="photo-preview-spinner" aria-label="Đang tải ảnh" />}
+    {broken === photo.id
+      ? <p className="photo-preview-broken">Không tải được ảnh này.</p>
+      // eslint-disable-next-line @next/next/no-img-element -- served straight from the Cloudinary CDN
+      : <img key={photo.id} className={loadedId === photo.id ? "is-loaded" : ""} src={photo.previewUrl} srcSet={`${photo.previewUrl} 1280w, ${photo.fullUrl} 1920w`} sizes={PREVIEW_SIZES} alt={photo.name} fetchPriority="high" decoding="async" onLoad={() => setLoadedId(photo.id)} onError={() => setBroken(photo.id)} />}
+    <button type="button" className="photo-fullscreen-btn" onClick={toggleFullscreen} aria-label={fullscreen ? "Thoát toàn màn hình" : "Xem toàn màn hình"} title={fullscreen ? "Thoát toàn màn hình" : "Xem toàn màn hình"}>
+      {fullscreen
+        ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" /></svg>
+        : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>}
+    </button>
+    <button type="button" className="photo-nav photo-nav-prev" onClick={() => go(-1)} disabled={!canPrev} aria-label="Ảnh trước">‹</button>
+    <button type="button" className="photo-nav photo-nav-next" onClick={() => go(1)} disabled={!canNext} aria-label="Ảnh sau">›</button>
+  </div>;
+
   return <div className="modal-backdrop photo-preview-backdrop" role="dialog" aria-modal="true" aria-label={`Ảnh ${position} trên ${total}`} {...backdropDismissProps(() => { if (!busy && !renaming) onClose(); })}>
     <section className="photo-preview">
       <header className="photo-preview-header">
@@ -528,30 +553,14 @@ function PhotoPreview({ photos, index, position, total, canPrev, canNext, canMan
         <button type="button" className="modal-close" onClick={onClose} aria-label="Đóng">×</button>
       </header>
 
-      <div ref={stage} className={`photo-preview-stage${fullscreenMode === "overlay" ? " is-fullscreen" : ""}`}
-        onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX ?? null; }}
-        onTouchEnd={(event) => {
-          const start = touchStart.current;
-          touchStart.current = null;
-          const end = event.changedTouches[0]?.clientX;
-          if (start === null || end === undefined || Math.abs(end - start) < 50) return;
-          go(end < start ? 1 : -1);
-        }}>
-        {/* The grid thumbnail is already cached: show it blurred at once while the sharp image loads. */}
-        <div className="photo-preview-ambient" style={{ backgroundImage: `url("${photo.thumbUrl}")` }} aria-hidden="true" />
-        {broken !== photo.id && loadedId !== photo.id && <span className="photo-preview-spinner" aria-label="Đang tải ảnh" />}
-        {broken === photo.id
-          ? <p className="photo-preview-broken">Không tải được ảnh này.</p>
-          // eslint-disable-next-line @next/next/no-img-element -- served straight from the Cloudinary CDN
-          : <img key={photo.id} className={loadedId === photo.id ? "is-loaded" : ""} src={photo.previewUrl} srcSet={`${photo.previewUrl} 1280w, ${photo.fullUrl} 1920w`} sizes={PREVIEW_SIZES} alt={photo.name} fetchPriority="high" decoding="async" onLoad={() => setLoadedId(photo.id)} onError={() => setBroken(photo.id)} />}
-        <button type="button" className="photo-fullscreen-btn" onClick={toggleFullscreen} aria-label={fullscreen ? "Thoát toàn màn hình" : "Xem toàn màn hình"} title={fullscreen ? "Thoát toàn màn hình" : "Xem toàn màn hình"}>
-          {fullscreen
-            ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" /></svg>
-            : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>}
-        </button>
-        <button type="button" className="photo-nav photo-nav-prev" onClick={() => go(-1)} disabled={!canPrev} aria-label="Ảnh trước">‹</button>
-        <button type="button" className="photo-nav photo-nav-next" onClick={() => go(1)} disabled={!canNext} aria-label="Ảnh sau">›</button>
-      </div>
+      {/* On iPhone (no element fullscreen) the stage leaves the dialog and covers the screen from the page itself: inside
+          the dialog, whose glass and motion make it the frame for anything "fixed", it only filled the dialog's box. */}
+      {fullscreenMode === "overlay"
+        ? <>
+          <div className="photo-preview-stage photo-stage-placeholder" aria-hidden="true" />
+          {createPortal(<div className="photo-fullscreen-overlay" role="dialog" aria-modal="true" aria-label={`Ảnh ${position} trên ${total}, toàn màn hình`}>{stageView}</div>, document.body)}
+        </>
+        : stageView}
 
       <footer className="photo-preview-footer">
         <span className="photo-counter">{position} / {total}</span>

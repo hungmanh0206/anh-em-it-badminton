@@ -53,6 +53,7 @@ import "./modal-desktop.css";
 import "./ranking-pages.css";
 import "./rules-cards.css";
 import "./photo-upload-preview.css";
+import "./photo-fullscreen.css";
 import "./dark-theme.css";
 import "./button-states.css";
 

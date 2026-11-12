@@ -1,0 +1,44 @@
+/* Kho ảnh › photo viewer, full screen on iPhone (PhotoPreview in app/photo-gallery.tsx). iPhone Safari cannot put an
+   element in full screen, so the viewer's stage is moved onto the page itself and covers the whole screen, black,
+   with its buttons kept clear of the notch, the home bar and the browser's bottom toolbar. */
+.photo-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: #000;
+  overscroll-behavior: contain;
+}
+
+.photo-fullscreen-overlay > .photo-preview-stage:not(#_):not(#_):not(#_) {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  aspect-ratio: auto !important;
+  background: #000 !important;
+  box-shadow: none !important;
+}
+
+.photo-fullscreen-overlay .photo-fullscreen-btn:not(#_):not(#_) {
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+}
+
+.photo-fullscreen-overlay .photo-nav-prev:not(#_):not(#_) {
+  left: calc(env(safe-area-inset-left, 0px) + 12px);
+}
+
+.photo-fullscreen-overlay .photo-nav-next:not(#_):not(#_) {
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+}
+
+/* The stage's spot in the dialog keeps its size while the photo is out on the full screen. */
+.photo-stage-placeholder {
+  visibility: hidden;
+}
