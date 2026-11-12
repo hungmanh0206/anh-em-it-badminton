@@ -48,8 +48,21 @@ export const isCheckinWindowOpenForDate = (now: Date) => {
   return day >= 3 && day <= 6;
 };
 
+// The day after a session (normally Sunday) still belongs to that session, so a mix-up in the scores can be fixed
+// until the end of that day. Check-in stays closed; the next session takes over from the following day.
+export const scoreGraceSessionDateKey = (now: Date) => {
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const key = dateKey(yesterday);
+  return targetSessionDateKey(yesterday) === key ? key : null;
+};
+
+// The session the home screen works on: yesterday's during its grace day, otherwise the coming one.
+export const homeSessionDateKey = (now: Date) => scoreGraceSessionDateKey(now) ?? targetSessionDateKey(now);
+
 export const sessionStateForDate = (now: Date) => {
   const today = dateKey(now);
+  if (scoreGraceSessionDateKey(now)) return "ĐÃ DIỄN RA";
   const sessionDate = targetSessionDateKey(now);
   if (today === sessionDate) return "ĐANG DIỄN RA";
   return isCheckinWindowOpenForDate(now) ? "CHƯA DIỄN RA" : "CHỜ THỨ TƯ";

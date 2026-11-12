@@ -1,7 +1,7 @@
 import { recalculateEloIfAvailable } from "@/lib/elo/server";
 import { isMonthClosed, monthStart, sessionHasResults, syncMonthlyResults } from "@/lib/match-result";
 import { ApiError, jsonError, requireUser } from "@/lib/supabase-admin";
-import { isCheckinWindowOpenForDate, normalizeSessionDateKey, rescheduledOriginalDateKey, targetSessionDateKey } from "@/lib/session-dates";
+import { isCheckinWindowOpenForDate, normalizeSessionDateKey, rescheduledOriginalDateKey, scoreGraceSessionDateKey, targetSessionDateKey } from "@/lib/session-dates";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type Profile = {
@@ -109,11 +109,24 @@ async function loadSessionPayload(request: Request, reset: boolean) {
   if (reset && profile.role !== "admin") throw new ApiError(403, "Chỉ Admin được reset phiên Trang chủ.");
 
   const now = vietnamNow();
-  const shouldUseLiveSession = reset || isTestFlowEnabled() || isCheckinWindowOpenForDate(now);
+  const graceDate = isTestFlowEnabled() ? null : scoreGraceSessionDateKey(now);
+  const shouldUseLiveSession = reset || isTestFlowEnabled() || isCheckinWindowOpenForDate(now) || Boolean(graceDate);
   if (!shouldUseLiveSession) return Response.json({ inactive: true, status: "draft" });
 
-  const sessionDate = targetSessionDateKey(now);
-  const session = await getOrCreateSession(admin, user.id, sessionDate);
+  let session: PlaySession;
+  if (graceDate) {
+    // The day after a session keeps it open for score fixes, but never creates a session that was not played.
+    const { data: played, error: playedError } = await admin
+      .from("play_sessions")
+      .select("id, session_date, status")
+      .eq("session_date", normalizeSessionDateKey(graceDate))
+      .maybeSingle();
+    if (playedError) throw playedError;
+    if (!played) return Response.json({ inactive: true, status: "draft" });
+    session = played as PlaySession;
+  } else {
+    session = await getOrCreateSession(admin, user.id, targetSessionDateKey(now));
+  }
   if (reset && session.status === "completed") {
     throw new ApiError(400, "Buổi này đã hoàn tất nên không reset dữ liệu lịch sử.");
   }

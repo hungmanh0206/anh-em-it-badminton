@@ -16,7 +16,7 @@ import { GlassSelect } from "@/app/ui/glass-select";
 import { ThemeToggle } from "@/app/ui/theme-toggle";
 import { Toast, useToast } from "@/app/ui/toast";
 import { supabase } from "@/lib/supabase";
-import { isCheckinWindowOpenForDate, sessionDatesOfMonth, sessionStateForDate, sessionWeekdayLabel, sessionWeekInMonth, targetSessionDateKey } from "@/lib/session-dates";
+import { homeSessionDateKey, isCheckinWindowOpenForDate, scoreGraceSessionDateKey, sessionDatesOfMonth, sessionStateForDate, sessionWeekdayLabel, sessionWeekInMonth } from "@/lib/session-dates";
 import { reorderMatchesForRest } from "@/lib/schedule-reorder";
 import { MEMBER_PASSWORD_MIN, usernameFromName } from "@/lib/member-username";
 import { isScoreText, mergeSavedScores, SCORE_FORMAT_ERROR, scoreEntryError } from "@/lib/score-input";
@@ -232,7 +232,7 @@ const monthDateFromLabel = (label: string) => {
 const nextMonthStartDate = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 1);
 const shortDateLabel = (date: Date) => date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 const sessionTitle = (date: Date) => `Buổi ${sessionWeekInMonth(date)} - ${sessionWeekdayLabel(date)} ngày ${shortDateLabel(date)}`;
-function homeSession(now: Date) { const date = new Date(`${targetSessionDateKey(now)}T00:00:00`); return { date, state: sessionStateForDate(now) }; }
+function homeSession(now: Date) { const date = new Date(`${homeSessionDateKey(now)}T00:00:00`); return { date, state: sessionStateForDate(now) }; }
 function monthlyProgress(now: Date) { const sessions = sessionDatesOfMonth(now); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); return { total: sessions.length, completed: sessions.filter((date) => date < today).length }; }
 function finalSaturdayOfMonth(date: Date) { const finalSaturday = new Date(date.getFullYear(), date.getMonth() + 1, 0); while (finalSaturday.getDay() !== 6) finalSaturday.setDate(finalSaturday.getDate() - 1); return finalSaturday; }
 const recentMonthStarts = (start: Date, count: number) => Array.from({ length: count }, (_, index) => new Date(start.getFullYear(), start.getMonth() - index, 1));
@@ -454,7 +454,8 @@ export default function Home() {
   const isLiveCheckinWindow = isCheckinWindowOpenForDate(now);
   const isCheckinTestMode = ENABLE_TEST_FLOW && !isLiveCheckinWindow;
   const isCheckinWindowOpen = ENABLE_TEST_FLOW || isLiveCheckinWindow;
-  const shouldLoadHomeSession = ENABLE_TEST_FLOW || isLiveCheckinWindow;
+  // Check-in closes after the session day, but the session itself stays loaded through the next day for score fixes.
+  const shouldLoadHomeSession = ENABLE_TEST_FLOW || isLiveCheckinWindow || Boolean(scoreGraceSessionDateKey(now));
   const sessionDateKey = localDateKey(session.date);
   const currentCheckinPromptKey = `${activeUsername || "guest"}:${sessionId || sessionDateKey}`;
   const signedInMember = activeUsername ? members.find((member) => member.username === activeUsername) : null;
