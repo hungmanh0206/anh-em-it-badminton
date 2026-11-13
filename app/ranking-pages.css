@@ -405,3 +405,20 @@
 :root[data-theme="dark"] .rank-row .level.level-chip-2:not(#_):not(#_):not(#_) {
   color: #86efac !important;
 }
+
+/* Xếp hạng › ELO: the block has no padding of its own, like the month table's, so "Thứ hạng ELO" sits as far
+   from the block's top as "Thứ hạng Tháng …" does, and the list ends one inset above the block's foot. */
+.elo-ranking-panel:not(#_):not(#_):not(#_) {
+  padding-block: 0 !important;
+}
+
+.elo-ranking-panel > :is(.elo-list, .bxh-m, .elo-status):last-child:not(#_):not(#_):not(#_),
+.elo-ranking-panel > .elo-list:not(#_):not(#_):not(#_) {
+  margin-bottom: var(--block-inset) !important;
+}
+
+/* The two ELO buttons keep their label centred when they stretch to share a phone's width. */
+.elo-head-actions .elo-guide-btn:not(#_):not(#_):not(#_) {
+  justify-content: center;
+  text-align: center;
+}
