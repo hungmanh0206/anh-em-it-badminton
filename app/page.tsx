@@ -167,7 +167,7 @@ const schedule = (patterns: MatchPattern[]) => patterns.map(([a1, a2, b1, b2, ty
   return { teamA, teamB, type: type ?? (teamALabel === teamBLabel ? teamALabel : "LINH HOẠT") };
 });
 const relaxedOneLevel1 = "Lịch linh hoạt: chỉ có 1 thành viên Level 1 nên các trận của người này không áp dụng rule cân Level; vẫn giữ mỗi người 4 trận và không lặp đồng đội.";
-const relaxedThreeThree = "Lịch linh hoạt: 3 Level 1 + 3 Level 2 ưu tiên không lặp đồng đội; 2 trận cuối không áp dụng rule cân Level để vẫn giữ mỗi người 4 trận.";
+const relaxedThreeThree = "Lịch linh hoạt: 3 Level 1 + 3 Level 2 ưu tiên không lặp đồng đội; 4 trận cho cặp Level 1 + Level 1 hoặc Level 2 + Level 2 gặp cặp Level 1 + Level 2, không có trận Level 1 + Level 1 gặp Level 2 + Level 2.";
 const makeScheduleScenario = (participantCount: ParticipantCount, level1Count: number, matches: ScheduleMatch[], relaxedReason?: string): ScheduleScenario => {
   const level2Count = participantCount - level1Count;
   const isOpenFive = participantCount === 5;
@@ -189,7 +189,7 @@ const scheduleScenarios: ScheduleScenario[] = [
   makeScheduleScenario(6, 0, schedule([[5, 6, 7, 8], [5, 7, 9, 10], [5, 9, 6, 8], [7, 10, 8, 9], [5, 10, 6, 7], [6, 9, 8, 10]])),
   makeScheduleScenario(6, 1, schedule([[1, 5, 6, 7], [1, 6, 8, 9], [5, 8, 7, 9], [1, 8, 5, 7], [1, 7, 6, 9], [5, 9, 6, 8]]), relaxedOneLevel1),
   makeScheduleScenario(6, 2, schedule([[1, 5, 2, 6], [1, 7, 2, 8], [5, 6, 7, 8], [1, 6, 2, 5], [1, 8, 2, 7], [5, 7, 6, 8]])),
-  makeScheduleScenario(6, 3, schedule([[1, 6, 3, 7], [2, 7, 3, 5], [2, 5, 3, 6], [1, 7, 2, 6], [1, 2, 5, 6], [1, 3, 5, 7]]), relaxedThreeThree),
+  makeScheduleScenario(6, 3, schedule([[1, 2, 3, 5], [1, 3, 2, 6], [1, 5, 2, 7], [1, 6, 3, 7], [2, 5, 6, 7], [3, 6, 5, 7]]), relaxedThreeThree),
   makeScheduleScenario(6, 4, schedule([[1, 2, 3, 4], [1, 5, 2, 6], [3, 5, 4, 6], [1, 3, 2, 4], [1, 6, 2, 5], [3, 6, 4, 5]])),
   makeScheduleScenario(7, 1, schedule([[1, 5, 6, 7], [1, 6, 8, 9], [5, 7, 9, 10], [1, 8, 5, 10], [6, 9, 8, 10], [1, 7, 6, 8], [5, 9, 7, 10]]), relaxedOneLevel1),
   makeScheduleScenario(7, 2, schedule([[1, 5, 2, 6], [5, 7, 8, 9], [1, 6, 2, 7], [1, 8, 2, 9], [5, 6, 7, 8], [1, 9, 2, 5], [6, 8, 7, 9]])),
