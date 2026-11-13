@@ -544,3 +544,141 @@
   cursor: not-allowed;
   box-shadow: none;
 }
+
+/* Thư viện lịch: one line per match. The match number is a small column on the left ("TRẬN" over "01"),
+   so the card is only as tall as its number tokens. */
+.schedule-library .schedule-match-card:not(#_):not(#_) {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 14px;
+  padding: 10px 14px !important;
+}
+
+.schedule-library .schedule-match-card > .match-top:not(#_):not(#_) {
+  display: block;
+  min-width: 38px;
+  padding-right: 14px;
+  border-right: 1px solid rgba(138, 101, 6, 0.16);
+  text-align: center;
+}
+
+.schedule-library .schedule-match-card > .match-top b:not(#_):not(#_) {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.schedule-library .schedule-match-card > .match-top small:not(#_):not(#_) {
+  display: block;
+  font-family: inherit;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  opacity: 0.72;
+}
+
+.schedule-library .schedule-match-card > .teams:not(#_):not(#_) {
+  margin-top: 0;
+}
+
+:root[data-theme="dark"] .schedule-library .schedule-match-card > .match-top:not(#_):not(#_) {
+  border-right-color: rgba(255, 220, 116, 0.14);
+}
+
+@media (max-width: 800px) {
+  .schedule-library .schedule-match-card:not(#_):not(#_) {
+    column-gap: 10px;
+    padding: 9px 12px !important;
+  }
+
+  .schedule-library .schedule-match-card > .match-top:not(#_):not(#_) {
+    min-width: 32px;
+    padding-right: 10px;
+  }
+
+  .schedule-library .schedule-match-card > .match-top b:not(#_):not(#_) {
+    font-size: 15px;
+  }
+
+  .schedule-library .schedule-match-card > .match-top small:not(#_):not(#_) {
+    font-size: 7px;
+  }
+}
+
+/* The VS disc steps down with the screen: 32px on desktop, 28px on iPad, 24px on phones, 22px on narrow phones. */
+@media (max-width: 1023px) {
+  .schedule-library .schedule-match-card > .teams strong:not(#_):not(#_) {
+    width: 28px;
+    height: 28px;
+    font-size: 9px !important;
+  }
+}
+
+@media (max-width: 800px) {
+  .schedule-library .schedule-match-card > .teams:not(#_):not(#_) {
+    grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr) !important;
+  }
+
+  .schedule-library .schedule-match-card > .teams strong:not(#_):not(#_) {
+    width: 24px;
+    height: 24px;
+    font-size: 8px !important;
+  }
+}
+
+/* Narrow phones (iPhone SE / mini): smaller tokens and gaps so both pairs and VS fit beside the match number. */
+@media (max-width: 380px) {
+  .schedule-library .schedule-match-card:not(#_):not(#_) {
+    column-gap: 8px;
+    padding: 8px 10px !important;
+  }
+
+  .schedule-library .schedule-match-card > .match-top:not(#_):not(#_) {
+    min-width: 26px;
+    padding-right: 8px;
+  }
+
+  .schedule-library .schedule-match-card > .teams:not(#_):not(#_) {
+    grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr) !important;
+    gap: 4px;
+  }
+
+  .schedule-library .schedule-match-card > .teams strong:not(#_):not(#_) {
+    width: 22px;
+    height: 22px;
+    font-size: 7px !important;
+  }
+
+  .schedule-library .schedule-match-card .team-pair:not(#_):not(#_) {
+    gap: 3px;
+  }
+
+  .schedule-library .schedule-match-card .team-pair > i:not(#_):not(#_) {
+    font-size: 12px;
+  }
+
+  .schedule-library .schedule-match-card .slot-token:not(#_):not(#_) {
+    min-width: 30px;
+    min-height: 32px;
+    padding: 3px 4px;
+    border-radius: 10px;
+  }
+
+  .schedule-library .schedule-match-card .slot-token b:not(#_):not(#_) {
+    font-size: 17px;
+  }
+}
+
+/* iPad portrait / large phones in landscape: two matches per row, so a card is no wider than on a phone. */
+@media (min-width: 720px) and (max-width: 800px) {
+  .schedule-library .schedule-library-grid:not(#_):not(#_) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
