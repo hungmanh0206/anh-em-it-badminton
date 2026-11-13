@@ -1828,7 +1828,7 @@ function MatchModal({ index, match, namesBySlot, people, saved, confirmed, canMa
   };
   const team = (side: "a" | "b") => {
     const slots = side === "a" ? match.teamA : match.teamB;
-    return <div className={"mm-team" + (winner ? (winner === side ? " is-win" : " is-lose") : "")}>{slots.map((slot) => {
+    return <div className={`mm-team mm-team-${side}` + (winner ? (winner === side ? " is-win" : " is-lose") : "")}><span className="mm-team-label">ĐỘI {side.toUpperCase()}</span>{slots.map((slot) => {
       const name = namesBySlot[slot];
       const person = name ? people.get(name) : undefined;
       const art = person ? cardArtUrl(person.username) : null;
@@ -1844,10 +1844,13 @@ function MatchModal({ index, match, namesBySlot, people, saved, confirmed, canMa
       <div className="mm-head"><p className="eyebrow">TRẬN {String(index + 1).padStart(2, "0")}</p><h2>{confirmed ? "Kết quả trận đấu" : canManage ? "Nhập tỉ số" : "Chưa có kết quả"}</h2></div>
       <div className="mm-board">
         {team("a")}
-        <div className="mm-score">
-          {canManage
-            ? <><input inputMode="numeric" autoComplete="off" aria-label={`Điểm đội A trận ${index + 1}`} className={red.a ? "score-invalid" : undefined} aria-invalid={red.a} value={shown[0]} onChange={(event) => change(0, event.target.value)} /><em>:</em><input inputMode="numeric" autoComplete="off" aria-label={`Điểm đội B trận ${index + 1}`} className={red.b ? "score-invalid" : undefined} aria-invalid={red.b} value={shown[1]} onChange={(event) => change(1, event.target.value)} /></>
-            : <><b>{shown[0] || "–"}</b><em>:</em><b>{shown[1] || "–"}</b></>}
+        <div className="mm-mid">
+          <b className="mm-vs" aria-hidden="true">VS</b>
+          <div className="mm-score">
+            {canManage
+              ? <><input inputMode="numeric" autoComplete="off" placeholder="–" aria-label={`Điểm đội A trận ${index + 1}`} className={red.a ? "score-invalid" : undefined} aria-invalid={red.a} value={shown[0]} onChange={(event) => change(0, event.target.value)} /><em>:</em><input inputMode="numeric" autoComplete="off" placeholder="–" aria-label={`Điểm đội B trận ${index + 1}`} className={red.b ? "score-invalid" : undefined} aria-invalid={red.b} value={shown[1]} onChange={(event) => change(1, event.target.value)} /></>
+              : <><b>{shown[0] || "–"}</b><em>:</em><b>{shown[1] || "–"}</b></>}
+          </div>
         </div>
         {team("b")}
       </div>

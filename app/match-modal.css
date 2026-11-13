@@ -28,28 +28,34 @@
 }
 
 /* ---------- The match window ---------- */
+/* Desktop and iPad: "TRẬN 06" and the title on top; team A and team B each in their own glowing frame with an
+   "ĐỘI A" / "ĐỘI B" tab on its top edge, two player cards inside; a large VS over the score between them; Hủy and
+   Lưu at the foot. Phones stack the same pieces (see the end of this section). */
 .match-modal {
+  /* Both teams share the club's gold until there is a score; then the winners turn green and the losers red. */
+  --mm-team-a: #c9952c;
+  --mm-team-b: #c9952c;
   position: relative;
   display: grid;
-  gap: var(--card-gap);
+  gap: 22px;
   /* Grows with the screen, so the pictures get room on large ones and the window never feels a fixed box. */
-  width: min(100% - 32px, clamp(680px, 64vw, 1040px));
+  width: min(100% - 32px, clamp(760px, 74vw, 1120px));
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
-  padding: var(--block-inset);
-  border-radius: 22px;
+  padding: 26px 32px 30px;
+  border-radius: 28px;
   text-align: center;
 }
 
 .match-modal > .modal-close:not(#_):not(#_):not(#_) {
-  top: calc(var(--block-inset) - 2px) !important;
-  right: calc(var(--block-inset) - 2px) !important;
+  top: 22px !important;
+  right: 22px !important;
 }
 
 .mm-head {
   display: grid;
   justify-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 0 calc(var(--block-inset) + 24px);
 }
 
@@ -57,39 +63,88 @@
   margin: 0 !important;
 }
 
-.mm-head h2:not(#_):not(#_) {
-  margin-top: 4px !important;
-  color: var(--bar-text);
-  font-size: 22px;
+.mm-head .eyebrow:not(#_):not(#_) {
+  color: var(--bar-accent);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
 }
 
-/* Team A | score | team B. */
+.mm-head h2:not(#_):not(#_) {
+  color: var(--bar-text);
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* Team A | VS and score | team B. The top padding leaves room for the team tabs. */
 .mm-board {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: stretch;
-  gap: var(--card-gap);
+  align-items: center;
+  gap: 28px;
+  padding-top: 16px;
 }
 
-/* Each team is a pair of player cards; the winners' cards glow green, the losers' red. */
+/* A team: its two player cards on a soft fill in the team's colour (no rim or glow round it). Both teams are gold
+   until there is a score; then the winners turn green and the losers red, as on the row. */
 .mm-team {
+  --mm-team: var(--mm-team-a);
+  position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--card-gap);
+  gap: 10px;
   min-width: 0;
+  padding: 12px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mm-team) 18%, transparent), color-mix(in srgb, var(--mm-team) 8%, transparent));
+}
+
+.mm-team-b {
+  --mm-team: var(--mm-team-b);
+}
+
+.mm-team.is-win {
+  --mm-team: #22a55a;
+}
+
+.mm-team.is-lose {
+  --mm-team: #e05252;
+}
+
+/* "ĐỘI A" / "ĐỘI B": a tab sitting on the frame's top edge. */
+.mm-team-label {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 4;
+  padding: 7px 24px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mm-team) 22%, #fffaf0);
+  color: color-mix(in srgb, var(--mm-team) 70%, #1a1408);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  white-space: nowrap;
+  translate: -50% -50%;
+}
+
+:root[data-theme="dark"] .mm-team-label {
+  background: color-mix(in srgb, var(--mm-team) 34%, #2a241a);
+  color: #fffaf0;
 }
 
 /* A player card in the style of the member cards (member-cards.css): a glow in the player's own colour, the
-   celebration picture standing on the card's foot and fading into it. */
+   celebration picture standing on the card's foot, "1 - Tên" on a chip over its foot. */
 .mm-player {
   position: relative;
   isolation: isolate;
   display: grid;
-  gap: calc(var(--card-gap) / 2);
   min-width: 0;
   overflow: hidden;
-  padding-bottom: var(--card-gap);
-  border-radius: 18px;
+  border-radius: 20px;
   background:
     radial-gradient(90% 60% at 50% 58%, color-mix(in srgb, var(--avatar-color) 34%, transparent), transparent 72%),
     linear-gradient(180deg, color-mix(in srgb, var(--avatar-color) 24%, transparent), transparent 75%),
@@ -97,35 +152,18 @@
   box-shadow: var(--glass-lift-card);
 }
 
-/* The result shows on the name chips only: green for the winners, red for the losers. */
-.mm-team.is-win .mm-name:not(#_) {
-  background: linear-gradient(180deg, #2fc46a, #159a4b);
-  box-shadow: 0 3px 10px rgba(21, 154, 75, 0.35);
-  color: #fff;
-}
-
-.mm-team.is-lose .mm-name:not(#_) {
-  background: linear-gradient(180deg, #f06a6a, #d64545);
-  box-shadow: 0 3px 10px rgba(214, 69, 69, 0.3);
-  color: #fff;
-}
-
-.mm-team:is(.is-win, .is-lose) .mm-no:not(#_):not(#_) {
-  color: #fff;
-}
-
 .mm-figure {
   position: relative;
   z-index: 1;
   display: grid;
   place-items: center;
-  aspect-ratio: 1 / 1.08;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
 }
 
 .mm-glow {
   position: absolute;
-  top: 16%;
+  top: 14%;
   left: 50%;
   width: 96%;
   aspect-ratio: 1;
@@ -143,8 +181,8 @@
   position: absolute;
   bottom: 0;
   left: 50%;
-  width: 90%;
-  height: 92%;
+  width: 96%;
+  height: 90%;
   object-fit: contain;
   object-position: bottom center;
   filter: drop-shadow(0 10px 14px rgba(40, 28, 8, 0.22));
@@ -158,39 +196,64 @@
   width: 52%;
   height: auto;
   aspect-ratio: 1;
+  margin-bottom: 18%;
   font-size: 22px;
 }
 
 .mm-slot-no {
   position: relative;
+  margin-bottom: 18%;
   color: var(--bar-muted);
   font-size: 28px;
   font-weight: 900;
 }
 
+/* "1 - Mạnh" on one chip over the card's foot, the number in its Level's colour. */
 .mm-player > .mm-name {
-  position: relative;
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
   z-index: 3;
+  max-width: calc(100% - 16px);
+  translate: -50% 0;
 }
 
-/* "1 - Mạnh" on one chip, the number in its Level's colour. */
 .mm-name {
-  justify-self: center;
-  max-width: 100%;
-  padding: 3px 10px;
+  padding: 6px 14px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 4px 12px rgba(40, 28, 8, 0.12);
   color: var(--bar-text);
-  font-size: 13.5px;
+  font-size: 15px;
   font-weight: 850;
-  line-height: 1.35;
+  line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
 :root[data-theme="dark"] .mm-name {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(20, 17, 12, 0.62);
+  box-shadow: none;
+}
+
+/* The result shows on the name chips too: green for the winners, red for the losers. */
+.mm-team.is-win .mm-name:not(#_) {
+  background: linear-gradient(180deg, #2fc46a, #159a4b);
+  box-shadow: 0 3px 10px rgba(21, 154, 75, 0.35);
+  color: #fff;
+}
+
+.mm-team.is-lose .mm-name:not(#_) {
+  background: linear-gradient(180deg, #f06a6a, #d64545);
+  box-shadow: 0 3px 10px rgba(214, 69, 69, 0.3);
+  color: #fff;
+}
+
+.mm-team:is(.is-win, .is-lose) .mm-no:not(#_):not(#_) {
+  color: #fff;
 }
 
 .mm-no {
@@ -218,41 +281,72 @@
   color: #ffd66d;
 }
 
-/* The score between the teams: two boxes for admins, the numbers for everyone else. */
+/* Between the teams: a large VS over the score. */
+.mm-mid {
+  display: grid;
+  justify-items: center;
+  gap: 22px;
+}
+
+/* The padding gives the italic letters room inside the clipped gradient, or the S loses its right edge. */
+.mm-vs {
+  padding: 0.06em 0.16em;
+  background: linear-gradient(180deg, #4a3f2c, #9a8a66);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 68px;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+:root[data-theme="dark"] .mm-vs {
+  background-image: linear-gradient(180deg, #ffffff, #b9b2a3);
+}
+
+/* The score: two boxes for admins, the numbers for everyone else. */
 .mm-score {
   display: flex;
   align-items: center;
-  gap: var(--card-gap);
+  gap: 14px;
 }
 
 .mm-score em {
-  color: var(--bar-muted);
-  font-size: 28px;
+  color: var(--bar-text);
+  font-size: 34px;
   font-style: normal;
   font-weight: 900;
+  line-height: 1;
 }
 
 .mm-score b {
-  min-width: 54px;
+  min-width: 64px;
   color: var(--bar-text);
-  font-size: 44px;
+  font-size: 56px;
   font-weight: 950;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 
 .mm-score input:not(#_):not(#_):not(#_) {
-  width: 72px;
-  height: 72px;
+  width: 120px;
+  height: 92px;
   padding: 0 !important;
   border: 0 !important;
-  border-radius: 16px;
+  border-radius: 20px;
   background: var(--score-well) !important;
-  box-shadow: inset 0 2px 6px rgba(40, 28, 8, 0.12) !important;
+  box-shadow: none !important;
   color: var(--bar-text);
-  font-size: 32px;
+  font-size: 40px;
   font-weight: 950;
   text-align: center;
+}
+
+.mm-score input::placeholder {
+  color: var(--bar-muted);
+  opacity: 0.7;
 }
 
 .mm-score input:focus:not(#_):not(#_):not(#_) {
@@ -266,88 +360,23 @@
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.7) !important;
 }
 
-/* Compact buttons, centred at the window's foot. */
+/* Hủy (or Xóa điểm) and Lưu side by side at the window's foot, both the same size. */
 .mm-actions:not(#_):not(#_) {
   display: flex;
   justify-content: center;
-  gap: var(--card-gap);
-  margin: 0 !important;
+  gap: 16px;
+  margin: 4px 0 0 !important;
 }
 
 .mm-actions button:not(#_):not(#_):not(#_) {
-  width: auto;
-  min-width: 96px;
-  min-height: 38px;
+  width: 170px;
+  min-width: 0;
+  min-height: 52px;
   margin: 0 !important;
-  padding: 0 18px !important;
-  font-size: 13px;
-}
-
-/* Phones: the teams side by side, the score on its own line under them. */
-@media (max-width: 560px) {
-  .match-modal {
-    width: calc(100% - 24px);
-    border-radius: 18px;
-  }
-
-  .mm-head h2:not(#_):not(#_) {
-    font-size: 19px;
-  }
-
-  /* Phones: one team on top, the score, the other team underneath. */
-  .mm-board {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "a"
-      "score"
-      "b";
-  }
-
-  .mm-board > .mm-team:first-child {
-    grid-area: a;
-  }
-
-  .mm-board > .mm-team:last-child {
-    grid-area: b;
-  }
-
-  .mm-board > .mm-score {
-    grid-area: score;
-    justify-content: center;
-  }
-
-  /* Phones: each pair stays compact in the middle instead of filling the width. */
-  .mm-team {
-    width: min(100%, 250px);
-    justify-self: center;
-  }
-
-  .mm-player {
-    border-radius: 14px;
-  }
-
-  .mm-name {
-    font-size: 12.5px;
-  }
-
-  .mm-score input:not(#_):not(#_):not(#_) {
-    width: 64px;
-    height: 58px;
-    font-size: 28px;
-  }
-
-  .mm-score b {
-    font-size: 38px;
-  }
-}
-
-/* iPad: the window spans the screen, the pictures in between the phone and desktop sizes. */
-@media (min-width: 561px) and (max-width: 1023px) {
-  .match-modal {
-    width: calc(100% - 48px);
-  }
-
-
+  padding: 0 28px !important;
+  border-radius: 16px !important;
+  font-size: 17px;
+  font-weight: 800;
 }
 
 /* "Xóa điểm" reads as a delete: soft red glass with red text, the same size as "Lưu". */
@@ -362,15 +391,201 @@
   color: #ff8a8a !important;
 }
 
-/* iPad and phones: small buttons, side by side in the middle, taking little room. */
-@media (max-width: 1023px) {
-  .mm-actions button:not(#_):not(#_):not(#_) {
-    width: auto;
-    min-width: 82px;
-    min-height: 34px;
-    padding: 0 14px !important;
-    border-radius: 10px !important;
+/* iPad: the same layout, a step smaller. */
+@media (min-width: 561px) and (max-width: 1023px) {
+  .match-modal {
+    gap: 18px;
+    width: calc(100% - 40px);
+    padding: 22px 22px 24px;
+    border-radius: 24px;
+  }
+
+  .match-modal > .modal-close:not(#_):not(#_):not(#_) {
+    top: 16px !important;
+    right: 16px !important;
+  }
+
+  .mm-head h2:not(#_):not(#_) {
+    font-size: 30px;
+  }
+
+  .mm-board {
+    gap: 18px;
+  }
+
+  .mm-team {
+    gap: 8px;
+    padding: 9px;
+    border-radius: 20px;
+  }
+
+  .mm-team-label {
+    padding: 6px 16px;
+    font-size: 11.5px;
+  }
+
+  .mm-player {
+    border-radius: 15px;
+  }
+
+  .mm-player > .mm-name {
+    bottom: 8px;
+  }
+
+  .mm-name {
+    padding: 4px 9px;
     font-size: 12.5px;
+  }
+
+  .mm-mid {
+    gap: 14px;
+  }
+
+  .mm-vs {
+    font-size: 46px;
+  }
+
+  .mm-score {
+    gap: 8px;
+  }
+
+  .mm-score em {
+    font-size: 26px;
+  }
+
+  .mm-score b {
+    min-width: 46px;
+    font-size: 42px;
+  }
+
+  .mm-score input:not(#_):not(#_):not(#_) {
+    width: 78px;
+    height: 68px;
+    border-radius: 16px;
+    font-size: 30px;
+  }
+
+  .mm-actions button:not(#_):not(#_):not(#_) {
+    width: 140px;
+    min-height: 46px;
+    border-radius: 14px !important;
+    font-size: 15px;
+  }
+}
+
+/* Phones: team A, then VS and the score on one line, then team B; Hủy and Lưu share the foot. */
+@media (max-width: 560px) {
+  .match-modal {
+    gap: 16px;
+    width: calc(100% - 24px);
+    padding: 18px 14px 16px;
+    border-radius: 22px;
+  }
+
+  .match-modal > .modal-close:not(#_):not(#_):not(#_) {
+    top: 12px !important;
+    right: 12px !important;
+  }
+
+  .mm-head .eyebrow:not(#_):not(#_) {
+    font-size: 11.5px;
+  }
+
+  .mm-head h2:not(#_):not(#_) {
+    font-size: 24px;
+  }
+
+  .mm-board {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    padding-top: 10px;
+  }
+
+  .mm-team {
+    gap: 8px;
+    padding: 8px;
+    border-radius: 20px;
+  }
+
+  .mm-team-label {
+    padding: 5px 16px;
+    font-size: 11px;
+  }
+
+  .mm-player {
+    border-radius: 14px;
+  }
+
+  .mm-figure {
+    aspect-ratio: 1 / 1;
+  }
+
+  .mm-player > .mm-name {
+    bottom: 7px;
+  }
+
+  .mm-name {
+    padding: 4px 10px;
+    font-size: 12.5px;
+  }
+
+  /* VS sits between the two score boxes, so the middle takes one line. */
+  .mm-mid {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: -6px;
+  }
+
+  .mm-mid > .mm-vs {
+    order: 0;
+    font-size: 30px;
+  }
+
+  .mm-score {
+    display: contents;
+  }
+
+  .mm-score > :first-child {
+    order: -1;
+  }
+
+  .mm-score > em {
+    display: none;
+  }
+
+  .mm-score > :last-child {
+    order: 1;
+  }
+
+  .mm-score b {
+    min-width: 44px;
+    font-size: 40px;
+  }
+
+  .mm-score input:not(#_):not(#_):not(#_) {
+    width: 84px;
+    height: 62px;
+    border-radius: 16px;
+    font-size: 30px;
+  }
+
+  /* Two equal columns, so the buttons are the same width whatever their labels. */
+  .mm-actions:not(#_):not(#_) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 0 !important;
+  }
+
+  .mm-actions button:not(#_):not(#_):not(#_) {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0 12px !important;
+    border-radius: 14px !important;
+    font-size: 16px;
   }
 }
 
