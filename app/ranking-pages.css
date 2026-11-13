@@ -1,8 +1,8 @@
 /* Xếp hạng › Bảng xếp hạng and ELO, and Thi đấu › Thư viện lịch: the same page shape (hero, then one block headed by
    its title and tools) and the same table look, whatever columns each one has. */
 
-/* The month table sits flat in its block, like the ELO list. */
-.ranking-panel > .rank-table:not(#_):not(#_):not(#_) {
+/* The month table, and the week table on the home page, sit flat in their block, like the ELO list. */
+:is(.ranking-panel, .live-ranking-panel) > .rank-table:not(#_):not(#_):not(#_) {
   margin: 0 var(--block-inset) var(--block-inset) !important;
   background: none !important;
   box-shadow: none !important;
