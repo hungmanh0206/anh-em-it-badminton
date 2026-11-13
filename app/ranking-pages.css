@@ -10,6 +10,14 @@
   backdrop-filter: none;
 }
 
+/* Phones: the week table's top three keep their medals but lose the row tint and side bar, like the Xếp hạng table. */
+@media (max-width: 700px) {
+  .live-ranking-panel > .rank-table > .rank-row.top-rank:not(#_):not(#_):not(#_) {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+}
+
 /* Tools on one line beside the title: the month filter, then the export. */
 .ranking-head-actions:not(#_):not(#_) {
   display: flex;
