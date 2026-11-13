@@ -594,3 +594,70 @@
   color: #14110a !important;
   text-shadow: none;
 }
+
+/* iPad and desktop: the match number is a strip down the row's left edge (no "Trận" label), filling the row's
+   height instead of floating in the corner. No empty tail on the right: the two teams are equally wide, so the
+   score still sits midway between them. */
+@media (min-width: 561px) {
+  .result-entry-panel .match-result-row.match-open-row:not(#_):not(#_) {
+    --row-pad: 14px;
+    --row-lead: 28px;
+    --row-tail: 0px;
+    padding-inline: var(--row-pad) !important;
+  }
+
+  .match-open-row .match-result-meta:not(#_):not(#_):not(#_) {
+    align-self: stretch;
+    justify-content: center;
+    /* Out over the row's 1px transparent border too, or a light rim shows round the strip. */
+    width: calc(var(--row-lead) + var(--row-pad) + 1px);
+    margin: -9px 0 -9px calc(-1 * var(--row-pad) - 1px);
+    border-right: 1px solid rgba(138, 101, 6, 0.12);
+    border-radius: 15px 0 0 15px;
+    background: rgba(255, 183, 0, 0.07);
+    color: #8a6506;
+  }
+
+  .match-open-row .match-result-meta b:not(#_):not(#_):not(#_) {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+
+  :root[data-theme="dark"] .match-open-row .match-result-meta:not(#_):not(#_):not(#_) {
+    border-right-color: rgba(255, 220, 116, 0.1);
+    background: rgba(0, 0, 0, 0.16);
+    color: #ffd66b;
+  }
+
+  /* On a played match the strip sits on the winner's colour: a white number reads on green and red alike. */
+  .match-open-row:is(.result-a-wins, .result-b-wins) .match-result-meta:not(#_):not(#_):not(#_) {
+    border-right-color: rgba(255, 255, 255, 0.16);
+    background: rgba(0, 0, 0, 0.1);
+    color: #fff;
+  }
+}
+
+@media (min-width: 561px) and (max-width: 780px) {
+  .result-entry-panel .match-result-row.match-open-row:not(#_):not(#_) {
+    --row-pad: 8px;
+    --row-lead: 22px;
+    --row-tail: 0px;
+  }
+
+  .match-open-row .match-result-meta b:not(#_):not(#_):not(#_) {
+    font-size: 16px;
+  }
+}
+
+/* iPad and desktop: the players and the "+" spread evenly across each team's half, so the first player sits as
+   close to the match number as the players sit to each other, instead of centred in a quarter of the row. */
+@media (min-width: 561px) {
+  .match-open-row .team-pair:not(#_):not(#_):not(#_) {
+    justify-content: space-evenly !important;
+  }
+
+  .match-open-row .slot-token.has-avatar:not(#_):not(#_):not(#_) {
+    flex: 0 1 auto;
+  }
+}
