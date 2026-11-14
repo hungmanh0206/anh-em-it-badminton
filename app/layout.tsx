@@ -56,6 +56,7 @@ import "./photo-upload-preview.css";
 import "./photo-fullscreen.css";
 import "./dark-theme.css";
 import "./button-states.css";
+import "./stats.css";
 
 // Lets the fixed bars reach the screen edges; they pad themselves for the notch and home indicator.
 export const viewport: Viewport = { viewportFit: "cover" };

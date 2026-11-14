@@ -13,6 +13,7 @@ import { useSlidingIndicator } from "@/app/ui/use-sliding-indicator";
 import { unlockFireworkSound } from "@/app/ui/firework-sound";
 import { DRAW_SPIN_MS, DrawWheel } from "@/app/ui/draw-wheel";
 import { GlassSelect } from "@/app/ui/glass-select";
+import { MemberStatsPage, StatsScreen, type StatsMember, type StatsPayload } from "@/app/ui/stats-screens";
 import { ThemeToggle } from "@/app/ui/theme-toggle";
 import { Toast, useToast } from "@/app/ui/toast";
 import { supabase } from "@/lib/supabase";
@@ -59,7 +60,7 @@ type AppDataCachePayload = RankingCachePayload & {
   historySessions: HistorySession[];
   monthCloseStatus: MonthCloseStatus | null;
 };
-type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "elo" | "hall" | "history" | "photos";
+type Screen = "home" | "members" | "rules" | "schedules" | "ranking" | "elo" | "stats" | "hall" | "history" | "photos" | "member";
 type SessionStatus = "draft" | "checked_in" | "drawn" | "scheduled" | "completed";
 type AttendanceRow = { choice: "pending" | "attending" | "absent"; drawn_number: number | null; level_at_time?: "1" | "2" | number | string | null; profiles: SupabaseProfile | SupabaseProfile[] | null };
 type HomeSessionPayload = { inactive?: boolean; sessionId?: string | null; sessionDate?: string; status?: SessionStatus; attendances?: AttendanceRow[]; needsReset?: boolean; drawsReassigned?: boolean; scheduleCleared?: boolean; error?: string };
@@ -104,7 +105,7 @@ const attendeeCountFromAttendances = (attendances: HistorySessionRow["attendance
 const navGroups: { key: string; label: string; icon: AppIconName; screens: { screen: Screen; label: string }[] }[] = [
   { key: "home", label: "Trang chủ", icon: "home", screens: [{ screen: "home", label: "Trang chủ" }] },
   { key: "matches", label: "Thi đấu", icon: "schedule", screens: [{ screen: "schedules", label: "Lịch thi đấu" }, { screen: "history", label: "Kết quả & lịch sử" }] },
-  { key: "standings", label: "Xếp hạng", icon: "ranking", screens: [{ screen: "ranking", label: "Bảng xếp hạng" }, { screen: "elo", label: "ELO" }, { screen: "hall", label: "Bảng vàng" }] },
+  { key: "standings", label: "Xếp hạng", icon: "ranking", screens: [{ screen: "ranking", label: "Bảng xếp hạng" }, { screen: "elo", label: "ELO" }, { screen: "stats", label: "Thống kê" }, { screen: "hall", label: "Bảng vàng" }] },
   { key: "library", label: "Thư viện", icon: "photos", screens: [{ screen: "photos", label: "Kho ảnh" }, { screen: "rules", label: "Thể lệ" }] },
   { key: "members", label: "Thành viên", icon: "members", screens: [{ screen: "members", label: "Thành viên" }] },
 ];
@@ -115,6 +116,8 @@ const screenTitles: Record<Screen, string> = {
   schedules: "Lịch thi đấu",
   ranking: "Bảng xếp hạng",
   elo: "ELO",
+  stats: "Thống kê",
+  member: "Thành viên",
   hall: "Bảng vàng thành tích",
   history: "Lịch sử thi đấu",
   photos: "Kho ảnh",
@@ -417,6 +420,12 @@ export default function Home() {
     return monthLabel(new Date(initialDate.getFullYear(), initialDate.getMonth() - 1, 1));
   });
   const [historySessions, setHistorySessions] = useState<HistorySession[]>([]);
+  // Xếp hạng › Thống kê and the member pages: loaded from /api/stats while one of them is open, reloaded live.
+  const [statsData, setStatsData] = useState<StatsPayload | null>(null);
+  const [statsError, setStatsError] = useState("");
+  const [statsTick, setStatsTick] = useState(0);
+  const [statsMember, setStatsMember] = useState<string | null>(() => localStorage.getItem("aemit-stats-member"));
+  const [memberBack, setMemberBack] = useState<Screen>("members");
   const [confirmation, setConfirmation] = useState<{ title: string; message: string; action: () => void | Promise<void> } | null>(null);
   const [attendanceChangeNotice, setAttendanceChangeNotice] = useState<string | null>(null);
   const [showProfileCard, setShowProfileCard] = useState(false);
@@ -1050,6 +1059,43 @@ export default function Home() {
       .subscribe();
     return () => { void client.removeChannel(channel); };
   }, [activeUsername]);
+  const statsOpen = screen === "stats" || screen === "member";
+  useEffect(() => {
+    if (!supabase || !activeUsername || !statsOpen) return;
+    const client = supabase;
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const { data: { session: authSession } } = await client.auth.getSession();
+        const response = await fetch("/api/stats", {
+          headers: { ...(authSession?.access_token ? { Authorization: `Bearer ${authSession.access_token}` } : {}) },
+          cache: "no-store",
+        });
+        const payload = await response.json().catch(() => ({ error: "Không tải được số liệu thống kê." })) as StatsPayload & { error?: string };
+        if (cancelled) return;
+        if (!response.ok) { setStatsError(payload.error || "Không tải được số liệu thống kê."); return; }
+        setStatsError("");
+        setStatsData(payload);
+      } catch {
+        if (!cancelled) setStatsError("Không tải được số liệu thống kê. Kiểm tra mạng rồi thử lại.");
+      }
+    };
+    // One score save sends several live updates; wait a moment so they become a single request.
+    const timer = window.setTimeout(() => void load(), statsTick ? 400 : 0);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [activeUsername, statsOpen, statsTick]);
+  useEffect(() => {
+    if (!supabase || !activeUsername || !statsOpen) return;
+    const client = supabase;
+    const reload = () => setStatsTick((tick) => tick + 1);
+    const channel = client
+      .channel(liveChannelName("club-stats-live"))
+      .on("postgres_changes", { event: "*", schema: "public", table: "matches" }, reload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "attendances" }, reload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "play_sessions" }, reload)
+      .subscribe();
+    return () => { void client.removeChannel(channel); };
+  }, [activeUsername, statsOpen]);
   useEffect(() => {
     if (!attendanceChangeNotice) return;
     const timer = window.setTimeout(() => setAttendanceChangeNotice(null), 9_000);
@@ -1345,12 +1391,24 @@ export default function Home() {
   const profileRankClass = profileHasRankingData && profileRank > 0 && profileRank <= 3 ? `rank-${profileRank}` : "rank-none";
   const profileElo = eloRows.find((row) => row.username === currentUser.username || row.name === currentUser.name) ?? null;
   const champion = championRankingRows[0];
-  const activeGroup = navGroups.find((group) => group.screens.some((item) => item.screen === screen));
+  const activeGroup = navGroups.find((group) => group.screens.some((item) => item.screen === screen)) ?? (screen === "member" ? navGroups.find((group) => group.key === "members") : undefined);
   const openScreen = (next: Screen) => {
     window.scrollTo({ top: 0, behavior: "instant" });
     setScreen(next);
     if (next === "ranking") setRankingMonth(ENABLE_TEST_FLOW ? sessionMonthLabel : currentMonthLabel);
   };
+  const openMemberStats = (username: string) => {
+    setStatsMember(username);
+    localStorage.setItem("aemit-stats-member", username);
+    if (screen !== "member") setMemberBack(screen);
+    openScreen("member");
+  };
+  const statsAvatar = (member: StatsMember, size: "sm" | "md" | "lg" | "xl") => {
+    const person = members.find((item) => item.username === member.username) ?? { username: member.username, color: "#6846e8", initials: member.name.split(" ").map((part) => part[0]).slice(-2).join("") };
+    return <span className={avatarClassName(`avatar st-avatar ${size}`, person)} style={avatarStyle(person)} aria-hidden="true">{person.initials}</span>;
+  };
+  const statsMeId = statsData?.members.find((item) => item.username === activeUser?.username)?.id ?? null;
+  const statsMemberId = statsData?.members.find((item) => item.username === statsMember)?.id ?? "";
   const openRankingMonth = (label: string) => {
     window.scrollTo({ top: 0, behavior: "instant" });
     setScreen("ranking");
@@ -1377,7 +1435,7 @@ export default function Home() {
     <section className="content">
       <header><div className="title-group"><div><h1>{screen === "members" && !isAdmin ? "Thành viên" : screenTitles[screen]}</h1></div>{screen === "home" && <p className="title-date">{currentDateLabel}</p>}</div></header>
       {activeGroup && activeGroup.screens.length > 1 && <div ref={tabsRef} key={activeGroup.key} className="page-tabs" aria-label={activeGroup.label}>{activeGroup.screens.map((item) => <button key={item.screen} className={screen === item.screen ? "active" : ""} aria-current={screen === item.screen ? "page" : undefined} onClick={() => openScreen(item.screen)}>{item.label}</button>)}<i className="slide-indicator" aria-hidden="true" /></div>}
-      <div className="screen-view" key={screen}>{screen === "members" ? <Members canManage={isAdmin} members={members} rankingRows={profileRows} rankingMonth={profileAchievementMonth} eloRows={eloRows} formByUsername={formByUsername} onAvatarUpdated={(username, avatarUrl) => { if (avatarUrl) memberAvatars.set(username, avatarUrl); else memberAvatars.delete(username); removeBrowserCache(memberAvatarsCacheKey); setAvatarRevision((revision) => revision + 1); }} onCardArtUpdated={(username, cardUrl) => { memberCardArt.set(username, cardUrl); setAvatarRevision((revision) => revision + 1); }} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "hall" ? <HallOfFame entries={hallOfFame} onOpenMonth={openRankingMonth} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={rankingFormByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
+      <div className="screen-view" key={screen}>{screen === "members" ? <Members canManage={isAdmin} members={members} onOpenMember={openMemberStats} onAvatarUpdated={(username, avatarUrl) => { if (avatarUrl) memberAvatars.set(username, avatarUrl); else memberAvatars.delete(username); removeBrowserCache(memberAvatarsCacheKey); setAvatarRevision((revision) => revision + 1); }} onCardArtUpdated={(username, cardUrl) => { memberCardArt.set(username, cardUrl); setAvatarRevision((revision) => revision + 1); }} onRoleUpdated={(username, role) => setMembers((previous) => previous.map((member) => member.username === username ? { ...member, role } : member))} /> : screen === "rules" ? <Rules members={members} /> : screen === "hall" ? <HallOfFame entries={hallOfFame} onOpenMonth={openRankingMonth} /> : screen === "schedules" ? <ScheduleLibrary scenarios={scheduleScenarios} members={members} /> : screen === "ranking" ? <Ranking month={rankingMonth} rows={rankingRows} form={rankingFormByUsername} elo={Object.fromEntries(eloRows.map((row) => [row.username, row.eloRating]))} onMonthChange={(month) => { setMonthCloseNotice(""); setRankingMonth(month); }} monthOptions={rankingMonthOptions} isAdmin={isAdmin} closeStatus={monthCloseStatus} closeNotice={monthCloseNotice} closingMonth={closingMonth} onCloseMonth={closeRankingMonth} /> : screen === "stats" ? <StatsScreen data={statsData} error={statsData ? "" : statsError} meId={statsMeId} avatar={statsAvatar} onOpenMember={(id) => { const found = statsData?.members.find((item) => item.id === id); if (found) openMemberStats(found.username); }} /> : screen === "member" ? <MemberStatsPage key={statsMember ?? ""} data={statsData} error={statsData ? "" : statsError} meId={statsMeId} avatar={statsAvatar} memberId={statsMemberId} backLabel={memberBack === "stats" ? "Thống kê" : "Thành viên"} onBack={() => openScreen(memberBack === "member" ? "members" : memberBack)} onOpenMember={(id) => { const found = statsData?.members.find((item) => item.id === id); if (found) openMemberStats(found.username); }} /> : screen === "elo" ? <EloRanking rows={eloRows} status={eloStatus} /> : screen === "history" ? <History sessions={historySessions} currentMonth={currentMonthLabel} /> : screen === "photos" ? <PhotoGallery /> : <>
         <div className="home-top">
         <div className="next-session">
         <section className="hero">
@@ -2755,7 +2813,7 @@ function AddMemberModal({ onClose, onCreate }: { onClose: () => void; onCreate: 
   </div>;
 }
 
-function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formByUsername, onAvatarUpdated, onCardArtUpdated, onRoleUpdated }: { canManage: boolean; members: Member[]; rankingRows: RankingRow[]; rankingMonth: string; eloRows: EloRankingRow[]; formByUsername: Record<string, FormResult[]>; onAvatarUpdated: (username: string, avatarUrl: string | null) => void; onCardArtUpdated: (username: string, cardUrl: string | null) => void; onRoleUpdated: (username: string, role: MemberRole) => void }) {
+function Members({ canManage, members, onOpenMember, onAvatarUpdated, onCardArtUpdated, onRoleUpdated }: { canManage: boolean; members: Member[]; onOpenMember: (username: string) => void; onAvatarUpdated: (username: string, avatarUrl: string | null) => void; onCardArtUpdated: (username: string, cardUrl: string | null) => void; onRoleUpdated: (username: string, role: MemberRole) => void }) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   // The ••• menu is drawn on the page body, not inside the block, so its glass can blur what lies beneath it
   // (a block's own glass would keep it from seeing past the block). It sits under its button, or above it near the bottom.
@@ -2770,7 +2828,6 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
       window.removeEventListener("resize", close);
     };
   }, [openMenu]);
-  const [viewing, setViewing] = useState<Member | null>(null);
   const [editing, setEditing] = useState<Member | null>(null);
   const photo = useAvatarPicker();
   const newAvatar = photo.picked;
@@ -2990,14 +3047,14 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
       </div>
       {roleNotice && <div className="member-role-notice">{roleNotice}</div>}
       {visibleMembers.length === 0 ? <div className="member-table"><div className="empty-ranking">Không tìm thấy thành viên phù hợp với “{searchTerm}”.</div></div> : viewMode === "list" ? <div className="member-table">{visibleMembers.map((member) => <div key={member.username}>
-        <button type="button" className="person member-person-btn" aria-label={`Xem thông tin ${member.name}`} onClick={() => setViewing(member)}><div className={avatarClassName("avatar", member)} style={avatarStyle(member)}>{member.initials}</div><div><b>{member.name}{effectiveRole(member.role) !== "member" && <span className={"member-card-role " + effectiveRole(member.role)}>{effectiveRole(member.role) === "admin" ? "Admin" : "Sub-admin"}</span>}</b><small>{canManage ? `@${member.username}` : `Level ${member.level}`}</small></div></button>
+        <button type="button" className="person member-person-btn" aria-label={`Xem thông tin ${member.name}`} onClick={() => onOpenMember(member.username)}><div className={avatarClassName("avatar", member)} style={avatarStyle(member)}>{member.initials}</div><div><b>{member.name}{effectiveRole(member.role) !== "member" && <span className={"member-card-role " + effectiveRole(member.role)}>{effectiveRole(member.role) === "admin" ? "Admin" : "Sub-admin"}</span>}</b><small>{canManage ? `@${member.username}` : `Level ${member.level}`}</small></div></button>
         <span className="status">● Hoạt động</span>
         {canManage && memberMenu(member)}
       </div>)}</div> : <div className="member-cards">{visibleMembers.map((member) => {
         const art = cardArtUrl(member.username);
         const role = effectiveRole(member.role);
         return <article key={member.username} className={"member-card-tile" + (art ? " has-art" : "")} style={{ "--avatar-color": member.color || "#6846e8" } as CSSProperties}>
-          <button type="button" className="member-card-open" aria-label={`Xem thông tin ${member.name}`} onClick={() => setViewing(member)}>
+          <button type="button" className="member-card-open" aria-label={`Xem thông tin ${member.name}`} onClick={() => onOpenMember(member.username)}>
             <span className="member-card-stage" aria-hidden="true">
               <i className="member-card-glow" />
               {art ? <img className="member-card-art" src={art} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.closest(".member-card-tile")?.classList.remove("has-art"); event.currentTarget.remove(); }} /> : null}
@@ -3013,14 +3070,6 @@ function Members({ canManage, members, rankingRows, rankingMonth, eloRows, formB
       })}</div>}
     </section>
     <Presence show={canManage && Boolean(editing)}>{canManage && editing && <div className="modal-backdrop" role="dialog" aria-modal="true"><section className="member-editor"><button className="modal-close" onClick={closeEditor}>×</button><div className="member-editor-head"><p className="eyebrow">CHỈNH SỬA THÀNH VIÊN</p><h2>{editing.name}</h2></div><div className="member-editor-media"><AvatarField url={newAvatar?.preview ?? (avatarRemoved ? null : avatarImageUrl(editing.username))} initials={editing.initials} canRemove={Boolean(newAvatar) || (memberAvatars.has(editing.username) && !avatarRemoved)} error={photo.error} onPick={(file) => void pickAvatar(file)} onRemove={() => { photo.reset(); setAvatarRemoved(memberAvatars.has(editing.username)); }} /><CardArtField url={newCard?.preview ?? (cardRemoved ? null : cardArtUrl(editing.username))} canRemove={Boolean(newCard) || (Boolean(cardArtUrl(editing.username)) && !cardRemoved)} error={cardPick.error} onPick={(file) => void cardPick.pick(file).then((ok) => { if (ok) setCardRemoved(false); })} onRemove={() => { cardPick.reset(); setCardRemoved(Boolean(cardArtUrl(editing.username))); }} /></div><div className="member-editor-main"><label>Họ và tên<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoFocus /></label><label className="member-role-field">Quyền{effectiveRole(editing.role) === "admin" || editing.username === "manh" ? <span className="member-role-badge admin member-role-editor-badge">Admin</span> : <GlassSelect value={editRole} options={[{ value: "member", label: "Thành viên" }, { value: "sub-admin", label: "Sub-admin" }]} disabled={roleSaving === editing.username} onChange={(next) => setEditRole(next as "member" | "sub-admin")} ariaLabel="Quyền" />}</label><label className="member-password-field">Mật khẩu mới<PasswordField value={editPassword} onChange={setEditPassword} placeholder="Để trống nếu giữ nguyên" /></label><div className="editor-actions"><button className="soft-btn" onClick={closeEditor}>Hủy bỏ</button><button className="primary" onClick={() => void save()}>{roleSaving === editing.username ? "Đang lưu…" : "Lưu"}</button></div></div></section></div>}</Presence>
-    <Presence show={Boolean(viewing)}>{viewing && (() => {
-      const rank = rankingRows.findIndex((row) => row.username === viewing.username || row.name === viewing.name) + 1;
-      const achievement = rank > 0 ? rankingRows[rank - 1] : null;
-      const hasRankingData = Boolean(achievement && !achievement.placeholder && achievement.matches > 0);
-      const rankClass = hasRankingData && rank <= 3 ? `rank-${rank}` : "rank-none";
-      const elo = eloRows.find((row) => row.username === viewing.username || row.name === viewing.name) ?? null;
-      return <div className="modal-backdrop"><ProfilePopover detail showUsername={canManage} member={viewing} rank={rank} achievement={achievement} achievementMonth={rankingMonth} rankClass={rankClass} hasRankingData={hasRankingData} elo={elo} form={formByUsername[viewing.username]} onClose={() => setViewing(null)} /></div>;
-    })()}</Presence>
     <Presence show={canManage && adding}>{canManage && adding && <AddMemberModal onClose={() => setAdding(false)} onCreate={async (values) => {
       const { avatar, card, ...member } = values;
       const created = await adminPost("/api/member-create", member, "Không thể thêm thành viên.") as { username?: string };
