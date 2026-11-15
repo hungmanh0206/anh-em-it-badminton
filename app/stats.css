@@ -184,13 +184,17 @@ button.st-hl:not(#_):not(#_):hover { box-shadow: var(--glass-lift); translate: 0
 .st-heat-key i { width: 120px; height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--st-lose), var(--st-track), var(--st-win)); }
 
 /* Head to head */
-.st-vs-pick { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--card-gap); }
-.st-vs-pick > span { color: var(--st-faint); font-size: 15px; font-style: italic; font-weight: 900; }
+.st-head-range, .st-card-filters, .st-check-short { display: none; }
 .st-score { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px; padding: 18px; }
 .st-side { display: flex; align-items: center; gap: 12px; min-width: 0; font-size: 16px; font-weight: 800; }
 .st-side.r { flex-direction: row-reverse; text-align: right; }
+/* The names in the score card are dropdowns: bold text with the app's chevron, a soft pill on hover. */
+.st-side > .glass-select.st-side-select:not(#_):not(#_) { width: auto; min-width: 0; max-width: 100%; min-height: 38px; padding: 0 8px 0 10px; background: none; box-shadow: none; font-size: 16px; font-weight: 800; }
+.st-side > .glass-select.st-side-select:not(#_):not(#_):hover, .st-side > .glass-select.st-side-select[aria-expanded="true"]:not(#_):not(#_) { background: var(--pill); box-shadow: none; }
+.st-side.r > .glass-select.st-side-select:not(#_):not(#_) { padding: 0 8px 0 10px; }
 .st-big { font-size: 44px; font-weight: 700; line-height: 1; white-space: nowrap; }
 .st-big em { margin: 0 10px; color: var(--st-faint); font-style: normal; }
+.st-big > em:only-child { margin: 0; font-size: 22px; font-style: italic; font-weight: 900; }
 .st-split { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--st-lose); }
 .st-split span { width: calc(var(--v, 50) * 1%); background: var(--st-win); transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1); }
 .st-matches { display: grid; gap: var(--card-gap); margin: 0; padding: 0; list-style: none; }
@@ -202,13 +206,18 @@ button.st-hl:not(#_):not(#_):hover { box-shadow: var(--glass-lift); translate: 0
 .st-sc { font-family: "JetBrains Mono", ui-monospace, monospace; font-weight: 700; text-align: center; }
 
 /* Personal */
-.st-me-head:not(#_):not(#_) { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
-.st-me-head h2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.st-me-head:not(#_):not(#_) { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--card-gap) 14px; }
+.st-me-who { min-width: 0; text-align: left; }
+.st-me-who h2:not(#_):not(#_) { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 8px; margin: 0; text-align: left; }
+.st-me-who p { margin: 4px 0 0; }
 .st-elo-now { margin-left: auto; text-align: right; }
 .st-elo-now b { display: block; font-size: 28px; font-weight: 700; line-height: 1; }
 .st-elo-now > span { display: block; margin-top: 6px; color: var(--bar-muted); font-size: 12px; font-weight: 700; }
-.st-link:not(#_):not(#_) { display: inline-flex; align-items: center; min-height: 36px; margin: 0; padding: 0 14px; border: 0; border-radius: 12px; background: var(--glass-card); box-shadow: var(--glass-lift-card); color: var(--bar-accent); font: inherit; font-size: 13px; font-weight: 800; white-space: nowrap; cursor: pointer; }
-.st-link:not(#_):not(#_):hover { box-shadow: var(--glass-lift); }
+/* The avatar opens the member's page: a gold ring and a slight lift on hover say it can be tapped. */
+.st-avatar-btn:not(#_):not(#_) { display: inline-flex; flex: none; margin: 0; padding: 0; border: 0; border-radius: 50%; background: none; box-shadow: none; cursor: pointer; transition: box-shadow 160ms ease, scale 160ms ease; }
+.st-avatar-btn:not(#_):not(#_):hover { box-shadow: 0 0 0 3px rgba(255, 190, 40, 0.55); scale: 1.04; }
+.st-avatar-btn:not(#_):not(#_):active { scale: 0.97; }
+.st-avatar-btn:not(#_):not(#_):focus-visible { outline: 2px solid rgba(255, 183, 0, 0.8); outline-offset: 3px; }
 .st-me-main { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--block-inset); }
 .st-ring { position: relative; width: 148px; height: 148px; }
 .st-ring svg { width: 100%; height: 100%; rotate: -90deg; }
@@ -252,10 +261,16 @@ button.st-hl:not(#_):not(#_):hover { box-shadow: var(--glass-lift); translate: 0
   .st-cols { grid-template-columns: minmax(0, 1fr); }
   .st-rows-head, .st-row:not(#_):not(#_) { grid-template-columns: minmax(0, 1fr) 48px 98px 124px 64px 58px; gap: 10px; }
 }
-@media (min-width: 701px) and (max-width: 980px) {
-  .st-toolbar { flex-direction: column; align-items: stretch; }
-  .st-toolbar .st-switch { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }
-  .st-tools-right > .glass-select:not(#_) { flex: 1 1 0; width: auto; }
+/* iPad portrait and phones: the bar keeps only the section switch, full width; the filters move into the first
+   block, beside its title (Tổng quan, Đối đầu) or under it (Cặp đôi, Cá nhân). */
+@media (max-width: 980px) {
+  .st-toolbar { flex-direction: column; align-items: flex-start; }
+  .st-toolbar .st-tools-right { display: none; }
+  /* Filters keep a field's width (196px, as in the app) instead of stretching across the block. */
+  .st-card-filters { display: flex; flex-wrap: wrap; grid-column: 1 / -1; gap: var(--card-gap); width: 100%; }
+  .st-card-filters > .glass-select:not(#_) { flex: 0 1 196px; width: 196px; min-width: 0; }
+  .st-head-inline:not(#_):not(#_) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+  .st-head-inline .st-head-range { display: block; width: 160px; }
 }
 
 /* ---------- Phones ---------- */
@@ -270,7 +285,6 @@ button.st-hl:not(#_):not(#_):hover { box-shadow: var(--glass-lift); translate: 0
   .st-mini3 .st-card { padding: 12px; }
   .st-mini3 .st-stat > b { font-size: 17px; }
   .st-heat-block { display: none; }
-  .st-head .st-tools { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; }
   .st-sort { display: block; }
   .st-rows-head { display: none; }
   .st-row:not(#_):not(#_), .st-rows.four .st-row:not(#_):not(#_) { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px 8px; padding: 12px 14px; text-align: left; }
@@ -284,25 +298,48 @@ button.st-hl:not(#_):not(#_):hover { box-shadow: var(--glass-lift); translate: 0
   .st-matches .st-d { grid-column: 1 / -1; }
   .st-score { gap: 10px; padding: 16px 14px; }
   .st-big { font-size: 34px; }
-  .st-side { gap: 8px; font-size: 14px; }
+  /* Phones: each side is the avatar over its name field; the score sits between them. */
+  .st-score { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .st-side, .st-side.r { flex-direction: column; justify-content: center; gap: 6px; min-width: 0; text-align: center; }
+  .st-side > .glass-select.st-side-select:not(#_):not(#_), .st-side.r > .glass-select.st-side-select:not(#_):not(#_) { justify-content: center; gap: 4px; width: 100%; padding: 0 4px; font-size: 14px; }
   .st-me-main { grid-template-columns: minmax(0, 1fr); justify-items: center; }
   .st-me-main .st-grid-4 { width: 100%; }
-  .st-elo-now { width: 100%; margin-left: 0; text-align: left; }
   .st-attend { grid-template-columns: minmax(0, 1fr); gap: var(--card-gap); }
   .st-mh-who { gap: 14px; }
   .st-avatar.xl:not(#_):not(#_):not(#_) { width: 64px !important; height: 64px !important; min-width: 64px !important; font-size: 21px !important; }
   .st-page-select { width: 160px; }
 }
+@media (max-width: 700px) {
+  .st-card-filters > .glass-select:not(#_), .st-sort > .glass-select:not(#_) { padding-inline: 11px 9px; font-size: 13px; }
+  /* Cặp đôi: the sort field and the checkbox share one line. */
+  /* Phones: every filter is half the line, so the sort field lines up under the time field. */
+  .st-card-filters > .glass-select:not(#_) { flex: 1 1 0; width: auto; }
+  .st-head .st-tools:not(#_) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: var(--card-gap); width: 100%; }
+  .st-sort > .glass-select:not(#_):not(#_) { width: 100%; font-size: 13px; }
+  .st-check-full { display: none; }
+  .st-check-short { display: inline; }
+  .st-check { white-space: nowrap; }
+  /* Cá nhân head: avatar and name on one line, the ELO under them, the filters last. */
+  .st-me-head:not(#_):not(#_) { grid-template-columns: auto minmax(0, 1fr); }
+  .st-me-head .st-elo-now { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; grid-column: 1 / -1; width: auto; margin: 0; text-align: left; }
+  .st-me-head .st-elo-now b { font-size: 24px; }
+  .st-me-head .st-elo-now > span { margin: 0; }
+  .st-head-inline .st-head-range { width: 132px; }
+}
 @media (max-width: 600px) {
-  .st-tools-right > .glass-select:not(#_), .st-vs-pick > .glass-select:not(#_) { padding-inline: 11px 9px; font-size: 13px; }
+  .st-tools-right > .glass-select:not(#_), .st-head-range > .glass-select:not(#_) { padding-inline: 11px 9px; font-size: 13px; }
+}
+@media (max-width: 430px) {
+  .st-score { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "a b" "s s"; row-gap: 10px; }
+  .st-score > .st-side:first-child { grid-area: a; }
+  .st-score > .st-side.r { grid-area: b; }
+  .st-score > .st-big { grid-area: s; justify-self: center; font-size: 34px; }
 }
 @media (max-width: 560px) {
   .st-stat > b { font-size: 24px; }
   .st-grid-4.st-hl-grid { grid-template-columns: minmax(0, 1fr); }
   .st-histo { min-height: 184px; gap: 8px; }
   .st-histo small { font-size: 10.5px; }
-  .st-vs-pick { grid-template-columns: minmax(0, 1fr); }
-  .st-vs-pick > span { text-align: center; }
 }
 @media (max-width: 380px) {
   .st-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -314,11 +351,7 @@ button.st-hl:not(#_):not(#_):hover { box-shadow: var(--glass-lift); translate: 0
   .st-matches .st-t { grid-area: a; }
   .st-matches .st-t.b { grid-area: b; text-align: left; }
   .st-matches .st-sc { grid-area: s; align-self: center; }
-  .st-score { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "a b" "s s"; row-gap: 12px; }
-  .st-score > .st-side:first-child { grid-area: a; }
-  .st-score > .st-side.r { grid-area: b; }
-  .st-score > .st-big { grid-area: s; justify-self: center; }
-  .st-side > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .st-big em { margin: 0 6px; }
   .st-grid-3.st-mini3 { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -69,8 +69,8 @@ function Switch<T extends string>({ value, options, onChange, label, className =
   </div>;
 }
 
-function Head({ title, sub, children }: { title: ReactNode; sub?: ReactNode; children?: ReactNode }) {
-  return <div className="panel-head st-head"><div><h2>{title}</h2>{sub && <p>{sub}</p>}</div>{children}</div>;
+function Head({ title, sub, children, inline = false }: { title: ReactNode; sub?: ReactNode; children?: ReactNode; inline?: boolean }) {
+  return <div className={"panel-head st-head" + (inline ? " st-head-inline" : "")}><div><h2>{title}</h2>{sub && <p>{sub}</p>}</div>{children}</div>;
 }
 
 function Stat({ label, children, foot, small = false }: { label: string; children: ReactNode; foot?: ReactNode; small?: boolean }) {
@@ -181,7 +181,7 @@ function useModel(data: StatsPayload | null) {
 }
 
 // ---------- Personal block (the Cá nhân tab and the member page) ----------
-function Personal({ st, data, id, compact, rangeLabel, model, avatarOf, sessions, meId, onOpenMember }: { st: Stats; data: StatsPayload; id: string; compact: boolean; rangeLabel: string; model: NonNullable<ReturnType<typeof useModel>>; avatarOf: (id: string, size?: AvatarSize) => ReactNode; sessions: { date: string; present: string[] }[]; meId: string | null; onOpenMember: (id: string) => void }) {
+function Personal({ st, data, id, compact, rangeLabel, model, avatarOf, sessions, meId, onOpenMember, filters }: { filters?: ReactNode; st: Stats; data: StatsPayload; id: string; compact: boolean; rangeLabel: string; model: NonNullable<ReturnType<typeof useModel>>; avatarOf: (id: string, size?: AvatarSize) => ReactNode; sessions: { date: string; present: string[] }[]; meId: string | null; onOpenMember: (id: string) => void }) {
   const grown = useGrown();
   const member = model.byId.get(id);
   const p = (st.person as Record<string, Tally & { closeW: number; closeL: number; deuceW: number; deuceL: number; blowW: number; upsetW: number; bestStreak: number; current: { won: boolean; n: number } }>)[id];
@@ -189,9 +189,12 @@ function Personal({ st, data, id, compact, rangeLabel, model, avatarOf, sessions
   const delta = Math.round(eloChange(data.eloBySession, id, member?.elo));
   const head = compact
     ? <Head title="Thành tích" sub={`${rangeLabel}${p ? ` · ${p.m} trận có tỉ số` : ""}`} />
-    : <div className="panel-head st-me-head">{avatarOf(id, "md")}<div><h2>{name} {member && <span className={`st-chip l${member.level}`}>Level {member.level}</span>}{id === meId && <span className="st-chip me">Tôi</span>}</h2><p>{rangeLabel}{p ? ` · ${p.m} trận` : ""}</p></div>
+    : <div className="panel-head st-me-head">
+      <button type="button" className="st-avatar-btn" aria-label={`Mở trang của ${name}`} title={`Mở trang của ${name}`} onClick={() => onOpenMember(id)}>{avatarOf(id, "md")}</button>
+      <div className="st-me-who"><h2>{name}{member && <span className={`st-chip l${member.level}`}>Level {member.level}</span>}{id === meId && <span className="st-chip me">Tôi</span>}</h2><p>{rangeLabel}{p ? ` · ${p.m} trận` : ""}</p></div>
       <div className="st-elo-now"><b className="st-num">{member ? nf.format(Math.round(member.elo)) : "–"}</b><span>ELO hiện tại · <span className={delta >= 0 ? "st-pos" : "st-neg"}>{signed(delta)} trong 4 tuần</span></span></div>
-      <button type="button" className="st-link" onClick={() => onOpenMember(id)}>Trang của {name}</button></div>;
+      {filters}
+    </div>;
   if (!p) return <section className="panel st-panel">{head}<div className="st-body"><Empty>{name} chưa có trận nào có tỉ số trong khoảng thời gian này.</Empty></div></section>;
   const att = attendance(sessions, id, member?.joinedOn ?? null), attPct = att.held ? (att.came / att.held) * 100 : 0;
   const { nemesis, prey } = rivals(st, id, model.nameOf, collator) as { nemesis: [string, Tally][]; prey: [string, Tally][] };
@@ -258,16 +261,20 @@ export function StatsScreen({ data, error, meId, avatar, onOpenMember }: Common)
   const memberId = member && model.byId.has(member) ? member : null;
   const avatarOf = (id: string, size: AvatarSize = "sm") => { const m = model.byId.get(id); return m ? avatar(m, size) : null; };
   const pairName = (q: { ids: string[] }) => q.ids.map(model.nameOf).join(" + ");
+  const plainOptions = () => [...model.active].sort((x, y) => (x.id === me ? -1 : y.id === me ? 1 : collator.compare(x.name, y.name))).map((m) => ({ value: m.id, label: m.name }));
   const memberOptions = (withAll: boolean) => [
     ...(withAll ? [{ value: "", label: "Cả CLB" }] : []),
     ...(me ? [{ value: me, label: `${model.nameOf(me)} (tôi)` }] : []),
     ...model.active.filter((m) => m.id !== me).sort((x, y) => collator.compare(x.name, y.name)).map((m) => ({ value: m.id, label: m.name })),
   ];
-  const tools = <div className="st-tools-right">
-    <GlassSelect value={rangeOk} options={model.rangeOptions} onChange={(v) => { setRange(v); setAllPairs(false); setOpenPair(null); }} ariaLabel="Thời gian" />
-    {section === "cap-doi" && <GlassSelect value={memberId ?? ""} options={memberOptions(true)} onChange={(v) => { setMember(v || null); setAllPairs(false); setOpenPair(null); }} ariaLabel="Thành viên" />}
-    {section === "ca-nhan" && personId && <GlassSelect value={personId} options={memberOptions(false)} onChange={setPerson} ariaLabel="Thành viên" />}
-  </div>;
+  const rangeSelect = <GlassSelect value={rangeOk} options={model.rangeOptions} onChange={(v) => { setRange(v); setAllPairs(false); setOpenPair(null); }} ariaLabel="Thời gian" />;
+  // Tổng quan and Đối đầu have only the time field: on phones it sits beside the first block's title.
+  const headRange = <div className="st-head-range">{rangeSelect}</div>;
+  const memberSelect = section === "cap-doi" ? <GlassSelect value={memberId ?? ""} options={memberOptions(true)} onChange={(v) => { setMember(v || null); setAllPairs(false); setOpenPair(null); }} ariaLabel="Thành viên" />
+    : section === "ca-nhan" && personId ? <GlassSelect value={personId} options={memberOptions(false)} onChange={setPerson} ariaLabel="Thành viên" /> : null;
+  // On phones the bar keeps only the section switch; the filters sit in the first block (st-card-filters).
+  const cardFilters = <div className="st-card-filters">{rangeSelect}{memberSelect}</div>;
+  const tools = <div className="st-tools-right">{rangeSelect}{memberSelect}</div>;
 
   let body: ReactNode;
   if (!matches.length) body = <section className="panel st-panel"><div className="st-body st-top"><Empty>Chưa có trận nào có tỉ số trong khoảng thời gian này. Chọn “Từ đầu” hoặc một tháng khác.</Empty></div></section>;
@@ -277,7 +284,7 @@ export function StatsScreen({ data, error, meId, avatar, onOpenMember }: Common)
     const maxB = Math.max(...st.buckets, 1), labels = ["1–2", "3–5", "6–9", "10–14", "15+"];
     const openPerson = (id: string) => { setPerson(id); setSection("ca-nhan"); };
     body = <>
-      <section className="panel st-panel"><Head title="Toàn CLB" sub={`${rangeLabel} · ${nf.format(st.n)} trận có tỉ số trong ${sessions.length} buổi`} />
+      <section className="panel st-panel"><Head inline title="Toàn CLB" sub={`${rangeLabel} · ${nf.format(st.n)} trận có tỉ số trong ${sessions.length} buổi`}>{headRange}</Head>
         <div className="st-body"><div className="st-grid-4">
           <Stat label="Trận đã tính" foot={`trong ${sessions.length} buổi`}><Count value={st.n} /></Stat>
           <Stat label="Cách biệt trung bình" foot="chênh lệch điểm mỗi trận"><Count value={st.marginAvg} format="dec" /><small>điểm</small></Stat>
@@ -320,9 +327,10 @@ export function StatsScreen({ data, error, meId, avatar, onOpenMember }: Common)
     body = <>
       <section className="panel st-panel">
         <Head title={`Cặp đôi${memberId ? ` của ${model.nameOf(memberId)}` : ""}`} sub="Hai người cùng một đội. Bấm vào một cặp để xem các trận của họ.">
+          {cardFilters}
           <div className="st-tools">
-            <div className="st-sort"><GlassSelect value={sort.key} options={[{ value: "w", label: "Thắng nhiều nhất" }, { value: "m", label: "Đánh cùng nhiều nhất" }, { value: "rate", label: "Tỉ lệ thắng cao nhất" }, { value: "diff", label: "Hiệu số cao nhất" }, { value: "chem", label: "Ăn ý nhất" }]} onChange={(v) => setSort({ key: v as typeof sort.key, dir: -1 })} ariaLabel="Xếp theo" /></div>
-            <label className="st-check"><input type="checkbox" checked={showFew} onChange={(e) => setShowFew(e.target.checked)} />Hiện cả cặp dưới {MIN_MATCHES} trận</label>
+            <div className="st-sort"><GlassSelect value={sort.key} options={[{ value: "w", label: "Thắng nhiều" }, { value: "m", label: "Đánh nhiều" }, { value: "rate", label: "Tỉ lệ thắng" }, { value: "diff", label: "Hiệu số" }, { value: "chem", label: "Ăn ý" }]} onChange={(v) => setSort({ key: v as typeof sort.key, dir: -1 })} ariaLabel="Xếp theo" /></div>
+            <label className="st-check"><input type="checkbox" checked={showFew} onChange={(e) => setShowFew(e.target.checked)} /><span className="st-check-full">Hiện cả cặp dưới {MIN_MATCHES} trận</span><span className="st-check-short">Cặp dưới {MIN_MATCHES} trận</span></label>
           </div>
         </Head>
         <div className="st-body">
@@ -357,15 +365,15 @@ export function StatsScreen({ data, error, meId, avatar, onOpenMember }: Common)
     const close = list.filter((m) => Math.abs(m.sa - m.sb) <= CLOSE_MARGIN).length;
     const { nemesis, prey } = rivals(st, a, model.nameOf, collator) as { nemesis: [string, Tally][]; prey: [string, Tally][] };
     body = <>
-      <section className="panel st-panel"><Head title="Đối đầu" sub="Các trận hai người ở hai đội khác nhau." />
+      <section className="panel st-panel"><Head inline title="Đối đầu" sub="Các trận hai người ở hai đội khác nhau.">{headRange}</Head>
         <div className="st-body">
-          <div className="st-vs-pick"><GlassSelect value={a} options={memberOptions(false)} onChange={(v) => setVs({ a: v, b: v === b ? null : b })} ariaLabel="Người thứ nhất" /><span>VS</span><GlassSelect value={b} options={memberOptions(false).filter((o) => o.value !== a)} onChange={(v) => setVs({ a, b: v })} ariaLabel="Đối thủ" /></div>
+          {/* The two people are picked right in the score card: each name is a dropdown. */}
+          <div className="st-card st-score">
+            <div className="st-side">{avatarOf(a, "md")}<GlassSelect className="st-side-select" value={a} options={plainOptions()} onChange={(v) => setVs({ a: v, b: v === b ? null : b })} ariaLabel="Người thứ nhất" /></div>
+            <div className="st-big">{h ? <><span className="st-num st-pos">{h.w}</span><em>–</em><span className="st-num st-neg">{h.m - h.w}</span></> : <em>VS</em>}</div>
+            <div className="st-side r">{avatarOf(b, "md")}<GlassSelect className="st-side-select" value={b} options={plainOptions().filter((o) => o.value !== a)} onChange={(v) => setVs({ a, b: v })} ariaLabel="Đối thủ" /></div>
+          </div>
           {h ? <>
-            <div className="st-card st-score">
-              <div className="st-side">{avatarOf(a, "md")}<span>{model.nameOf(a)}</span></div>
-              <div className="st-big"><span className="st-num st-pos">{h.w}</span><em>–</em><span className="st-num st-neg">{h.m - h.w}</span></div>
-              <div className="st-side r">{avatarOf(b, "md")}<span>{model.nameOf(b)}</span></div>
-            </div>
             <div className="st-split" aria-hidden="true"><span style={grow(grown, winRate(h) * 100)} /></div>
             <div className="st-grid-3 st-mini3">
               <Stat label="Lần gặp" small><span className="st-num">{h.m}</span></Stat>
@@ -386,7 +394,7 @@ export function StatsScreen({ data, error, meId, avatar, onOpenMember }: Common)
         <div className="st-body"><Heat ids={model.eloRank.map((m) => m.id)} get={(x, y) => h2h[x]?.[y]} none="chưa gặp" nameOf={model.nameOf} /></div>
       </section>
     </>;
-  } else body = personId ? <Personal st={st} data={data} id={personId} compact={false} rangeLabel={rangeLabel} model={model} avatarOf={avatarOf} sessions={sessions} meId={me} onOpenMember={onOpenMember} /> : null;
+  } else body = personId ? <Personal st={st} data={data} id={personId} compact={false} rangeLabel={rangeLabel} model={model} avatarOf={avatarOf} sessions={sessions} meId={me} onOpenMember={onOpenMember} filters={cardFilters} /> : null;
 
   return <>
     <PageHero eyebrow="THỐNG KÊ" title="Số liệu thi đấu của CLB" description="Ai đánh cặp hợp nhau, ai là khắc tinh của ai, phong độ ELO đi lên hay đi xuống. Số liệu tính từ các trận đã có tỉ số." statsLabel="Tóm tắt" stats={[{ label: "Trận đã tính", value: nf.format(st.n) }, { label: "Buổi", value: nf.format(sessions.length) }]} />
