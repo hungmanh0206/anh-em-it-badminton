@@ -1093,6 +1093,8 @@ export default function Home() {
       .on("postgres_changes", { event: "*", schema: "public", table: "matches" }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "attendances" }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "play_sessions" }, reload)
+      // ELO is written after the match itself, so the match event alone can arrive before the new ELO is there.
+      .on("postgres_changes", { event: "*", schema: "public", table: "elo_ratings" }, reload)
       .subscribe();
     return () => { void client.removeChannel(channel); };
   }, [activeUsername, statsOpen]);
