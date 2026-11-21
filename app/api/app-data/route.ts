@@ -254,8 +254,19 @@ const buildEloRows = (rankedRows: Array<{ memberId: string; name?: string; usern
 
 type EloRatingsRead = { data: unknown[] | null; error: { code?: string; message: string } | null };
 
+// Scored matches per member: the "Số trận" column. Counts the same matches the ELO rebuild replays.
+const eloMatchCounts = (sessions: EloSessionRow[]) => {
+  const counts = new Map<string, number>();
+  for (const session of sessions) {
+    for (const match of (session.matches || []).filter(isScoredEloMatch)) {
+      for (const memberId of [...(match.team_a as string[]), ...(match.team_b as string[])]) counts.set(memberId, (counts.get(memberId) ?? 0) + 1);
+    }
+  }
+  return counts;
+};
+
 // The ratings table is read alongside the other app-data queries; this only filters it to active members.
-async function loadPersistedEloRows(eloRatingsRead: EloRatingsRead, activeProfiles: SupabaseProfile[]) {
+async function loadPersistedEloRows(eloRatingsRead: EloRatingsRead, activeProfiles: SupabaseProfile[], sessions: EloSessionRow[]) {
   const memberIds = new Set(activeProfiles.flatMap((profile) => profile.id ? [profile.id] : []));
   if (!memberIds.size) return null;
 
@@ -270,19 +281,20 @@ async function loadPersistedEloRows(eloRatingsRead: EloRatingsRead, activeProfil
 
   const ratingByMember = new Map(ratingRows.map((row) => [row.member_id, Number(row.elo_rating ?? ELO_INITIAL_RATING)]));
   const latestUpdatedAt = ratingRows.map((row) => row.updated_at).filter(Boolean).sort().at(-1);
+  const matchCounts = eloMatchCounts(sessions);
   const ranked = rankEloPlayers(activeProfiles.flatMap((profile) => profile.id ? [{
     memberId: profile.id,
     username: profile.username || profile.id,
     name: profile.full_name || "Thành viên",
     eloRating: ratingByMember.get(profile.id) ?? startRatingForProfile(profile),
-    matches: 0,
+    matches: matchCounts.get(profile.id) ?? 0,
   }] : []));
 
   return {
     rows: buildEloRows(ranked, activeProfiles),
     status: {
       source: "database" as const,
-      processedMatches: 0,
+      processedMatches: sessions.reduce((total, session) => total + (session.matches || []).filter(isScoredEloMatch).length, 0),
       message: latestUpdatedAt ? `ELO đang lấy từ bảng đã backfill, cập nhật gần nhất ${new Date(String(latestUpdatedAt)).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}.` : "ELO đang lấy từ bảng đã backfill.",
     },
   };
@@ -329,9 +341,9 @@ async function buildCalculatedEloRows(admin: SupabaseClient, activeProfiles: Sup
  };
 }
 
-async function loadEloRanking(admin: SupabaseClient, eloRatingsRead: EloRatingsRead, activeProfiles: SupabaseProfile[]) {
+async function loadEloRanking(admin: SupabaseClient, eloRatingsRead: EloRatingsRead, activeProfiles: SupabaseProfile[], sessions: EloSessionRow[]) {
  try {
-   const persisted = await loadPersistedEloRows(eloRatingsRead, activeProfiles);
+   const persisted = await loadPersistedEloRows(eloRatingsRead, activeProfiles, sessions);
    if (persisted) return persisted;
    return await buildCalculatedEloRows(admin, activeProfiles);
  } catch (error) {
@@ -452,7 +464,7 @@ export async function GET(request: Request) {
     });
 
     const activeProfileRows = (activeProfiles || []) as SupabaseProfile[];
-    const { rows: eloRows, status: eloStatus } = await loadEloRanking(admin, eloRatingsRead, activeProfileRows);
+    const { rows: eloRows, status: eloStatus } = await loadEloRanking(admin, eloRatingsRead, activeProfileRows, (formSessions || []) as EloSessionRow[]);
     const formByUsername = buildFormByUsername((formSessions || []) as EloSessionRow[], activeProfileRows);
     // A past month's ranking shows the form its players ended that month with, not their latest matches.
     const rankingFormByUsername = month < currentMonthKey
