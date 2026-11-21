@@ -64,9 +64,9 @@ export async function POST(request: Request) {
 
     await syncMonthlyResults(admin, monthStart(playSession.session_date));
     // ELO replays from the matches table, which is already written, so it can run alongside the status update.
-    const [completed] = await Promise.all([syncSessionStatus(admin, body.sessionId, body.totalMatches), recalculateEloIfAvailable(admin)]);
+    const [completed, eloUpdated] = await Promise.all([syncSessionStatus(admin, body.sessionId, body.totalMatches), recalculateEloIfAvailable(admin)]);
 
-    return Response.json({ ok: true, completed });
+    return Response.json({ ok: true, completed, eloUpdated });
   } catch (error) {
     return jsonError(error);
   }
@@ -81,7 +81,7 @@ export async function DELETE(request: Request) {
 
     const result = await deleteMatchResult(admin, { sessionId: body.sessionId, matchNo: body.matchNo, totalMatches: body.totalMatches }, { recalculateElo: () => recalculateEloIfAvailable(admin) });
     if (result.error) return Response.json({ error: result.error }, { status: result.status });
-    return Response.json({ ok: true, completed: false });
+    return Response.json({ ok: true, completed: false, eloUpdated: result.eloUpdated !== false });
   } catch (error) {
     return jsonError(error);
   }

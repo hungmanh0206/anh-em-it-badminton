@@ -1794,11 +1794,12 @@ function Results({ header, scenario, onEditingChange, matches, drawn, people, sc
         headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
         body: JSON.stringify({ sessionId, matchNo: index + 1, matchType: match.type, teamA: match.teamA, teamB: match.teamB, scoreA, scoreB, totalMatches: matches.length }),
       });
-      const payload = await response.json().catch(() => ({})) as { error?: string; completed?: boolean };
+      const payload = await response.json().catch(() => ({})) as { error?: string; completed?: boolean; eloUpdated?: boolean };
       if (!response.ok) { showToast(payload.error || "Không thể lưu kết quả trận."); return false; }
       setScores((current) => ({ ...current, [index]: [scoreAText, scoreBText] }));
       setConfirmedMatches((current) => ({ ...current, [index]: true }));
-      showToast(`Đã lưu trận ${index + 1} (${scoreA}–${scoreB}), BXH đã cập nhật.`, "success");
+      if (payload.eloUpdated === false) showToast(`Đã lưu trận ${index + 1} (${scoreA}–${scoreB}) và BXH, nhưng ELO chưa cập nhật được. Lưu lại trận này để thử lại.`);
+      else showToast(`Đã lưu trận ${index + 1} (${scoreA}–${scoreB}), BXH và ELO đã cập nhật.`, "success");
       onSaved(Boolean(payload.completed));
       return true;
     } catch {
@@ -1820,7 +1821,7 @@ function Results({ header, scenario, onEditingChange, matches, drawn, people, sc
         headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
         body: JSON.stringify({ sessionId, matchNo: index + 1, totalMatches: matches.length }),
       });
-      const payload = await response.json().catch(() => ({})) as { error?: string };
+      const payload = await response.json().catch(() => ({})) as { error?: string; eloUpdated?: boolean };
       if (!response.ok) { showToast(payload.error || "Không thể xóa điểm trận này."); return false; }
       setScores((current) => {
         const remaining = { ...current };
@@ -1828,7 +1829,8 @@ function Results({ header, scenario, onEditingChange, matches, drawn, people, sc
         return remaining;
       });
       setConfirmedMatches((current) => ({ ...current, [index]: false }));
-      showToast(`Đã xóa điểm trận ${index + 1}, BXH đã cập nhật.`, "success");
+      if (payload.eloUpdated === false) showToast(`Đã xóa điểm trận ${index + 1} và cập nhật BXH, nhưng ELO chưa cập nhật được.`);
+      else showToast(`Đã xóa điểm trận ${index + 1}, BXH và ELO đã cập nhật.`, "success");
       onSaved(false);
       return true;
     } catch {

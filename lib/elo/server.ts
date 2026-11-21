@@ -1,22 +1,13 @@
-import { rankEloPlayers, replayEloMatches } from "@/lib/elo/calculate-elo";
+import { replayEloMatches } from "@/lib/elo/calculate-elo";
 import { startRatingForProfile } from "@/lib/elo/start-rating";
+import { isMissingEloFeature, writeEloInApplication } from "@/lib/elo/sync-elo";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-type SupabaseMaybeError = { code?: string; message?: string } | null | undefined;
 type ProfileRow = { id: string; is_active?: boolean | null; description?: string | null };
 type StoredMatch = { id: string; match_no: number; team_a: string[] | null; team_b: string[] | null; score_a: number | null; score_b: number | null };
 type SessionRow = { session_date: string; matches?: StoredMatch[] | null };
 
-export const isMissingEloFeature = (error: SupabaseMaybeError) => {
-  const message = String(error?.message || "").toLowerCase();
-  return ["PGRST202", "42883", "42P01"].includes(String(error?.code || "")) ||
-    message.includes("recalculate_elo_from_matches") ||
-    message.includes("snapshot_elo_month") ||
-    message.includes("elo_ratings") ||
-    message.includes("elo_monthly_snapshots") ||
-    message.includes("could not find the function") ||
-    message.includes("could not find the table");
-};
+export { isMissingEloFeature };
 
 const isScoredMatch = (match: StoredMatch) =>
   Array.isArray(match.team_a) &&
@@ -69,27 +60,24 @@ export async function currentEloRatings(admin: SupabaseClient) {
   return (await replayActiveEloRatings(admin)).map((row) => row.eloRating);
 }
 
-async function recalculateEloLevelsInApplication(admin: SupabaseClient) {
-  const ratings = await replayActiveEloRatings(admin);
-  if (!ratings.length) return;
-  const assignments = rankEloPlayers(ratings);
+// Brings ELO up to date with the saved matches, straight after every change to them. The database function
+// does it in one transaction; when it fails or hangs, the same replay runs here and writes the tables,
+// so a saved score never leaves the ELO behind. Returns false only when both ways failed.
+// A rebuild takes well under a second; one that has not answered by then is stuck (e.g. waiting on its lock),
+// so the app stops waiting and writes the ELO itself.
+const ELO_RPC_TIMEOUT_MS = 5_000;
 
-  const updates = await Promise.all(assignments.map((assignment: { memberId: string; level: 1 | 2 }) => admin
-    .from("profiles")
-    .update({ level: String(assignment.level) })
-    .eq("id", assignment.memberId)));
-  const failed = updates.find((result) => result.error);
-  if (failed?.error) throw failed.error;
-}
-
-export async function recalculateEloIfAvailable(admin: SupabaseClient) {
-  const { error } = await admin.rpc("recalculate_elo_from_matches");
-  if (!error) return;
-  if (isMissingEloFeature(error)) {
-    await recalculateEloLevelsInApplication(admin);
-    return;
+export async function recalculateEloIfAvailable(admin: SupabaseClient): Promise<boolean> {
+  const { error } = await admin.rpc("recalculate_elo_from_matches").abortSignal(AbortSignal.timeout(ELO_RPC_TIMEOUT_MS));
+  if (!error) return true;
+  if (!isMissingEloFeature(error)) console.error("ELO: recalculate_elo_from_matches() failed, recalculating in the app", error);
+  try {
+    await writeEloInApplication(admin);
+    return true;
+  } catch (appError) {
+    console.error("ELO: recalculation in the app failed too", appError);
+    return false;
   }
-  console.warn("ELO recalculation failed", error.message);
 }
 
 export async function snapshotEloMonthIfAvailable(admin: SupabaseClient, month: string) {
